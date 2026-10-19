@@ -36,6 +36,13 @@ public final class MainActivity extends Activity {
             layout.addView(swatch, new LinearLayout.LayoutParams(-1, 80));
         }
         setContentView(layout);
+        button.post(new Runnable() {
+            @Override public void run() {
+                int[] position=new int[2];button.getLocationOnScreen(position);
+                android.util.Log.i("PocketGuestTest","POCKET_GUEST_BUTTON center="+
+                    (position[0]+button.getWidth()/2)+","+(position[1]+button.getHeight()/2));
+            }
+        });
     }
     @Override public void onSaveInstanceState(Bundle out) { out.putInt("taps", taps); super.onSaveInstanceState(out); }
 }

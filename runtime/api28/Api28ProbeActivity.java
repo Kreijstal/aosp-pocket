@@ -14,7 +14,7 @@ import java.util.zip.*;
 import org.json.JSONObject;
 
 /** Isolated development APK: real Android 9 libraries, no full guest boot. */
-public final class Api28ProbeActivity extends Activity {
+public class Api28ProbeActivity extends Activity {
     private final GuestBinder receiver = new GuestBinder();
     private volatile java.lang.Process manager, client, propertyServer, propertyWaiter, initProcess;
     private volatile boolean closed;
@@ -39,9 +39,9 @@ public final class Api28ProbeActivity extends Activity {
         new Thread(this::probe, "Api28Probe").start();
     }
 
-    private void message(String value) { runOnUiThread(() -> status.setText(value)); }
+    protected void message(String value) { runOnUiThread(() -> status.setText(value)); }
 
-    private File extract() throws Exception {
+    protected File extract() throws Exception {
         File root = new File(getFilesDir(), "api28-rootfs");
         root.mkdirs();
         SharedPreferences cache = getSharedPreferences("api28-fixture-cache", MODE_PRIVATE);
@@ -127,7 +127,7 @@ public final class Api28ProbeActivity extends Activity {
             virtual ? (mode.equals("manager") ? "0:0" : "39999:39999") : null, mode);
     }
 
-    private java.lang.Process startProgram(File root, String binary, String[] args, String identity, String output) throws IOException {
+    protected java.lang.Process startProgram(File root, String binary, String[] args, String identity, String output) throws IOException {
         if (closed) throw new IOException("Probe closed");
         File tmp = new File(getFilesDir(), "tmp");
         tmp.mkdirs();
@@ -167,7 +167,7 @@ public final class Api28ProbeActivity extends Activity {
         // /dev/null input instead of leaving a Java ProcessBuilder pipe open.
         builder.redirectInput(new File("/dev/null"));
         builder.redirectErrorStream(true);
-        File logFile = new File(getFilesDir(), output + ".log");
+        File logFile = programLog(output);
         try (FileOutputStream clear = new FileOutputStream(logFile)) { }
         // Forked zygote children reopen Java's duplicated stdout/err handles.
         // Append mode keeps those descriptions from overwriting each other.
@@ -175,9 +175,13 @@ public final class Api28ProbeActivity extends Activity {
         return builder.start();
     }
 
+    protected File programLog(String name) { return new File(getFilesDir(), name + ".log"); }
+
     private String log(String name) throws IOException {
-        return new String(Files.readAllBytes(new File(getFilesDir(), name + ".log").toPath()), "UTF-8");
+        return new String(Files.readAllBytes(programLog(name).toPath()), "UTF-8");
     }
+
+    protected boolean extendedStage(File root, JSONObject result) throws Exception { return false; }
 
     private void probe() {
         JSONObject result = new JSONObject();
@@ -187,6 +191,7 @@ public final class Api28ProbeActivity extends Activity {
             File root = extract();
             result.put("payload_files_extracted", extractedFiles).put("payload_files_cached", cachedFiles);
             hostTemplates(root);
+            if (extendedStage(root, result)) return;
             if ("zygote".equals(getIntent().getStringExtra("stage"))) {
                 result.put("scope", "zygote_only");
                 zygote(root, result);

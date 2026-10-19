@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +17,8 @@
 #include <sys/socket.h>
 #include <sys/syscall.h>
 #include <sys/un.h>
+#include <sys/xattr.h>
+#include <sys/inotify.h>
 #include <unistd.h>
 
 #if defined(SYS_newfstatat)
@@ -26,8 +29,17 @@
 
 static pthread_once_t once = PTHREAD_ONCE_INIT;
 static char root[PATH_MAX];
-static int root_fd = -1, init_error;
+static int init_error;
 static bool enabled;
+#ifdef POCKET_DIRECT_BOOT
+static char data_alias[NAME_MAX+1];
+static void visible_name(const char* path,char* output) {
+    size_t length=strlen(data_alias);
+    if(length && path[0]=='/' && !strncmp(path+1,data_alias,length) && (!path[length+1] || path[length+1]=='/')) {
+        strcpy(output,"/data");strcat(output,path+length+1);
+    } else strcpy(output,path);
+}
+#endif
 
 static int raw_open(int dir, const char* path, int flags, mode_t mode) {
     return (int)syscall(SYS_openat, dir, path, flags, mode);
@@ -48,13 +60,24 @@ static void initialize(void) {
     if (!value) return; // Same controlled binary can run under PRoot unchanged.
     enabled = true;
     if (!*value || value[0] != '/') { init_error = EINVAL; return; }
-    root_fd = raw_open(AT_FDCWD, value, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
+    int root_fd = raw_open(AT_FDCWD, value, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
     if (root_fd < 0) { init_error = errno; return; }
     // Do not call wrapped realpath during pthread_once initialization.
     if (fd_path(root_fd, root) || !strcmp(root, "/")) {
         init_error = errno ? errno : EINVAL;
-        close(root_fd); root_fd = -1;
     }
+#ifdef POCKET_DIRECT_BOOT
+    if(!init_error) {
+        char target[NAME_MAX+1];struct stat st;
+        ssize_t n=syscall(SYS_readlinkat,root_fd,"data",target,sizeof(target)-1);
+        if(n>0) {
+            target[n]=0;
+            if((!strcmp(target,"system-data") || !strcmp(target,"zygote-data")) &&
+               raw_stat(root_fd,target,&st,AT_SYMLINK_NOFOLLOW)==0 && S_ISDIR(st.st_mode)) strcpy(data_alias,target);
+        }
+    }
+#endif
+    close(root_fd);
 }
 int pocket_guest_init(void) {
     pthread_once(&once, initialize);
@@ -79,9 +102,16 @@ static int directory_name(int dir, char* guest) {
     }
     size_t n = strlen(root);
     if (strncmp(actual, root, n) || (actual[n] && actual[n] != '/')) {
+#ifdef POCKET_DIRECT_BOOT
+        if (pocket_boot_passthrough(actual)) { strcpy(guest, actual); return 0; }
+#endif
         errno = EXDEV; return -1;
     }
+#ifdef POCKET_DIRECT_BOOT
+    visible_name(actual[n]?actual+n:"/",guest);
+#else
     strcpy(guest, actual[n] ? actual + n : "/");
+#endif
     return 0;
 }
 
@@ -102,6 +132,12 @@ static int resolve(int dir, const char* path, bool follow, Path* result) {
         // Passthrough is handled in wrappers; never truncate a long leaf here.
         errno = ENOTSUP; return -1;
     }
+#ifdef POCKET_DIRECT_BOOT
+    // The kernel and loader expose real paths to our own mapped files.
+    size_t prefix = strlen(root);
+    if (!strncmp(path, root, prefix) && (path[prefix] == '/' || !path[prefix]))
+        path = path[prefix] ? path + prefix : "/";
+#endif
     char todo[PATH_MAX], base[PATH_MAX];
     if (*path == '/') strcpy(todo, path);
     else {
@@ -111,7 +147,11 @@ static int resolve(int dir, const char* path, bool follow, Path* result) {
         }
     }
     int stack[PATH_MAX / 2], depth = 0, links = 0;
-    stack[0] = fcntl(root_fd, F_DUPFD_CLOEXEC, 3);
+#ifdef POCKET_DIRECT_BOOT
+    stack[0] = raw_open(AT_FDCWD, pocket_boot_passthrough(todo) ? "/" : root, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
+#else
+    stack[0] = raw_open(AT_FDCWD, root, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
+#endif
     if (stack[0] < 0) return -1;
     int saved = 0;
     for (;;) {
@@ -132,6 +172,16 @@ static int resolve(int dir, const char* path, bool follow, Path* result) {
         bool last = !*rest;
         if (!strcmp(part, ".")) continue;
         if (!strcmp(part, "..")) { if (depth) close(stack[depth--]); continue; }
+#ifdef POCKET_DIRECT_BOOT
+        // Present the selected private data directory as a virtual mount at
+        // /data, including lstat/realpath semantics. Its host-side symlink is
+        // an implementation detail, not part of the guest filesystem view.
+        if(depth==0 && data_alias[0] && !strcmp(part,"data")) {
+            int next=raw_open(stack[depth],data_alias,O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC,0);
+            if(next<0) {saved=errno;break;}
+            stack[++depth]=next;continue;
+        }
+#endif
         // Read metadata without following the final link in the host namespace.
         struct stat st;
         if (raw_stat(stack[depth], part, &st, AT_SYMLINK_NOFOLLOW)) {
@@ -180,6 +230,64 @@ static int host_path(Path* p, char* path) {
     }
     return 0;
 }
+#ifdef POCKET_DIRECT_BOOT
+int pocket_boot_map_path(const char* path, char* output) {
+    Path p; if (resolve(AT_FDCWD, path, true, &p)) return -1;
+    return finish(&p, host_path(&p, output));
+}
+#endif
+
+#ifdef POCKET_DIRECT_BOOT
+// Keep the resolved parent FD alive for path-based xattrs. Kernel attributes
+// are stored on the actual private inode; no host SELinux labels are rewritten.
+int __wrap_inotify_add_watch(int fd,const char* path,uint32_t mask) {
+    int state=active();if(state<0) return -1;
+    if(!state) return syscall(SYS_inotify_add_watch,fd,path,mask);
+    Path p;
+    if(resolve(AT_FDCWD,path,!(mask&IN_DONT_FOLLOW),&p)) return -1;
+    if(require_directory(&p)) return finish(&p,-1);
+    char actual[PATH_MAX+64];
+    int length=snprintf(actual,sizeof(actual),"/proc/self/fd/%d/%s",p.dir,p.name);
+    if(length<0 || (size_t)length>=sizeof(actual)) {errno=ENAMETOOLONG;return finish(&p,-1);}
+    return finish(&p,syscall(SYS_inotify_add_watch,fd,actual,mask));
+}
+static long path_xattr(long number,const char* path,bool follow,
+                       uintptr_t a,uintptr_t b,uintptr_t c,uintptr_t d) {
+    int state=active();if (state<0) return -1;
+    if (!state) return syscall(number,path,a,b,c,d);
+    Path p;if (resolve(AT_FDCWD,path,follow,&p)) return -1;
+    if (require_directory(&p)) return finish(&p,-1);
+    char resolved[PATH_MAX];
+    if (snprintf(resolved,sizeof(resolved),"/proc/self/fd/%d/%s",p.dir,p.name)>=(int)sizeof(resolved)) {
+        errno=ENAMETOOLONG;return finish(&p,-1);
+    }
+    return finish(&p,syscall(number,resolved,a,b,c,d));
+}
+ssize_t __wrap_getxattr(const char* p,const char* name,void* value,size_t size) {
+    return path_xattr(SYS_getxattr,p,true,(uintptr_t)name,(uintptr_t)value,size,0);
+}
+ssize_t __wrap_lgetxattr(const char* p,const char* name,void* value,size_t size) {
+    return path_xattr(SYS_lgetxattr,p,false,(uintptr_t)name,(uintptr_t)value,size,0);
+}
+int __wrap_setxattr(const char* p,const char* name,const void* value,size_t size,int flags) {
+    return path_xattr(SYS_setxattr,p,true,(uintptr_t)name,(uintptr_t)value,size,flags);
+}
+int __wrap_lsetxattr(const char* p,const char* name,const void* value,size_t size,int flags) {
+    return path_xattr(SYS_lsetxattr,p,false,(uintptr_t)name,(uintptr_t)value,size,flags);
+}
+ssize_t __wrap_listxattr(const char* p,char* list,size_t size) {
+    return path_xattr(SYS_listxattr,p,true,(uintptr_t)list,size,0,0);
+}
+ssize_t __wrap_llistxattr(const char* p,char* list,size_t size) {
+    return path_xattr(SYS_llistxattr,p,false,(uintptr_t)list,size,0,0);
+}
+int __wrap_removexattr(const char* p,const char* name) {
+    return path_xattr(SYS_removexattr,p,true,(uintptr_t)name,0,0,0);
+}
+int __wrap_lremovexattr(const char* p,const char* name) {
+    return path_xattr(SYS_lremovexattr,p,false,(uintptr_t)name,0,0,0);
+}
+#endif
 
 int __wrap_openat(int dir, const char* path, int flags, ...) {
     mode_t mode = 0;
@@ -189,9 +297,22 @@ int __wrap_openat(int dir, const char* path, int flags, ...) {
     int state = active(); if (state < 0) return -1;
     if (!state) return raw_open(dir, path, flags, mode);
     if ((flags & O_TMPFILE) == O_TMPFILE) { errno = ENOTSUP; return -1; }
+#ifdef POCKET_DIRECT_BOOT
+    // Separate hwbinder userspace endpoint; the app is allowed to use its normal
+    // Binder driver. Never open the host hardware-service context or register it.
+    if (!strcmp(path,"/dev/hwbinder")) return raw_open(AT_FDCWD,"/dev/binder",flags,mode);
+#endif
     Path p;
     if (resolve(dir, path, !(flags & O_NOFOLLOW) && !((flags & O_CREAT) && (flags & O_EXCL)), &p)) return -1;
-    return finish(&p, raw_open(p.dir, p.name, flags | (p.slash ? O_DIRECTORY : 0), mode));
+#ifdef POCKET_DIRECT_BOOT
+    struct stat before;
+    bool created = (flags & O_CREAT) && raw_stat(p.dir,p.name,&before,AT_SYMLINK_NOFOLLOW)<0 && errno==ENOENT;
+#endif
+    int fd=raw_open(p.dir,p.name,flags | (p.slash ? O_DIRECTORY : 0),mode);
+#ifdef POCKET_DIRECT_BOOT
+    if (fd>=0 && created && pocket_boot_created_at(p.dir,p.name)) { int e=errno;close(fd);errno=e;fd=-1; }
+#endif
+    return finish(&p, fd);
 }
 int __wrap_open(const char* path, int flags, ...) {
     mode_t mode = 0;
@@ -215,6 +336,22 @@ ssize_t __wrap_readlinkat(int dir, const char* path, char* out, size_t size) {
     int state = active(); if (state < 0) return -1;
     if (!state) return syscall(SYS_readlinkat, dir, path, out, size);
     Path p; if (resolve(dir, path, false, &p)) return -1;
+#ifdef POCKET_DIRECT_BOOT
+    if (!strncmp(path, "/proc/", 6)) {
+        char actual[PATH_MAX];
+        ssize_t n = syscall(SYS_readlinkat, p.dir, p.name, actual, sizeof(actual) - 1);
+        int e = errno; close(p.dir); errno = e;
+        if (n < 0) return -1;
+        actual[n] = 0;
+        const char* visible = actual;
+        const char* console = getenv("POCKET_DIRECT_CONSOLE");
+        if (console && !strcmp(actual, console)) visible = "/pocket-console";
+        else if (!strncmp(actual, root, strlen(root)) && actual[strlen(root)] == '/') visible += strlen(root);
+        char translated[PATH_MAX];visible_name(visible,translated);
+        n = strlen(translated); if ((size_t)n > size) n = size;
+        memcpy(out, translated, n); return n;
+    }
+#endif
     ssize_t rc = syscall(SYS_readlinkat, p.dir, p.name, out, size);
     int e = errno; close(p.dir); errno = e; return rc;
 }
@@ -223,7 +360,11 @@ int __wrap_mkdirat(int dir, const char* path, mode_t mode) {
     int state = active(); if (state < 0) return -1;
     if (!state) return syscall(SYS_mkdirat, dir, path, mode);
     Path p; if (resolve(dir, path, false, &p)) return -1;
-    return finish(&p, syscall(SYS_mkdirat, p.dir, p.name, mode));
+    int rc=syscall(SYS_mkdirat,p.dir,p.name,mode);
+#ifdef POCKET_DIRECT_BOOT
+    if (!rc) rc=pocket_boot_created_at(p.dir,p.name);
+#endif
+    return finish(&p,rc);
 }
 int __wrap_mkdir(const char* path, mode_t mode) { return __wrap_mkdirat(AT_FDCWD, path, mode); }
 int __wrap_unlinkat(int dir, const char* path, int flags) {
@@ -242,7 +383,11 @@ int __wrap_symlinkat(const char* target, int dir, const char* path) {
     Path p; if (resolve(dir, path, false, &p)) return -1;
     if (p.slash) return finish(&p, (errno = ENOTSUP, -1));
     // Keep guest link contents unchanged; resolve() interprets them later.
-    return finish(&p, syscall(SYS_symlinkat, target, p.dir, p.name));
+    int rc=syscall(SYS_symlinkat,target,p.dir,p.name);
+#ifdef POCKET_DIRECT_BOOT
+    if (!rc) rc=pocket_boot_created_at(p.dir,p.name);
+#endif
+    return finish(&p,rc);
 }
 int __wrap_symlink(const char* target, const char* path) { return __wrap_symlinkat(target, AT_FDCWD, path); }
 int __wrap_chdir(const char* path) {
@@ -420,7 +565,13 @@ static int socket_call(int nr, int fd, const struct sockaddr* address, socklen_t
         return syscall(nr, fd, address, length);
     struct sockaddr_un mapped; socklen_t mapped_length;
     if (socket_address(address, length, follow, &mapped, &mapped_length)) return -1;
-    return syscall(nr, fd, &mapped, mapped_length);
+    int rc=syscall(nr,fd,&mapped,mapped_length);
+    if (!rc && nr==SYS_bind) {
+#ifdef POCKET_DIRECT_BOOT
+        rc=pocket_boot_created_at(AT_FDCWD,mapped.sun_path);
+#endif
+    }
+    return rc;
 }
 int __wrap_bind(int fd, const struct sockaddr* address, socklen_t length) {
     return socket_call(SYS_bind, fd, address, length, false);
@@ -473,7 +624,7 @@ int __wrap_execve(const char* file, char* const argv[], char* const envp[]) {
     size_t envc = 0;
     while (envp && envp[envc]) ++envc;
     const char* libraries = getenv("POCKET_DIRECT_LIBRARIES");
-    char** env = calloc(envc + 5, sizeof(char*));
+    char** env = calloc(envc + 24, sizeof(char*));
     char *rootenv = NULL, *searchenv = NULL, *libenv = NULL, *configenv = NULL;
     if (!env || asprintf(&rootenv, "POCKET_DIRECT_ROOT=%s", root) < 0 ||
         (libraries && (asprintf(&searchenv, "LD_LIBRARY_PATH=%s", libraries) < 0 ||
@@ -488,8 +639,30 @@ int __wrap_execve(const char* file, char* const argv[], char* const envp[]) {
             (!libraries || (strncmp(envp[i], "LD_LIBRARY_PATH=", 16) && strncmp(envp[i], "LD_CONFIG_FILE=", 15)))) env[j++] = envp[i];
     env[j++] = rootenv;
     if (libraries) { env[j++] = searchenv; env[j++] = libenv; env[j++] = configenv; }
+#ifdef POCKET_DIRECT_BOOT
+    const char* keys[] = {"POCKET_DIRECT_ID", "POCKET_DIRECT_GROUPS", "POCKET_DIRECT_CONSOLE", "POCKET_PARENT_PID", "LD_PRELOAD", NULL};
+    char* extra[8] = {0}; int extras = 0;
+    for (int k = 0; keys[k]; ++k) {
+        const char* value = getenv(keys[k]);
+        if (!value) continue;
+        size_t key_length = strlen(keys[k]);
+        for (size_t i = 0; i < j;)
+            if (!strncmp(env[i], keys[k], key_length) && env[i][key_length] == '=') env[i] = env[--j]; else ++i;
+        if (asprintf(&extra[extras], "%s=%s", keys[k], value) < 0) _exit(126);
+        env[j++] = extra[extras++];
+    }
+    // Always retain the runtime ahead of any RC-provided guest preload.
+    char preload[PATH_MAX * 3 + 256];
+    snprintf(preload, sizeof(preload), "LD_PRELOAD=%s/system/lib64/libpocket_direct_boot.so:%s/system/lib64/libpocket_binder_api28.so:%s/system/lib64/libpocket_hidl_api28.so", root, root, root);
+    for (size_t i = 0; i < j;) if (!strncmp(env[i], "LD_PRELOAD=", 11)) env[i] = env[--j]; else ++i;
+    env[j++] = preload;
+    env[j] = NULL;
+#endif
     int rc = syscall(SYS_execve, executable, argv, env);
     int e = errno;
     free(env); free(rootenv); free(searchenv); free(libenv); free(configenv); errno = e;
+#ifdef POCKET_DIRECT_BOOT
+    for (int i = 0; i < extras; ++i) free(extra[i]);
+#endif
     return rc;
 }

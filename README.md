@@ -48,7 +48,14 @@ property actions, inherited sockets, crash/restart and clean shutdown tests.
 The real Android 9 zygote now accepts ABI queries, forks a Java child, handles
 its Binder calls and reaps it while retaining the host app sandbox. This uses
 an image-only development profile with lazy preload and a JVMTI bootstrap.
-System-server and guest UI boot remain unverified. See
+A separate direct platform profile now **boots Android 9 without PRoot**, using
+the real system server, SurfaceFlinger, installer and a 480 × 800 software
+display. The VM regression passes the boot property, launcher first draw, APK
+installation, app rendering and an injected tap that increments its button.
+See [the evidence](docs/api28-direct-boot-validation.json) and
+[captured test app](docs/images/api28-guest-test.png). This remains a separate
+development APK; Pocket Manager still uses API 25. Networking/audio and physical
+phone validation remain outside this profile. See
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
 
 A separate experimental **direct backend** runs a controlled native program

@@ -59,3 +59,25 @@ Its controlled-call path adapter and native/Java integration tests are project
 sources under GPL-3.0-only. PRoot is bundled only for the comparison run; the
 direct execution path does not launch or link it. No YLINKER binary or VMOS
 implementation is used. The adapter's Linux host tests use the host's libc.
+
+The separate direct platform APK adds matching Android 9 framework resources,
+preoptimized system-server code, installer, SurfaceFlinger and Redroid software
+EGL/graphics HAL prebuilts from the same pinned OCI layer. Its Android 9 NOTICE
+asset covers these upstream components. It includes no PRoot executable.
+The direct zygote adaptation is runtime/direct/zygote-system-server.patch.
+Pinned AOSP libhidl and libhwbinder headers/IDLs supply the graphics HAL ABI;
+original Apache-2.0 notices remain in the fetched sources. IBase headers are
+regenerated from that IDL with a host hidl-gen tool. A compile-time enum template
+allows a modern host generator with Android 9 runtime headers; it changes no
+interface vtable. The in-process software graphics profile is project code.
+All guest processes retain the host app's real UID, groups and SELinux domain.
+Guest owner/identity metadata is not a security boundary or a host privilege.
+The direct system-server experiment adds project-owned health, private storage,
+offline network, event-channel and unavailable-audio profiles. Health/manager
+headers come from pinned Apache-2.0 AOSP HIDL interfaces. Storage/network
+transaction constants are generated from pinned AOSP vold, storaged and netd
+AIDL declarations. The unavailable-audio adaptation uses the matching AOSP
+AudioSystem declarations and leaves actual service-unavailable results intact.
+The matching keystore executable, software Keymaster 3 HAL and selected VNDK
+dependencies are upstream prebuilts from the same pinned Android 9 image,
+covered by its NOTICE asset; they are not locally source-built platform claims.

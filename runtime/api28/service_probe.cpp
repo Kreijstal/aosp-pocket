@@ -35,21 +35,46 @@ class Echo final : public BBinder {
 // Minimum API 28 IServiceManager wire protocol for bring-up, not a complete
 // production manager. No host BINDER_SET_CONTEXT_MGR or global registration.
 class Registry final : public BBinder {
-    std::map<String16, sp<IBinder>> services;
+    struct Entry { sp<IBinder> binder; sp<IBinder::DeathRecipient> death; };
+    std::map<String16, Entry> services;
     Mutex mutex;
+    class ServiceDeath final : public IBinder::DeathRecipient {
+        wp<Registry> owner;
+        String16 name;
+    public:
+        ServiceDeath(Registry* registry,const String16& service):owner(registry),name(service) {}
+        void binderDied(const wp<IBinder>&) override {
+            sp<Registry> registry=owner.promote();
+            if (registry) registry->removeDead(name,this);
+        }
+    };
+    void removeDead(const String16& name,const IBinder::DeathRecipient* recipient) {
+        Mutex::Autolock guard(mutex);
+        auto entry=services.find(name);
+        if (entry!=services.end() && entry->second.death.get()==recipient) {
+            printf("API28_REGISTRY_REMOVE_DEAD name=%s\n",String8(name).c_str());
+            services.erase(entry);
+        }
+    }
     status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply, uint32_t flags) override {
         if (code < 1 || code > 4) return BBinder::onTransact(code, data, reply, flags);
         if (!data.enforceInterface(String16("android.os.IServiceManager"))) return PERMISSION_DENIED;
         Mutex::Autolock guard(mutex);
         if (code == IServiceManager::GET_SERVICE_TRANSACTION || code == IServiceManager::CHECK_SERVICE_TRANSACTION) {
             auto entry = services.find(data.readString16());
-            return reply->writeStrongBinder(entry == services.end() ? nullptr : entry->second);
+            return reply->writeStrongBinder(entry == services.end() ? nullptr : entry->second.binder);
         }
         if (code == IServiceManager::ADD_SERVICE_TRANSACTION) {
             String16 name = data.readString16();
             sp<IBinder> service = data.readStrongBinder();
             if (!service || !name.size()) return BAD_VALUE;
-            services[name] = service;
+            sp<IBinder::DeathRecipient> death=new ServiceDeath(this,name);
+            status_t result=service->linkToDeath(death);
+            // Locally owned Binder objects live with this registry process.
+            if (result!=NO_ERROR && result!=INVALID_OPERATION) return result;
+            auto previous=services.find(name);
+            if (previous!=services.end()) previous->second.binder->unlinkToDeath(previous->second.death);
+            services[name] = {service,death};
             return reply->writeInt32(0);
         }
         int index = data.readInt32();

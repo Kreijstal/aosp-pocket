@@ -6,6 +6,7 @@ Does not start Docker, execute the image, or touch the working API 25 guest.
 The reference supplies bionic/platform/ART libraries for isolated bring-up.
 """
 import argparse
+import fcntl
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
@@ -18,6 +19,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def prepare(art=False):
+    cache = ROOT / "out/api28"
+    cache.mkdir(parents=True, exist_ok=True)
+    # Multiple independent backends share this immutable source/reference cache.
+    # Serialize Git sparse-checkout updates and archive publication.
+    with (cache / ".prepare.lock").open("a") as guard:
+        fcntl.flock(guard.fileno(), fcntl.LOCK_EX)
+        return _prepare(art)
+
+
+def _prepare(art=False):
     lock = json.loads((ROOT / "sources.lock.json").read_text())["guest_api28"]
     cache = ROOT / "out/api28"
     for item in lock["headers"]:

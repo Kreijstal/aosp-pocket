@@ -73,10 +73,10 @@
     }
   ],
   "guest_api28": {
-    "status": "zygote_verified_vm",
+    "status": "direct_framework_boot_verified_vm",
     "sdk": 28,
     "android_tag": "android-9.0.0_r61",
-    "full_guest_boot_verified": false,
+    "full_guest_boot_verified": true,
     "abi_reference": {
       "image": "redroid/redroid:9.0.0-latest",
       "platform": "linux/arm64",
@@ -113,7 +113,8 @@
           "base",
           "libprocessgroup",
           "libcutils",
-          "include"
+          "include",
+          "storaged"
         ]
       },
       {
@@ -168,6 +169,79 @@
           "sigchainlib",
           "openjdkjvmti/include"
         ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/libhwbinder",
+        "tag": "android-9.0.0_r61",
+        "commit": "3b82196284ea11b8374bfea6afb027617043d6e6",
+        "cache": "libhwbinder",
+        "paths": [
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/libhidl",
+        "tag": "android-9.0.0_r61",
+        "commit": "5628025297a4a0905e2b5e95643daa6e2508adbd",
+        "cache": "libhidl",
+        "paths": [
+          "base/include",
+          "transport/include",
+          "transport/base",
+          "transport/manager"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/hardware/interfaces",
+        "tag": "android-9.0.0_r61",
+        "commit": "f53f4c35268154fd5e320bb39d772e8a61d200ff",
+        "cache": "hardware-interfaces",
+        "paths": [
+          "configstore",
+          "health"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/vold",
+        "tag": "android-9.0.0_r61",
+        "commit": "5ebb0d603e74b5d84c8b73b0b89c18bbbd3aeedb",
+        "cache": "system-vold",
+        "paths": [
+          "binder"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/netd",
+        "tag": "android-9.0.0_r61",
+        "commit": "ab6091762862b4b8038ae8a66d8fddb786dbdc80",
+        "cache": "system-netd",
+        "paths": [
+          "binder",
+          "server"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/frameworks/av",
+        "tag": "android-9.0.0_r61",
+        "commit": "fb027a5efa741f03e8d1f33a486a365ff38c0724",
+        "cache": "frameworks-av",
+        "paths": [
+          "media/libaudioclient",
+          "services/audioflinger",
+          "services/audiopolicy",
+          "media/audioserver",
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/media",
+        "tag": "android-9.0.0_r61",
+        "commit": "ba90150f439f16e1717bc8972468328da4ffac76",
+        "cache": "system-media",
+        "paths": [
+          "audio/include",
+          "audio_utils/include"
+        ]
       }
     ],
     "properties_verified_vm": true,
@@ -190,6 +264,19 @@
       "compiler_cache_supported": false,
       "jdwp_enabled": false,
       "system_server_supported": false
+    },
+    "full_guest_boot_profile": "direct_platform_probe",
+    "pocket_manager_api28_supported": false,
+    "direct_port": {
+      "evidence": "docs/api28-direct-boot-validation.json",
+      "foundation_evidence": "docs/direct-platform-validation.json",
+      "tracer_required": false,
+      "host_uid_confined": true,
+      "software_graphics": true,
+      "keymaster_security_level": "SOFTWARE",
+      "network": "offline",
+      "audio": "unavailable",
+      "jit_enabled": false
     }
   }
 }

@@ -13,11 +13,12 @@ notifications, clean shutdown and fresh restart pass. A Java program runs in
 ART, exercises threads/reflection/exceptions, and launches a native child that
 retains UID 39999 and reads the SDK 28 property area.
 
-This is **runtime bring-up, not a bootable Android 9 guest**. The bootable
-runtime continues to use its tested Android 7.1/API 25 image. The init core and
-zygote now have rootless integration profiles. System services, launcher and
-graphics integration remain unverified.
-Hardware bridges are not added here.
+These are foundation milestones for the PRoot profile. The separate direct
+platform profile below has now passed Android 9 framework/UI boot, installation
+and input. The Pocket Manager runtime continues to use its tested Android
+7.1/API 25 image; general Android 9 image imports are not enabled there.
+The foundation probe adds no hardware bridge; the direct system-server
+experiment below includes a battery relay.
 
 ## Separate builds and SDK checks
 
@@ -503,18 +504,200 @@ ssh pi@juanraspberry python3 - < tools/validate_direct_on_pi.py
 ```
 
 Output is `out/direct/aosp-pocket-direct-probe.apk`, approximately 1.6 MiB.
-The next direct-backend milestone is to route controlled platform/bionic
-operations through the adapter, then port the already tested property/Binder
-and init/zygote paths. Keep PRoot available until equivalent regressions pass.
+The direct platform profile below routes pinned platform/bionic operations
+through this adapter and ports the property/Binder/init/zygote paths. The
+controlled-call APK remains a separate ABI benchmark. PRoot remains available
+for the original runtime and compatibility regression.
 
-## Next boot gates
+## Next integration gates
 
-1. Extend the tested zygote profile toward system-server startup. Implement
-   required service/socket/property behavior and generic descendant lifecycle
-   ownership. The current profile deliberately rejects system-server requests.
-2. Add manager death/restart and nested Binder regression cases before treating
-   the private registry as a general framework IPC layer.
-3. Adapt Android 9 graphics/HAL transports and linker namespace configuration,
-   then demonstrate launcher display, APK installation and forwarded touch.
-4. Enable an explicitly versioned API 28 image/profile in Pocket Manager only
-   after those real boot gates pass; retain the working API 25 profile.
+1. Integrate the verified direct profile into Pocket Manager with persistent
+   guest lifecycle, live display and interactive controls; retain API 25.
+2. Broaden manager death/restart and nested Binder regression coverage and
+   descendant cleanup for arbitrary apps. The current bounded probe stops its
+   managed services and verifies zero remaining managed children.
+3. Add functional network/audio bridges and validate other missing hardware
+   interfaces. The boot profile's offline/unavailable states are explicit.
+4. Enable a versioned API 28 image/import format after those runtime integration
+   checks pass. Keep pinned development prebuilts separate from source-built
+   platform claims and validate on a physical non-rooted phone separately.
+
+## Direct platform profile (experimental)
+
+`out/boot/aosp-pocket-boot-probe.apk` is a separate development package,
+`dev.kreijstal.aosppocket.bootprobe`. It extends the controlled direct backend
+through the pinned Android 9 platform libc and contains no PRoot executable.
+It does not replace the working API 25 image or make Android 9 available as a
+finished Pocket Manager guest yet.
+
+[Recorded VM evidence](api28-direct-boot-validation.json) now reports
+`full_guest_boot_verified=true` for this specific development profile. A real
+Android 9 system server reaches boot completion, Launcher3 reports its first
+draw, and PackageInstaller installs the project test app. Its button receives
+an injected touch and reports `tap=1`; the
+[captured frame](images/api28-guest-test.png) shows the counter and RGB swatches.
+The launcher's initial workspace is empty; foreground task identity alone is
+not treated as first-draw evidence. All programs retain host UID 10173, enforcing
+`untrusted_app_27` SELinux, seccomp 2 and zero effective capabilities. The original
+API 25 runtime's host, PRoot, init, system-server and launcher PIDs remained alive.
+
+The pinned libc's reviewed internal filesystem/socket/identity entry points
+are redirected after verifying their original instruction bytes. This covers
+platform calls made inside libc, beyond the 38 link-time wrappers in the
+small direct probe. The loader patches only its private guest libc, restores
+RX permissions, and leaves the host libc untouched. It reserves executable
+PT_INTERP paths for the private linker and redirects guest dlopen paths.
+There is no syscall tracer. Objects issuing other inline syscalls are not
+universally redirected.
+
+Private properties reuse the Android 9 property implementation. Because libc
+startup precedes the development preload constructor, the constructor resets
+the exact pinned private `SystemProperties` state and initializes it again
+after path hooks are active. Any host read-only mappings used during early
+startup remain read-only and are never edited. This depends on the pinned
+library layout; it is not a general libc compatibility API.
+
+Guest UID/GID/supplementary groups and file owners are library-level metadata.
+File ownership is stored under `.pocket-owner` by device/inode; newly created
+objects record the virtual creator. All real ownership remains with the host
+app. These identities and guest Binder credential headers are not authenticated
+security principals, and guest processes share one host sandbox. Virtual DAC,
+privileged operations and arbitrary native code containment are not provided.
+Owner records need lifecycle/generation handling before general image use.
+
+[Foundation evidence](direct-platform-validation.json) records passing private
+property notifications/restart, Binder/FD transfer, ART, init service lifecycle
+and a real app-style zygote Java child on this backend. That fork includes guest
+groups, seinfo metadata and a requested external-storage mode, and separately
+rejects a child-zygote request. The child retained the ordinary host app UID,
+zero capabilities, enforcing SELinux, seccomp 2 and TracerPid 0. The profile also
+loads the real X.509/SHA-256 providers before zygote startup. This is a foundation
+regression, not evidence of a completed framework/UI boot.
+
+The system-server stage includes the image's matching framework resources,
+ARM64 libraries, core UI packages and OAT/VDEX files, because several JARs have
+stripped DEX contents. Image property defaults are merged with build properties;
+the interpreter profile disables JIT and uses verify compiler policies. A 32-bit
+dex2oat is not bundled as a supposedly working ARM64 compiler.
+
+The separate zygote patch permits system-server and ordinary app forks with
+guest supplementary groups. Seinfo and storage requests are guest metadata;
+they do not change host SELinux or mounts. Read-only storage modes and per-app
+filesystem separation are not enforced by this prototype. Guest capability
+requests do not grant host capabilities. Child zygotes remain unsupported.
+
+The software graphics profile loads selected Android 9 graphics HALs in process
+and compiles the pinned AOSP config-store implementation for software rendering.
+Unsupported HALs remain unavailable and are reported. It never forwards HAL
+lookup to the host hardware service manager. A pixel-readback test exercises
+real SwiftShader EGL/GLES and checks exact RGBA output.
+Lazy zygote startup now explicitly initializes the default typeface and measures
+text before forking. Without the normal text preload, framework painting reached
+`Typeface::resolveDefault` with no native default and aborted during phase 550.
+
+Java health RPC uses a separate native service process and real kernel Binder
+buffer transfer. In-process HIDL replies proved unsuitable for Java clients:
+embedded string/vector storage could expire before Java read the reply. The
+private registry now accepts both the Android 9 native service-manager protocol
+and an explicit HIDL lookup protocol. It uses a separate Binder connection for
+hardware RPC over the ordinary app-permitted Binder driver; it never registers
+a global context manager or looks up host hardware services. Health 2.0 and its
+service notifications relay actual host BatteryManager snapshots. Missing or
+stale readings remain unknown, and unsupported battery metrics are reported as
+unsupported. This is a host relay, not direct battery hardware access.
+The manager exposes both 1.0 and 1.1 interfaces, including the native C++ service
+getter. The matching keystore executable uses the explicit `softwareonly`
+Keymaster 3 implementation; its observed security level is SOFTWARE. No host
+keystore or hardware-backed keymaster service is requested by that profile.
+
+The full-server profile adds an app-private storage backend for the existing
+user 0. Its Android 9 transaction ordinals come from pinned AIDL declarations.
+The backend checks prepared private directories and exposes their emulated
+storage paths without mounting host filesystems. It does not implement disk
+formatting, filesystem trim, guest encryption, additional users or AppFuse.
+Unsupported maintenance completes with an error callback. Privileged calls
+reject an ordinary guest role; the role remains metadata within one host UID.
+The selected full/framework data directory is a virtual mount at `/data`:
+canonical paths, cwd, lstat and descriptor paths retain that guest name. Its
+host-side `system-data`/`zygote-data` selection does not leak into volume lookup.
+
+The network backend is explicitly offline: it supplies the native Binder,
+netd and mDNS control endpoints needed during startup, reports no interfaces,
+and rejects unsupported network configuration. It does not configure host
+routes or firewalls. A temporary no-audio profile makes platform clients return
+their unavailable-service errors instead of waiting forever for missing audio
+daemons. Playback and recording are not implemented in this profile.
+The reference Wi-Fi feature XML enables WifiService because SystemUI requires
+that framework API; the Wi-Fi controller and connectivity remain unavailable.
+A private seqpacket endpoint records Android 9 process-priority hints so that
+ActivityManager need not retry a missing lmkd socket. It does not modify host OOM
+priorities or kill processes; the host retains memory-pressure control.
+
+Pinned libc hooks additionally cover path-based xattrs, descriptor ownership,
+inotify watches and timers. Watches target real private inodes. Supplemental
+guest groups participate in ownership metadata checks; kernel owners and
+groups remain unchanged. Alarm-clock timers use non-wakeup realtime/boottime
+timerfds while the app runs. Changing the host wall clock/timezone is denied;
+waking a suspended host requires a future Android AlarmManager bridge.
+UEventObserver also uses a private datagram channel rather than privileged host
+kernel netlink. The native delivery regression injects a synthetic test record;
+it is not evidence of receiving physical device events. Without an explicit
+relay the observer waits without producing events.
+
+The native Binder adapter decodes guest roles before service permission checks,
+including checks performed before enforceInterface. The header's sender PID
+must match the kernel-reported PID for synchronous calls, and the real sender
+UID must be this host app. Kernel Binder reports PID zero for one-way calls;
+their claimed PID is guest metadata and cannot be kernel-verified this way.
+The claimed guest UID is also untrusted metadata inside one host sandbox.
+A focused test checks a permitted system role and a denied ordinary role. The
+private registry now removes services on Binder death; a separate process tests
+that removal. A two-process storage regression decodes an asynchronous nested
+maintenance callback, including its real unsupported status and bundle. Manager
+restart and broader nested-transaction coverage remain future work.
+
+Build and inspect this development stage:
+
+```sh
+make -f runtime/Makefile -j2 boot-verify HIDL_GEN=/path/to/hidl-gen
+rsync --inplace --no-whole-file out/boot/aosp-pocket-boot-probe.apk pi@juanraspberry:/home/pi/aosp-pocket-boot-probe.apk
+ssh pi@juanraspberry python3 - --direct < tools/validate_api28_on_pi.py
+ssh pi@juanraspberry python3 - --direct --system-server < tools/validate_api28_on_pi.py
+```
+
+The first VM command runs the foundation regression; the second is a bounded
+system-server bring-up attempt and exits 2 until a completed boot is verified.
+Its JSON contains real process status, Binder ping results and startup logs.
+Use `--skip-install` only to rerun a stage against the APK already installed;
+omit it after transferring a new build.
+It shuts down its private init/services after observation. No command restarts
+the ADB server or stops another guest. `full_guest_boot_verified` stays false
+until system startup, a displayed launcher, installation and input work.
+
+For native-only development, keep a copy of the APK actually installed as
+`out/boot/baseline.apk`, build the next version, and run:
+
+```sh
+make -f runtime/Makefile -j2 boot-overlay BASE_APK=out/boot/baseline.apk
+rsync --inplace --no-whole-file out/boot/native-overlay.zip pi@juanraspberry:/home/pi/aosp-pocket-native-overlay.zip
+ssh pi@juanraspberry python3 - --direct --system-server --skip-install --overlay < tools/validate_api28_on_pi.py
+```
+
+This opt-in development overlay only replaces changed system/vendor assets.
+The packer rejects host Java, manifest or JNI changes, which require reinstalling
+the APK and updating the baseline. The app records the overlay plan before
+copying; on its next launch it restores those assets from its APK before any
+new overlay is applied. This is a trusted local development mechanism, not a
+signed production updater. The harness verifies which files were applied.
+The overlay target rebuilds native/guest assets and the host compatibility
+inputs without recompressing and signing the entire APK. Run `boot-verify`
+for a complete APK build and validation before distributing a build.
+
+The full-server development image also contains an end-to-end framework probe.
+It waits for the actual boot property, checks the foreground home activity and
+its first-draw report, captures a compositor frame, installs the project test
+APK through PackageInstaller, launches it and injects a tap at the button's
+reported screen coordinates. The application's click log and a second real
+frame complete the input check. A boot property, foreground task or nonblank
+wallpaper alone cannot satisfy these gates. Until they all pass, the runtime
+report retains `full_guest_boot_verified=false`.

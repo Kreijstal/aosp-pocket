@@ -29,13 +29,21 @@ public final class ZygoteChild {
         String binderOutput = bytes.toString("UTF-8");
         if (binder.waitFor() != 0 || !binderOutput.contains("server_uid=0 client_uid=39999"))
             throw new AssertionError("Forked child Binder path failed: " + binderOutput);
+        boolean appProfile=args.length==2 && args[1].equals("app");
+        if (appProfile) {
+            Process groupProbe=new ProcessBuilder("/system/bin/pocket-boot-probe","app").redirectErrorStream(true).start();
+            ByteArrayOutputStream groupBytes=new ByteArrayOutputStream();
+            for (int count;(count=groupProbe.getInputStream().read(buffer))!=-1;) groupBytes.write(buffer,0,count);
+            if (groupProbe.waitFor()!=0 || !groupBytes.toString("UTF-8").contains("DIRECT_APP_GROUPS_PASS"))
+                throw new AssertionError("Wrong app guest groups: "+groupBytes.toString("UTF-8"));
+        }
         final int[] answer = {0};
         Thread child = new Thread(() -> answer[0] = 28, "pocket-zygote-child");
         child.start(); child.join();
-        if (uid != 39999 || !sdk.equals("28") || answer[0] != 28 || args.length != 1)
+        if (uid != 39999 || !sdk.equals("28") || answer[0] != 28 || (!appProfile && args.length != 1))
             throw new AssertionError("Bad zygote child identity or runtime");
         try (Writer out = new OutputStreamWriter(new FileOutputStream("/data/pocket-zygote-child.json"), "UTF-8")) {
-            out.write("{\"passed\":true,\"pid\":" + pid + ",\"uid\":" + uid + ",\"sdk\":28,\"nonce\":\"" + args[0] + "\",\"thread\":28,\"binder\":true,\"regain_root_denied\":true}\n");
+            out.write("{\"app_profile\":"+appProfile+",\"passed\":true,\"pid\":" + pid + ",\"uid\":" + uid + ",\"sdk\":28,\"nonce\":\"" + args[0] + "\",\"thread\":28,\"binder\":true,\"regain_root_denied\":true}\n");
         }
         // Remain alive for independent inspection and explicit termination/reaping.
         Thread.sleep(120000);

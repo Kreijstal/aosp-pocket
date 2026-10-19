@@ -82,6 +82,7 @@ $(OUT)/guest-test.apk: $(shell find runtime/smoke -name '*.java' -o -name '*.xml
 
 include runtime/api28/Makefile
 include runtime/direct/Makefile
+include runtime/direct/boot.mk
 
 check-profiles:
 	mkdir -p out/profile-tests

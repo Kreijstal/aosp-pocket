@@ -1,0 +1,38 @@
+--- a/core/jni/com_android_internal_os_Zygote.cpp
++++ b/core/jni/com_android_internal_os_Zygote.cpp
+@@ -202,2 +202,2 @@
+-  if (gids.size() != 0) {
+-    *error_msg = "supplementary groups unsupported in this profile";
++  if (setgroups(gids.size(), reinterpret_cast<const gid_t*>(gids.get())) != 0) {
++    *error_msg = CREATE_ERROR("guest setgroups failed: %s", strerror(errno));
+@@ -368,5 +368,6 @@
+-  // seccomp filter. Only PRoot guest identity and private filesystem paths vary.
+-  if (is_system_server || is_child_zygote || mount_external != MOUNT_EXTERNAL_NONE ||
+-      permittedCapabilities || effectiveCapabilities || java_se_info != nullptr ||
+-      (javaGids != nullptr && env->GetArrayLength(javaGids) != 0)) {
+-    fprintf(stderr, "POCKET_ZYGOTE_UNSUPPORTED specialization request\n");
++  // seccomp filter. Only library-level guest identity and private filesystem paths vary.
++  // Direct profile: system_server and supplementary guest groups are supported.
++  // Never request host capabilities, mounts or SELinux domain transitions.
++  if (is_child_zygote || mount_external < MOUNT_EXTERNAL_NONE || mount_external > MOUNT_EXTERNAL_WRITE ||
++      permittedCapabilities || effectiveCapabilities) {
++    fprintf(stderr, "POCKET_ZYGOTE_UNSUPPORTED specialization request system_server=%d storage=%d caps=%lld/%lld seinfo=%d childzygote=%d\n", is_system_server, mount_external, (long long)permittedCapabilities, (long long)effectiveCapabilities, java_se_info!=nullptr, is_child_zygote);
+@@ -378,0 +380,4 @@
++  // Guest seinfo/storage requests describe guest metadata only. This runtime
++  // does not change the host SELinux domain, mount namespace or kernel DAC.
++  if (java_se_info != nullptr || mount_external != MOUNT_EXTERNAL_NONE)
++    fprintf(stderr, "DIRECT_ZYGOTE_APP_PROFILE storage=%d seinfo_metadata=%d host_namespace=unchanged\n", mount_external, java_se_info!=nullptr);
+@@ -434,0 +440 @@
++  fprintf(stderr, "DIRECT_ZYGOTE_FORK pid=%d system_server=%d guest_uid=%d guest_gid=%d\n", pid, is_system_server, uid, gid);
+@@ -587 +593,4 @@
+-    // Nonzero capability requests are rejected by the rootless fork profile.
++    // Guest groups cannot grant host kernel capabilities. Keep the ordinary
++    // app's zero-capability host confinement; no capset is attempted.
++    if (capabilities) fprintf(stderr,"DIRECT_ZYGOTE_CAPABILITIES requested=%lld host_caps=unchanged\n",(long long)capabilities);
++    capabilities=0;
+@@ -602 +611 @@
+-                                      MOUNT_EXTERNAL_DEFAULT, NULL, NULL, true, NULL,
++                                      MOUNT_EXTERNAL_NONE, NULL, NULL, true, NULL,
+@@ -639 +648 @@
+-    fprintf(stderr, "POCKET_ZYGOTE_STORAGE proot-private-binds kernel-namespace=unchanged\n");
++    fprintf(stderr, "POCKET_ZYGOTE_STORAGE direct-private-paths kernel-namespace=unchanged\n");

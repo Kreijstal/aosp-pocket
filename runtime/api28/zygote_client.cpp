@@ -11,6 +11,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <string>
+#include <vector>
+#include <stdlib.h>
 
 namespace {
 uid_t kernelUid() {
@@ -68,18 +70,31 @@ int main(int argc, char** argv) {
     __android_log_write(ANDROID_LOG_INFO, "PocketZygoteProbe", "API28_LOG_WRITER_TEST");
     if (!strcmp(argv[1], "query")) { close(fd); return 0; }
     if (argc != 3 || strlen(argv[2]) != 16 || strspn(argv[2], "0123456789abcdef") != 16) return 64;
-    std::string request = "9\n--runtime-args\n--setuid=39999\n--setgid=39999\n--runtime-flags=0\n--target-sdk-version=28\n--nice-name=pocket-api28-child\n--instruction-set=arm64\ndev.kreijstal.aosppocket.guest.ZygoteChild\n";
-    request += std::string(argv[2]) + "\n";
-    // Unsupported privileged storage setup must fail without killing zygote.
-    std::string unsupported = request;
-    unsupported.replace(0, 2, "10\n");
-    unsupported.insert(unsupported.find("dev.kreijstal.aosppocket.guest.ZygoteChild"), "--mount-external-default\n");
+    const bool direct=getenv("POCKET_DIRECT_ROOT")!=nullptr;
+    std::vector<std::string> arguments={"--runtime-args","--setuid=39999","--setgid=39999",
+        "--runtime-flags=0","--target-sdk-version=28","--nice-name=pocket-api28-child",
+        "--instruction-set=arm64","dev.kreijstal.aosppocket.guest.ZygoteChild",argv[2]};
+    if (direct) {
+        arguments.insert(arguments.begin()+7,{"--setgroups=1000,3010","--mount-external-write","--seinfo=platform:targetSdkVersion=28:complete"});
+        arguments.push_back("app");
+    }
+    auto encode=[](const std::vector<std::string>& args) {
+        std::string wire=std::to_string(args.size())+"\n";
+        for (const auto& arg:args) wire+=arg+"\n";
+        return wire;
+    };
+    const std::string request=encode(arguments);
+    auto rejected=arguments;
+    rejected.insert(rejected.begin()+7,direct?"--start-child-zygote":"--mount-external-default");
+    if (direct) rejected.push_back("--zygote-socket=pocket-unused");
+    const std::string unsupported=encode(rejected);
     if (!command(fd, unsupported)) return 20;
     uint32_t deniedPid; unsigned char deniedWrapper;
     if (!transfer(fd, &deniedPid, sizeof(deniedPid), false) ||
         !transfer(fd, &deniedWrapper, sizeof(deniedWrapper), false) ||
         static_cast<int32_t>(ntohl(deniedPid)) != -1 || deniedWrapper || !abi(fd)) return 21;
-    puts("API28_ZYGOTE_UNSUPPORTED_STORAGE rejected=1 server_alive=1");
+    puts(direct?"API28_ZYGOTE_UNSUPPORTED_CHILD_ZYGOTE rejected=1 server_alive=1":
+                "API28_ZYGOTE_UNSUPPORTED_STORAGE rejected=1 server_alive=1");
     if (!command(fd, request)) return 4;
     uint32_t pid; unsigned char wrapper;
     if (!transfer(fd, &pid, sizeof(pid), false) || !transfer(fd, &wrapper, sizeof(wrapper), false)) return 5;
