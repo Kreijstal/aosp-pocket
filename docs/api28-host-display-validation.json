@@ -1,0 +1,91 @@
+{
+  "version": "0.6-host-display",
+  "evidence": "Cuttlefish VM host and ordinary guest app verified; not physical SM-G780G hardware verification",
+  "build_command": "make -f runtime/Makefile -j2 manager-verify verify check-display check-profiles check-host-wire",
+  "development_build_command": "make -f runtime/Makefile -j2 manager-verify check-display check-profiles check-host-wire MANAGER_PACKAGE=dev.kreijstal.aosppocket.managerdev MANAGER_OUT=out/manager-dev",
+  "focused_test_command": "make -f runtime/Makefile -j2 display-probe check-display",
+  "integration_command": "ssh pi@juanraspberry python3 -u - < tools/validate_display_on_pi.py",
+  "production_matches_test_cohort": {
+    "host_dex": true,
+    "host_native_libraries": true,
+    "guest_payloads": 1376
+  },
+  "screenshots": {
+    "embedded": "images/api28-host-display-embedded.png",
+    "dedicated": "images/api28-host-display-dedicated.png",
+    "pip": "images/api28-host-display-pip.png"
+  },
+  "validation": {
+    "passed": true,
+    "sequential_guests": true,
+    "original_was_running": true,
+    "original_host_pid_before": 14701,
+    "boot": {
+      "passed": true,
+      "scope": "manager_android9_boot",
+      "host_uid": 10174,
+      "host_pid": 19842,
+      "system_server_pid": 20045,
+      "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+      "original_api25_unchanged": null,
+      "original_api25_pids": null,
+      "direct_backend": true,
+      "boot_completed": true,
+      "guest_display": {
+        "width": 720,
+        "height": 1280,
+        "density_dpi": 240
+      },
+      "tracer_pid": 0,
+      "seccomp": 2,
+      "effective_capabilities": 0,
+      "screenshot": "/home/pi/pocket-manager9.png"
+    },
+    "app_initial": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 0
+    },
+    "app_final": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 3
+    },
+    "guest_pixels_constant_across_windows": true,
+    "viewports": [
+      {
+        "window": "embedded",
+        "width": 340,
+        "height": 605
+      },
+      {
+        "window": "dedicated",
+        "width": 679,
+        "height": 1208
+      },
+      {
+        "window": "embedded_after_pip",
+        "width": 340,
+        "height": 605
+      }
+    ],
+    "guest_taps": 3,
+    "pip_exclusive": true,
+    "system_server_restarts": 0,
+    "host_dpi_relayed": true,
+    "development_guest_reaped": true,
+    "original_restored_from_existing_data": true,
+    "original_host_pid_after": 21825
+  },
+  "limitations": [
+    "Physical phone display validation pending",
+    "Existing PNG transport is limited to at most four requested frames per second",
+    "Android 7 retains its saved geometry; host-native boot geometry applies to Android 9"
+  ]
+}

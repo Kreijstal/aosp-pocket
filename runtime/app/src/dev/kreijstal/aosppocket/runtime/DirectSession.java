@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import java.io.*;
 import java.util.Set;
 import java.util.concurrent.*;
+import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
 /** Persistent Android 9 session owned by GuestService, independent of windows. */
 final class DirectSession implements AutoCloseable {
@@ -20,6 +21,7 @@ final class DirectSession implements AutoCloseable {
     }
     private final Context context;
     private final Listener listener;
+    private final DisplayGeometry geometry;
     private final Handler main=new Handler(Looper.getMainLooper());
     private final Set<LocalSocket> sockets=ConcurrentHashMap.newKeySet();
     private final ThreadPoolExecutor commands=new ThreadPoolExecutor(1,1,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(128));
@@ -30,8 +32,8 @@ final class DirectSession implements AutoCloseable {
     private HostBroker hostBroker;
     private File root;
     private Connection input;
-    DirectSession(Context context,Listener listener) {
-        this.context=context;this.listener=listener;worker=new Thread(this::run,"PocketAndroid9");
+    DirectSession(Context context,DisplayGeometry geometry,Listener listener) {
+        this.context=context;this.geometry=geometry;this.listener=listener;worker=new Thread(this::run,"PocketAndroid9");
     }
     void start(){worker.start();}
     boolean running(){return init!=null && init.isAlive() && !closed;}
@@ -41,7 +43,7 @@ final class DirectSession implements AutoCloseable {
         String ended="Android 9 stopped. Tap Start to boot again.";
         try {
             final int[] percent={-1};
-            root=DirectImage.prepare(context,(done,total)->{
+            root=DirectImage.prepare(context,geometry,(done,total)->{
                 int value=total==0?0:(int)(100*done/total);
                 if(value!=percent[0]){percent[0]=value;status("Setting up Android 9: "+value+"%");}
             });
@@ -62,10 +64,10 @@ final class DirectSession implements AutoCloseable {
                 while(!closed && init.isAlive()) {
                     if(!visible){Thread.sleep(250);continue;}
                     long began=SystemClock.elapsedRealtime();channel.out.writeInt(1);channel.out.flush();
-                    int length=channel.in.readInt();if(length<1 || length>8*1024*1024)throw new IOException("Invalid frame length");
+                    int length=channel.in.readInt();if(length<1 || length>geometry.maximumFrameBytes())throw new IOException("Invalid frame length");
                     byte[] pixels=new byte[length];channel.in.readFully(pixels);
                     Bitmap bitmap=BitmapFactory.decodeByteArray(pixels,0,pixels.length);
-                    if(bitmap==null || bitmap.getWidth()!=480 || bitmap.getHeight()!=800)throw new IOException("Invalid guest display frame");
+                    if(bitmap==null || bitmap.getWidth()!=geometry.width || bitmap.getHeight()!=geometry.height)throw new IOException("Invalid guest display frame");
                     main.post(()->{if(!closed)listener.frame(bitmap);else bitmap.recycle();});
                     Thread.sleep(Math.max(1,250-(SystemClock.elapsedRealtime()-began)));
                 }
@@ -99,7 +101,8 @@ final class DirectSession implements AutoCloseable {
                 socket.setSoTimeout(15000);
                 in=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
                 out=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                if(in.readInt()!=0x504b5439 || in.readInt()!=480 || in.readInt()!=800)throw new IOException("Unsupported guest control protocol");
+                DisplayGeometry actual=DisplayGeometry.read(in);
+                if(!geometry.equals(actual))throw new IOException("Guest display "+actual+" does not match host "+geometry);
             } catch(IOException error){close();throw error;}
         }
         @Override public void close(){sockets.remove(socket);try{socket.close();}catch(IOException ignored){}}

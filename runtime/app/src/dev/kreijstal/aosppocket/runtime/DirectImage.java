@@ -8,6 +8,7 @@ import java.nio.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.zip.*;
+import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
 /** The pinned direct Android 9 image. Never modifies the API 25 rootfs/data. */
 final class DirectImage {
@@ -15,7 +16,7 @@ final class DirectImage {
         try(InputStream in=context.getAssets().open("api28-rootfs/system/build.prop.payload")){return in.read()!=-1;}
         catch(IOException missing){return false;}
     }
-    static File prepare(Context context,GuestImage.Progress progress) throws Exception {
+    static File prepare(Context context,DisplayGeometry geometry,GuestImage.Progress progress) throws Exception {
         File root=new File(context.getFilesDir(),"api28-rootfs");root.mkdirs();
         try (InputStream marker=context.getAssets().open("manager-dev-update.json")) {
             if (!new File(root,"system/bin/pocket-init-api28").isFile())
@@ -68,6 +69,10 @@ final class DirectImage {
         for(File executable:new File(root,"system/bin").listFiles())patchInterpreter(executable,new File(root,"system/bin/linker64").getPath());
         Files.write(new File(root,"system/etc/ld.config.txt").toPath(),("dir.pocket = "+root+"\n[pocket]\nnamespace.default.isolated = false\nnamespace.default.search.paths = "+root+"/system/lib64:"+root+"/vendor/lib64\nnamespace.default.permitted.paths = "+root+"\n").getBytes("UTF-8"));
         GuestBinder.preparePlatform(context,root);
+        File properties=new File(root,"system/build.prop"),temporary=new File(properties.getPath()+".display-new");
+        String original=new String(Files.readAllBytes(properties.toPath()),"UTF-8");
+        Files.write(temporary.toPath(),geometry.properties(original).getBytes("UTF-8"));
+        Files.move(temporary.toPath(),properties.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
         return root;
     }
     private static void patchInterpreter(File executable,String interpreter) throws Exception {

@@ -95,6 +95,12 @@ def main():
             raise RuntimeError(text)
         time.sleep(2)
     else:raise RuntimeError('Manager did not boot: '+text)
+    measured=re.findall(r'POCKET_CONTROL_READY sdk=28 width=(\d+) height=(\d+) density=(\d+)',text)
+    assert measured,'Guest did not report actual display size and density'
+    guest_width,guest_height,guest_dpi=map(int,measured[-1])
+    host_width,host_height=map(int,re.findall(r'(\d+)x(\d+)',shell('wm size'))[-1])
+    host_dpi=int(re.findall(r'density:\s*(\d+)',shell('wm density'))[-1])
+    assert (guest_width,guest_height,guest_dpi)==(min(host_width,host_height),max(host_width,host_height),host_dpi)
     time.sleep(3)
     if any(n.get('text','').startswith('Android is open in its own window.')
            for n in hierarchy().iter('node')):
@@ -123,7 +129,7 @@ def main():
     adb('pull','/sdcard/pocket-manager9.png','/home/pi/pocket-manager9.png')
     result={'passed':True,'scope':'manager_android9_boot','host_uid':int(uid),'host_pid':int(host[1]),
             'system_server_pid':int(server[1]),'domain':domain,'original_api25_unchanged':True if before else None,'original_api25_pids':{'host':int(before[0][1]),'proot':int(before[1][1]),'init':int(before[2][1])} if before else None,
-            'direct_backend':True,'boot_completed':True,'tracer_pid':0,'seccomp':2,'effective_capabilities':0,'screenshot':'/home/pi/pocket-manager9.png'}
+            'direct_backend':True,'boot_completed':True,'guest_display':{'width':guest_width,'height':guest_height,'density_dpi':guest_dpi},'tracer_pid':0,'seccomp':2,'effective_capabilities':0,'screenshot':'/home/pi/pocket-manager9.png'}
     Path('/home/pi/pocket-manager9-validation.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2),flush=True)
     if args.boot_only:return
@@ -164,7 +170,7 @@ def main():
         node=max(surfaces,key=area)
         l,t,r,b=map(int,re.findall(r'\d+',node.get('bounds')))
         offset=int(shell('stat -c %s '+ROOT+'/logs/manager-init.log',True))
-        shell(f'input touchscreen -d 0 tap {l+x*(r-l)//480} {t+y*(b-t)//800}')
+        shell(f'input touchscreen -d 0 tap {l+x*(r-l)//guest_width} {t+y*(b-t)//guest_height}')
         deadline=time.monotonic()+10
         while time.monotonic()<deadline:
             new_text=shell('tail -c +'+str(offset+1)+' '+ROOT+'/logs/manager-init.log',True)

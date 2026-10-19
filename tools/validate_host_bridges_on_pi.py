@@ -212,7 +212,10 @@ def main():
         surface = next(n for n in hierarchy().iter('node') if n.get('package') == PACKAGE
                        and n.get('class') == 'android.view.SurfaceView')
         l, t, r, b = map(int, re.findall(r'\d+', surface.get('bounds')))
-        shell(f'input touchscreen -d 0 tap {l+x*(r-l)//480} {t+y*(b-t)//800}')
+        dimensions=re.findall(r'POCKET_CONTROL_READY sdk=28 width=(\d+) height=(\d+)',
+                             shell('grep POCKET_CONTROL_READY '+ROOT+'/logs/manager-init.log'))[-1]
+        guest_width,guest_height=map(int,dimensions)
+        shell(f'input touchscreen -d 0 tap {l+x*(r-l)//guest_width} {t+y*(b-t)//guest_height}')
         resumed = wait_host_app(['messaging', 'mms'])
         result['host_sms_composer_resumed'] = resumed
         result['sms_sent'] = False

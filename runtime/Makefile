@@ -11,7 +11,7 @@ JAVA := $(shell find runtime/app/src -name '*.java') runtime/direct/BootBattery.
 OUT := out/runtime
 BUNDLED_GUEST ?= out/aosp-pocket-guest-arm64.zip
 .DEFAULT_GOAL := verify
-.PHONY: native verify smoke check-host check-profiles check-host-wire
+.PHONY: native verify smoke check-host check-profiles check-host-wire check-display
 .DELETE_ON_ERROR:
 
 NATIVE_INPUTS := $(shell find runtime/native -type f) runtime/anbox-renderer.patch runtime/anbox-input.patch runtime/proot-android.patch runtime/talloc.cross tools/build_runtime_native.py sources.lock.json vendor/anbox/CMakeLists.txt vendor/proot/src/GNUmakefile
@@ -95,3 +95,8 @@ check-host-wire:
 	java -cp out/host-wire-tests dev.kreijstal.aosppocket.bridge.HostWireTest
 
 include runtime/manager/Makefile
+
+check-display:
+	mkdir -p out/display-tests
+	javac --release 8 -d out/display-tests runtime/app/src/dev/kreijstal/aosppocket/bridge/DisplayGeometry.java runtime/tests/DisplayGeometryTest.java
+	java -cp out/display-tests dev.kreijstal.aosppocket.bridge.DisplayGeometryTest

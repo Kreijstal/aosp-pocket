@@ -60,6 +60,9 @@ delegation and a permission-checked host device broker. Standard guest camera,
 audio, sensor and location adapters and physical phone validation remain
 pending. See [the Manager upgrade and capability matrix](docs/pocket-manager-api28.md) and
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
+Version 0.6 uses the host display's full pixel dimensions and density for
+Android 9, fitting that unchanged guest display into the embedded card,
+dedicated window or PiP with matching touch coordinates.
 
 A separate experimental **direct backend** runs a controlled native program
 with the pinned Android 9 linker/bionic without PRoot or a tracer. Its path,

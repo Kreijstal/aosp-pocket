@@ -7,6 +7,7 @@ import android.view.*;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import java.util.concurrent.atomic.AtomicLong;
+import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
 /** A letterboxed, interactive view of the service's fixed-resolution display. */
 final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, GuestService.FrameListener {
@@ -18,7 +19,6 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     private GuestService runtime;
     private int logicalWidth = 1, logicalHeight = 1;
     private boolean attached, owned;
-    private int previewHeight = Integer.MAX_VALUE;
 
     GuestDisplay(Context context, boolean dedicated) {
         super(context);
@@ -62,7 +62,6 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
             (int)(event.getY(index) * logicalHeight / Math.max(1, surface.getHeight()))));
         Native.touch(action, (int)(id % 1024) * 32 + event.getPointerId(index), x, y);
     }
-    void limitPreviewHeight(int height) { previewHeight = height; requestLayout(); }
     void setRuntime(GuestService value) {
         GuestService previous = runtime;
         runtime = value;
@@ -121,9 +120,8 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     @Override protected void onMeasure(int widthSpec, int heightSpec) {
         int width = MeasureSpec.getSize(widthSpec), height = MeasureSpec.getSize(heightSpec);
         setMeasuredDimension(width, height);
-        int childWidth = width, childHeight = (int)((long)width * logicalHeight / logicalWidth);
-        int limit = Math.min(height, previewHeight);
-        if (childHeight > limit) { childHeight = limit; childWidth = (int)((long)limit * logicalWidth / logicalHeight); }
+        int[] fitted=new DisplayGeometry(logicalWidth,logicalHeight,160).fit(width,height);
+        int childWidth=fitted[0],childHeight=fitted[1];
         surface.measure(MeasureSpec.makeMeasureSpec(Math.max(1, childWidth), MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(Math.max(1, childHeight), MeasureSpec.EXACTLY));
         elsewhere.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),

@@ -48,7 +48,6 @@ public final class MainActivity extends RuntimeActivity {
         caption.setPadding(0, dp(12), 0, dp(8));
         layout.addView(caption);
         display = new GuestDisplay(this, false);
-        display.limitPreviewHeight(dp(300));
         layout.addView(display, new LinearLayout.LayoutParams(-1, 0, 1));
         LinearLayout open = new LinearLayout(this);
         apk = button("Install APK", open, v -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)

@@ -10,10 +10,12 @@ import android.view.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.concurrent.Semaphore;
+import android.util.DisplayMetrics;
+import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
 /** App-private host connection to the real Android 9 compositor/input services. */
 public final class GuestControl {
-    private static final int WIDTH=480, HEIGHT=800;
+    private static DisplayGeometry display;
     private static final Semaphore clients=new Semaphore(4);
     private static Object input;
     private static Method inject;
@@ -28,13 +30,13 @@ public final class GuestControl {
             peer.setSoTimeout(0);
             DataInputStream in=new DataInputStream(new BufferedInputStream(peer.getInputStream()));
             DataOutputStream out=new DataOutputStream(new BufferedOutputStream(peer.getOutputStream()));
-            out.writeInt(0x504b5439);out.writeInt(WIDTH);out.writeInt(HEIGHT);out.flush();
+            display.write(out);out.flush();
             while(true) {
                 int op=in.readInt();
                 if(op==1) {
                     Bitmap bitmap=(Bitmap)Class.forName("android.view.SurfaceControl")
                         .getMethod("screenshot",android.graphics.Rect.class,int.class,int.class,int.class)
-                        .invoke(null,new android.graphics.Rect(),WIDTH,HEIGHT,0);
+                        .invoke(null,new android.graphics.Rect(),display.width,display.height,0);
                     if(bitmap==null)throw new IOException("Compositor returned no frame");
                     ByteArrayOutputStream encoded=new ByteArrayOutputStream();
                     try {if(!bitmap.compress(Bitmap.CompressFormat.PNG,100,encoded))throw new IOException("Frame encoding failed");}
@@ -53,8 +55,8 @@ public final class GuestControl {
                         ids|=1<<id;
                         properties[i]=new MotionEvent.PointerProperties();properties[i].id=id;
                         properties[i].toolType=MotionEvent.TOOL_TYPE_FINGER;
-                        coords[i]=new MotionEvent.PointerCoords();coords[i].x=Math.max(0,Math.min(WIDTH-1,x));
-                        coords[i].y=Math.max(0,Math.min(HEIGHT-1,y));coords[i].pressure=1;coords[i].size=1;
+                        coords[i]=new MotionEvent.PointerCoords();coords[i].x=Math.max(0,Math.min(display.width-1,x));
+                        coords[i].y=Math.max(0,Math.min(display.height-1,y));coords[i].pressure=1;coords[i].size=1;
                     }
                     MotionEvent event=MotionEvent.obtain(down,time,action,count,properties,coords,0,0,1,1,0,0,InputDevice.SOURCE_TOUCHSCREEN,0);
                     try {out.writeBoolean(inject(event));} finally {event.recycle();}
@@ -114,6 +116,9 @@ public final class GuestControl {
         try {
             if(android.os.Process.myUid()!=1000)throw new IOException("Expected guest system role");
             context=FrameworkProbe.context();
+            DisplayMetrics metrics=new DisplayMetrics();
+            ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+            display=new DisplayGeometry(metrics.widthPixels,metrics.heightPixels,metrics.densityDpi);
             new HostNetwork(context);
             input=FrameworkProbe.service("input","android.hardware.input.IInputManager$Stub");
             inject=Class.forName("android.hardware.input.IInputManager").getMethod("injectInputEvent",InputEvent.class,int.class);
@@ -121,7 +126,7 @@ public final class GuestControl {
             Field number=FileDescriptor.class.getDeclaredField("descriptor");number.setAccessible(true);
             number.setInt(fd,Integer.parseInt(System.getenv("ANDROID_SOCKET_pocket_control")));
             try(LocalServerSocket server=new LocalServerSocket(fd)) {
-                System.out.println("POCKET_CONTROL_READY sdk=28 width="+WIDTH+" height="+HEIGHT);
+                System.out.println("POCKET_CONTROL_READY sdk=28 width="+display.width+" height="+display.height+" density="+display.densityDpi);
                 while(true) {
                     LocalSocket socket=server.accept();
                     if(!clients.tryAcquire()){socket.close();continue;}

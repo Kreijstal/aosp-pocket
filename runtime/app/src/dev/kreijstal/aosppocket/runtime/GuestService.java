@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.WindowManager;
 import java.io.*;
 import java.util.concurrent.CopyOnWriteArraySet;
+import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
 /** Owns one guest independently of the manager, full-screen or floating UI. */
 public final class GuestService extends Service {
@@ -36,6 +37,7 @@ public final class GuestService extends Service {
     private String message;
     int width, height, dpi;
     private int sdk, legacyWidth, legacyHeight, legacyDpi;
+    private DisplayGeometry hostDisplay;
     private DirectSession direct;
     private android.graphics.Bitmap frame;
     private final java.util.Set<FrameListener> visibleDisplays = new java.util.LinkedHashSet<>();
@@ -79,19 +81,19 @@ public final class GuestService extends Service {
         message("Android " + (sdk == 28 ? "9 · direct backend" : "7.1.1 · PRoot") + " selected. Tap Start.");
     }
     private void geometry() {
-        width = sdk == 28 ? 480 : legacyWidth;
-        height = sdk == 28 ? 800 : legacyHeight;
-        dpi = sdk == 28 ? 320 : legacyDpi;
+        width = sdk == 28 ? hostDisplay.width : legacyWidth;
+        height = sdk == 28 ? hostDisplay.height : legacyHeight;
+        dpi = sdk == 28 ? hostDisplay.densityDpi : legacyDpi;
     }
     private void bootDirect() {
         if (direct != null) return;
         receiver.reset();
         starting = true;
-        direct = new DirectSession(this, new DirectSession.Listener() {
+        direct = new DirectSession(this, new DisplayGeometry(width,height,dpi), new DirectSession.Listener() {
             @Override public void status(String text) { if (!destroyed) message(text); }
             @Override public void ready() {
                 starting = false; booted = true;
-                message("Android 9 running · 480 × 800");
+                message("Android 9 running · "+width+" × "+height);
             }
             @Override public void frame(android.graphics.Bitmap bitmap) {
                 android.graphics.Bitmap old = frame; frame = bitmap;
@@ -117,6 +119,8 @@ public final class GuestService extends Service {
             "Tap Start to set up the included Android 7.1.1. No download needed." : "Import a trusted guest ZIP, then Start.";
         DisplayMetrics metrics = new DisplayMetrics();
         ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+        hostDisplay=new DisplayGeometry(Math.min(metrics.widthPixels,metrics.heightPixels),
+            Math.max(metrics.widthPixels,metrics.heightPixels),metrics.densityDpi);
         width = Math.min(metrics.widthPixels, metrics.heightPixels);
         // Reserve the full-screen viewer's 48dp control strip. Preview/PiP
         // surfaces keep this logical size and only scale its presentation.

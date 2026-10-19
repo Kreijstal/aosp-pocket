@@ -27,10 +27,22 @@ serves lossless compositor screenshots, pointer events, navigation keys and APK
 installation. This replaces the bounded development probe: Manager does not
 install a test app or shut down automatically after boot.
 
-The preview is letterboxed and maps touches into the guest's 480 × 800 display.
+Android 9 takes the host display's full portrait pixel dimensions and density
+when its service starts. Window controls do not subtract pixels from the guest
+display. These values configure the private image's boot properties before
+init starts; the control handshake checks the framework's actual size and DPI.
+The embedded card, dedicated window and PiP scale this same display to fit
+their available area while preserving its aspect ratio. Resizing a window does
+not change the guest resolution or restart Android. Touches map from the
+visible surface back into the full guest pixel coordinates. For example, a
+1080 × 2400 guest in a 320-pixel-wide card occupies about 320 × 711 pixels.
+The embedded card no longer has an arbitrary 300 dp height cap.
 The initial viewer requests at most four PNG frames per second, pauses requests
 when no window is visible, and reconnects windows to the same session. This is
 an initial display transport, not a high-frame-rate graphics backend.
+Frame limits scale with the configured pixels rather than imposing the older
+480 × 800 transport limit. The protocol rejects invalid dimensions and sizes
+over 16 megapixels. Android 7 retains its saved display geometry.
 
 Use **Install APK** in Manager to select an APK through Android's document
 picker. The service copies it into the guest, uses its real PackageInstaller,
@@ -44,11 +56,11 @@ avoids reinstalling; automatic update-launch ordering remains a limitation.
 ## Build
 
 ```sh
-make -f runtime/Makefile -j2 manager-verify check-profiles
+make -f runtime/Makefile -j2 manager-verify check-profiles check-display
 ```
 
 Upgrade APK: `out/manager/aosp-pocket-manager.apk`, package
-`dev.kreijstal.aosppocket.runtime`, version 0.5 / code 5. Installing it over the
+`dev.kreijstal.aosppocket.runtime`, version 0.6 / code 6. Installing it over the
 old package stops that package's currently running processes, as with any app
 update. Its image and user data remain in place.
 
@@ -134,6 +146,32 @@ the new manifest and includes guest payloads changed from the full seed.
 It retains the already unpacked private
 Android 9 image and refuses a first-run setup without that seed. This is only
 for `managerdev`; distribute the full `manager-verify` APK.
+
+`check-display` covers aspect-ratio fitting in portrait/landscape and smaller
+windows, native-resolution frame limits, boot-property projection and the
+versioned size/density handshake. `tools/validate_display_on_pi.py` exercises
+an ordinary guest app's real display metrics, forwarded touches in embedded
+and dedicated windows, exclusive PiP and return to Manager. It tests guests
+sequentially to fit the 2 GiB outer VM, stopping the original through its own
+UI and restoring it from its existing data afterwards. Stage the development
+APK as `/home/pi/aosp-pocket-manager-dev.apk`, the display probe as
+`/home/pi/pocket-display-test.apk`, and `tools/validate_manager_on_pi.py` as
+`/home/pi/aosp-pocket-validate-manager.py`, then run:
+
+```sh
+make -f runtime/Makefile -j2 display-probe check-display
+ssh pi@juanraspberry python3 -u - < tools/validate_display_on_pi.py
+```
+
+[Version 0.6 display evidence](api28-host-display-validation.json) records a
+720 × 1280, 240 DPI host and an ordinary guest app reporting the same pixel
+dimensions and resource density. Three button taps reached that app across
+the embedded view, dedicated window and PiP handback without restarting its
+system server. The [embedded preview](images/api28-host-display-embedded.png),
+[dedicated window](images/api28-host-display-dedicated.png) and
+[exclusive PiP](images/api28-host-display-pip.png) show the same guest display
+fitted without stretching. These are Cuttlefish observations; physical phone
+display validation is still pending.
 
 [Recorded VM results](api28-manager-validation.json) cover a clean-data boot,
 real APK installation, four guest button taps through Manager/full-screen
