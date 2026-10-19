@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "scope": "manager_android9_integration",
+  "host_uid": 10174,
+  "host_pid": 6789,
+  "system_server_pid": 7136,
+  "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+  "original_api25_unchanged": true,
+  "original_api25_pids": {
+    "host": 17501,
+    "proot": 17995,
+    "init": 18007
+  },
+  "direct_backend": true,
+  "boot_completed": true,
+  "tracer_pid": 0,
+  "seccomp": 2,
+  "effective_capabilities": 0,
+  "screenshot": "docs/images/api28-manager.png",
+  "system_server_restarts_during_test": 0,
+  "window_lifetime_verified": true,
+  "apk_install_verified": true,
+  "guest_taps": 4,
+  "pip_verified": true,
+  "stop_reaped_all_guest_processes": true,
+  "restart_verified": true,
+  "fresh_data_boot_verified": true,
+  "code_cohort": {
+    "host_dex_identical": true,
+    "host_native_libraries_identical": true,
+    "guest_payload_files_identical": 1369,
+    "test_configuration": "full managerdev image seed plus host-only update",
+    "distribution_apk": "out/manager/aosp-pocket-manager.apk"
+  },
+  "validation_command": "ssh pi@juanraspberry python3 -u - < tools/validate_manager_on_pi.py",
+  "fresh_data_boot_validation": {
+    "passed": true,
+    "scope": "manager_android9_boot",
+    "host_uid": 10174,
+    "host_pid": 1329,
+    "system_server_pid": 2178,
+    "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+    "original_api25_unchanged": true,
+    "direct_backend": true,
+    "boot_completed": true,
+    "screenshot": "/home/pi/pocket-manager9.png"
+  }
+}

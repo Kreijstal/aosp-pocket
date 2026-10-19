@@ -266,7 +266,7 @@
       "system_server_supported": false
     },
     "full_guest_boot_profile": "direct_platform_probe",
-    "pocket_manager_api28_supported": false,
+    "pocket_manager_api28_supported": true,
     "direct_port": {
       "evidence": "docs/api28-direct-boot-validation.json",
       "foundation_evidence": "docs/direct-platform-validation.json",
@@ -276,7 +276,9 @@
       "keymaster_security_level": "SOFTWARE",
       "network": "offline",
       "audio": "unavailable",
-      "jit_enabled": false
-    }
+      "jit_enabled": false,
+      "manager_evidence": "docs/api28-manager-validation.json"
+    },
+    "pocket_manager_profile": "direct_api28"
   }
 }

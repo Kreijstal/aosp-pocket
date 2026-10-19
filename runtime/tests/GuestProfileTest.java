@@ -23,7 +23,7 @@ public final class GuestProfileTest {
             rejects(() -> GuestProfile.detect(root.toFile()).checkDeclaredSdk(28), "does not match");
             Files.write(props, "ro.build.version.sdk=28\n".getBytes("UTF-8"));
             GuestProfile.detect(root.toFile()).checkDeclaredSdk(28);
-            rejects(() -> GuestProfile.detect(root.toFile()).requireBootSupport(), "Binder bring-up");
+            rejects(() -> GuestProfile.detect(root.toFile()).requireBootSupport(), "requires the direct backend");
             Files.write(props, "ro.build.version.sdk=36\n".getBytes("UTF-8"));
             rejects(() -> GuestProfile.detect(root.toFile()).requireBootSupport(), "Unsupported guest SDK 36");
             Files.write(props, "ro.build.version.sdk=invalid\n".getBytes("UTF-8"));

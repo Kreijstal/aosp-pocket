@@ -111,7 +111,7 @@ def main():
     for jar in (reference/"system/framework").glob("*.jar"):
         shutil.copy2(jar,stage/"system/framework"/jar.name)
     shutil.copy2(ROOT/'out/runtime/guest-test.apk',stage/'system/etc/pocket-smoke.apk')
-    for binary in ("sh", "toybox", "surfaceflinger", "installd", "screencap", "keystore"):
+    for binary in ("sh", "toybox", "surfaceflinger", "installd", "screencap", "keystore", "gatekeeperd"):
         shutil.copy2(platform/"system/bin"/binary,stage/"system/bin"/binary)
     vendor=platform/"vendor/lib64"
     for relative in ("egl/libEGL_swiftshader.so","egl/libGLESv1_CM_swiftshader.so","egl/libGLESv2_swiftshader.so",
@@ -170,6 +170,7 @@ def main():
     rc+="\nservice pocket-network /system/bin/pocket-netd-offline\n    class pocket-zygote\n    user 0\n    group 0\n"
     rc+="\nservice pocket-keystore /system/bin/keystore /data/misc/keystore\n    class pocket-zygote\n    user 1017\n    group 1017\n"
     rc+="\nservice pocket-audio-verify /system/bin/pocket-audio-verify\n    class pocket-zygote\n    user 1000\n    group 1000\n    oneshot\n"
+    rc+="\nservice pocket-gatekeeper /system/bin/gatekeeperd /data/misc/gatekeeper\n    class pocket-zygote\n    user 1000\n    group 1000\n"
     bootclasspath=(ROOT/'out/api28/bootclasspath.txt').read_text().strip()
     rc+="\non property:sys.boot_completed=1\n    start pocket-framework-probe\n"
     rc+="\nservice pocket-framework-probe /system/bin/pocket-app-process-api28 -Xint -Xnorelocate -Xnoimage-dex2oat -Ximage:/system/framework/boot.art -Xplugin:libopenjdkjvmti.so -agentpath:/system/lib64/libpocket_zygote_api28.so -Xms16m -Xmx96m /system/bin dev.kreijstal.aosppocket.guest.FrameworkProbe /system/etc/pocket-smoke.apk\n    class pocket-bootstrap\n    user 1000\n    group 1000\n    oneshot\n    setenv BOOTCLASSPATH "+bootclasspath+"\n"

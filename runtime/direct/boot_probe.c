@@ -35,7 +35,7 @@ static int prepare_data(uid_t kernel_uid) {
         {"/data/misc/user",0710,0,0},{"/data/misc/user/0",0710,0,0},
         {"/data/misc/profiles",0771,1000,1000},{"/data/misc/profiles/cur",0771,1000,1000},
         {"/data/misc/profiles/cur/0",0771,1000,1000},{"/data/misc/profiles/ref",0771,1000,1000},
-        {"/data/misc/keychain",0771,1000,1000},{"/data/misc/keystore",0700,1017,1017},
+        {"/data/misc/gatekeeper",0700,1000,1000},{"/data/misc/keychain",0771,1000,1000},{"/data/misc/keystore",0700,1017,1017},
         {"/data/user",0711,1000,1000},{"/data/user/0",0771,1000,1000},
         {"/data/user_de",0711,1000,1000},{"/data/user_de/0",0771,1000,1000},
         {"/data/media",0770,1023,1023},{"/data/media/0",0770,1023,1023},

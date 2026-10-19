@@ -15,8 +15,9 @@ retains UID 39999 and reads the SDK 28 property area.
 
 These are foundation milestones for the PRoot profile. The separate direct
 platform profile below has now passed Android 9 framework/UI boot, installation
-and input. The Pocket Manager runtime continues to use its tested Android
-7.1/API 25 image; general Android 9 image imports are not enabled there.
+and input. Pocket Manager 0.4 integrates the pinned direct Android 9 profile
+alongside Android 7.1/API 25; general Android 9 ROM imports remain disabled.
+See [the Manager integration](pocket-manager-api28.md).
 The foundation probe adds no hardware bridge; the direct system-server
 experiment below includes a battery relay.
 
@@ -511,8 +512,8 @@ for the original runtime and compatibility regression.
 
 ## Next integration gates
 
-1. Integrate the verified direct profile into Pocket Manager with persistent
-   guest lifecycle, live display and interactive controls; retain API 25.
+1. Improve the initial four-frame-per-second PNG viewer in the integrated
+   [Pocket Manager](pocket-manager-api28.md); retain both backend profiles.
 2. Broaden manager death/restart and nested Binder regression coverage and
    descendant cleanup for arbitrary apps. The current bounded probe stops its
    managed services and verifies zero remaining managed children.
@@ -527,8 +528,9 @@ for the original runtime and compatibility regression.
 `out/boot/aosp-pocket-boot-probe.apk` is a separate development package,
 `dev.kreijstal.aosppocket.bootprobe`. It extends the controlled direct backend
 through the pinned Android 9 platform libc and contains no PRoot executable.
-It does not replace the working API 25 image or make Android 9 available as a
-finished Pocket Manager guest yet.
+This probe remains separate from Pocket Manager 0.4, which uses the matching
+direct profile with a persistent guest lifecycle and live display/input.
+The existing API 25 image has its own independent data and backend.
 
 [Recorded VM evidence](api28-direct-boot-validation.json) now reports
 `full_guest_boot_verified=true` for this specific development profile. A real

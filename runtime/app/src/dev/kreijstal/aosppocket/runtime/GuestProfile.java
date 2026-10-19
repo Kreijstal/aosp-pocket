@@ -21,8 +21,8 @@ final class GuestProfile {
 
     void requireBootSupport() throws IOException {
         if (sdk == 25) return;
-        if (sdk == 28) throw new IOException("Android 9/API 28 is in Binder bring-up. "
-            + "Use the separate API 28 probe; full guest boot is not available yet");
+        if (sdk == 28) throw new IOException("Android 9/API 28 requires the direct backend. "
+            + "Select the included Android 9 profile in Pocket Manager");
         throw new IOException("Unsupported guest SDK " + sdk + "; boot currently requires the adapted API 25 image");
     }
 

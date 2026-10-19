@@ -13,7 +13,7 @@ import android.widget.*;
 /** Dedicated Android task; PiP gives it a floating miniature without overlays. */
 public final class GuestActivity extends RuntimeActivity {
     private LinearLayout controls;
-    private Button floating;
+    private Button floating, back, home;
     static Intent intent(Context context) {
         return new Intent(context, GuestActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     }
@@ -27,6 +27,8 @@ public final class GuestActivity extends RuntimeActivity {
         button("Manager", controls, v -> startActivity(new Intent(this, MainActivity.class)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP)));
         floating = button("Float", controls, v -> enterFloating());
+        back = button("Back", controls, v -> { if (runtime != null) runtime.key(KeyEvent.KEYCODE_BACK); });
+        home = button("Home", controls, v -> { if (runtime != null) runtime.key(KeyEvent.KEYCODE_HOME); });
         button("Close window", controls, v -> finishAndRemoveTask());
         layout.addView(controls, new LinearLayout.LayoutParams(-1, dp(48)));
         FrameLayout content = new FrameLayout(this);
@@ -51,6 +53,10 @@ public final class GuestActivity extends RuntimeActivity {
     @Override public void onWindowFocusChanged(boolean focus) { super.onWindowFocusChanged(focus); if (focus) immersive(); }
     @Override public void onGuestChanged() {
         super.onGuestChanged();
+        if (back != null) {
+            boolean enabled = runtime != null && runtime.directBackend() && runtime.booted();
+            back.setEnabled(enabled); home.setEnabled(enabled);
+        }
         if (floating != null) floating.setEnabled(runtime != null && runtime.running() &&
             getPackageManager().hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE));
         if (status != null) status.setVisibility(isInPictureInPictureMode() || runtime != null && runtime.booted() ? View.GONE : View.VISIBLE);

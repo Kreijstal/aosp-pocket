@@ -7,7 +7,7 @@ NDK ?= $(HOME)/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c
 LLVM := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/bin
 TOOLS := $(TOOLCHAIN)/build/tools
 SIGNER := $(TOOLCHAIN)/build/apksigner.jar
-JAVA := $(shell find runtime/app/src -name '*.java')
+JAVA := $(shell find runtime/app/src -name '*.java') runtime/direct/BootBattery.java
 OUT := out/runtime
 BUNDLED_GUEST ?= out/aosp-pocket-guest-arm64.zip
 .DEFAULT_GOAL := verify
@@ -88,3 +88,5 @@ check-profiles:
 	mkdir -p out/profile-tests
 	javac --release 8 -d out/profile-tests runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestProfile.java runtime/tests/GuestProfileTest.java
 	java -cp out/profile-tests dev.kreijstal.aosppocket.runtime.GuestProfileTest
+
+include runtime/manager/Makefile

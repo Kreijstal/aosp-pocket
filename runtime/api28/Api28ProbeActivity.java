@@ -95,31 +95,7 @@ public class Api28ProbeActivity extends Activity {
             if (!entry.delete()) throw new IOException("Cannot remove prior guest property file " + entry);
     }
 
-    private void hostTemplates(File root) throws Exception {
-        GuestBinder.prepare(this, root);
-        Files.write(new File(root, "host-api").toPath(), Integer.toString(Build.VERSION.SDK_INT).getBytes("UTF-8"));
-        Parcel p = Parcel.obtain();
-        try {
-            // No Binder objects, so marshall() is safe for this one template.
-            p.writeInterfaceToken("android.os.IServiceManager");
-            p.writeString("activity");
-            byte[] data = p.marshall();
-            try (OutputStream out = new FileOutputStream(new File(root, "activityServiceRequest"))) {
-                out.write(ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
-                    .putLong(data.length).putLong(0).array());
-                out.write(data);
-            }
-            p.setDataSize(0);
-            p.setDataPosition(0);
-            String descriptor = "com.github.ananbox.ILocalInterface";
-            p.writeInterfaceToken(descriptor);
-            int stringSize = 4 + ((2 * (descriptor.length() + 1) + 3) & ~3);
-            int stringPosition = p.dataSize() - stringSize;
-            if (stringPosition < 0) throw new IOException("Unsupported host interface header");
-            Files.write(new File(root, "host-token-position").toPath(),
-                Integer.toString(stringPosition).getBytes("UTF-8"));
-        } finally { p.recycle(); }
-    }
+    private void hostTemplates(File root) throws Exception { GuestBinder.preparePlatform(this, root); }
 
     private java.lang.Process start(File root, String mode, boolean virtual) throws IOException {
         return startProgram(root, "pocket-api28-probe",

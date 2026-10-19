@@ -14,6 +14,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /** Owns one guest independently of the manager, full-screen or floating UI. */
 public final class GuestService extends Service {
     interface Listener { void onGuestChanged(); }
+    interface FrameListener { void onGuestFrame(); }
     public final class LocalBinder extends Binder { GuestService get() { return GuestService.this; } }
     private static final String START = "dev.kreijstal.aosppocket.START";
     private static final String STOP = "dev.kreijstal.aosppocket.STOP";
@@ -30,6 +31,60 @@ public final class GuestService extends Service {
     private Thread imageWorker;
     private String message;
     int width, height, dpi;
+    private int sdk, legacyWidth, legacyHeight, legacyDpi;
+    private DirectSession direct;
+    private android.graphics.Bitmap frame;
+    private final java.util.Set<FrameListener> visibleDisplays = new java.util.HashSet<>();
+    boolean directBackend() { return sdk == 28; }
+    int selectedSdk() { return sdk; }
+    boolean directAvailable() { return DirectImage.bundled(this); }
+    android.graphics.Bitmap frame() { return frame; }
+    void displayVisible(FrameListener id, boolean visible) {
+        if (visible) visibleDisplays.add(id); else visibleDisplays.remove(id);
+        if (direct != null) direct.visible(!visibleDisplays.isEmpty());
+    }
+    void touch(android.view.MotionEvent event, float sx, float sy) { if (direct != null) direct.touch(event, sx, sy); }
+    void key(int code) { if (direct != null) direct.key(code); }
+    void installApk(Uri uri) { if (direct != null && booted) direct.install(uri); }
+    void selectSdk(int value) {
+        if (value == sdk || running() || starting || preparing() || stopping || value != 25 && value != 28) return;
+        if (value == 28 && !directAvailable()) return;
+        sdk = value;
+        getSharedPreferences("guest-backend", MODE_PRIVATE).edit().putInt("sdk", sdk).apply();
+        geometry();
+        if (frame != null) { frame.recycle(); frame = null; }
+        message("Android " + (sdk == 28 ? "9 · direct backend" : "7.1.1 · PRoot") + " selected. Tap Start.");
+    }
+    private void geometry() {
+        width = sdk == 28 ? 480 : legacyWidth;
+        height = sdk == 28 ? 800 : legacyHeight;
+        dpi = sdk == 28 ? 320 : legacyDpi;
+    }
+    private void bootDirect() {
+        if (direct != null) return;
+        receiver.reset();
+        starting = true;
+        direct = new DirectSession(this, new DirectSession.Listener() {
+            @Override public void status(String text) { if (!destroyed) message(text); }
+            @Override public void ready() {
+                starting = false; booted = true;
+                message("Android 9 running · 480 × 800 · network and audio unavailable");
+            }
+            @Override public void frame(android.graphics.Bitmap bitmap) {
+                android.graphics.Bitmap old = frame; frame = bitmap;
+                for (FrameListener view : new java.util.ArrayList<>(visibleDisplays)) view.onGuestFrame();
+                if (old != null) old.recycle();
+            }
+            @Override public void stopped(String text) {
+                direct = null; starting = false; booted = false; stopping = false;
+                if (frame != null) { frame.recycle(); frame = null; }
+                if (!destroyed) { message(text); releaseForeground(); }
+            }
+        });
+        direct.visible(!visibleDisplays.isEmpty());
+        direct.start();
+        changed();
+    }
 
     @Override public void onCreate() {
         super.onCreate();
@@ -50,6 +105,11 @@ public final class GuestService extends Service {
         dpi = geometry.getInt("dpi", dpi);
         if (!geometry.contains("width")) geometry.edit().putInt("width", width)
             .putInt("height", height).putInt("dpi", dpi).apply();
+        legacyWidth = width; legacyHeight = height; legacyDpi = dpi;
+        sdk = getSharedPreferences("guest-backend", MODE_PRIVATE).getInt("sdk",
+            new File(getFilesDir(), "rootfs/init").isFile() || !directAvailable() ? 25 : 28);
+        geometry();
+        message = "Android " + (sdk == 28 ? "9 · direct backend" : "7.1.1 · PRoot") + " ready. Tap Start.";
         receiverThread = new HandlerThread("GuestBinder");
         receiverThread.start();
         IntentFilter filter = new IntentFilter(GuestBinder.ACTION);
@@ -65,7 +125,7 @@ public final class GuestService extends Service {
         if (intent != null && STOP.equals(intent.getAction())) stopGuest();
         else if (intent != null && START.equals(intent.getAction())) {
             promote();
-            if (hasImage()) boot();
+            if (directBackend() || hasImage()) boot();
             else if (imageWorker == null) prepareImage(null);
         } else if (intent != null && IMPORT.equals(intent.getAction()) && imageWorker == null) {
             promote();
@@ -73,11 +133,11 @@ public final class GuestService extends Service {
         }
         return START_NOT_STICKY;
     }
-    boolean hasImage() { return new File(getFilesDir(), "rootfs/init").isFile(); }
-    boolean running() { return guest != null; }
+    boolean hasImage() { if (directBackend()) return new File(getFilesDir(), "api28-rootfs/system/bin/pocket-init-api28").isFile(); return new File(getFilesDir(), "rootfs/init").isFile(); }
+    boolean running() { return directBackend() ? direct != null && direct.running() : guest != null; }
     boolean starting() { return starting; }
-    boolean preparing() { return imageWorker != null; }
-    boolean canStart() { return hasImage() || bundled; }
+    boolean preparing() { return imageWorker != null || direct != null && !booted; }
+    boolean canStart() { return directBackend() ? directAvailable() : hasImage() || bundled; }
     boolean stopping() { return stopping; }
     boolean initialized() { return initialized; }
     boolean booted() { return booted; }
@@ -93,7 +153,7 @@ public final class GuestService extends Service {
         if (foreground) getSystemService(NotificationManager.class).notify(NOTIFICATION, notification());
     }
     void startGuest() {
-        if (running() || starting) return;
+        if (running() || starting || stopping || preparing()) return;
         if (!canStart()) { message("Import a trusted guest ZIP in Pocket Manager first."); return; }
         starting = true;
         message("Starting Android…");
@@ -101,7 +161,7 @@ public final class GuestService extends Service {
         catch (RuntimeException error) { starting = false; message("Cannot start guest: " + error); }
     }
     void importGuest(Uri uri) {
-        if (running() || starting || hasImage()) return;
+        if (directBackend() || running() || starting || hasImage()) return;
         starting = true;
         message("Importing guest…");
         try { startForegroundService(new Intent(this, GuestService.class).setAction(IMPORT).setData(uri)); }
@@ -171,6 +231,7 @@ public final class GuestService extends Service {
     private void promote() { startForeground(NOTIFICATION, notification()); foreground = true; }
     private void releaseForeground() { stopForeground(true); foreground = false; stopSelf(); }
     private void boot() {
+        if (directBackend()) { bootDirect(); return; }
         if (guest != null) { starting = false; changed(); return; }
         try {
             File root = new File(getFilesDir(), "rootfs");
@@ -257,6 +318,7 @@ public final class GuestService extends Service {
         finally { if (query != null && query.isAlive()) query.destroyForcibly(); }
     }
     void stopGuest() {
+        if (direct != null) { stopping = true; message("Stopping Android 9…"); direct.close(); return; }
         if (imageWorker != null && !stopping) {
             stopping = true;
             message("Cancelling image setup…");
@@ -269,6 +331,7 @@ public final class GuestService extends Service {
     }
     @Override public void onDestroy() {
         destroyed = true;
+        if (direct != null) direct.close();
         if (imageWorker != null) imageWorker.interrupt();
         if (guest != null) guest.destroyForcibly();
         unregisterReceiver(receiver);

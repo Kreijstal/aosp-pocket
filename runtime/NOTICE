@@ -81,3 +81,9 @@ AudioSystem declarations and leaves actual service-unavailable results intact.
 The matching keystore executable, software Keymaster 3 HAL and selected VNDK
 dependencies are upstream prebuilts from the same pinned Android 9 image,
 covered by its NOTICE asset; they are not locally source-built platform claims.
+
+The dual-backend Pocket Manager APK also bundles the pinned AOSP/Redroid
+Android 9 ARM64 reference image, with the original Android NOTICE.xml.gz in
+assets/licenses/android9-NOTICE.xml.gz. Its binary provenance and matching
+source revisions are recorded in sources.lock.json. Gatekeeper uses the AOSP
+software fallback; no hardware credential or attestation device is included.

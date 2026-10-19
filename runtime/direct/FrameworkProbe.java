@@ -23,12 +23,12 @@ public final class FrameworkProbe {
     private static void check(boolean condition,String message) throws IOException {
         if(!condition)throw new IOException(message);
     }
-    private static Object service(String name,String stub) throws Exception {
+    static Object service(String name,String stub) throws Exception {
         IBinder binder=(IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,name);
         check(binder!=null,"Missing service: "+name);
         return Class.forName(stub).getMethod("asInterface",IBinder.class).invoke(null,binder);
     }
-    private static Context context() throws Exception {
+    static Context context() throws Exception {
         if(Looper.myLooper()==null)Looper.prepare();
         Class<?> thread=Class.forName("android.app.ActivityThread");
         Object main=thread.getMethod("systemMain").invoke(null);
@@ -61,10 +61,10 @@ public final class FrameworkProbe {
         capture("/data/pocket-launcher.png");
         System.out.println("DIRECT_FRAMEWORK_LAUNCHER_PASS foreground=com.android.launcher3 compositor=verified");
     }
-    private static void install(Context context,File apk) throws Exception {
+    static void install(Context context,File apk,String packageName) throws Exception {
         PackageInstaller installer=context.getPackageManager().getPackageInstaller();
         PackageInstaller.SessionParams params=new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-        params.setAppPackageName(PACKAGE);params.setSize(apk.length());
+        params.setAppPackageName(packageName);params.setSize(apk.length());
         CountDownLatch delivered=new CountDownLatch(1);final Intent[] result=new Intent[1];
         Binder receiver=new Binder() {
             @Override protected boolean onTransact(int code,Parcel data,Parcel reply,int flags) throws RemoteException {
@@ -90,12 +90,12 @@ public final class FrameworkProbe {
         check(result[0]!=null,"PackageInstaller returned no intent");
         int status=result[0].getIntExtra(PackageInstaller.EXTRA_STATUS,Integer.MIN_VALUE);
         check(status==PackageInstaller.STATUS_SUCCESS,"PackageInstaller status="+status+" message="+result[0].getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE));
-        check(context.getPackageManager().getPackageInfo(PACKAGE,0)!=null,"Installed package is missing");
-        System.out.println("DIRECT_FRAMEWORK_INSTALL_PASS package="+PACKAGE+" session="+sessionId);
+        check(context.getPackageManager().getPackageInfo(packageName,0)!=null,"Installed package is missing");
+        System.out.println("DIRECT_FRAMEWORK_INSTALL_PASS package="+packageName+" session="+sessionId);
     }
-    private static void launch() throws Exception {
+    static void launch(Intent intent) throws Exception {
         Object manager=Class.forName("android.app.ActivityManager").getMethod("getService").invoke(null);
-        Intent intent=new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(PACKAGE,PACKAGE+".MainActivity")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         Method start=null;
         for(Method candidate:Class.forName("android.app.IActivityManager").getMethods())
             if(candidate.getName().equals("startActivityAsUser") && candidate.getParameterCount()==11)start=candidate;
@@ -137,7 +137,7 @@ public final class FrameworkProbe {
         try {
             check(args.length==1 && android.os.Process.myUid()==1000,"Expected system role and one APK path");
             check(android.graphics.Typeface.DEFAULT!=null,"Default typeface missing");
-            Context context=context();launcher(context);install(context,new File(args[0]));launch();tap();
+            Context context=context();launcher(context);install(context,new File(args[0]),PACKAGE);launch(new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(PACKAGE,PACKAGE+".MainActivity")));tap();
             System.out.println("DIRECT_FRAMEWORK_SMOKE_PASS launcher=1 install=1 activity=1 input=1");
         } catch(Throwable error) {
             System.err.println("DIRECT_FRAMEWORK_SMOKE_FAIL "+error);error.printStackTrace();System.exit(1);

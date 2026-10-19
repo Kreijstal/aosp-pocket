@@ -53,9 +53,10 @@ the real system server, SurfaceFlinger, installer and a 480 × 800 software
 display. The VM regression passes the boot property, launcher first draw, APK
 installation, app rendering and an injected tap that increments its button.
 See [the evidence](docs/api28-direct-boot-validation.json) and
-[captured test app](docs/images/api28-guest-test.png). This remains a separate
-development APK; Pocket Manager still uses API 25. Networking/audio and physical
-phone validation remain outside this profile. See
+[captured test app](docs/images/api28-guest-test.png). Pocket Manager 0.4 now integrates this direct backend alongside Android 7, with
+separate persistent data, live preview/window/PiP, touch and APK installation.
+See [the Manager upgrade](docs/pocket-manager-api28.md). Networking/audio and
+physical phone validation remain outside the Android 9 profile. See
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
 
 A separate experimental **direct backend** runs a controlled native program
@@ -155,10 +156,10 @@ security settings. See [the recorded results](docs/validation.md).
 ```sh
 git submodule update --init
 make -f runtime/Makefile native
-make -f runtime/Makefile -j2 verify
+make -f runtime/Makefile -j2 manager-verify check-profiles
 ```
 
-Output: `out/runtime/aosp-pocket-runtime.apk`, package
+Output: `out/manager/aosp-pocket-manager.apk`, package
 `dev.kreijstal.aosppocket.runtime`. This is a separate GPL runtime prototype;
 the bootstrap remains a separate Apache-2.0 APK. See the runtime document for
 the additional CMake/Boost/D8 prerequisites, guest image preparation and

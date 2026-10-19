@@ -8,7 +8,7 @@ import android.widget.FrameLayout;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** A letterboxed, interactive view of the service's fixed-resolution display. */
-final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback {
+final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, GuestService.FrameListener {
     private static final AtomicLong NEXT = new AtomicLong();
     private final long id = NEXT.incrementAndGet();
     private final SurfaceView surface;
@@ -26,6 +26,12 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback {
         addView(surface);
         surface.setOnTouchListener((view, event) -> {
             if (runtime == null || !runtime.running()) return false;
+            if (runtime.directBackend()) {
+                if (event.getActionMasked() == MotionEvent.ACTION_DOWN) getParent().requestDisallowInterceptTouchEvent(true);
+                runtime.touch(event, (float)logicalWidth / Math.max(1, surface.getWidth()),
+                    (float)logicalHeight / Math.max(1, surface.getHeight()));
+                return true;
+            }
             int action = event.getActionMasked(), index = event.getActionIndex();
             if (action == MotionEvent.ACTION_MOVE || action == MotionEvent.ACTION_CANCEL) {
                 for (int i = 0; i < event.getPointerCount(); i++) send(event, i,
@@ -46,7 +52,9 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback {
     void limitPreviewHeight(int height) { previewHeight = height; requestLayout(); }
     void setRuntime(GuestService value) {
         if (runtime != value && attached) { Native.detach(id); attached = false; }
+        if (runtime != null && runtime != value) runtime.displayVisible(this, false);
         runtime = value;
+        if (value != null) value.displayVisible(this, true);
         if (value != null) {
             if (logicalWidth != value.width || logicalHeight != value.height) {
                 logicalWidth = value.width;
@@ -57,8 +65,25 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback {
             attach();
         }
     }
+    @Override public void onGuestFrame() { attach(); }
     private void attach() {
         SurfaceHolder holder = surface.getHolder();
+        if (runtime != null && runtime.directBackend()) {
+            if (attached) { Native.detach(id); attached = false; }
+            if (holder.getSurface().isValid()) {
+                android.graphics.Canvas canvas = null;
+                try {
+                    canvas = holder.lockCanvas();
+                    if (canvas != null) {
+                        canvas.drawColor(Color.BLACK);
+                        android.graphics.Bitmap bitmap = runtime.frame();
+                        if (bitmap != null) canvas.drawBitmap(bitmap, null,
+                            new android.graphics.Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
+                    }
+                } finally { if (canvas != null) holder.unlockCanvasAndPost(canvas); }
+            }
+            return;
+        }
         if (!attached && runtime != null && runtime.initialized() && holder.getSurface().isValid() &&
                 holder.getSurfaceFrame().width() == logicalWidth && holder.getSurfaceFrame().height() == logicalHeight) {
             try { Native.attach(id, holder.getSurface()); attached = true; }
@@ -84,9 +109,10 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback {
         surface.getGlobalVisibleRect(bounds);
         return bounds;
     }
-    @Override public void surfaceCreated(SurfaceHolder holder) { attach(); }
+    @Override public void surfaceCreated(SurfaceHolder holder) { if (runtime != null) runtime.displayVisible(this, true); attach(); }
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { attach(); }
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
+        if (runtime != null) runtime.displayVisible(this, false);
         if (attached) { Native.detach(id); attached = false; }
     }
 }

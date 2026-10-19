@@ -5,6 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
+import java.nio.*;
+import java.nio.file.Files;
+import java.io.IOException;
+import java.io.OutputStream;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
@@ -111,4 +116,30 @@ final class GuestBinder extends BroadcastReceiver {
             out.write(0);
         }
     }
+    static void preparePlatform(Context context, File root) throws Exception {
+        GuestBinder.prepare(context, root);
+        Files.write(new File(root, "host-api").toPath(), Integer.toString(Build.VERSION.SDK_INT).getBytes("UTF-8"));
+        Parcel p = Parcel.obtain();
+        try {
+            // No Binder objects, so marshall() is safe for this one template.
+            p.writeInterfaceToken("android.os.IServiceManager");
+            p.writeString("activity");
+            byte[] data = p.marshall();
+            try (OutputStream out = new FileOutputStream(new File(root, "activityServiceRequest"))) {
+                out.write(ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
+                    .putLong(data.length).putLong(0).array());
+                out.write(data);
+            }
+            p.setDataSize(0);
+            p.setDataPosition(0);
+            String descriptor = "com.github.ananbox.ILocalInterface";
+            p.writeInterfaceToken(descriptor);
+            int stringSize = 4 + ((2 * (descriptor.length() + 1) + 3) & ~3);
+            int stringPosition = p.dataSize() - stringSize;
+            if (stringPosition < 0) throw new IOException("Unsupported host interface header");
+            Files.write(new File(root, "host-token-position").toPath(),
+                Integer.toString(stringPosition).getBytes("UTF-8"));
+        } finally { p.recycle(); }
+    }
+
 }
