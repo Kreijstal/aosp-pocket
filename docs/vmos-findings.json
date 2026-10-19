@@ -171,6 +171,19 @@
       "target_executed": false,
       "installed_version_match": "unknown",
       "proprietary_implementation_imported": false
+    },
+    {
+      "id": "VMOS-014",
+      "classification": "binary_derived",
+      "finding": "Embedded guest surface matches a constraint-sized card whose aspect ratio is assigned from guest dimensions; the display layout has a compact icon header and no text-button rows or version spinner",
+      "evidence": [
+        "FragmentVmBinding.d and resource 0x7f0b003d -> res/wO.xml",
+        "VmFragment.onViewCreated dimensionRatio assignment",
+        "out/research/vmos/analysis/display-page-checks.json"
+      ],
+      "checks_passed": 9,
+      "target_executed": false,
+      "proprietary_implementation_imported": false
     }
   ],
   "tools": {

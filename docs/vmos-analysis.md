@@ -246,6 +246,26 @@ VMOS was not installed or executed, and the installed phone version remains
 uncompared. Pocket implements its own viewer and in-window movable control
 menu. No VMOS code, graphics assets or binaries are included in its APK.
 
+## Embedded display page
+
+**Binary XML and DEX derived, same pinned APK.** `FragmentVmBinding.d` selects
+resource `0x7f0b003d`, resolved through the APK's resource table to `res/wO.xml`.
+It contains a compact icon header and a constraint-sized CardView. The guest
+TextureView matches the card width and height. This layout has no Spinner or
+text Button rows. Separately, `VmFragment.onViewCreated` assigns the card's
+`dimensionRatio` from configured guest width/height. Its parent is a page
+background, rather than a large black display slot surrounding a narrow image.
+
+```sh
+out/research/vmos/venv/bin/python tools/inspect_vmos_display_page.py out/research/vmos/vmos-official.apk out/research/vmos/analysis
+```
+
+Passed: nine checks of the binary layout and the aspect-ratio assignment in
+DEX. The private artifacts are `fragment-vm.xml`, `display-page-dex.txt` and
+`display-page-checks.json`. No target code was executed. Pocket 0.8 adopts the
+aspect-ratio card, a focused Android page and a separate Settings activity;
+its implementation and visual assets are independently written.
+
 ## What ADB activation changes in the inspected path
 
 **Binary derived, cross-checked against DEX instructions.**

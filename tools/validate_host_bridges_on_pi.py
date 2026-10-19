@@ -73,6 +73,12 @@ def main():
                     shell(f'input touchscreen -d 0 tap {(l+r)//2} {(t+b)//2}')
                     time.sleep(1)
                     return
+            if package==PACKAGE and label in ('Start','Stop','Install APK','Open last app','Close manager','Host peripherals','Import guest'):
+                settings=next((n for n in tree.iter('node') if n.get('package')==PACKAGE and n.get('text','').casefold()=='settings' and n.get('clickable')=='true'),None)
+                if settings is not None:
+                    l,t,r,b=map(int,re.findall(r'\d+',settings.get('bounds')))
+                    shell(f'input tap {(l+r)//2} {(t+b)//2}')
+                    continue
             if attempt == 0 and package == PACKAGE:
                 # Previous probes can leave this ScrollView below the target.
                 for _ in range(3):

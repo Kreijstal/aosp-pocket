@@ -52,6 +52,11 @@ def main():
         nodes = list(hierarchy().iter('node'))
         button = next((n for n in nodes if n.get('package') == PACKAGE and
                        n.get('text', '').casefold().startswith(label.casefold()) and n.get('enabled') == 'true'),None)
+        if button is None and label in ('Start','Stop','Install APK','Open last app','Close manager','Host peripherals','Import guest'):
+            settings=next(n for n in nodes if n.get('package')==PACKAGE and n.get('text','').casefold()=='settings' and n.get('clickable')=='true')
+            left,top,right,bottom=bounds(settings)
+            outer(f'input tap {(left+right)//2} {(top+bottom)//2}')
+            button=next(n for n in hierarchy().iter('node') if n.get('package')==PACKAGE and n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true')
         if button is None and label in ('Float','Close window','Manager'):
             handle=next(n for n in nodes if n.get('package')==PACKAGE and n.get('content-desc')=='Android controls')
             left,top,right,bottom=bounds(handle)

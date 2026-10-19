@@ -58,6 +58,12 @@ def main():
         nodes=list(hierarchy().iter('node'))
         node=next((n for n in nodes if n.get('package')==PACKAGE and
                    n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true'),None)
+        if node is None and label in ('Start','Stop','Install APK','Open last app','Close manager','Host peripherals','Import guest'):
+            settings=next((n for n in nodes if n.get('package')==PACKAGE and n.get('text','').casefold()=='settings' and n.get('clickable')=='true'),None)
+            if settings is not None:
+                l,t,r,b=map(int,re.findall(r'\d+',settings.get('bounds')))
+                shell(f'input tap {(l+r)//2} {(t+b)//2}')
+                node=next((n for n in hierarchy().iter('node') if n.get('package')==PACKAGE and n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true'),None)
         if node is None and label in ('Float','Close window','Manager'):
             handle=next(n for n in nodes if n.get('package')==PACKAGE and n.get('content-desc')=='Android controls')
             l,t,r,b=map(int,re.findall(r'\d+',handle.get('bounds')))
@@ -71,7 +77,9 @@ def main():
         if shell('pm path '+PACKAGE):
             launch('MainActivity')
             tree=hierarchy()
-            if any(n.get('package')==PACKAGE and n.get('text')=='Stop' and n.get('enabled')=='true'
+            if any(n.get('package')==PACKAGE and n.get('text','').casefold()=='settings' and n.get('clickable')=='true' for n in tree.iter('node')):
+                click('Settings'); tree=hierarchy()
+            if any(n.get('package')==PACKAGE and n.get('text','').casefold()=='stop' and n.get('enabled')=='true'
                    for n in tree.iter('node')):
                 click('Stop')
                 deadline=time.monotonic()+30
@@ -130,8 +138,12 @@ def main():
     assert 'untrusted_app' in domain,domain
     tree=hierarchy()
     assert any(n.get('class')=='android.view.SurfaceView' and n.get('package')==PACKAGE for n in tree.iter('node'))
-    assert any(n.get('text')=='Install APK' and n.get('enabled')=='true'
+    click('Settings')
+    tree=hierarchy()
+    assert any(n.get('text','').casefold()=='install apk' and n.get('enabled')=='true'
                for n in tree.iter('node')),'Manager has not enabled the booted direct guest controls'
+    assert not any(n.get('package')==PACKAGE and n.get('class')=='android.view.SurfaceView' for n in tree.iter('node')),'Settings unexpectedly contains a guest preview'
+    click('Back to Android')
     shell('screencap -p /sdcard/pocket-manager9.png')
     adb('pull','/sdcard/pocket-manager9.png','/home/pi/pocket-manager9.png')
     result={'passed':True,'scope':'manager_android9_boot','host_uid':int(uid),'host_pid':int(host[1]),

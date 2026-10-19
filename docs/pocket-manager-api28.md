@@ -44,8 +44,21 @@ Frame limits scale with the configured pixels rather than imposing the older
 480 × 800 transport limit. The protocol rejects invalid dimensions and sizes
 over 16 megapixels. Android 7 retains its saved display geometry.
 
-Version 0.7 adds a full-screen control in the preview's upper corner and a
-**Full screen** button below it. Both open the existing guest in its own
+Version 0.8 puts the guest on a dedicated **Android** page. Its only page
+navigation is Android/Settings; a small expand control opens the existing
+full-screen guest. Start/Stop, image import, version selection, APK install,
+Open last app, peripheral grants and diagnostics live on **Settings**. Settings
+contains no guest preview. Opening the last app or choosing an APK returns to
+the Android page. The idle page offers one Start Android action.
+
+The embedded card itself fits the guest aspect ratio and the SurfaceView fills
+that card's exact bounds. There is no larger black container around a smaller
+image. Page margins use the page background, and the complete guest screen is
+preserved. Fitting happens once at the card boundary, avoiding another rounding
+step that could leave a one-pixel border. Switching pages pauses invisible
+frame requests and leaves the guest process running.
+
+The full-screen control introduced in version 0.7 opens the existing guest in its own
 immersive task. The guest fills the available display with no permanent host
 toolbar. A movable **Android controls** button snaps to either edge and opens
 Back, Home, Recents, Manager, Float and Close window actions. It stays inside
@@ -81,7 +94,7 @@ make -f runtime/Makefile -j2 manager-verify check-profiles check-display
 ```
 
 Upgrade APK: `out/manager/aosp-pocket-manager.apk`, package
-`dev.kreijstal.aosppocket.runtime`, version 0.7 / code 7. Installing it over the
+`dev.kreijstal.aosppocket.runtime`, version 0.8 / code 8. Installing it over the
 old package stops that package's currently running processes, as with any app
 update. Its image and user data remain in place.
 
@@ -183,6 +196,29 @@ APK as `/home/pi/aosp-pocket-manager-dev.apk`, the display probe as
 make -f runtime/Makefile -j2 display-probe check-display
 ssh pi@juanraspberry python3 -u - < tools/validate_display_on_pi.py
 ```
+
+[Version 0.8 display-page evidence](api28-display-page-validation.json) verifies
+the [focused Android page](images/api28-display-page.png) and
+[separate Settings page](images/api28-settings-page.png). The embedded card and
+SurfaceView both occupy `[59,54][660,1124]` on the 720 × 1280 test host:
+601 × 1070, compared with version 0.7's 340 × 605 preview. Pixel inspection
+confirms that the guest's full-width red reference bar reaches both card edges
+and the surrounding page has its normal background colour. The Surface adds
+zero padding on all four sides; guest Android's own status/navigation bars
+remain part of the guest image. The native guest resolution/DPI stayed
+720 × 1280 at 240 DPI through Settings, full screen and PiP handback. Three
+real taps reached the same guest app without a system-server restart.
+
+```sh
+ssh pi@juanraspberry python3 -u - --clean-page --reuse-probe < tools/validate_display_on_pi.py
+```
+
+The first run exposed capitalised accessibility button labels under the new
+host theme; the test now compares action labels case-insensitively. No APK
+change was needed for that test correction. The final run stopped/reaped the
+development guest and restored the original from existing data. Production and
+development APKs have matching host DEX/native code and all 1,376 guest payloads.
+Only VM host evidence is claimed; physical Samsung testing remains pending.
 
 [Version 0.7 full-screen evidence](api28-fullscreen-validation.json) verifies
 the [preview expand control](images/api28-fullscreen-embedded.png), a

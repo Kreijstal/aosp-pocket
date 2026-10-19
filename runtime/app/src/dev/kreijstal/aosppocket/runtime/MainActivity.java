@@ -5,109 +5,62 @@ import android.app.ActivityManager;
 import android.content.*;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.*;
 import android.widget.*;
+import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
-/** Manager task with a live miniature; the guest screen has its own task/icon. */
+/** Display page: the guest card and page navigation, with management on Settings. */
 public final class MainActivity extends RuntimeActivity {
-    private Button install, start, stop, apk, lastApp, expand;
-    private Spinner version;
-    private boolean updating;
-    private android.net.Uri pendingImport, pendingApk;
+    private ScreenCard card;
+    private LinearLayout idle;
+    private Button start;
     @Override public void onCreate(Bundle state) {
+        setTheme(android.R.style.Theme_Material_Light_NoActionBar);
         super.onCreate(state);
-        autoStart = getIntent().getBooleanExtra("start_guest", false);
-        setTaskDescription(new ActivityManager.TaskDescription("Pocket Manager", null, 0xff24465e));
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(dp(12), dp(8), dp(12), dp(8));
-        status = new TextView(this);
-        status.setLines(2);
-        layout.addView(status);
-        version = new Spinner(this);
-        version.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
-            new String[]{"Android 7.1.1 · PRoot", "Android 9 · direct backend"}));
-        version.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
-                if (!updating && runtime != null) runtime.selectSdk(position == 1 ? 28 : 25);
-            }
-            @Override public void onNothingSelected(AdapterView<?> parent) { }
-        });
-        layout.addView(version);
-        LinearLayout controls = new LinearLayout(this);
-        install = button("Import guest", controls, v -> importGuest());
-        start = button("Start", controls, v -> requestStart());
-        stop = button("Stop", controls, v -> { if (runtime != null) runtime.stopGuest(); });
-        lastApp = button("Open last app", controls, v -> { if (runtime != null) runtime.openLastApp(); });
-        layout.addView(controls, new LinearLayout.LayoutParams(-1, dp(48)));
-        Button peripherals = new Button(this);
-        peripherals.setText("Host peripherals");
-        peripherals.setOnClickListener(v -> startActivity(new Intent(this, PeripheralsActivity.class)));
-        layout.addView(peripherals, new LinearLayout.LayoutParams(-1, dp(44)));
-        TextView caption = new TextView(this);
-        caption.setText("Android display");
-        caption.setPadding(0, dp(12), 0, dp(8));
-        layout.addView(caption);
-        display = new GuestDisplay(this, false);
-        FrameLayout preview=new FrameLayout(this);
-        preview.addView(display,new FrameLayout.LayoutParams(-1,-1));
-        expand=new Button(this); expand.setText("⛶"); expand.setTextSize(23); expand.setPadding(0,0,0,0);
-        expand.setContentDescription("Full screen");
-        expand.setOnClickListener(v->startActivity(GuestActivity.intent(this)));
-        FrameLayout.LayoutParams expandPosition=new FrameLayout.LayoutParams(dp(48),dp(48),android.view.Gravity.TOP|android.view.Gravity.RIGHT);
-        preview.addView(expand,expandPosition);
-        layout.addView(preview, new LinearLayout.LayoutParams(-1, 0, 1));
-        LinearLayout open = new LinearLayout(this);
-        apk = button("Install APK", open, v -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
-            .setType("application/vnd.android.package-archive").addCategory(Intent.CATEGORY_OPENABLE), 2));
-        button("Full screen ↗", open, v -> startActivity(GuestActivity.intent(this)));
-        button("Close manager", open, v -> finishAndRemoveTask());
-        layout.addView(open, new LinearLayout.LayoutParams(-1, dp(52)));
-        TextView note = new TextView(this);
-        note.setText("Android has its own launcher icon and Recents window. Closing this manager keeps it running. Shared host UID/kernel.");
-        note.setTextColor(Color.DKGRAY);
-        layout.addView(note);
-        setContentView(layout);
-        onGuestChanged();
+        autoStart=getIntent().getBooleanExtra("start_guest",false);
+        setTaskDescription(new ActivityManager.TaskDescription("Pocket Manager",null,0xff16746e));
+        LinearLayout layout=new LinearLayout(this); layout.setOrientation(LinearLayout.VERTICAL);
+        FrameLayout page=new FrameLayout(this); page.setBackgroundColor(0xffeef1f4);
+        page.setContentDescription("Android page"); page.setPadding(dp(8),dp(8),dp(8),dp(8));
+        card=new ScreenCard(); card.setContentDescription("Android screen card");
+        display=new GuestDisplay(this,false,true);
+        card.addView(display,new FrameLayout.LayoutParams(-1,-1));
+        Button expand=new Button(this); expand.setText("⛶"); expand.setTextSize(23); expand.setPadding(0,0,0,0);
+        expand.setContentDescription("Full screen"); expand.setOnClickListener(v->startActivity(GuestActivity.intent(this)));
+        card.addView(expand,new FrameLayout.LayoutParams(dp(40),dp(40),Gravity.TOP|Gravity.RIGHT));
+        page.addView(card,new FrameLayout.LayoutParams(-1,-1,Gravity.CENTER));
+        idle=new LinearLayout(this); idle.setOrientation(LinearLayout.VERTICAL); idle.setGravity(Gravity.CENTER);
+        status=new TextView(this); status.setGravity(Gravity.CENTER); status.setTextColor(0xff33414a);
+        idle.addView(status,new LinearLayout.LayoutParams(-1,-2));
+        start=new Button(this); start.setText("Start Android"); start.setOnClickListener(v->requestStart());
+        idle.addView(start,new LinearLayout.LayoutParams(-2,dp(48)));
+        page.addView(idle,new FrameLayout.LayoutParams(-1,-1));
+        layout.addView(page,new LinearLayout.LayoutParams(-1,0,1));
+        LinearLayout navigation=new LinearLayout(this); navigation.setBackgroundColor(Color.WHITE);
+        Button androidTab=button("Android",navigation,v->{}); androidTab.setSelected(true); androidTab.setEnabled(false);
+        button("Settings",navigation,v->startActivity(new Intent(this,SettingsActivity.class)));
+        layout.addView(navigation,new LinearLayout.LayoutParams(-1,dp(48)));
+        setContentView(layout); onGuestChanged();
     }
     @Override public void onGuestChanged() {
-        super.onGuestChanged();
-        if (start == null) return;
-        if (runtime != null && pendingImport != null) {
-            android.net.Uri uri = pendingImport;
-            pendingImport = null;
-            runtime.importGuest(uri);
-        }
-        if (runtime != null && pendingApk != null) {
-            android.net.Uri uri = pendingApk; pendingApk = null;
-            runtime.installApk(uri);
-        }
-        boolean ready = runtime != null;
-        expand.setVisibility(ready && runtime.running() ? android.view.View.VISIBLE : android.view.View.GONE);
-        updating = true;
-        if (ready) version.setSelection(runtime.selectedSdk() == 28 ? 1 : 0, false);
-        version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());
-        updating = false;
-        apk.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping());
-        lastApp.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping() && runtime.hasLastApp());
-        install.setEnabled(ready && !runtime.directBackend() && !runtime.hasImage() && !runtime.starting() && !runtime.running());
-        start.setEnabled(ready && runtime.canStart() && !runtime.running() && !runtime.starting() && !runtime.stopping());
-        stop.setEnabled(ready && (runtime.running() || runtime.preparing()) && !runtime.stopping());
+        super.onGuestChanged(); if (card==null) return;
+        if (runtime!=null) card.geometry(runtime.width,runtime.height);
+        boolean ready=runtime!=null && runtime.booted();
+        card.setVisibility(ready ? View.VISIBLE : View.GONE);
+        idle.setVisibility(ready ? View.GONE : View.VISIBLE);
+        boolean busy=runtime!=null && (runtime.starting() || runtime.preparing() || runtime.stopping());
+        status.setText(runtime==null ? "Connecting to Android…" : busy ? "Starting Android…" : "Your Android is ready");
+        start.setVisibility(busy || ready ? View.GONE : View.VISIBLE);
+        start.setEnabled(runtime!=null && runtime.canStart() && !runtime.running() && !busy);
     }
-    private void importGuest() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("application/zip");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, 1);
-    }
-    @Override protected void onActivityResult(int request, int result, Intent data) {
-        super.onActivityResult(request, result, data);
-        if (result != RESULT_OK || data == null || data.getData() == null) return;
-        if (request == 2) {
-            pendingApk = data.getData();
-            onGuestChanged();
-            return;
+    /** Fit the container once; the guest Surface then fills it edge to edge. */
+    private final class ScreenCard extends FrameLayout {
+        private int width=1,height=1;
+        ScreenCard() { super(MainActivity.this); }
+        void geometry(int w,int h) { if(width!=w || height!=h){width=w;height=h;requestLayout();} }
+        @Override protected void onMeasure(int widthSpec,int heightSpec) {
+            int[] fit=new DisplayGeometry(width,height,160).fit(MeasureSpec.getSize(widthSpec),MeasureSpec.getSize(heightSpec));
+            super.onMeasure(MeasureSpec.makeMeasureSpec(fit[0],MeasureSpec.EXACTLY),MeasureSpec.makeMeasureSpec(fit[1],MeasureSpec.EXACTLY));
         }
-        if (request != 1) return;
-        pendingImport = data.getData();
-        onGuestChanged();
     }
 }

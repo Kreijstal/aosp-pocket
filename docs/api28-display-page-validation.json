@@ -1,0 +1,139 @@
+{
+  "version": "0.8-display-page",
+  "evidence": "Android 9 guest on Android 16 Cuttlefish; physical Samsung validation pending",
+  "build_command": "make -f runtime/Makefile -j2 manager-verify",
+  "development_build_command": "make -f runtime/Makefile -j2 manager-verify MANAGER_PACKAGE=dev.kreijstal.aosppocket.managerdev MANAGER_OUT=out/manager-dev",
+  "geometry_validation_command": "make -f runtime/Makefile -j2 out/runtime/classes.dex check-display",
+  "integration_command": "ssh pi@juanraspberry python3 -u - --clean-page --reuse-probe < tools/validate_display_on_pi.py",
+  "vmos_layout_command": "out/research/vmos/venv/bin/python tools/inspect_vmos_display_page.py out/research/vmos/vmos-official.apk out/research/vmos/analysis",
+  "vmos_static_layout_checks_passed": 9,
+  "production_matches_test_cohort": {
+    "host_dex": true,
+    "host_native_libraries": true,
+    "guest_payloads": 1376
+  },
+  "screenshots": {
+    "android_page": "images/api28-display-page.png",
+    "settings": "images/api28-settings-page.png"
+  },
+  "validation": {
+    "passed": true,
+    "sequential_guests": true,
+    "original_was_running": true,
+    "original_host_pid_before": 27618,
+    "boot": {
+      "passed": true,
+      "scope": "manager_android9_boot",
+      "host_uid": 10174,
+      "host_pid": 7574,
+      "system_server_pid": 7831,
+      "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+      "original_api25_unchanged": null,
+      "original_api25_pids": null,
+      "direct_backend": true,
+      "boot_completed": true,
+      "guest_display": {
+        "width": 720,
+        "height": 1280,
+        "density_dpi": 240
+      },
+      "tracer_pid": 0,
+      "seccomp": 2,
+      "effective_capabilities": 0,
+      "screenshot": "/home/pi/pocket-manager9.png"
+    },
+    "existing_display_probe_reused": true,
+    "app_initial": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 0
+    },
+    "embedded_card_bounds": [
+      59,
+      54,
+      660,
+      1124
+    ],
+    "surface_fills_embedded_card": true,
+    "display_page_has_no_management_controls": true,
+    "settings_is_separate_page": true,
+    "app_final": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 3
+    },
+    "guest_pixels_constant_across_windows": true,
+    "viewports": [
+      {
+        "window": "embedded",
+        "width": 601,
+        "height": 1070
+      },
+      {
+        "window": "dedicated",
+        "width": 720,
+        "height": 1280
+      },
+      {
+        "window": "embedded_after_pip",
+        "width": 601,
+        "height": 1070
+      }
+    ],
+    "guest_taps": 3,
+    "pip_exclusive": true,
+    "system_server_restarts": 0,
+    "host_dpi_relayed": true,
+    "development_guest_reaped": true,
+    "development_host_closed_after_clean_stop": true,
+    "original_restored_from_existing_data": true,
+    "original_host_pid_after": 27618
+  },
+  "screenshot_pixel_check": {
+    "screenshot": "images/api28-display-page.png",
+    "reference": "Guest display test full-width red bar",
+    "y": 332,
+    "left": 59,
+    "right_inclusive": 659,
+    "uninterrupted_width": 601,
+    "left_edge_rgb": [
+      255,
+      0,
+      0
+    ],
+    "right_edge_rgb": [
+      255,
+      0,
+      0
+    ],
+    "outside_left_rgb": [
+      238,
+      241,
+      244
+    ],
+    "outside_right_rgb": [
+      238,
+      241,
+      244
+    ],
+    "reference_bar_fills_card_width": true,
+    "surface_padding_pixels": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    }
+  },
+  "notes": [
+    "The initial test failed because the new theme exposes button labels in capitals; case-insensitive matching fixes the test without changing the APK",
+    "The test app was already installed and reused; guest APK installation is not revalidated by this focused run",
+    "The existing PNG display transport is unchanged and requests at most four frames per second",
+    "Guest Android status and navigation bars are screen content; padding around the guest Surface is zero"
+  ]
+}

@@ -24,6 +24,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--fullscreen',action='store_true',help='Also verify immersive controls, host Back and Home-to-PiP')
     parser.add_argument('--reuse-probe',action='store_true',help='Reuse the previously installed display probe for focused host UI retesting')
+    parser.add_argument('--clean-page',action='store_true',help='Check separate Settings and an exact card/surface fit without letterboxing')
     args=parser.parse_args()
     sys.path.insert(0, '/home/pi/lineage-cuttlefish/tools')
     import cuttlefish_arm64 as c
@@ -68,6 +69,11 @@ def main():
                     shell(f'input tap {(l+r)//2} {(t+b)//2}')
                     time.sleep(1)
                     return
+            if package==DEV and label in ('Start','Stop','Install APK','Open last app','Close manager','Host peripherals','Import guest'):
+                settings=next((n for n in nodes if n.get('package')==DEV and n.get('text','').casefold()=='settings' and n.get('clickable')=='true'),None)
+                if settings is not None:
+                    l,t,r,b=map(int,re.findall(r'\d+',settings.get('bounds')))
+                    shell(f'input tap {(l+r)//2} {(t+b)//2}')
             if package==DEV and label in ('Float','Close window','Manager'):
                 handle=next((n for n in nodes if n.get('package')==DEV and n.get('content-desc')=='Android controls'),None)
                 if handle is not None:
@@ -135,6 +141,25 @@ def main():
             assert report['taps'] == taps, report
         assert_report(json.loads(reports[-1]), 0)
         result['app_initial'] = json.loads(reports[-1])
+        if args.clean_page:
+            nodes=list(hierarchy().iter('node'))
+            assert not any(n.get('package')==DEV and (n.get('text','').casefold() in ('import guest','start','stop','install apk','open last app','host peripherals','close manager') or n.get('class')=='android.widget.Spinner') for n in nodes),'Management controls remain on the display page'
+            card=next(n for n in nodes if n.get('package')==DEV and n.get('content-desc')=='Android screen card')
+            surface=next(n for n in nodes if n.get('package')==DEV and n.get('class')=='android.view.SurfaceView')
+            assert card.get('bounds')==surface.get('bounds'),(card.attrib,surface.attrib)
+            l,t,r,b=map(int,re.findall(r'\d+',card.get('bounds')))
+            assert r-l>=w*.75 and b-t>=h*.75,card.attrib
+            result['embedded_card_bounds']=[l,t,r,b]
+            result['surface_fills_embedded_card']=True
+            result['display_page_has_no_management_controls']=True
+            click('Settings')
+            nodes=list(hierarchy().iter('node'))
+            assert not any(n.get('package')==DEV and n.get('class')=='android.view.SurfaceView' for n in nodes),'Settings contains a guest display'
+            assert all(any(n.get('package')==DEV and n.get('text','').casefold()==label.casefold() for n in nodes) for label in ('Start','Stop','Install APK','Open last app','Host peripherals'))
+            screenshot('pocket-display-settings')
+            click('Back to Android')
+            result['settings_is_separate_page']=True
+            print('Clean display page, separate Settings and exact card/surface bounds verified',flush=True)
         viewports = []
         def tap_guest(expected, window):
             text = log()
@@ -165,10 +190,11 @@ def main():
             assert not any(n.get('package')==DEV and n.get('text') in ('Manager','Float','Back','Home','Close window') for n in nodes),'Permanent toolbar still visible'
             handle=next(n for n in nodes if n.get('package')==DEV and n.get('content-desc')=='Android controls')
             l,t,r,b=map(int,re.findall(r'\d+',handle.get('bounds')))
-            shell(f'input swipe {(l+r)//2} {(t+b)//2} 80 {min(h-100,(t+b)//2+180)} 400')
+            target_x=w-80 if (l+r)//2<w//2 else 80
+            shell(f'input swipe {(l+r)//2} {(t+b)//2} {target_x} {min(h-100,(t+b)//2+180)} 400')
             moved=next(n for n in hierarchy().iter('node') if n.get('package')==DEV and n.get('content-desc')=='Android controls')
             ml,mt,mr,mb=map(int,re.findall(r'\d+',moved.get('bounds')))
-            assert ml<w//2 and ml<mr<=w and 0<=mt<mb<=h,(handle.attrib,moved.attrib)
+            assert ((ml+mr)//2<w//2)!=((l+r)//2<w//2) and 0<=ml<mr<=w and 0<=mt<mb<=h,(handle.attrib,moved.attrib)
             result['movable_controls']=True
             click('Android controls')
             shell('input keyevent 4')
@@ -192,7 +218,7 @@ def main():
         if args.fullscreen:
             click('Full screen')
             click('Manager')
-            assert any(n.get('package')==DEV and n.get('text')=='Pocket Manager' for n in hierarchy().iter('node')),'Manager action did not return to preview'
+            assert any(n.get('package')==DEV and n.get('content-desc')=='Android page' for n in hierarchy().iter('node')),'Manager action did not return to display page'
             result['manager_return']=True
             click('Full screen')
             offset=int(shell('stat -c %s '+ROOT+'/logs/manager-init.log'))
@@ -230,7 +256,7 @@ def main():
         result['development_guest_reaped'] = not children(DEV)
         # Home-to-PiP may leave a viewer task after its guest has stopped.
         # Close only the test host, after confirming all guest children reaped.
-        if args.fullscreen:
+        if args.fullscreen or args.clean_page:
             assert result['development_guest_reaped']
             shell('am force-stop '+DEV)
             result['development_host_closed_after_clean_stop']=True
@@ -245,7 +271,7 @@ def main():
                 raise RuntimeError('Original API25 guest did not restore')
             result['original_restored_from_existing_data'] = True
             result['original_host_pid_after'] = int(host(OLD)[1])
-        report='pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
+        report='pocket-display-page-validation.json' if args.clean_page else 'pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
         Path('/home/pi/'+report).write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2), flush=True)
     if failure:

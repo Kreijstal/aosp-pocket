@@ -18,6 +18,8 @@
         android:hardwareAccelerated="false">
         <service android:name=".GuestService" android:exported="false" />
         <activity android:name=".PeripheralsActivity" android:exported="false" android:label="Host peripherals" />
+        <activity android:name=".SettingsActivity" android:exported="false" android:label="Settings"
+            android:configChanges="7552" android:screenOrientation="1" />
         <activity android:name=".MainActivity" android:exported="true"
             android:label="Pocket Manager" android:icon="0x01080042"
             android:taskAffinity="dev.kreijstal.aosppocket.runtime.manager"

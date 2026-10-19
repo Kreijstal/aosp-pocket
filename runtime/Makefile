@@ -23,7 +23,8 @@ out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so &: $(NATI
 out/runtime-native/libpocket_binder_bootstrap.so: runtime/guest-binder-bootstrap.cpp tools/build_guest_binder.py sources.lock.json
 	python3 tools/build_guest_binder.py --ndk $(NDK)
 
-$(OUT)/classes.dex: $(JAVA) $(ANDROID_JAR) $(R8)
+$(OUT)/classes.dex: $(JAVA) $(ANDROID_JAR) $(R8) runtime/Makefile
+	rm -rf $(OUT)/classes $(OUT)/dex
 	mkdir -p $(OUT)/classes $(OUT)/dex
 	javac --release 8 -classpath $(ANDROID_JAR) -d $(OUT)/classes $(JAVA)
 	jar cf $(OUT)/classes.jar -C $(OUT)/classes .

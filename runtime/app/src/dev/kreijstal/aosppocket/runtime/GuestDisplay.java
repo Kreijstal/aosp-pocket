@@ -16,13 +16,18 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     private final SurfaceView surface;
     private final TextView elsewhere;
     private final boolean dedicated;
+    private final boolean fillsBounds;
     private GuestService runtime;
     private int logicalWidth = 1, logicalHeight = 1;
     private boolean attached, owned;
 
     GuestDisplay(Context context, boolean dedicated) {
+        this(context,dedicated,false);
+    }
+    GuestDisplay(Context context, boolean dedicated, boolean fillsBounds) {
         super(context);
         this.dedicated = dedicated;
+        this.fillsBounds = fillsBounds;
         setBackgroundColor(Color.BLACK);
         surface = new SurfaceView(context);
         surface.getHolder().addCallback(this);
@@ -120,7 +125,7 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     @Override protected void onMeasure(int widthSpec, int heightSpec) {
         int width = MeasureSpec.getSize(widthSpec), height = MeasureSpec.getSize(heightSpec);
         setMeasuredDimension(width, height);
-        int[] fitted=new DisplayGeometry(logicalWidth,logicalHeight,160).fit(width,height);
+        int[] fitted=fillsBounds ? new int[]{width,height} : new DisplayGeometry(logicalWidth,logicalHeight,160).fit(width,height);
         int childWidth=fitted[0],childHeight=fitted[1];
         surface.measure(MeasureSpec.makeMeasureSpec(Math.max(1, childWidth), MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(Math.max(1, childHeight), MeasureSpec.EXACTLY));

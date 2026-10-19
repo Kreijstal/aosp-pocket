@@ -46,7 +46,7 @@ $(MANAGER_OUT)/manifest-source.xml: runtime/app/AndroidManifest.xml runtime/mana
 	python3 -c 'from pathlib import Path; s=Path("runtime/app/AndroidManifest.xml").read_text(); s=s.replace("android:name=\".","android:name=\"dev.kreijstal.aosppocket.runtime."); s=s.replace("dev.kreijstal.aosppocket.runtime.manager\"","$(MANAGER_PACKAGE).manager\"").replace("dev.kreijstal.aosppocket.runtime.android\"","$(MANAGER_PACKAGE).android\""); s=s.replace("package=\"dev.kreijstal.aosppocket.runtime\"","package=\"$(MANAGER_PACKAGE)\""); Path("$@").write_text(s)'
 
 $(MANAGER_OUT)/AndroidManifest.xml: $(MANAGER_OUT)/manifest-source.xml $(OUT)/tools/PocketManifest.class
-	java -cp $(TOOLS):$(OUT)/tools PocketManifest $< $@ 28 28 7 0.7-fullscreen
+	java -cp $(TOOLS):$(OUT)/tools PocketManifest $< $@ 28 28 8 0.8-display-page
 
 $(MANAGER_OUT)/base.apk: $(OUT)/classes.dex $(MANAGER_OUT)/AndroidManifest.xml
 	java -cp $(TOOLS) com.example.build.ApkBuilder $(MANAGER_OUT)/AndroidManifest.xml $(OUT)/classes.dex $@
