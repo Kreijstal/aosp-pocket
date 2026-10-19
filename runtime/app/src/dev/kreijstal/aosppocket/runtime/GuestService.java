@@ -39,13 +39,14 @@ public final class GuestService extends Service {
     private int sdk, legacyWidth, legacyHeight, legacyDpi;
     private DisplayGeometry hostDisplay;
     private DirectSession direct;
-    private android.graphics.Bitmap frame;
     private final java.util.Set<FrameListener> visibleDisplays = new java.util.LinkedHashSet<>();
     private FrameListener displayOwner;
     boolean directBackend() { return sdk == 28; }
     int selectedSdk() { return sdk; }
     boolean directAvailable() { return DirectImage.bundled(this); }
-    android.graphics.Bitmap frame() { return frame; }
+    android.graphics.Bitmap snapshot() { return direct==null ? null : direct.snapshot(); }
+    void presentSurface(android.view.Surface value) {if(direct!=null)direct.surface(value);}
+    void detachSurface(android.view.Surface value) {if(direct!=null)direct.detach(value);}
     void displayVisible(FrameListener id, boolean visible) {
         if (visible) visibleDisplays.add(id); else visibleDisplays.remove(id);
         FrameListener next = null;
@@ -77,7 +78,6 @@ public final class GuestService extends Service {
         sdk = value;
         getSharedPreferences("guest-backend", MODE_PRIVATE).edit().putInt("sdk", sdk).apply();
         geometry();
-        if (frame != null) { frame.recycle(); frame = null; }
         message("Android " + (sdk == 28 ? "9 · direct backend" : "7.1.1 · PRoot") + " selected. Tap Start.");
     }
     private void geometry() {
@@ -95,14 +95,8 @@ public final class GuestService extends Service {
                 starting = false; booted = true;
                 message("Android 9 running · "+width+" × "+height);
             }
-            @Override public void frame(android.graphics.Bitmap bitmap) {
-                android.graphics.Bitmap old = frame; frame = bitmap;
-                if (displayOwner != null) displayOwner.onGuestFrame();
-                if (old != null) old.recycle();
-            }
             @Override public void stopped(String text) {
                 direct = null; starting = false; booted = false; stopping = false;
-                if (frame != null) { frame.recycle(); frame = null; }
                 if (!destroyed) { message(text); releaseForeground(); }
             }
         });

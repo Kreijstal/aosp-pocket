@@ -20,7 +20,7 @@ def main():
             out / "packed.apk", "w", zipfile.ZIP_DEFLATED, compresslevel=1) as apk:
         for entry in base.infolist():
             apk.writestr(entry, base.read(entry.filename))
-        for name in ("libpocket_runtime.so", "libproot.so"):
+        for name in ("libpocket_runtime.so", "libproot.so", "libpocket_frames.so"):
             copied = out / name
             shutil.copy2(ROOT / "out/runtime-native" / name, copied)
             subprocess.run([str(args.ndk / "toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"), str(copied)], check=True)

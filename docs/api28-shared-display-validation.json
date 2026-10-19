@@ -1,0 +1,169 @@
+{
+  "version": "0.9-shared-display",
+  "evidence": "Android 9 guest on the Pi-hosted Android 16 Cuttlefish VM; Samsung speed unmeasured",
+  "build_command": "make -f runtime/Makefile -j2 manager-verify",
+  "unit_command": "make -f runtime/Makefile check-display",
+  "integration_command": "ssh pi@juanraspberry python3 -u - --clean-page --reuse-probe --shared-frames < tools/validate_display_on_pi.py",
+  "production_matches_test_cohort": {
+    "host_dex": true,
+    "native_libraries": [
+      "lib/arm64-v8a/libpocket_runtime.so",
+      "lib/arm64-v8a/libproot.so",
+      "lib/arm64-v8a/libpocket_frames.so"
+    ],
+    "guest_payloads": 1377,
+    "tested_apk": "managerdev shared-display update over 0.4 seed"
+  },
+  "pixel_check": {
+    "passed": true,
+    "colors": {
+      "red": {
+        "first_row": 308,
+        "last_row": 356,
+        "full_width_pixels": 601,
+        "rgb": [
+          255,
+          0,
+          0
+        ]
+      },
+      "green": {
+        "first_row": 358,
+        "last_row": 406,
+        "full_width_pixels": 601,
+        "rgb": [
+          0,
+          255,
+          0
+        ]
+      },
+      "blue": {
+        "first_row": 408,
+        "last_row": 456,
+        "full_width_pixels": 601,
+        "rgb": [
+          0,
+          0,
+          255
+        ]
+      }
+    },
+    "card_bounds": [
+      59,
+      54,
+      660,
+      1124
+    ],
+    "no_surrounding_black_padding": true
+  },
+  "validation": {
+    "passed": true,
+    "sequential_guests": true,
+    "original_was_running": true,
+    "original_host_pid_before": 27618,
+    "boot": {
+      "passed": true,
+      "scope": "manager_android9_boot",
+      "host_uid": 10174,
+      "host_pid": 21241,
+      "system_server_pid": 21432,
+      "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+      "original_api25_unchanged": null,
+      "original_api25_pids": null,
+      "direct_backend": true,
+      "boot_completed": true,
+      "guest_display": {
+        "width": 720,
+        "height": 1280,
+        "density_dpi": 240
+      },
+      "tracer_pid": 0,
+      "seccomp": 2,
+      "effective_capabilities": 0,
+      "screenshot": "/home/pi/pocket-manager9.png"
+    },
+    "existing_display_probe_reused": true,
+    "app_initial": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 0
+    },
+    "anonymous_shared_mapping_verified": true,
+    "shared_display_performance": {
+      "transport": "shared-rgba",
+      "backing": "anonymous",
+      "codec": "none",
+      "pixel_bytes_over_socket": 0,
+      "target_fps": 60,
+      "width": 720,
+      "height": 1280,
+      "shared_bytes": 7372800,
+      "frames_presented": 150,
+      "frames_requested": 152,
+      "interval_fps": 6.340146192046795,
+      "mean_capture_ms": 300.736873,
+      "max_capture_ms": 5610.895478,
+      "mean_present_ms": 6.602395
+    },
+    "embedded_card_bounds": [
+      59,
+      54,
+      660,
+      1124
+    ],
+    "surface_fills_embedded_card": true,
+    "display_page_has_no_management_controls": true,
+    "hidden_display_pauses_capture": true,
+    "shared_display_resumes": true,
+    "settings_is_separate_page": true,
+    "app_final": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 3
+    },
+    "guest_pixels_constant_across_windows": true,
+    "viewports": [
+      {
+        "window": "embedded",
+        "width": 601,
+        "height": 1070
+      },
+      {
+        "window": "dedicated",
+        "width": 720,
+        "height": 1280
+      },
+      {
+        "window": "embedded_after_pip",
+        "width": 601,
+        "height": 1070
+      }
+    ],
+    "guest_taps": 3,
+    "pip_exclusive": true,
+    "system_server_restarts": 0,
+    "host_dpi_relayed": true,
+    "development_guest_reaped": true,
+    "development_host_closed_after_clean_stop": true,
+    "original_restored_from_existing_data": true,
+    "original_host_pid_after": 27618
+  },
+  "limitations": [
+    "Guest still renders with SwiftShader and the existing 30 Hz compositor configuration.",
+    "Compositor readback and CPU copies remain; this is not zero-copy GPU buffer sharing.",
+    "FPS counts frame submissions; no old-version throughput benchmark or Samsung speed comparison was performed.",
+    "Mean capture time is cumulative and includes boot-time stalls."
+  ],
+  "samsung_download": {
+    "file": "Download/aosp-pocket-manager-0.9.apk",
+    "bytes": 553503464,
+    "transport": "LAN SCP",
+    "installed": false
+  }
+}

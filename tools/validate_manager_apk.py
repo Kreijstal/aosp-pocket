@@ -27,6 +27,8 @@ with zipfile.ZipFile(args.apk) as apk:
         offset+=size
     assert back_flags==[True],'Guest viewer platform Back callback opt-in missing'
     assert 'lib/arm64-v8a/libproot.so' in names,'API 25 PRoot missing'
+    assert 'lib/arm64-v8a/libpocket_frames.so' in names,'Host anonymous display mapper missing'
+    assert 'assets/api28-rootfs/system/lib64/libpocket_frames.so.payload' in names,'Guest anonymous display mapper missing'
     layout=json.loads(apk.read('assets/default-guest/pocket-layout.json'))
     assert layout.get('guest_sdk',25)==25
     props=apk.read('assets/api28-rootfs/system/build.prop.payload').decode()

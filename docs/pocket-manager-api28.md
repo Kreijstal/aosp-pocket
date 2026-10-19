@@ -23,8 +23,8 @@ service process groups before Start becomes available again.
 
 Android 9 starts a separate `GuestControl` process after its actual
 `sys.boot_completed=1` property trigger. Its inherited app-private Unix socket
-serves lossless compositor screenshots, pointer events, navigation keys and APK
-installation. This replaces the bounded development probe: Manager does not
+serves compositor frames through anonymous shared memory, pointer events,
+navigation keys and APK installation. This replaces the bounded development probe: Manager does not
 install a test app or shut down automatically after boot.
 
 Android 9 takes the host display's full portrait pixel dimensions and density
@@ -37,12 +37,49 @@ not change the guest resolution or restart Android. Touches map from the
 visible surface back into the full guest pixel coordinates. For example, a
 1080 × 2400 guest in a 320-pixel-wide card occupies about 320 × 711 pixels.
 The embedded card no longer has an arbitrary 300 dp height cap.
-The initial viewer requests at most four PNG frames per second, pauses requests
-when no window is visible, and reconnects windows to the same session. This is
-an initial display transport, not a high-frame-rate graphics backend.
-Frame limits scale with the configured pixels rather than imposing the older
-480 × 800 transport limit. The protocol rejects invalid dimensions and sizes
-over 16 megapixels. Android 7 retains its saved display geometry.
+Version 0.9 replaces the four-FPS PNG screenshot transport with two anonymous
+RGBA buffers. The host allocates shared memory using Android's public NDK
+shared-memory API and passes its descriptor to the guest through the private
+Unix socket. Pixel data does not travel through that socket or phone storage.
+A request identifies the back buffer and a sequence number; the guest completes
+its capture and copy before acknowledging ownership. The host presents that
+buffer directly to an `ANativeWindow` on its worker thread. A front-buffer lock
+protects window handoff, transition snapshots and unmapping at shutdown.
+There are no per-frame PNG encode/decode operations, host Java Bitmap draws,
+or accumulating UI callbacks. Presentation targets 60 FPS without a catch-up
+queue; achieved throughput depends on capture and host presentation costs.
+The producer pauses when no window owns a valid Surface. Embedded, full-screen
+and PiP windows use the same buffers and guest process.
+
+This remains a software-rendered SwiftShader guest, with compositor readback
+and CPU copies into shared memory and the host Surface. It is **not** zero-copy
+GPU buffer sharing or evidence of VMOS-equivalent performance. A host Bitmap is
+created only for an explicit window transition snapshot. API 25 keeps its
+existing renderer. Both sides require display protocol v3 and reject an older
+handshake rather than interpreting it as pixel data.
+
+On an unrooted phone, open **Settings** after using Android for a few seconds.
+The last visible sample shows presented FPS, guest capture time and native
+presentation time. **Copy display report** copies the JSON report without ADB,
+root or instrumentation. The private `logs/display-performance.json` also
+records geometry, anonymous buffer size and the zero pixel-byte socket count.
+Samples measure frame submissions, not unique content changes or panel scanout.
+The pinned compositor configuration remains 30 Hz; a 60-FPS producer ceiling
+does not imply 60 different guest frames. Capture/presentation means are
+cumulative for the session and include startup stalls.
+
+The [shared-display VM regression](api28-shared-display-validation.json) passed
+anonymous descriptor transfer, rootless guest boot, exact RGB pixels, three
+real guest taps, hidden-display pause/resume, exclusive PiP and clean teardown.
+The original API 25 guest was restored from its existing data. Its sampled
+throughput was 6.34 presented FPS at 720 × 1280, with cumulative mean capture
+300.7 ms and native presentation 6.6 ms. This is not a Samsung benchmark or a
+measured before/after speedup. [Android](images/api28-shared-display.png) and
+[Settings](images/api28-shared-display-settings.png) screenshots show the tested UI.
+
+Frame sizes scale with guest pixels. Invalid geometry and sizes over
+16 megapixels are rejected; two RGBA slots use eight bytes per guest pixel.
+Android 7 retains its saved display geometry.
 
 Version 0.8 puts the guest on a dedicated **Android** page. Its only page
 navigation is Android/Settings; a small expand control opens the existing

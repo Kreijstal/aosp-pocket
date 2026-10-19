@@ -11,6 +11,8 @@ import android.widget.*;
 public final class SettingsActivity extends RuntimeActivity {
     private Button install, start, stop, apk, lastApp;
     private Spinner version;
+    private TextView performance;
+    private String performanceReport;
     private boolean updating;
     private android.net.Uri pendingImport, pendingApk;
     @Override public void onCreate(Bundle state) {
@@ -57,8 +59,30 @@ public final class SettingsActivity extends RuntimeActivity {
         note.setText("Android has its own launcher icon and Recents window. Closing this manager keeps it running. Shared host UID/kernel.");
         note.setTextColor(Color.DKGRAY);
         layout.addView(note);
+        performance=new TextView(this);performance.setTextColor(Color.DKGRAY);layout.addView(performance);
+        Button copyPerformance=new Button(this);copyPerformance.setText("Copy display report");
+        copyPerformance.setOnClickListener(v->{
+            readPerformance();
+            if(performanceReport!=null) {
+                android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                clipboard.setPrimaryClip(ClipData.newPlainText("Pocket display timing",performanceReport));
+                Toast.makeText(this,"Display report copied",Toast.LENGTH_SHORT).show();
+            }
+        });layout.addView(copyPerformance);
         ScrollView scroll=new ScrollView(this); scroll.addView(layout); setContentView(scroll);
         onGuestChanged();
+    }
+    @Override protected void onResume(){super.onResume();readPerformance();}
+    private void readPerformance() {
+        if(performance==null)return;
+        try {
+            performanceReport=new String(java.nio.file.Files.readAllBytes(new java.io.File(getFilesDir(),"api28-rootfs/logs/display-performance.json").toPath()),"UTF-8");
+            org.json.JSONObject report=new org.json.JSONObject(performanceReport);
+            performance.setText(String.format(java.util.Locale.ROOT,
+                "Last visible display sample: %.1f FPS · %d × %d\nCapture: %.1f ms · Present: %.1f ms\nShared RGBA buffers · software guest rendering",
+                report.getDouble("interval_fps"),report.getInt("width"),report.getInt("height"),
+                report.getDouble("mean_capture_ms"),report.getDouble("mean_present_ms")));
+        } catch(Exception unavailable) {performanceReport=null;performance.setText("Display timing appears after Android 9 has been visible for a few seconds.");}
     }
     @Override public void onGuestChanged() {
         super.onGuestChanged();

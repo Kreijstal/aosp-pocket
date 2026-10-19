@@ -20,6 +20,7 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     private GuestService runtime;
     private int logicalWidth = 1, logicalHeight = 1;
     private boolean attached, owned;
+    private Surface directSurface;
 
     GuestDisplay(Context context, boolean dedicated) {
         this(context,dedicated,false);
@@ -69,6 +70,7 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     }
     void setRuntime(GuestService value) {
         GuestService previous = runtime;
+        if(previous!=value)detachDirect();
         runtime = value;
         if (previous != null && previous != value) previous.displayVisible(this, false);
         if (value != null) {
@@ -88,6 +90,7 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     @Override public int displayPriority() { return dedicated ? 1 : 0; }
     @Override public void onDisplayOwnership(boolean value) {
         owned = value;
+        if (!value)detachDirect();
         if (!value && attached) { Native.detach(id); attached = false; }
         // Hiding the SurfaceView also removes its stale last buffer from composition.
         surface.setVisibility(value ? VISIBLE : INVISIBLE);
@@ -103,16 +106,7 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
         if (runtime != null && runtime.directBackend()) {
             if (attached) { Native.detach(id); attached = false; }
             if (holder.getSurface().isValid()) {
-                android.graphics.Canvas canvas = null;
-                try {
-                    canvas = holder.lockCanvas();
-                    if (canvas != null) {
-                        canvas.drawColor(Color.BLACK);
-                        android.graphics.Bitmap bitmap = runtime.frame();
-                        if (bitmap != null) canvas.drawBitmap(bitmap, null,
-                            new android.graphics.Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
-                    }
-                } finally { if (canvas != null) holder.unlockCanvasAndPost(canvas); }
+                directSurface=holder.getSurface();runtime.presentSurface(directSurface);
             }
             return;
         }
@@ -143,9 +137,14 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
         surface.getGlobalVisibleRect(bounds);
         return bounds;
     }
+    private void detachDirect() {
+        if(directSurface!=null && runtime!=null)runtime.detachSurface(directSurface);
+        directSurface=null;
+    }
     @Override public void surfaceCreated(SurfaceHolder holder) { attach(); }
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { attach(); }
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
+        detachDirect();
         // Window lifecycle, not SurfaceView visibility, controls ownership. A losing
         // window hides its surface without withdrawing its request for later handback.
         if (attached) { Native.detach(id); attached = false; }

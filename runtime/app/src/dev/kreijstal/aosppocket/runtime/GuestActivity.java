@@ -175,10 +175,10 @@ public final class GuestActivity extends RuntimeActivity {
     }
     private void reveal(boolean enter,Runnable completion) {
         cancelReveal();
-        if (runtime==null || !runtime.directBackend() || runtime.frame()==null || content.getWidth()==0) {
+        if (runtime==null || !runtime.directBackend() || content.getWidth()==0) {
             if (completion!=null) completion.run(); return;
         }
-        Bitmap copy=runtime.frame().copy(Bitmap.Config.ARGB_8888,false);
+        Bitmap copy=runtime.snapshot();
         if (copy==null) { if (completion!=null) completion.run(); return; }
         display.setVisibility(View.INVISIBLE); handle.setVisibility(View.INVISIBLE);
         transition.start(copy,enter,()->{cancelReveal(); if (completion!=null) completion.run();});

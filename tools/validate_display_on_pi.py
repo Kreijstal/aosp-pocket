@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--fullscreen',action='store_true',help='Also verify immersive controls, host Back and Home-to-PiP')
     parser.add_argument('--reuse-probe',action='store_true',help='Reuse the previously installed display probe for focused host UI retesting')
     parser.add_argument('--clean-page',action='store_true',help='Check separate Settings and an exact card/surface fit without letterboxing')
+    parser.add_argument('--shared-frames',action='store_true',help='Verify native shared-buffer presentation, measured throughput and hidden-display pause')
     args=parser.parse_args()
     sys.path.insert(0, '/home/pi/lineage-cuttlefish/tools')
     import cuttlefish_arm64 as c
@@ -141,6 +142,18 @@ def main():
             assert report['taps'] == taps, report
         assert_report(json.loads(reports[-1]), 0)
         result['app_initial'] = json.loads(reports[-1])
+        if args.shared_frames:
+            time.sleep(5)
+            performance=json.loads(shell('cat '+ROOT+'/logs/display-performance.json'))
+            assert performance['transport']=='shared-rgba' and performance['codec']=='none',performance
+            assert performance['frames_presented']>0 and performance['interval_fps']>0,performance
+            assert performance['shared_bytes']==w*h*8,performance
+            assert performance['backing']=='anonymous' and performance['pixel_bytes_over_socket']==0,performance
+            maps=shell('cat /proc/'+str(boot['host_pid'])+'/maps')
+            assert any('pocket-display' in line and 'rw-s' in line for line in maps.splitlines()),'Host has no anonymous shared display mapping'
+            result['anonymous_shared_mapping_verified']=True
+            result['shared_display_performance']=performance
+            print('Shared display performance: '+json.dumps(performance),flush=True)
         if args.clean_page:
             nodes=list(hierarchy().iter('node'))
             assert not any(n.get('package')==DEV and (n.get('text','').casefold() in ('import guest','start','stop','install apk','open last app','host peripherals','close manager') or n.get('class')=='android.widget.Spinner') for n in nodes),'Management controls remain on the display page'
@@ -153,11 +166,23 @@ def main():
             result['surface_fills_embedded_card']=True
             result['display_page_has_no_management_controls']=True
             click('Settings')
+            if args.shared_frames:
+                # Allow the one in-flight producer request to finish; no visible Surface remains.
+                time.sleep(3)
+                paused=shell('cat '+ROOT+'/logs/display-performance.json')
+                time.sleep(3)
+                assert shell('cat '+ROOT+'/logs/display-performance.json')==paused,'Hidden display kept requesting frames'
+                result['hidden_display_pauses_capture']=True
             nodes=list(hierarchy().iter('node'))
             assert not any(n.get('package')==DEV and n.get('class')=='android.view.SurfaceView' for n in nodes),'Settings contains a guest display'
             assert all(any(n.get('package')==DEV and n.get('text','').casefold()==label.casefold() for n in nodes) for label in ('Start','Stop','Install APK','Open last app','Host peripherals'))
             screenshot('pocket-display-settings')
             click('Back to Android')
+            if args.shared_frames:
+                time.sleep(4)
+                resumed=json.loads(shell('cat '+ROOT+'/logs/display-performance.json'))
+                assert resumed['frames_presented']>performance['frames_presented'],resumed
+                result['shared_display_resumes']=True
             result['settings_is_separate_page']=True
             print('Clean display page, separate Settings and exact card/surface bounds verified',flush=True)
         viewports = []
@@ -271,7 +296,7 @@ def main():
                 raise RuntimeError('Original API25 guest did not restore')
             result['original_restored_from_existing_data'] = True
             result['original_host_pid_after'] = int(host(OLD)[1])
-        report='pocket-display-page-validation.json' if args.clean_page else 'pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
+        report='pocket-shared-display-validation.json' if args.shared_frames else 'pocket-display-page-validation.json' if args.clean_page else 'pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
         Path('/home/pi/'+report).write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2), flush=True)
     if failure:

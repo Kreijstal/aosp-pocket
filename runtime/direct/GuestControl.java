@@ -12,6 +12,7 @@ import java.lang.reflect.*;
 import java.util.concurrent.Semaphore;
 import android.util.DisplayMetrics;
 import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
+import dev.kreijstal.aosppocket.bridge.AnonymousFrames;
 
 /** App-private host connection to the real Android 9 compositor/input services. */
 public final class GuestControl {
@@ -19,11 +20,13 @@ public final class GuestControl {
     private static final Semaphore clients=new Semaphore(4);
     private static Object input;
     private static Method inject;
+    private static Method screenshot;
     private static Context context;
     private static boolean inject(InputEvent event) throws Exception {
         return (Boolean)inject.invoke(input,event,2);
     }
     private static void serve(LocalSocket socket) {
+        AnonymousFrames frames=null;
         try(LocalSocket peer=socket) {
             // All guest processes share one host UID; this is an app-private
             // control channel, not a security boundary between guest apps.
@@ -33,15 +36,35 @@ public final class GuestControl {
             display.write(out);out.flush();
             while(true) {
                 int op=in.readInt();
-                if(op==1) {
-                    Bitmap bitmap=(Bitmap)Class.forName("android.view.SurfaceControl")
-                        .getMethod("screenshot",android.graphics.Rect.class,int.class,int.class,int.class)
-                        .invoke(null,new android.graphics.Rect(),display.width,display.height,0);
+                if(op==11) {
+                    FileDescriptor[] handles=peer.getAncillaryFileDescriptors();
+                    if(handles==null || handles.length!=1 || frames!=null)throw new IOException("Expected one shared display descriptor");
+                    try {frames=AnonymousFrames.attach(display,handles[0]);}
+                    finally {android.system.Os.close(handles[0]);}
+                    out.writeBoolean(true);
+                } else if(op==10) {
+                    int slot=in.readInt();long sequence=in.readLong();
+                    if(slot<0 || slot>1 || sequence<1)throw new IOException("Invalid shared display request");
+                    if(frames==null)throw new IOException("Shared display descriptor was not supplied");
+                    long began=SystemClock.elapsedRealtimeNanos();
+                    Bitmap bitmap=(Bitmap)screenshot.invoke(null,new android.graphics.Rect(),display.width,display.height,0);
                     if(bitmap==null)throw new IOException("Compositor returned no frame");
-                    ByteArrayOutputStream encoded=new ByteArrayOutputStream();
-                    try {if(!bitmap.compress(Bitmap.CompressFormat.PNG,100,encoded))throw new IOException("Frame encoding failed");}
-                    finally {bitmap.recycle();}
-                    byte[] data=encoded.toByteArray();out.writeInt(data.length);out.write(data);
+                    try {
+                        if(bitmap.getWidth()!=display.width || bitmap.getHeight()!=display.height)
+                            throw new IOException("Compositor dimensions changed");
+                        if(bitmap.getConfig()==Bitmap.Config.HARDWARE) {
+                            Bitmap software=bitmap.copy(Bitmap.Config.ARGB_8888,false);
+                            if(software==null)throw new IOException("Cannot read compositor pixels");
+                            bitmap.recycle();bitmap=software;
+                        }
+                        if(bitmap.getConfig()!=Bitmap.Config.ARGB_8888 || bitmap.getRowBytes()!=display.width*4) {
+                            Bitmap normalized=Bitmap.createBitmap(display.width,display.height,Bitmap.Config.ARGB_8888);
+                            new android.graphics.Canvas(normalized).drawBitmap(bitmap,0,0,null);
+                            bitmap.recycle();bitmap=normalized;
+                        }
+                        bitmap.copyPixelsToBuffer(frames.slot(slot));
+                    } finally {bitmap.recycle();}
+                    out.writeLong(sequence);out.writeInt(slot);out.writeLong(SystemClock.elapsedRealtimeNanos()-began);
                 } else if(op==2) {
                     long down=in.readLong(),time=in.readLong();int action=in.readInt(),count=in.readInt();
                     if(count<1 || count>10 || (action&255)>MotionEvent.ACTION_POINTER_UP || (action>>8)>=count)
@@ -110,7 +133,7 @@ public final class GuestControl {
             }
         } catch(EOFException closed) { /* Normal viewer disconnect. */ }
         catch(Throwable error) {System.err.println("POCKET_CONTROL_CLIENT_CLOSED "+error);}
-        finally {clients.release();}
+        finally {if(frames!=null)try{frames.close();}catch(IOException ignored){}clients.release();}
     }
     public static void main(String[] args) {
         try {
@@ -122,6 +145,8 @@ public final class GuestControl {
             new HostNetwork(context);
             input=FrameworkProbe.service("input","android.hardware.input.IInputManager$Stub");
             inject=Class.forName("android.hardware.input.IInputManager").getMethod("injectInputEvent",InputEvent.class,int.class);
+            screenshot=Class.forName("android.view.SurfaceControl")
+                .getMethod("screenshot",android.graphics.Rect.class,int.class,int.class,int.class);
             FileDescriptor fd=new FileDescriptor();
             Field number=FileDescriptor.class.getDeclaredField("descriptor");number.setAccessible(true);
             number.setInt(fd,Integer.parseInt(System.getenv("ANDROID_SOCKET_pocket_control")));

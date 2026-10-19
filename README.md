@@ -68,6 +68,10 @@ movable control menu, guest Back navigation and Home-to-PiP transitions.
 Version 0.8 gives Android its own display page, with management controls on
 Settings. The embedded card follows the guest aspect ratio and its surface
 fills the card, removing the surrounding black panel.
+Version 0.9 replaces the four-FPS PNG transport with anonymous shared RGBA
+buffers and worker-thread native Surface presentation. Settings exposes timing
+reports without root. Guest rendering still uses SwiftShader; GPU buffer
+sharing and physical Samsung performance validation remain pending.
 
 A separate experimental **direct backend** runs a controlled native program
 with the pinned Android 9 linker/bionic without PRoot or a tracer. Its path,

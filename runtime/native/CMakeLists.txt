@@ -25,7 +25,7 @@ target_sources(anbox-core PRIVATE
   "${CMAKE_CURRENT_BINARY_DIR}/Device.cpp"
   "${CMAKE_CURRENT_LIST_DIR}/buffered_io_stream.cpp")
 target_include_directories(anbox-core BEFORE PUBLIC "${CMAKE_CURRENT_LIST_DIR}/overrides")
-add_library(pocket_runtime SHARED runtime.cpp)
+add_library(pocket_runtime SHARED runtime.cpp frame_present.cpp)
 target_include_directories(pocket_runtime BEFORE PRIVATE "${CMAKE_CURRENT_LIST_DIR}/overrides")
 target_include_directories(pocket_runtime PRIVATE
   "${ANBOX}" "${ANBOX}/src" "${ANBOX}/external"

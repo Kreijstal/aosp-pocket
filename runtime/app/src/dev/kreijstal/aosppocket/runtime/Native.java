@@ -8,6 +8,7 @@ final class Native {
     static native void initialize(String directory, int width, int height, int dpi);
     static native void attach(long displayId, Surface surface);
     static native void detach(long displayId);
+    static native boolean presentFrame(Surface surface, java.nio.ByteBuffer pixels, int width, int height);
     static native void touch(int action, int id, int x, int y);
     static native void dumpParcel(Parcel parcel, String destination, int size);
 }

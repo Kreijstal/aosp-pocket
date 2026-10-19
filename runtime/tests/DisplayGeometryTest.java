@@ -26,6 +26,9 @@ public final class DisplayGeometryTest {
         byte[] invalid=bytes.toByteArray();invalid[0]=0;
         try{DisplayGeometry.read(new DataInputStream(new ByteArrayInputStream(invalid)));throw new AssertionError("Old/bad protocol accepted");}
         catch(IOException expected){}
+        byte[] oldProtocol=bytes.toByteArray();oldProtocol[3]=0x3a;
+        try{DisplayGeometry.read(new DataInputStream(new ByteArrayInputStream(oldProtocol)));throw new AssertionError("PNG protocol accepted by the shared-frame client");}
+        catch(IOException expected){}
         require(new DisplayGeometry(2160,3840,640).maximumFrameBytes()>8*1024*1024,"Native 4K frame limit");
         reject(0,2400,420);reject(1080,-1,420);reject(1080,2400,0);reject(8192,8192,420);
         System.out.println("PASS: host geometry, aspect-preserving cards/windows, boot properties, versioned handshake and frame bounds");
