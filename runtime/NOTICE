@@ -42,3 +42,13 @@ in runtime/api28/init-rootless.patch. Original Apache-2.0 notices remain in
 the pinned sources. Compilation uses matching pinned AOSP libc++ headers
 (LLVM/University of Illinois and MIT licenses retained upstream). The APK's
 Android 9 NOTICE asset covers the corresponding platform runtime libraries.
+
+The API 28 zygote integration compiles AOSP android-9.0.0_r61 app_process,
+native Zygote fork hooks and file-descriptor checks from frameworks/base,
+adapted by runtime/api28/zygote-rootless.patch. It also statically compiles
+ART's sigchainlib with its original exported symbol map. Original Apache-2.0
+copyright notices remain in the pinned upstream sources. The development
+bootstrap uses the reference image's libopenjdkjvmti.so and Android 9 ART
+boot images; their notices are included in the Android 9 NOTICE asset. The
+bootstrap, wire-protocol client, Java child and diagnostic log receiver are
+project sources under GPL-3.0-only. No VMOS implementation is included.

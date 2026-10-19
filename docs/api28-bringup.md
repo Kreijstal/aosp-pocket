@@ -14,9 +14,9 @@ ART, exercises threads/reflection/exceptions, and launches a native child that
 retains UID 39999 and reads the SDK 28 property area.
 
 This is **runtime bring-up, not a bootable Android 9 guest**. The bootable
-runtime continues to use its tested Android 7.1/API 25 image. The init core now
-has a rootless integration profile; full platform init, zygote, system services,
-launcher and graphics integration remain unverified.
+runtime continues to use its tested Android 7.1/API 25 image. The init core and
+zygote now have rootless integration profiles. System services, launcher and
+graphics integration remain unverified.
 Hardware bridges are not added here.
 
 ## Separate builds and SDK checks
@@ -39,8 +39,12 @@ Outputs:
   rootless entry point and shared property backend.
 - `out/api28/native/pocket-init-test-api28`: real child services and an independent
   bionic control/observation client.
+- `out/api28/native/pocket-app-process-api28` and `libpocket_zygote_api28.so`:
+  source-built AOSP app_process and adapted native fork hooks.
+- `out/api28/native/pocket-zygote-client-api28`: independent Android 9 zygote
+  protocol client. `pocket-log-writer-api28` receives guest liblog diagnostics.
 - `out/api28/aosp-pocket-api28-probe.apk`: independent development application,
-  package `dev.kreijstal.aosppocket.api28probe`, about 74 MiB with ART assets.
+  package `dev.kreijstal.aosppocket.api28probe`, about 77 MiB with ART assets.
 - `out/api28/probe-rootfs`: ELF dependency closure, boot images and metadata;
   deliberately not an importable full guest image.
 
@@ -283,12 +287,83 @@ ssh pi@juanraspberry python3 - < tools/validate_api28_on_pi.py
 Both passed. The VM-side helper uses the instance's dedicated ADB server on
 port 5043, never a default server or physical-phone connection.
 
+## Real zygote integration
+
+The `0.4-api28-zygote` probe starts the real Android 9 `ZygoteInit`,
+`ZygoteServer` and `ZygoteConnection` from the reference boot image through
+the tested rootless init core. It compiles AOSP `app_process`, native fork
+hooks, descriptor checks and ART's signal-chain implementation from pinned
+`android-9.0.0_r61` sources. The
+[`zygote-rootless.patch`](../runtime/api28/zygote-rootless.patch) replaces
+privileged platform setup with the explicitly limited rootless profile.
+It keeps the AOSP fork, runtime pre/post-fork hooks, descriptor checks,
+signal handling, child reaping and guest `setresgid`/`setresuid` transitions.
+
+[`init.zygote.rc`](../runtime/api28/init.zygote.rc) starts the private Binder
+registry, a diagnostic `logdw` datagram receiver and app_process with an
+inherited zygote socket. The receiver captures real liblog messages and kernel
+sender credentials; it is not a full logd service. An independent native client
+uses the Android 9 argument-count/newline protocol, queries `arm64-v8a`, and
+first requests unsupported external-storage setup. That request must return
+PID -1 without killing zygote. A supported request forks a real Java child as
+guest UID/GID 39999. The child runs a Java thread, launches a native Binder
+echo client and verifies that returning to virtual UID 0 fails with EPERM.
+
+The host app independently reads the child's `/proc` identity and SELinux
+context, checks its real parent against the socket peer, and rejects stale
+child output using a fresh nonce. The VM harness also checks all four kernel
+UIDs, zero effective capabilities and inherited seccomp mode 2. The host app
+then terminates the verified child; zygote reaps it and must answer a fresh
+ABI query. Init stops all three services with no remaining managed children.
+[Recorded full-regression evidence](api28-zygote-validation.json) includes
+the preceding Binder/property/ART/init cases and these zygote checks.
+
+The profile uses interpreted ART, the pinned `/system` boot images and
+`--enable-lazy-preload`. It binds a separate cache-free `/data` and deliberately
+does not create a global dalvik-cache: compiler-cache generation, relocation
+and full class preloading are not implemented. Android 9's image loader does
+not append an arbitrary JAR through `BOOTCLASSPATH`; a supported JVMTI agent
+adds the project's bootstrap/test JAR to the boot loader, then installs the
+adapted native hooks and invokes the real AOSP entry point. The JVMTI plugin
+makes this a debuggable development runtime. JDWP transport is disabled.
+
+Java's Android 9 standard descriptors duplicate stdin/stdout/stderr. The
+supervisor supplies null stdin and an explicit guest `/pocket-console` log
+path, with append-mode output. Only that console path is added to AOSP's
+descriptor whitelist; unsupported descriptors still fail the original checks.
+
+System-server, child-zygote, supplementary-group, nonzero-capability,
+SELinux-context and external-storage specialization requests are rejected
+before fork. No kernel namespaces, cgroups, domain transitions or native bridge
+are created. Guest IDs are PRoot metadata; all processes keep the real host
+app UID and its SELinux/seccomp confinement. They share that sandbox rather
+than gaining security isolation from one another.
+
+AOSP's zygote connection moves a child to the requesting client's POSIX process
+group. The regression explicitly terminates its child while zygote can reap it;
+generic ownership and shutdown of arbitrary app descendants remains a boot
+gate. This milestone does not start system_server, render a launcher, install
+APKs or enable API 28 full-image imports in Pocket Manager. The API 25 guest
+remains separate. A read-only check after this regression confirmed its host
+PID 17501, PRoot PID 17995, init PID 18007, system-server PID 18325 and launcher
+PID 19301 were still running.
+
+Run the full regression with the validation commands above, or isolate zygote
+iteration with:
+
+```sh
+ssh pi@juanraspberry python3 - --zygote-only < tools/validate_api28_on_pi.py
+```
+
+The [Ananbox fork comparison](ananbox-fork-review.md) records useful upstream
+guest-management and Binder lifecycle work; the inspected fork does not
+provide an Android 9 port or a different execution backend.
+
 ## Next boot gates
 
-1. Start Android 9 zygote through the tested init core and private registry.
-   Add missing service/socket/property behavior as required, while keeping
-   privileged operations explicit and guest credentials consistent. The init
-   integration scenario alone does not establish zygote or system-server boot.
+1. Extend the tested zygote profile toward system-server startup. Implement
+   required service/socket/property behavior and generic descendant lifecycle
+   ownership. The current profile deliberately rejects system-server requests.
 2. Add manager death/restart and nested Binder regression cases before treating
    the private registry as a general framework IPC layer.
 3. Adapt Android 9 graphics/HAL transports and linker namespace configuration,

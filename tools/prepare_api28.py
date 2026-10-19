@@ -51,7 +51,9 @@ def prepare(art=False):
     if marker.exists() and marker.read_text().strip() == digest and (root / "system/etc/NOTICE.xml.gz").is_file() and (
             not art or (art_marker.exists() and art_marker.read_text().strip() == digest and
                         (root / "system/etc/event-log-tags").is_file() and
-                        (root / "system/etc/public.libraries.txt").is_file())):
+                        (root / "system/etc/public.libraries.txt").is_file() and
+                        (root / "system/bin/app_process64").is_file() and
+                        (root / "system/etc/preloaded-classes").is_file())):
         return root
     with archive.open("rb") as stream:
         if hashlib.file_digest(stream, "sha256").hexdigest() != digest:
@@ -68,8 +70,8 @@ def prepare(art=False):
             selected = name.startswith("system/lib64/") or name in (
                 "system/bin/linker64", "system/build.prop", "system/etc/NOTICE.xml.gz")
             if art:
-                selected |= name in ("init.environ.rc", "system/bin/dalvikvm64", "system/etc/event-log-tags",
-                                      "system/etc/public.libraries.txt") or (
+                selected |= name in ("init.environ.rc", "system/bin/dalvikvm64", "system/bin/app_process64", "system/etc/event-log-tags",
+                                      "system/etc/public.libraries.txt", "system/etc/preloaded-classes") or (
                     path.parent.as_posix() == "system/framework" and (path.suffix == ".jar" or path.name.startswith("boot"))) or (
                     name.startswith("system/framework/arm64/boot")) or name.startswith("system/usr/icu/") or (
                     name == "system/usr/share/zoneinfo/tzdata")

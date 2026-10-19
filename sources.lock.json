@@ -73,7 +73,7 @@
     }
   ],
   "guest_api28": {
-    "status": "init_core_verified_vm",
+    "status": "zygote_verified_vm",
     "sdk": 28,
     "android_tag": "android-9.0.0_r61",
     "full_guest_boot_verified": false,
@@ -135,11 +135,44 @@
         "paths": [
           "include"
         ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/frameworks/base",
+        "tag": "android-9.0.0_r61",
+        "commit": "ad31dbbdcd76091d7d2d1fc6c863ee17c3bfe87d",
+        "cache": "frameworks-base",
+        "paths": [
+          "cmds/app_process",
+          "core/java/com/android/internal/os",
+          "core/jni",
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/libnativehelper",
+        "tag": "android-9.0.0_r61",
+        "commit": "afd3a633ab30cb17758543b4bbf2e8165812ce7c",
+        "cache": "libnativehelper",
+        "paths": [
+          "include",
+          "include_jni",
+          "header_only_include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/art",
+        "tag": "android-9.0.0_r61",
+        "commit": "2a3fa67c8294c6108cf368be65de2658642ac349",
+        "cache": "art",
+        "paths": [
+          "sigchainlib",
+          "openjdkjvmti/include"
+        ]
       }
     ],
     "properties_verified_vm": true,
     "art_java_verified_vm": true,
-    "zygote_verified_vm": false,
+    "zygote_verified_vm": true,
     "init_port": {
       "patch": "runtime/api28/init-rootless.patch",
       "entry_point": "runtime/api28/init_main.cpp",
@@ -147,6 +180,16 @@
       "pid1": false,
       "privileged_boot_supported": false
     },
-    "init_core_verified_vm": true
+    "init_core_verified_vm": true,
+    "zygote_port": {
+      "patch": "runtime/api28/zygote-rootless.patch",
+      "bootstrap": "runtime/api28/ZygoteBootstrap.java",
+      "source_native_fork_hooks": true,
+      "bootstrap_classpath_extension": "JVMTI development agent",
+      "image_only": true,
+      "compiler_cache_supported": false,
+      "jdwp_enabled": false,
+      "system_server_supported": false
+    }
   }
 }

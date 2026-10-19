@@ -19,6 +19,7 @@ public final class Api28ProbeActivity extends Activity {
     private volatile java.lang.Process manager, client, propertyServer, propertyWaiter, initProcess;
     private volatile boolean closed;
     private HandlerThread receiverThread;
+    private int extractedFiles, cachedFiles;
     private TextView status;
 
     @Override public void onCreate(Bundle saved) {
@@ -43,6 +44,8 @@ public final class Api28ProbeActivity extends Activity {
     private File extract() throws Exception {
         File root = new File(getFilesDir(), "api28-rootfs");
         root.mkdirs();
+        SharedPreferences cache = getSharedPreferences("api28-fixture-cache", MODE_PRIVATE);
+        SharedPreferences.Editor stamps = cache.edit();
         try (ZipFile apk = new ZipFile(getApplicationInfo().sourceDir)) {
             java.util.Enumeration<? extends ZipEntry> entries = apk.entries();
             final String prefix = "assets/api28-rootfs/";
@@ -55,14 +58,23 @@ public final class Api28ProbeActivity extends Activity {
                 File file = new File(root, name);
                 if (!file.getCanonicalPath().startsWith(root.getCanonicalPath() + "/"))
                     throw new IOException("Invalid probe path");
+                String stamp = entry.getCrc() + ":" + entry.getSize();
+                if (stamp.equals(cache.getString(name, "")) && file.isFile() && file.length() == entry.getSize()) {
+                    Os.chmod(file.getPath(), 0755);
+                    ++cachedFiles;
+                    continue;
+                }
                 file.getParentFile().mkdirs();
                 try (InputStream in = apk.getInputStream(entry); OutputStream out = new FileOutputStream(file)) {
                     byte[] buffer = new byte[65536];
                     for (int n; (n = in.read(buffer)) != -1;) out.write(buffer, 0, n);
                 }
                 Os.chmod(file.getPath(), 0755);
+                stamps.putString(name, stamp);
+                ++extractedFiles;
             }
         }
+        if (extractedFiles > 0) stamps.apply();
         new File(root, "tmp").mkdirs();
         // PRoot's old bind-only probe created a mode-000 /dev placeholder.
         // The rootless guest now needs actual writable private subdirectories.
@@ -124,6 +136,14 @@ public final class Api28ProbeActivity extends Activity {
             "-r", root.getPath(), "-w", "/", "-b", "/dev", "-b", "/proc",
             "-b", new File(root, "dev/__properties__").getPath() + ":/dev/__properties__",
             "-b", new File(root, "dev/socket").getPath() + ":/dev/socket"));
+        if (output.startsWith("zygote")) {
+            // A separate, initially cache-free /data for the read-only image
+            // zygote profile. ART treats /data as its global cache namespace.
+            command.add("-b");
+            command.add(new File(root, "zygote-data").getPath() + ":/data");
+            command.add("-b");
+            command.add(new File(getFilesDir(), output + ".log").getPath() + ":/pocket-console");
+        }
         // Even a real-UID client needs guest metadata translation: bionic
         // requires property files to appear root-owned when mapping them.
         command.add("-i");
@@ -135,7 +155,7 @@ public final class Api28ProbeActivity extends Activity {
         builder.environment().put("PROOT_TMP_DIR", tmp.getPath());
         builder.environment().put("POCKET_PARENT_PID", Integer.toString(android.os.Process.myPid()));
         builder.environment().put("TMPDIR", "/tmp");
-        if (binary.equals("dalvikvm64")) builder.environment().put("POCKET_DEBUG_SIGNALS", "1");
+        if (binary.equals("dalvikvm64") || output.equals("zygote-init")) builder.environment().put("POCKET_DEBUG_SIGNALS", "1");
         builder.environment().put("ANDROID_ROOT", "/system");
         builder.environment().put("ANDROID_DATA", "/data");
         for (String name : new String[]{"BOOTCLASSPATH", "DEX2OATBOOTCLASSPATH", "SYSTEMSERVERCLASSPATH",
@@ -143,8 +163,15 @@ public final class Api28ProbeActivity extends Activity {
             builder.environment().remove(name);
         builder.environment().remove("LD_LIBRARY_PATH");
         builder.environment().remove("LD_PRELOAD");
+        // These supervised programs have no interactive stdin; match init's
+        // /dev/null input instead of leaving a Java ProcessBuilder pipe open.
+        builder.redirectInput(new File("/dev/null"));
         builder.redirectErrorStream(true);
-        builder.redirectOutput(new File(getFilesDir(), output + ".log"));
+        File logFile = new File(getFilesDir(), output + ".log");
+        try (FileOutputStream clear = new FileOutputStream(logFile)) { }
+        // Forked zygote children reopen Java's duplicated stdout/err handles.
+        // Append mode keeps those descriptions from overwriting each other.
+        builder.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile));
         return builder.start();
     }
 
@@ -158,7 +185,15 @@ public final class Api28ProbeActivity extends Activity {
             result.put("guest_sdk", 28).put("host_sdk", Build.VERSION.SDK_INT)
                 .put("host_uid", android.os.Process.myUid()).put("full_guest_boot_verified", false);
             File root = extract();
+            result.put("payload_files_extracted", extractedFiles).put("payload_files_cached", cachedFiles);
             hostTemplates(root);
+            if ("zygote".equals(getIntent().getStringExtra("stage"))) {
+                result.put("scope", "zygote_only");
+                zygote(root, result);
+                result.put("passed", true);
+                message("PASS — Android 9 zygote fork, Java child, Binder and shutdown");
+                return;
+            }
             startProperties(root);
             propertyCheck(root, "fresh");
             propertyWaiter = startProgram(root, "pocket-property-probe-api28", new String[]{"wait"}, "39999:39999", "property-wait");
@@ -181,11 +216,12 @@ public final class Api28ProbeActivity extends Activity {
             stopProperties(root);
             result.put("property_restart_passed", true).put("property_restart_log", log("properties"));
             initIntegration(root, result);
+            zygote(root, result);
             result.put("passed", true);
             message("PASS — Android 9 init integration\n\nPrivate properties, update notifications, "
                 + "restart, Binder and FD transfer passed.\n\nART: threads, reflection, exceptions "
                 + "and native child execution passed.\n\nAOSP init actions, sockets, child reaping, "
-                + "restart and shutdown passed. Zygote and launcher are not tested.");
+                + "restart and shutdown passed. Zygote fork/Java/Binder passed. Launcher is not tested.");
         } catch (Exception error) {
             try { result.put("passed", false).put("error", error.toString()); } catch (Exception ignored) { }
             message("API 28 bring-up failed:\n" + error);
@@ -224,6 +260,56 @@ public final class Api28ProbeActivity extends Activity {
             throw new IOException("Init left service state or socket behind:\n" + log("init-stopped"));
         result.put("init_passed", true).put("init_log", log("init"))
             .put("init_client_log", log("init-client")).put("init_shutdown_log", log("init-stopped"));
+    }
+
+    private void zygote(File root, JSONObject result) throws Exception {
+        message("Android 9: starting the real AOSP zygote and testing Java process creation…");
+        receiver.reset();
+        new File(root, "zygote-data").mkdirs();
+        resetProperties(root);
+        File childReport = new File(root, "zygote-data/pocket-zygote-child.json");
+        if (childReport.exists() && !childReport.delete()) throw new IOException("Cannot remove prior zygote report");
+        String nonce = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        initProcess = startProgram(root, "pocket-init-api28", new String[]{"/system/etc/init/init.zygote.rc"}, "0:0", "zygote-init");
+        waitForMarker(initProcess, "zygote-init", "API28_INIT_READY");
+        client = startProgram(root, "pocket-zygote-client-api28", new String[]{"fork", nonce}, "39999:39999", "zygote-client");
+        if (!client.waitFor(120, java.util.concurrent.TimeUnit.SECONDS) || client.exitValue() != 0)
+            throw new IOException("Zygote protocol/fork failed:\n" + log("zygote-client") + "\n" + log("zygote-init"));
+        JSONObject child = new JSONObject(new String(Files.readAllBytes(childReport.toPath()), "UTF-8"));
+        if (!child.getBoolean("passed") || child.getInt("uid") != 39999 || child.getInt("sdk") != 28 || !nonce.equals(child.getString("nonce")))
+            throw new IOException("Bad/stale zygote child report: " + child);
+        int pid = child.getInt("pid");
+        java.util.regex.Matcher fork = java.util.regex.Pattern.compile("parent_pid=(\\d+) child_pid=(\\d+) peer_kernel_uid=(\\d+)").matcher(log("zygote-client"));
+        if (!fork.find() || pid != Integer.parseInt(fork.group(2)) || android.os.Process.myUid() != Integer.parseInt(fork.group(3)))
+            throw new IOException("Zygote PID/peer identity mismatch");
+        String proc = new String(Files.readAllBytes(new File("/proc/" + pid + "/status").toPath()), "UTF-8");
+        java.util.regex.Matcher ids = java.util.regex.Pattern.compile("(?m)^Uid:\\s+(\\d+)").matcher(proc);
+        java.util.regex.Matcher parent = java.util.regex.Pattern.compile("(?m)^PPid:\\s+(\\d+)").matcher(proc);
+        if (!ids.find() || Integer.parseInt(ids.group(1)) != android.os.Process.myUid() || !parent.find() || !parent.group(1).equals(fork.group(1)))
+            throw new IOException("Zygote child escaped host UID or has the wrong parent");
+        String context = new String(Files.readAllBytes(new File("/proc/" + pid + "/attr/current").toPath()), "UTF-8").replace("\u0000", "").trim();
+        if (!context.contains("untrusted_app")) throw new IOException("Unexpected zygote child SELinux context " + context);
+        result.put("zygote_child_selinux", context);
+        result.put("zygote_child", child).put("zygote_child_status", proc).put("zygote_client_log", log("zygote-client"));
+        // AOSP ZygoteConnection moves the child to its client's POSIX group.
+        // Until descendant ownership is implemented, explicitly terminate the
+        // verified test child while zygote is alive to reap it.
+        Os.kill(pid, 15);
+        for (int n = 0; n < 100 && new File("/proc/" + pid).exists(); ++n) Thread.sleep(50);
+        if (new File("/proc/" + pid).exists()) throw new IOException("Zygote did not reap its test child");
+        client = startProgram(root, "pocket-zygote-client-api28", new String[]{"query"}, "39999:39999", "zygote-query");
+        if (!client.waitFor(15, java.util.concurrent.TimeUnit.SECONDS) || client.exitValue() != 0)
+            throw new IOException("Zygote did not survive child exit:\n" + log("zygote-query"));
+        propertyCheck(root, "stop");
+        if (!initProcess.waitFor(15, java.util.concurrent.TimeUnit.SECONDS) || initProcess.exitValue() != 0 ||
+                !log("zygote-init").contains("remaining=0 failed=0"))
+            throw new IOException("Zygote init did not shut down:\n" + log("zygote-init"));
+        if (new File(root, "zygote-data/dalvik-cache").exists())
+            throw new IOException("Image-only zygote profile unexpectedly created a compiler cache");
+        if (!log("zygote-init").contains("API28_LOG_WRITER_TEST"))
+            throw new IOException("Guest log writer did not capture the real liblog test message");
+        result.put("zygote_image_only_cache_absent", true);
+        result.put("zygote_passed", true).put("zygote_init_log", log("zygote-init")).put("zygote_query_after_child_log", log("zygote-query"));
     }
 
     private void art(File root, JSONObject result) throws Exception {

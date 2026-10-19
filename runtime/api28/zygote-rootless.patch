@@ -1,0 +1,549 @@
+--- a/core/jni/com_android_internal_os_Zygote.cpp
++++ b/core/jni/com_android_internal_os_Zygote.cpp
+@@ -32,7 +32,7 @@
+ #include <paths.h>
+ #include <signal.h>
+ #include <stdlib.h>
+-#include <sys/capability.h>
++
+ #include <sys/cdefs.h>
+ #include <sys/personality.h>
+ #include <sys/prctl.h>
+@@ -52,9 +52,9 @@
+ #include <cutils/sched_policy.h>
+ #include <private/android_filesystem_config.h>
+ #include <utils/String8.h>
+-#include <selinux/android.h>
+-#include <seccomp_policy.h>
+-#include <processgroup/processgroup.h>
++
++
++
+ 
+ #include "core_jni_helpers.h"
+ #include <nativehelper/JNIHelp.h>
+@@ -63,7 +63,7 @@
+ #include <nativehelper/ScopedUtfChars.h>
+ #include "fd_utils.h"
+ 
+-#include "nativebridge/native_bridge.h"
++
+ 
+ namespace {
+ 
+@@ -80,7 +80,7 @@
+ static jclass gZygoteClass;
+ static jmethodID gCallPostForkChildHooks;
+ 
+-static bool g_is_security_enforced = true;
++
+ 
+ // Must match values in com.android.internal.os.Zygote.
+ enum MountExternalKind {
+@@ -199,12 +199,10 @@
+     *error_msg = CREATE_ERROR("Getting gids int array failed");
+     return false;
+   }
+-  int rc = setgroups(gids.size(), reinterpret_cast<const gid_t*>(&gids[0]));
+-  if (rc == -1) {
+-    *error_msg = CREATE_ERROR("setgroups failed: %s, gids.size=%zu", strerror(errno), gids.size());
++  if (gids.size() != 0) {
++    *error_msg = "supplementary groups unsupported in this profile";
+     return false;
+   }
+-
+   return true;
+ }
+ 
+@@ -251,184 +249,6 @@
+ 
+   // Set the jemalloc decay time to 1.
+   mallopt(M_DECAY_TIME, 1);
+-}
+-
+-static void SetUpSeccompFilter(uid_t uid) {
+-  if (!g_is_security_enforced) {
+-    ALOGI("seccomp disabled by setenforce 0");
+-    return;
+-  }
+-
+-  // Apply system or app filter based on uid.
+-  if (uid >= AID_APP_START) {
+-    set_app_seccomp_filter();
+-  } else {
+-    set_system_seccomp_filter();
+-  }
+-}
+-
+-static bool EnableKeepCapabilities(std::string* error_msg) {
+-  int rc = prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0);
+-  if (rc == -1) {
+-    *error_msg = CREATE_ERROR("prctl(PR_SET_KEEPCAPS) failed: %s", strerror(errno));
+-    return false;
+-  }
+-  return true;
+-}
+-
+-static bool DropCapabilitiesBoundingSet(std::string* error_msg) {
+-  for (int i = 0; prctl(PR_CAPBSET_READ, i, 0, 0, 0) >= 0; i++) {
+-    int rc = prctl(PR_CAPBSET_DROP, i, 0, 0, 0);
+-    if (rc == -1) {
+-      if (errno == EINVAL) {
+-        ALOGE("prctl(PR_CAPBSET_DROP) failed with EINVAL. Please verify "
+-              "your kernel is compiled with file capabilities support");
+-      } else {
+-        *error_msg = CREATE_ERROR("prctl(PR_CAPBSET_DROP, %d) failed: %s", i, strerror(errno));
+-        return false;
+-      }
+-    }
+-  }
+-  return true;
+-}
+-
+-static bool SetInheritable(uint64_t inheritable, std::string* error_msg) {
+-  __user_cap_header_struct capheader;
+-  memset(&capheader, 0, sizeof(capheader));
+-  capheader.version = _LINUX_CAPABILITY_VERSION_3;
+-  capheader.pid = 0;
+-
+-  __user_cap_data_struct capdata[2];
+-  if (capget(&capheader, &capdata[0]) == -1) {
+-    *error_msg = CREATE_ERROR("capget failed: %s", strerror(errno));
+-    return false;
+-  }
+-
+-  capdata[0].inheritable = inheritable;
+-  capdata[1].inheritable = inheritable >> 32;
+-
+-  if (capset(&capheader, &capdata[0]) == -1) {
+-    *error_msg = CREATE_ERROR("capset(inh=%" PRIx64 ") failed: %s", inheritable, strerror(errno));
+-    return false;
+-  }
+-
+-  return true;
+-}
+-
+-static bool SetCapabilities(uint64_t permitted, uint64_t effective, uint64_t inheritable,
+-                            std::string* error_msg) {
+-  __user_cap_header_struct capheader;
+-  memset(&capheader, 0, sizeof(capheader));
+-  capheader.version = _LINUX_CAPABILITY_VERSION_3;
+-  capheader.pid = 0;
+-
+-  __user_cap_data_struct capdata[2];
+-  memset(&capdata, 0, sizeof(capdata));
+-  capdata[0].effective = effective;
+-  capdata[1].effective = effective >> 32;
+-  capdata[0].permitted = permitted;
+-  capdata[1].permitted = permitted >> 32;
+-  capdata[0].inheritable = inheritable;
+-  capdata[1].inheritable = inheritable >> 32;
+-
+-  if (capset(&capheader, &capdata[0]) == -1) {
+-    *error_msg = CREATE_ERROR("capset(perm=%" PRIx64 ", eff=%" PRIx64 ", inh=%" PRIx64 ") "
+-                              "failed: %s", permitted, effective, inheritable, strerror(errno));
+-    return false;
+-  }
+-  return true;
+-}
+-
+-static bool SetSchedulerPolicy(std::string* error_msg) {
+-  errno = -set_sched_policy(0, SP_DEFAULT);
+-  if (errno != 0) {
+-    *error_msg = CREATE_ERROR("set_sched_policy(0, SP_DEFAULT) failed: %s", strerror(errno));
+-    return false;
+-  }
+-  return true;
+-}
+-
+-static int UnmountTree(const char* path) {
+-    size_t path_len = strlen(path);
+-
+-    FILE* fp = setmntent("/proc/mounts", "r");
+-    if (fp == NULL) {
+-        ALOGE("Error opening /proc/mounts: %s", strerror(errno));
+-        return -errno;
+-    }
+-
+-    // Some volumes can be stacked on each other, so force unmount in
+-    // reverse order to give us the best chance of success.
+-    std::list<std::string> toUnmount;
+-    mntent* mentry;
+-    while ((mentry = getmntent(fp)) != NULL) {
+-        if (strncmp(mentry->mnt_dir, path, path_len) == 0) {
+-            toUnmount.push_front(std::string(mentry->mnt_dir));
+-        }
+-    }
+-    endmntent(fp);
+-
+-    for (auto path : toUnmount) {
+-        if (umount2(path.c_str(), MNT_DETACH)) {
+-            ALOGW("Failed to unmount %s: %s", path.c_str(), strerror(errno));
+-        }
+-    }
+-    return 0;
+-}
+-
+-// Create a private mount namespace and bind mount appropriate emulated
+-// storage for the given user.
+-static bool MountEmulatedStorage(uid_t uid, jint mount_mode,
+-        bool force_mount_namespace, std::string* error_msg) {
+-    // See storage config details at http://source.android.com/tech/storage/
+-
+-    String8 storageSource;
+-    if (mount_mode == MOUNT_EXTERNAL_DEFAULT) {
+-        storageSource = "/mnt/runtime/default";
+-    } else if (mount_mode == MOUNT_EXTERNAL_READ) {
+-        storageSource = "/mnt/runtime/read";
+-    } else if (mount_mode == MOUNT_EXTERNAL_WRITE) {
+-        storageSource = "/mnt/runtime/write";
+-    } else if (!force_mount_namespace) {
+-        // Sane default of no storage visible
+-        return true;
+-    }
+-
+-    // Create a second private mount namespace for our process
+-    if (unshare(CLONE_NEWNS) == -1) {
+-        *error_msg = CREATE_ERROR("Failed to unshare(): %s", strerror(errno));
+-        return false;
+-    }
+-
+-    // Handle force_mount_namespace with MOUNT_EXTERNAL_NONE.
+-    if (mount_mode == MOUNT_EXTERNAL_NONE) {
+-        return true;
+-    }
+-
+-    if (TEMP_FAILURE_RETRY(mount(storageSource.string(), "/storage",
+-            NULL, MS_BIND | MS_REC | MS_SLAVE, NULL)) == -1) {
+-        *error_msg = CREATE_ERROR("Failed to mount %s to /storage: %s",
+-                                  storageSource.string(),
+-                                  strerror(errno));
+-        return false;
+-    }
+-
+-    // Mount user-specific symlink helper into place
+-    userid_t user_id = multiuser_get_user_id(uid);
+-    const String8 userSource(String8::format("/mnt/user/%d", user_id));
+-    if (fs_prepare_dir(userSource.string(), 0751, 0, 0) == -1) {
+-        *error_msg = CREATE_ERROR("fs_prepare_dir failed on %s", userSource.string());
+-        return false;
+-    }
+-    if (TEMP_FAILURE_RETRY(mount(userSource.string(), "/storage/self",
+-            NULL, MS_BIND, NULL)) == -1) {
+-        *error_msg = CREATE_ERROR("Failed to mount %s to /storage/self: %s",
+-                                  userSource.string(),
+-                                  strerror(errno));
+-        return false;
+-    }
+-
+-    return true;
+ }
+ 
+ static bool NeedsNoRandomizeWorkaround() {
+@@ -544,6 +364,18 @@
+                                      bool is_system_server, jintArray fdsToClose,
+                                      jintArray fdsToIgnore, bool is_child_zygote,
+                                      jstring instructionSet, jstring dataDir) {
++  // This profile retains the host app's kernel UID, groups, SELinux domain and
++  // seccomp filter. Only PRoot guest identity and private filesystem paths vary.
++  if (is_system_server || is_child_zygote || mount_external != MOUNT_EXTERNAL_NONE ||
++      permittedCapabilities || effectiveCapabilities || java_se_info != nullptr ||
++      (javaGids != nullptr && env->GetArrayLength(javaGids) != 0)) {
++    fprintf(stderr, "POCKET_ZYGOTE_UNSUPPORTED specialization request\n");
++    return -1;
++  }
++  if (instructionSet != nullptr) {
++    ScopedUtfChars isa(env, instructionSet);
++    if (!isa.c_str() || strcmp(isa.c_str(), "arm64")) return -1;
++  }
+   SetSignalHandlers();
+ 
+   sigset_t sigchld;
+@@ -619,61 +451,8 @@
+       fail_fn(CREATE_ERROR("sigprocmask(SIG_SETMASK, { SIGCHLD }) failed: %s", strerror(errno)));
+     }
+ 
+-    // Keep capabilities across UID change, unless we're staying root.
+-    if (uid != 0) {
+-      if (!EnableKeepCapabilities(&error_msg)) {
+-        fail_fn(error_msg);
+-      }
+-    }
+-
+-    if (!SetInheritable(permittedCapabilities, &error_msg)) {
+-      fail_fn(error_msg);
+-    }
+-    if (!DropCapabilitiesBoundingSet(&error_msg)) {
+-      fail_fn(error_msg);
+-    }
+-
+-    bool use_native_bridge = !is_system_server && (instructionSet != NULL)
+-        && android::NativeBridgeAvailable();
+-    if (use_native_bridge) {
+-      ScopedUtfChars isa_string(env, instructionSet);
+-      use_native_bridge = android::NeedsNativeBridge(isa_string.c_str());
+-    }
+-    if (use_native_bridge && dataDir == NULL) {
+-      // dataDir should never be null if we need to use a native bridge.
+-      // In general, dataDir will never be null for normal applications. It can only happen in
+-      // special cases (for isolated processes which are not associated with any app). These are
+-      // launched by the framework and should not be emulated anyway.
+-      use_native_bridge = false;
+-      ALOGW("Native bridge will not be used because dataDir == NULL.");
+-    }
+-
+-    if (!MountEmulatedStorage(uid, mount_external, use_native_bridge, &error_msg)) {
+-      ALOGW("Failed to mount emulated storage: %s (%s)", error_msg.c_str(), strerror(errno));
+-      if (errno == ENOTCONN || errno == EROFS) {
+-        // When device is actively encrypting, we get ENOTCONN here
+-        // since FUSE was mounted before the framework restarted.
+-        // When encrypted device is booting, we get EROFS since
+-        // FUSE hasn't been created yet by init.
+-        // In either case, continue without external storage.
+-      } else {
+-        fail_fn(error_msg);
+-      }
+-    }
+-
+-    // If this zygote isn't root, it won't be able to create a process group,
+-    // since the directory is owned by root.
+-    if (!is_system_server && getuid() == 0) {
+-        int rc = createProcessGroup(uid, getpid());
+-        if (rc != 0) {
+-            if (rc == -EROFS) {
+-                ALOGW("createProcessGroup failed, kernel missing CONFIG_CGROUP_CPUACCT?");
+-            } else {
+-                ALOGE("createProcessGroup(%d, %d) failed: %s", uid, pid, strerror(-rc));
+-            }
+-        }
+-    }
+-
++    // Mounts, cgroups, SELinux transitions and capabilities are unavailable
++    // here. The supported profile inherits the host sandbox and PRoot binds.
+     std::string error_msg;
+     if (!SetGids(env, javaGids, &error_msg)) {
+       fail_fn(error_msg);
+@@ -683,23 +462,10 @@
+       fail_fn(error_msg);
+     }
+ 
+-    if (use_native_bridge) {
+-      ScopedUtfChars isa_string(env, instructionSet);
+-      ScopedUtfChars data_dir(env, dataDir);
+-      android::PreInitializeNativeBridge(data_dir.c_str(), isa_string.c_str());
+-    }
+-
+     int rc = setresgid(gid, gid, gid);
+     if (rc == -1) {
+       fail_fn(CREATE_ERROR("setresgid(%d) failed: %s", gid, strerror(errno)));
+     }
+-
+-    // Must be called when the new process still has CAP_SYS_ADMIN, in this case, before changing
+-    // uid from 0, which clears capabilities.  The other alternative is to call
+-    // prctl(PR_SET_NO_NEW_PRIVS, 1) afterward, but that breaks SELinux domain transition (see
+-    // b/71859146).  As the result, privileged syscalls used below still need to be accessible in
+-    // app process.
+-    SetUpSeccompFilter(uid);
+ 
+     rc = setresuid(uid, uid, uid);
+     if (rc == -1) {
+@@ -715,24 +481,6 @@
+         }
+     }
+ 
+-    if (!SetCapabilities(permittedCapabilities, effectiveCapabilities, permittedCapabilities,
+-                         &error_msg)) {
+-      fail_fn(error_msg);
+-    }
+-
+-    if (!SetSchedulerPolicy(&error_msg)) {
+-      fail_fn(error_msg);
+-    }
+-
+-    const char* se_info_c_str = NULL;
+-    ScopedUtfChars* se_info = NULL;
+-    if (java_se_info != NULL) {
+-        se_info = new ScopedUtfChars(env, java_se_info);
+-        se_info_c_str = se_info->c_str();
+-        if (se_info_c_str == NULL) {
+-          fail_fn("se_info_c_str == NULL");
+-        }
+-    }
+     const char* se_name_c_str = NULL;
+     ScopedUtfChars* se_name = NULL;
+     if (java_se_name != NULL) {
+@@ -742,12 +490,7 @@
+           fail_fn("se_name_c_str == NULL");
+         }
+     }
+-    rc = selinux_android_setcontext(uid, is_system_server, se_info_c_str, se_name_c_str);
+-    if (rc == -1) {
+-      fail_fn(CREATE_ERROR("selinux_android_setcontext(%d, %d, \"%s\", \"%s\") failed", uid,
+-            is_system_server, se_info_c_str, se_name_c_str));
+-    }
+-
++    // Keep the actual untrusted-app SELinux context; no guest domain exists.
+     // Make it easier to debug audit logs by setting the main thread's name to the
+     // nice name rather than "app_process".
+     if (se_name_c_str == NULL && is_system_server) {
+@@ -757,7 +500,6 @@
+       SetThreadName(se_name_c_str);
+     }
+ 
+-    delete se_info;
+     delete se_name;
+ 
+     // Unset the SIGCHLD handler, but keep ignoring SIGHUP (rationale in SetSignalHandlers).
+@@ -779,29 +521,12 @@
+   return pid;
+ }
+ 
+-static uint64_t GetEffectiveCapabilityMask(JNIEnv* env) {
+-    __user_cap_header_struct capheader;
+-    memset(&capheader, 0, sizeof(capheader));
+-    capheader.version = _LINUX_CAPABILITY_VERSION_3;
+-    capheader.pid = 0;
+-
+-    __user_cap_data_struct capdata[2];
+-    if (capget(&capheader, &capdata[0]) == -1) {
+-        ALOGE("capget failed: %s", strerror(errno));
+-        RuntimeAbort(env, __LINE__, "capget failed");
+-    }
+-
+-    return capdata[0].effective |
+-           (static_cast<uint64_t>(capdata[1].effective) << 32);
+-}
+ }  // anonymous namespace
+ 
+ namespace android {
+ 
+ static void com_android_internal_os_Zygote_nativeSecurityInit(JNIEnv*, jclass) {
+-  // security_getenforce is not allowed on app process. Initialize and cache the value before
+-  // zygote forks.
+-  g_is_security_enforced = security_getenforce();
++  fprintf(stderr, "POCKET_ZYGOTE_SECURITY inherited-host-domain-and-seccomp\n");
+ }
+ 
+ static void com_android_internal_os_Zygote_nativePreApplicationInit(JNIEnv*, jclass) {
+@@ -859,7 +584,7 @@
+ 
+     // Containers run without some capabilities, so drop any caps that are not
+     // available.
+-    capabilities &= GetEffectiveCapabilityMask(env);
++    // Nonzero capability requests are rejected by the rootless fork profile.
+ 
+     return ForkAndSpecializeCommon(env, uid, gid, gids, runtime_flags,
+             rlimits, capabilities, capabilities, mount_external, se_info,
+@@ -911,41 +636,7 @@
+ }
+ 
+ static void com_android_internal_os_Zygote_nativeUnmountStorageOnInit(JNIEnv* env, jclass) {
+-    // Zygote process unmount root storage space initially before every child processes are forked.
+-    // Every forked child processes (include SystemServer) only mount their own root storage space
+-    // and no need unmount storage operation in MountEmulatedStorage method.
+-    // Zygote process does not utilize root storage spaces and unshares its mount namespace below.
+-
+-    // See storage config details at http://source.android.com/tech/storage/
+-    // Create private mount namespace shared by all children
+-    if (unshare(CLONE_NEWNS) == -1) {
+-        RuntimeAbort(env, __LINE__, "Failed to unshare()");
+-        return;
+-    }
+-
+-    // Mark rootfs as being a slave so that changes from default
+-    // namespace only flow into our children.
+-    if (mount("rootfs", "/", nullptr, (MS_SLAVE | MS_REC), nullptr) == -1) {
+-        RuntimeAbort(env, __LINE__, "Failed to mount() rootfs as MS_SLAVE");
+-        return;
+-    }
+-
+-    // Create a staging tmpfs that is shared by our children; they will
+-    // bind mount storage into their respective private namespaces, which
+-    // are isolated from each other.
+-    const char* target_base = getenv("EMULATED_STORAGE_TARGET");
+-    if (target_base != nullptr) {
+-#define STRINGIFY_UID(x) __STRING(x)
+-        if (mount("tmpfs", target_base, "tmpfs", MS_NOSUID | MS_NODEV,
+-                  "uid=0,gid=" STRINGIFY_UID(AID_SDCARD_R) ",mode=0751") == -1) {
+-            ALOGE("Failed to mount tmpfs to %s", target_base);
+-            RuntimeAbort(env, __LINE__, "Failed to mount tmpfs");
+-            return;
+-        }
+-#undef STRINGIFY_UID
+-    }
+-
+-    UnmountTree("/storage");
++    fprintf(stderr, "POCKET_ZYGOTE_STORAGE proot-private-binds kernel-namespace=unchanged\n");
+ }
+ 
+ static const JNINativeMethod gMethods[] = {
+@@ -964,7 +655,7 @@
+       (void *) com_android_internal_os_Zygote_nativePreApplicationInit }
+ };
+ 
+-int register_com_android_internal_os_Zygote(JNIEnv* env) {
++int pocketRegisterZygote(JNIEnv* env) {
+   gZygoteClass = MakeGlobalRefOrDie(env, FindClassOrDie(env, kZygoteClassName));
+   gCallPostForkChildHooks = GetStaticMethodIDOrDie(env, gZygoteClass, "callPostForkChildHooks",
+                                                    "(IZZLjava/lang/String;)V");
+--- a/cmds/app_process/app_main.cpp
++++ b/cmds/app_process/app_main.cpp
+@@ -14,7 +14,7 @@
+ #include <unistd.h>
+ 
+ #include <binder/IPCThreadState.h>
+-#include <hwbinder/IPCThreadState.h>
++
+ #include <utils/Log.h>
+ #include <cutils/memory.h>
+ #include <cutils/properties.h>
+@@ -85,7 +85,7 @@
+         ar->callMain(mClassName, mClass, mArgs);
+ 
+         IPCThreadState::self()->stopProcess();
+-        hardware::IPCThreadState::self()->stopProcess();
++
+     }
+ 
+     virtual void onZygoteInit()
+@@ -100,7 +100,7 @@
+         if (mClassName.isEmpty()) {
+             // if zygote
+             IPCThreadState::self()->stopProcess();
+-            hardware::IPCThreadState::self()->stopProcess();
++    
+         }
+ 
+         AndroidRuntime::onExit(code);
+@@ -318,7 +318,7 @@
+         }
+     } else {
+         // We're in zygote mode.
+-        maybeCreateDalvikCache();
++        // Rootless image-only profile: load /system boot images without a global cache.
+ 
+         if (startSystemServer) {
+             args.add(String8("start-system-server"));
+@@ -347,7 +347,7 @@
+     }
+ 
+     if (zygote) {
+-        runtime.start("com.android.internal.os.ZygoteInit", args, zygote);
++        runtime.start("dev.kreijstal.aosppocket.guest.ZygoteBootstrap", args, zygote);
+     } else if (className) {
+         runtime.start("com.android.internal.os.RuntimeInit", args, zygote);
+     } else {
+--- a/core/jni/fd_utils.cpp
++++ b/core/jni/fd_utils.cpp
+@@ -206,7 +206,10 @@
+   // with the child process across forks but those should have been closed
+   // before we got to this point.
+   if (!S_ISCHR(f_stat.st_mode) && !S_ISREG(f_stat.st_mode)) {
+-    *error_msg = android::base::StringPrintf("Unsupported st_mode %u", f_stat.st_mode);
++    std::string target;
++    android::base::Readlink("/proc/self/fd/" + std::to_string(fd), &target);
++    *error_msg = android::base::StringPrintf("Unsupported fd=%d st_mode=%u flags=%d target=%s",
++                                            fd, f_stat.st_mode, fcntl(fd, F_GETFD), target.c_str());
+     return nullptr;
+   }
+ 

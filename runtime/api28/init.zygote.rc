@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# A real Android 9 zygote with lazy preloading; no system_server/launcher yet.
+on boot
+    setprop dalvik.vm.heapstartsize 16m
+    setprop dalvik.vm.heapsize 192m
+    setprop dalvik.vm.jdwp-provider none
+    setprop ro.dalvik.vm.native.bridge 0
+    class_start pocket-zygote
+
+service pocket-log-writer /system/bin/pocket-log-writer-api28
+    class pocket-zygote
+    user 0
+    group 0
+    socket logdw dgram 0600 0 0
+
+service pocket-registry /system/bin/pocket-api28-probe manager
+    class pocket-zygote
+    user 0
+    group 0
+
+service pocket-zygote /system/bin/pocket-app-process-api28 -Xzygote -Xint -Xnorelocate -Xnoimage-dex2oat -Ximage:/system/framework/boot.art -Xplugin:libopenjdkjvmti.so -agentpath:/system/lib64/libpocket_zygote_api28.so -Xms16m -Xmx192m /system/bin --zygote --abi-list=arm64-v8a --socket-name=zygote --enable-lazy-preload
+    class pocket-zygote
+    user 0
+    group 0
+    socket zygote stream 0600 0 0
+    setenv BOOTCLASSPATH @BOOTCLASSPATH@
+    setenv LD_PRELOAD /system/lib64/libpocket_binder_api28.so

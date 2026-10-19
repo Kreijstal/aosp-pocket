@@ -72,9 +72,43 @@ def build(ndk):
     init_test = native / "pocket-init-test-api28"
     subprocess.run(common + ["-fPIE", "-pie", str(ROOT / "runtime/api28/init_test.cpp")]
                    + link + ["-o", str(init_test)], check=True)
+    # AOSP app_process and native zygote fork hooks, separately adapted for
+    # the rootless profile. The Java server remains the actual platform code.
+    zygote_source = out / "rootless-frameworks-base"
+    if zygote_source.exists():
+        shutil.rmtree(zygote_source)
+    shutil.copytree(out / "frameworks-base", zygote_source, ignore=shutil.ignore_patterns(".git"))
+    subprocess.run(["patch", "--batch", "-p1", "-i", str(ROOT / "runtime/api28/zygote-rootless.patch")],
+                   cwd=zygote_source, check=True)
+    jni = zygote_source / "core/jni"
+    zygote_includes = ["-I" + str(jni), "-I" + str(jni / "include"),
+                       "-I" + str(out / "libnativehelper/include"),
+                       "-I" + str(out / "libnativehelper/include_jni"),
+                       "-I" + str(out / "libnativehelper/header_only_include"),
+                       "-I" + str(out / "art/openjdkjvmti/include")]
+    zygote_flags = common + ["-std=c++17", "-Wno-unused-parameter", "-Wno-unused-function",
+                            "-Wno-writable-strings"] + zygote_includes
+    zygote = native / "libpocket_zygote_api28.so"
+    app_process = native / "pocket-app-process-api28"
+    subprocess.run(zygote_flags + ["-fPIC", "-shared", str(jni / "com_android_internal_os_Zygote.cpp"),
+                   str(jni / "fd_utils.cpp"), str(ROOT / "runtime/api28/zygote_bootstrap.cpp"),
+                   str(libs / "libc.so"), "-landroid_runtime", "-lnativehelper", "-lcutils", "-lbase"] + link +
+                   ["-o", str(zygote)], check=True)
+    subprocess.run(zygote_flags + ["-fPIE", "-pie", str(zygote_source / "cmds/app_process/app_main.cpp"),
+                   str(out / "art/sigchainlib/sigchain.cc"), "-DART_TARGET_ANDROID",
+                   "-Wl,--export-dynamic", "-Wl,--version-script=" + str(out / "art/sigchainlib/version-script64.txt"),
+                   "-landroid_runtime", "-lcutils", "-lwilhelm", "-ldl"] + link + ["-o", str(app_process)], check=True)
+    zygote_client = native / "pocket-zygote-client-api28"
+    subprocess.run(common + ["-fPIE", "-pie", str(ROOT / "runtime/api28/zygote_client.cpp")]
+                   + link + ["-o", str(zygote_client)], check=True)
+    log_writer = native / "pocket-log-writer-api28"
+    subprocess.run(common + ["-fPIE", "-pie", str(ROOT / "runtime/api28/log_writer.cpp")]
+                   + link + ["-o", str(log_writer)], check=True)
     # Include exactly the dependency closure, not the entire reference image.
     stage = out / "probe-rootfs"
-    stage.mkdir(exist_ok=True)
+    if stage.exists():
+        shutil.rmtree(stage)
+    stage.mkdir()
     queue = [(bridge, "system/lib64/" + bridge.name), (probe, "system/bin/" + probe.name),
              (property_service, "system/bin/" + property_service.name),
              (property_probe, "system/bin/" + property_probe.name),
@@ -82,8 +116,12 @@ def build(ndk):
     queue.append((reference / "system/bin/dalvikvm64", "system/bin/dalvikvm64"))
     queue.append((init, "system/bin/" + init.name))
     queue.append((init_test, "system/bin/" + init_test.name))
+    queue.append((zygote, "system/lib64/" + zygote.name))
+    queue.append((app_process, "system/bin/" + app_process.name))
+    queue.append((zygote_client, "system/bin/" + zygote_client.name))
+    queue.append((log_writer, "system/bin/" + log_writer.name))
     # ART and core JNI libraries are loaded dynamically, beyond DT_NEEDED.
-    for name in ("libart.so", "libjavacore.so", "libopenjdk.so", "libopenjdkjvm.so"):
+    for name in ("libart.so", "libjavacore.so", "libopenjdk.so", "libopenjdkjvm.so", "libopenjdkjvmti.so"):
         queue.append((libs / name, "system/lib64/" + name))
     # Android 9 NativeLoader preloads its public namespace before the Java
     # entry point. Keep its actual list and supply the corresponding libraries.
@@ -114,6 +152,7 @@ def build(ndk):
     data_files = set(path.lstrip("/") for path in bootclasspath.split(":"))
     data_files.add("system/etc/event-log-tags")
     data_files.add("system/etc/public.libraries.txt")
+    data_files.add("system/etc/preloaded-classes")
     data_files.update(path.relative_to(reference).as_posix() for path in
                       (reference / "system/framework/arm64").glob("boot*"))
     data_files.update(path.relative_to(reference).as_posix() for path in (reference / "system/usr").rglob("*") if path.is_file())
@@ -124,7 +163,7 @@ def build(ndk):
     for path in (ROOT / "runtime/api28").glob("*.rc"):
         destination = stage / "system/etc/init" / path.name
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, destination)
+        destination.write_text(path.read_text().replace("@BOOTCLASSPATH@", bootclasspath))
         data_files.add(destination.relative_to(stage).as_posix())
     (stage / "tmp").mkdir(exist_ok=True)
     elf = subprocess.check_output([readelf, "-hlsWd", bridge], text=True)

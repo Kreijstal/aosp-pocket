@@ -353,3 +353,43 @@
  } while (0)
  
  /**
+--- a/src/extension/fake_id0/fake_id0.c
++++ b/src/extension/fake_id0/fake_id0.c
+@@ -467,6 +467,10 @@
+ 	type ## id_t r ## type ## id = peek_reg(tracee, ORIGINAL, SYSARG_1);	\
+ 	type ## id_t e ## type ## id = peek_reg(tracee, ORIGINAL, SYSARG_2);	\
+ 	type ## id_t s ## type ## id = peek_reg(tracee, ORIGINAL, SYSARG_3);	\
++    bool had_root = config->r ## type ## id == 0 ||                      \
++                    config->e ## type ## id == 0 ||                      \
++                    config->s ## type ## id == 0;                        \
++    type ## id_t old_effective = config->e ## type ## id;                 \
+ 	bool allowed;							\
+ 									\
+ 	/* "Unprivileged user processes may change the real UID,	\
+@@ -477,7 +481,7 @@
+ 	 * Privileged processes (on Linux, those having the CAP_SETUID	\
+ 	 * capability) may set the real UID, effective UID, and saved	\
+ 	 * set-user-ID to arbitrary values." -- man setresuid */	\
+-	allowed = (HAS_CAP(CAP_SETUID)                                  \
++	allowed = (HAS_CAP(CAP_SET ## type ## id)                                  \
+ 		|| ((UNSET_ID(r ## type ## id) || EQUALS_ANY_ID(r ## type ## id, type)) \
+ 		 && (UNSET_ID(e ## type ## id) || EQUALS_ANY_ID(e ## type ## id, type)) \
+ 		 && (UNSET_ID(s ## type ## id) || EQUALS_ANY_ID(s ## type ## id, type)))); \
+@@ -500,6 +504,17 @@
+ 	if (!UNSET_ID(s ## type ## id))					\
+ 		config->s ## type ## id = s ## type ## id;		\
+ 									\
++    if (CAP_SET ## type ## id == CAP_SETUID) {                            \
++        if (had_root && config->r ## type ## id != 0 &&                  \
++            config->e ## type ## id != 0 && config->s ## type ## id != 0) {\
++            if (!config->keepCaps) config->permitted = 0;                 \
++            config->effective = 0;                                       \
++        }                                                               \
++        if (old_effective == 0 && config->e ## type ## id != 0)           \
++            config->effective = 0;                                       \
++        if (old_effective != 0 && config->e ## type ## id == 0)           \
++            config->effective = config->permitted;                       \
++    }                                                                   \
+ 	poke_reg(tracee, SYSARG_RESULT, 0);				\
+ 	return 0;							\
+ } while (0)

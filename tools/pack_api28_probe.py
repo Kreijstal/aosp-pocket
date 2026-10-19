@@ -17,6 +17,7 @@ with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(
             apk.write(path, "assets/api28-rootfs/" + path.relative_to(out / "probe-rootfs").as_posix() + ".payload")
     apk.write(ROOT / "sources.lock.json", "assets/sources.lock.json")
     apk.write(out / "art-probe.dex", "assets/api28-rootfs/data/pocket-art-probe.dex.payload")
+    apk.write(out / "pocket-zygote.jar", "assets/api28-rootfs/system/framework/pocket-zygote.jar.payload")
     apk.write(out / "bootclasspath.txt", "assets/bootclasspath.txt")
     for source, target in (("LICENSE", "apache-2.0.txt"), ("vendor/proot/COPYING", "proot.txt"),
                            ("runtime/NOTICE", "NOTICE"), ("runtime/licenses/GPL-3.0-only.txt", "runtime.txt"),

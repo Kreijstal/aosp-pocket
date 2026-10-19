@@ -53,6 +53,8 @@ def main():
                     assert data.startswith(b"# SPDX-License-Identifier:"), name
                 elif guest_name == "system/etc/event-log-tags":
                     assert b"boot_progress_start" in data, name
+                elif guest_name == "system/etc/preloaded-classes":
+                    assert b"android." in data, name
                 elif guest_name == "system/etc/public.libraries.txt":
                     assert b"libandroid.so" in data, name
                 else:
@@ -72,10 +74,17 @@ def main():
         assert "_ZNK7android6Parcel16enforceInterface" in bridge
         assert "HostBinder" not in bridge and "__ndk1" not in bridge
         assert "pocket-api28-probe" in elf_files
-        assert {"pocket-property-service-api28", "pocket-property-probe-api28", "dalvikvm64", "libart.so", "pocket-init-api28", "pocket-init-test-api28"} <= elf_files.keys()
+        assert {"pocket-property-service-api28", "pocket-property-probe-api28", "dalvikvm64", "libart.so", "pocket-init-api28", "pocket-init-test-api28", "pocket-app-process-api28", "libpocket_zygote_api28.so", "pocket-zygote-client-api28", "pocket-log-writer-api28", "libopenjdkjvmti.so"} <= elf_files.keys()
         for name in ("libpocket_binder_api28.so", "pocket-api28-probe"):
             loads = [line for line in elf_files[name].splitlines() if line.strip().startswith("LOAD ")]
             assert loads and all(int(line.split()[-1], 16) >= 16384 for line in loads), loads
+        app_process = Path(temp) / "pocket-app-process-api28"
+        exported = subprocess.check_output([readelf, "--dyn-syms", "-W", app_process], text=True)
+        for symbol in ("AddSpecialSignalHandlerFn", "RemoveSpecialSignalHandlerFn", "EnsureFrontOfChain"):
+            assert symbol in exported, ("ART signal-chain export missing", symbol)
+        profile = apk.read(prefix + "system/etc/init/init.zygote.rc.payload")
+        assert b"@BOOTCLASSPATH@" not in profile and b"--enable-lazy-preload" in profile
+        assert b"libopenjdkjvmti.so" in profile
         init = elf_files["pocket-init-api28"]
         for symbol in ("_ZN7android4init7Service5StartEv", "_ZN7android4init13ActionManager17ExecuteOneCommandEv",
                        "_ZN7android4init6Parser11ParseConfig"):
@@ -83,7 +92,7 @@ def main():
         config = apk.read(prefix + "system/etc/init/init.pocket.rc.payload")
         assert b"socket pocket_init_test" in config and b"on property:" in config
         assert len(apk.read("assets/licenses/android9-NOTICE.xml.gz")) > 1000
-    print("PASS: isolated API 28 package, ARM64 Binder/property/ART/init binaries, boot images, complete ELF dependency closure, bridge symbols and license notices")
+    print("PASS: isolated API 28 package, ARM64 Binder/property/ART/init/zygote binaries, boot images, complete ELF dependency closure, bridge symbols and license notices")
 
 
 if __name__ == "__main__":

@@ -45,7 +45,10 @@ execution of Java threads/reflection/exceptions plus a native child process.
 These run under an ordinary host app UID; ART/platform binaries are pinned
 upstream prebuilts. The rootless AOSP init core also passes service startup,
 property actions, inherited sockets, crash/restart and clean shutdown tests.
-Full platform init, zygote and guest UI boot remain unverified. See
+The real Android 9 zygote now accepts ABI queries, forks a Java child, handles
+its Binder calls and reaps it while retaining the host app sandbox. This uses
+an image-only development profile with lazy preload and a JVMTI bootstrap.
+System-server and guest UI boot remain unverified. See
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
 
 ## What works
