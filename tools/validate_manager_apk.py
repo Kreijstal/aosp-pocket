@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-import argparse,json,subprocess,zipfile
+import argparse,io,json,struct,subprocess,zipfile
 from pathlib import Path
 
 parser=argparse.ArgumentParser()
@@ -22,6 +22,28 @@ with zipfile.ZipFile(args.apk) as apk:
     assert 'assets/api28-rootfs/system/bin/gatekeeperd.payload' in names
     assert 'FrameworkProbe' not in rc,'Development harness must not run in Manager'
     assert 'assets/api28-rootfs/system/framework/pocket-zygote.jar.payload' in names
+    for name in ('ContactsProvider','Contacts'):
+        assert 'assets/api28-rootfs/system/priv-app/'+name+'/'+name+'.apk.payload' in names
+    phone='assets/api28-rootfs/system/app/PocketHostPhone/PocketHostPhone.apk.payload'
+    assert phone in names
+    with zipfile.ZipFile(io.BytesIO(apk.read(phone))) as delegate:
+        manifest=delegate.read('AndroidManifest.xml')
+    offset=8;resources=[];schemes=[]
+    while offset<len(manifest):
+        kind,header,size=struct.unpack_from('<HHI',manifest,offset)
+        assert size>=header>=8 and offset+size<=len(manifest)
+        if kind==0x180:
+            resources=list(struct.unpack_from('<'+'I'*((size-header)//4),manifest,offset+header))
+        elif kind==0x102:
+            start,stride,count=struct.unpack_from('<HHH',manifest,offset+24)
+            for index in range(count):
+                attribute=offset+16+start+stride*index
+                name=struct.unpack_from('<I',manifest,attribute+4)[0]
+                if name<len(resources) and resources[name]==0x01010027:
+                    assert manifest[attribute+15]==3,'URI scheme must be a string'
+                    schemes.append(struct.unpack_from('<I',manifest,attribute+16)[0])
+        offset+=size
+    assert len(schemes)==len(set(schemes))==3,'Encoded host-phone tel/sms/smsto schemes missing'
     assert 'assets/licenses/android9-NOTICE.xml.gz' in names
     assert not any(n.endswith('.bc') for n in names),'Guest RenderScript must remain opaque to host ABI scan'
     for name in ('libpocket_direct_boot.so','libpocket_binder_api28.so','libpocket_hidl_api28.so'):

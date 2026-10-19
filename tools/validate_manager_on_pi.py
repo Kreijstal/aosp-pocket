@@ -18,7 +18,12 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--install',action='store_true')
     parser.add_argument('--boot-only',action='store_true')
+    parser.add_argument('--reset-host-permissions',action='store_true',
+                        help='Revoke development-app device permissions after a clean stop')
+    parser.add_argument('--original-stopped',action='store_true',
+                        help='Sequential test after an already stopped API25 guest; never stop it here')
     args=parser.parse_args()
+    if args.reset_host_permissions and not args.install:parser.error('--reset-host-permissions requires --install')
     sys.path.insert(0,'/home/pi/lineage-cuttlefish/tools')
     import cuttlefish_arm64 as c
     c.require_virtual()
@@ -36,16 +41,16 @@ def main():
         init=next((r for r in rows if proot and len(r)==4 and r[2]==proot[1] and r[3]=='init'),None)
         return [host,proot,init] if proot and init else None
     before=original()
-    assert before is not None,'Original API25 guest is missing before test'
-    if args.install:
-        print(adb('install','--streaming','-r','/home/pi/aosp-pocket-manager-dev.apk',timeout=360),flush=True)
+    assert (before is None) == args.original_stopped,'Original API25 presence differs from the requested test mode'
     def launch(activity):
         print(shell('am start -f 0x10000000 -n '+PACKAGE+'/'+CLASS+activity),flush=True)
     def hierarchy():
         for attempt in range(5):
             path='/sdcard/pocket-manager-ui-'+str(time.time_ns())+'.xml'
-            output=shell('uiautomator dump '+path)
-            try:return ET.fromstring(shell('cat '+path))
+            output=''
+            try:
+                output=shell('timeout 30 uiautomator dump '+path)
+                return ET.fromstring(shell('cat '+path))
             except (RuntimeError,ET.ParseError):pass
             time.sleep(1)
         raise RuntimeError('UIAutomator could not capture a fresh hierarchy: '+output)
@@ -55,6 +60,26 @@ def main():
         l,t,r,b=map(int,re.findall(r'\d+',node.get('bounds')))
         shell(f'input touchscreen -d 0 tap {(l+r)//2} {(t+b)//2}')
         time.sleep(1)
+    if args.install:
+        if shell('pm path '+PACKAGE):
+            launch('MainActivity')
+            tree=hierarchy()
+            if any(n.get('package')==PACKAGE and n.get('text')=='Stop' and n.get('enabled')=='true'
+                   for n in tree.iter('node')):
+                click('Stop')
+                deadline=time.monotonic()+30
+                while time.monotonic()<deadline:
+                    rows=[line.split() for line in shell('ps -A -o UID,PID,PPID,NAME').splitlines()[1:]]
+                    host=next((row for row in rows if row[-1]==PACKAGE),None)
+                    if host and not any(row[0]==host[0] and row[1]!=host[1] for row in rows):break
+                    time.sleep(.5)
+                else:raise RuntimeError('Refusing to update before the development guest stops cleanly')
+        assert before==original(),'Original API25 guest changed before update'
+        if args.reset_host_permissions:
+            for permission in ['CAMERA','RECORD_AUDIO','READ_CONTACTS','READ_PHONE_STATE',
+                               'ACCESS_FINE_LOCATION','ACCESS_COARSE_LOCATION']:
+                shell('pm revoke '+PACKAGE+' android.permission.'+permission)
+        print(adb('install','--streaming','-r','/home/pi/aosp-pocket-manager-dev.apk',timeout=360),flush=True)
     def log():return shell('if [ -f '+ROOT+'/logs/manager-init.log ]; then grep -E "POCKET_CONTROL|API28_INIT_STOPPED|FATAL EXCEPTION IN SYSTEM PROCESS" '+ROOT+'/logs/manager-init.log || true; fi',True)
     print(shell('am start -f 0x10000000 -n '+PACKAGE+'/'+CLASS+'MainActivity --ei guest_sdk 28 --ez start_guest true'),flush=True)
     deadline=time.monotonic()+480
@@ -97,7 +122,7 @@ def main():
     shell('screencap -p /sdcard/pocket-manager9.png')
     adb('pull','/sdcard/pocket-manager9.png','/home/pi/pocket-manager9.png')
     result={'passed':True,'scope':'manager_android9_boot','host_uid':int(uid),'host_pid':int(host[1]),
-            'system_server_pid':int(server[1]),'domain':domain,'original_api25_unchanged':True,'original_api25_pids':{'host':int(before[0][1]),'proot':int(before[1][1]),'init':int(before[2][1])},
+            'system_server_pid':int(server[1]),'domain':domain,'original_api25_unchanged':True if before else None,'original_api25_pids':{'host':int(before[0][1]),'proot':int(before[1][1]),'init':int(before[2][1])} if before else None,
             'direct_backend':True,'boot_completed':True,'tracer_pid':0,'seccomp':2,'effective_capabilities':0,'screenshot':'/home/pi/pocket-manager9.png'}
     Path('/home/pi/pocket-manager9-validation.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2),flush=True)

@@ -74,6 +74,35 @@ public final class GuestControl {
                     Intent launch=context.getPackageManager().getLaunchIntentForPackage(info.packageName);
                     if(launch!=null)FrameworkProbe.launch(launch);
                     out.writeUTF("Installed "+info.packageName);
+                } else if(op==5) {
+                    try {out.writeUTF(HostDevices.importContacts(context));}
+                    catch(Exception error){out.writeUTF("Contacts import unavailable: "+error.getMessage());}
+                } else if(op==6) {
+                    String url=in.readUTF();
+                    org.json.JSONObject result=HostDevices.query(dev.kreijstal.aosppocket.bridge.HostWire.INFO,new org.json.JSONObject());
+                    result.put("guest_elapsed_ms",SystemClock.elapsedRealtime());
+                    if(!url.isEmpty()) {
+                        java.net.HttpURLConnection connection=(java.net.HttpURLConnection)new java.net.URL(url).openConnection();
+                        connection.setConnectTimeout(10000);connection.setReadTimeout(10000);
+                        try {result.put("http_status",connection.getResponseCode());
+                            try(InputStream body=connection.getInputStream()) {byte[] bytes=new byte[256];int count=body.read(bytes);
+                                result.put("http_body",count<0?"":new String(bytes,0,count,"UTF-8"));}}
+                        catch(Exception error){result.put("http_error",error.toString());}
+                        finally {connection.disconnect();}
+                    }
+                    android.net.ConnectivityManager cm=(android.net.ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                    result.put("guest_network_connected",cm.getActiveNetworkInfo()!=null && cm.getActiveNetworkInfo().isConnected());
+                    out.writeUTF(result.toString());
+                } else if(op==7) {
+                    out.writeUTF(HostDevices.diagnose(context).toString());
+                } else if(op==8) {
+                    FrameworkProbe.launch(new Intent(Intent.ACTION_DIAL,Uri.fromParts("tel","",null)));
+                    out.writeBoolean(true);
+                } else if(op==9) {
+                    String name=in.readUTF();
+                    Intent launch=context.getPackageManager().getLaunchIntentForPackage(name);
+                    if(launch==null)throw new IOException("App has no launcher activity: "+name);
+                    FrameworkProbe.launch(launch);out.writeBoolean(true);
                 } else throw new IOException("Unknown control command");
                 out.flush();
             }
@@ -85,6 +114,7 @@ public final class GuestControl {
         try {
             if(android.os.Process.myUid()!=1000)throw new IOException("Expected guest system role");
             context=FrameworkProbe.context();
+            new HostNetwork(context);
             input=FrameworkProbe.service("input","android.hardware.input.IInputManager$Stub");
             inject=Class.forName("android.hardware.input.IInputManager").getMethod("injectInputEvent",InputEvent.class,int.class);
             FileDescriptor fd=new FileDescriptor();

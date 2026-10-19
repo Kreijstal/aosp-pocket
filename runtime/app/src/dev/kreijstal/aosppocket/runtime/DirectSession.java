@@ -27,6 +27,7 @@ final class DirectSession implements AutoCloseable {
     private volatile boolean closed,visible,ready;
     private volatile java.lang.Process init;
     private BootBattery battery;
+    private HostBroker hostBroker;
     private File root;
     private Connection input;
     DirectSession(Context context,Listener listener) {
@@ -46,7 +47,7 @@ final class DirectSession implements AutoCloseable {
             });
             synchronized(this) {
                 if(closed)return;
-                battery=new BootBattery(context,root);init=DirectImage.start(root);
+                battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);init=DirectImage.start(root);
             }
             status("Android 9 starting…");
             long deadline=SystemClock.elapsedRealtime()+240000;
@@ -82,6 +83,7 @@ final class DirectSession implements AutoCloseable {
                 catch(InterruptedException interrupted){current.destroyForcibly();}
             }
             if(battery!=null)battery.close();
+            if(hostBroker!=null)hostBroker.close();
             final String message=ended;main.post(()->listener.stopped(message));
         }
     }
@@ -121,6 +123,36 @@ final class DirectSession implements AutoCloseable {
             c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected touch input");});
     }
     void key(int code){submit(c->{c.out.writeInt(3);c.out.writeInt(code);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected navigation");});}
+    void importHostContacts(){submit(c->{c.socket.setSoTimeout(90000);try{c.out.writeInt(5);c.out.flush();status(c.in.readUTF());}finally{c.socket.setSoTimeout(15000);}});}
+    void checkHostBridges(){submit(c->{
+        c.socket.setSoTimeout(30000);
+        try {
+            c.out.writeInt(6);c.out.writeUTF("https://example.com/");c.out.flush();String result=c.in.readUTF();
+            java.nio.file.Files.write(new File(root,"logs/host-bridge-check.json").toPath(),result.getBytes("UTF-8"));
+            org.json.JSONObject report=new org.json.JSONObject(result);
+            status("Guest network: "+(report.optBoolean("guest_network_connected")?"connected":"offline")+
+                " · HTTPS "+(report.has("http_status")?report.optInt("http_status"):report.optString("http_error","unavailable")));
+        } finally {c.socket.setSoTimeout(15000);}
+    });}
+    void checkHostDevices(){submit(c->{
+        c.socket.setSoTimeout(60000);
+        try {
+            c.out.writeInt(7);c.out.flush();String result=c.in.readUTF();
+            java.nio.file.Files.write(new File(root,"logs/host-device-check.json").toPath(),result.getBytes("UTF-8"));
+            org.json.JSONObject report=new org.json.JSONObject(result);StringBuilder summary=new StringBuilder("Host checks:");
+            for(String name:new String[]{"camera","audio","sensors","contacts","phone","location"})
+                summary.append(' ').append(name).append('=').append(report.getJSONObject(name).getString("status"));
+            status(summary.toString());
+        } finally {c.socket.setSoTimeout(15000);}
+    });}
+    void openGuestDialer(){submit(c->{c.out.writeInt(8);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest dialer did not open");});}
+    boolean hasLastApp(){return !context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE).getString("package","").isEmpty();}
+    void openLastApp(){submit(c->{
+        String name=context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE).getString("package","");
+        if(name.isEmpty())throw new IOException("Install a guest APK first");
+        c.out.writeInt(9);c.out.writeUTF(name);c.out.flush();
+        if(!c.in.readBoolean())throw new IOException("App did not open");
+    });}
     void install(android.net.Uri uri) {
         submit(c->{
             status("Installing APK in Android 9…");
@@ -131,7 +163,10 @@ final class DirectSession implements AutoCloseable {
                 }
                 java.nio.file.Files.move(temp.toPath(),target.toPath(),java.nio.file.StandardCopyOption.ATOMIC_MOVE,java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 c.socket.setSoTimeout(90000);c.out.writeInt(4);c.out.flush();
-                status(c.in.readUTF());
+                String result=c.in.readUTF();
+                if(result.startsWith("Installed "))context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE)
+                    .edit().putString("package",result.substring(10)).apply();
+                status(result);
             } finally {temp.delete();target.delete();c.socket.setSoTimeout(15000);}
         });
     }

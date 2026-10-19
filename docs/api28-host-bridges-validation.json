@@ -1,0 +1,435 @@
+{
+  "version": "0.5",
+  "evidence": "VM host API verified; not physical SM-G780G hardware verification",
+  "build_command": "make -f runtime/Makefile -j2 manager-verify verify check-profiles check-host-wire",
+  "app_test_command": "ssh pi@juanraspberry python3 -u - --network-app --app-only --original-stopped < tools/validate_host_bridges_on_pi.py",
+  "production_matches_test_cohort": {
+    "host_dex": true,
+    "host_native_libraries": true,
+    "guest_payloads": 1376
+  },
+  "boot": {
+    "passed": true,
+    "scope": "manager_android9_boot",
+    "host_uid": 10174,
+    "host_pid": 12385,
+    "system_server_pid": 12548,
+    "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+    "original_api25_unchanged": null,
+    "original_api25_pids": null,
+    "direct_backend": true,
+    "boot_completed": true,
+    "tracer_pid": 0,
+    "seccomp": 2,
+    "effective_capabilities": 0,
+    "screenshot": "/home/pi/pocket-manager9.png"
+  },
+  "bridge_tests": {
+    "scope": "Cuttlefish host APIs, not physical Samsung hardware",
+    "permission_denial": {
+      "guest_elapsed_ms": 102458785,
+      "host": {
+        "protocol": 1,
+        "host_sdk": 36,
+        "network": {
+          "connected": true,
+          "metered": false,
+          "internet": true,
+          "validated": true,
+          "transports": [
+            1
+          ],
+          "dns": [
+            "10.0.2.3"
+          ]
+        },
+        "permissions": {
+          "android.permission.CAMERA": true,
+          "android.permission.RECORD_AUDIO": true,
+          "android.permission.READ_CONTACTS": true,
+          "android.permission.READ_PHONE_STATE": true,
+          "android.permission.ACCESS_FINE_LOCATION": true,
+          "android.permission.ACCESS_COARSE_LOCATION": true
+        },
+        "camera_count": 3,
+        "sensor_count": 15,
+        "ims": {
+          "owner": "host",
+          "guest_registration": "unavailable",
+          "calls": "host dialer delegation",
+          "sms": "host composer delegation",
+          "reason": "Carrier/privileged IMS APIs are not available to an ordinary host app"
+        },
+        "standard_guest_apis": {
+          "battery": "relayed",
+          "dns": "host resolver via guest dnsproxyd",
+          "camera": "HAL adapter pending",
+          "audio": "AudioFlinger/HAL adapter pending",
+          "sensors": "HAL adapter pending",
+          "contacts": "explicit import",
+          "phone": "radio adapter pending"
+        },
+        "status": "ok"
+      },
+      "contacts": {
+        "host_contacts": 2,
+        "host_rows": 1,
+        "guest_contacts": 2,
+        "guest_imported_contacts": 2,
+        "matched_host_rows": 1,
+        "status": "ok"
+      },
+      "location": {
+        "provider": "gps",
+        "age_ms": 10941837,
+        "status": "ok"
+      },
+      "phone": {
+        "sim_state": 5,
+        "network_operator": "311740",
+        "network_country_iso": "us",
+        "sim_operator": "311740",
+        "phone_type": 1,
+        "ims_owner": "host",
+        "data_network_type": 10,
+        "voice_network_type": 10,
+        "call_state": 0,
+        "identifiers": {
+          "unavailable": "not_requested_or_privileged"
+        },
+        "ims_registration": {
+          "unavailable": "carrier_or_privileged_access_required"
+        },
+        "status": "ok"
+      },
+      "sensors": {
+        "samples": 4,
+        "type": 1,
+        "status": "ok"
+      },
+      "camera": {
+        "width": 176,
+        "height": 144,
+        "format": 35,
+        "planes": [
+          {
+            "offset": 0,
+            "length": 27632,
+            "row_stride": 192,
+            "pixel_stride": 1
+          },
+          {
+            "offset": 27632,
+            "length": 6904,
+            "row_stride": 96,
+            "pixel_stride": 1
+          },
+          {
+            "offset": 34536,
+            "length": 6904,
+            "row_stride": 96,
+            "pixel_stride": 1
+          }
+        ],
+        "bytes": 41440,
+        "timestamp_ns": 102459939829263,
+        "status": "ok"
+      },
+      "audio": {
+        "frames": 12000,
+        "sample_rate": 48000,
+        "nonzero_samples": 0,
+        "peak": 0,
+        "playback_frames": 12000,
+        "status": "ok"
+      }
+    },
+    "devices": {
+      "guest_elapsed_ms": 102466448,
+      "host": {
+        "protocol": 1,
+        "host_sdk": 36,
+        "network": {
+          "connected": true,
+          "metered": false,
+          "internet": true,
+          "validated": true,
+          "transports": [
+            1
+          ],
+          "dns": [
+            "10.0.2.3"
+          ]
+        },
+        "permissions": {
+          "android.permission.CAMERA": true,
+          "android.permission.RECORD_AUDIO": true,
+          "android.permission.READ_CONTACTS": true,
+          "android.permission.READ_PHONE_STATE": true,
+          "android.permission.ACCESS_FINE_LOCATION": true,
+          "android.permission.ACCESS_COARSE_LOCATION": true
+        },
+        "camera_count": 3,
+        "sensor_count": 15,
+        "ims": {
+          "owner": "host",
+          "guest_registration": "unavailable",
+          "calls": "host dialer delegation",
+          "sms": "host composer delegation",
+          "reason": "Carrier/privileged IMS APIs are not available to an ordinary host app"
+        },
+        "standard_guest_apis": {
+          "battery": "relayed",
+          "dns": "host resolver via guest dnsproxyd",
+          "camera": "HAL adapter pending",
+          "audio": "AudioFlinger/HAL adapter pending",
+          "sensors": "HAL adapter pending",
+          "contacts": "explicit import",
+          "phone": "radio adapter pending"
+        },
+        "status": "ok"
+      },
+      "contacts": {
+        "host_contacts": 2,
+        "host_rows": 1,
+        "guest_contacts": 2,
+        "guest_imported_contacts": 2,
+        "matched_host_rows": 1,
+        "status": "ok"
+      },
+      "location": {
+        "provider": "gps",
+        "age_ms": 10949412,
+        "status": "ok"
+      },
+      "phone": {
+        "sim_state": 5,
+        "network_operator": "311740",
+        "network_country_iso": "us",
+        "sim_operator": "311740",
+        "phone_type": 1,
+        "ims_owner": "host",
+        "data_network_type": 10,
+        "voice_network_type": 10,
+        "call_state": 0,
+        "identifiers": {
+          "unavailable": "not_requested_or_privileged"
+        },
+        "ims_registration": {
+          "unavailable": "carrier_or_privileged_access_required"
+        },
+        "status": "ok"
+      },
+      "sensors": {
+        "samples": 4,
+        "type": 1,
+        "status": "ok"
+      },
+      "camera": {
+        "width": 176,
+        "height": 144,
+        "format": 35,
+        "planes": [
+          {
+            "offset": 0,
+            "length": 27632,
+            "row_stride": 192,
+            "pixel_stride": 1
+          },
+          {
+            "offset": 27632,
+            "length": 6904,
+            "row_stride": 96,
+            "pixel_stride": 1
+          },
+          {
+            "offset": 34536,
+            "length": 6904,
+            "row_stride": 96,
+            "pixel_stride": 1
+          }
+        ],
+        "bytes": 41440,
+        "timestamp_ns": 102467410163425,
+        "status": "ok"
+      },
+      "audio": {
+        "frames": 12000,
+        "sample_rate": 48000,
+        "nonzero_samples": 0,
+        "peak": 0,
+        "playback_frames": 12000,
+        "status": "ok"
+      }
+    },
+    "contacts": {
+      "host_contacts": 2,
+      "host_rows": 1,
+      "guest_contacts": 2,
+      "guest_imported_contacts": 2,
+      "matched_host_rows": 1,
+      "status": "ok"
+    },
+    "repeat_import_idempotent": true,
+    "network": {
+      "protocol": 1,
+      "host_sdk": 36,
+      "network": {
+        "connected": true,
+        "metered": false,
+        "internet": true,
+        "validated": true,
+        "transports": [
+          1
+        ],
+        "dns": [
+          "10.0.2.3"
+        ]
+      },
+      "permissions": {
+        "android.permission.CAMERA": true,
+        "android.permission.RECORD_AUDIO": true,
+        "android.permission.READ_CONTACTS": true,
+        "android.permission.READ_PHONE_STATE": true,
+        "android.permission.ACCESS_FINE_LOCATION": true,
+        "android.permission.ACCESS_COARSE_LOCATION": true
+      },
+      "camera_count": 3,
+      "sensor_count": 15,
+      "ims": {
+        "owner": "host",
+        "guest_registration": "unavailable",
+        "calls": "host dialer delegation",
+        "sms": "host composer delegation",
+        "reason": "Carrier/privileged IMS APIs are not available to an ordinary host app"
+      },
+      "standard_guest_apis": {
+        "battery": "relayed",
+        "dns": "host resolver via guest dnsproxyd",
+        "camera": "HAL adapter pending",
+        "audio": "AudioFlinger/HAL adapter pending",
+        "sensors": "HAL adapter pending",
+        "contacts": "explicit import",
+        "phone": "radio adapter pending"
+      },
+      "guest_elapsed_ms": 102499497,
+      "http_status": 200,
+      "http_body": "<!doctype html><html lang=en><head><meta charset=utf-8><link rel=icon href=data:,><meta name=viewport content=\"width=device-width,initial-scale=1\"><title>Example Domain</title><style>html{color-scheme:light dark;background:light-dark(#eee,#222)}body{font:1",
+      "guest_network_connected": true
+    },
+    "host_dialer_resumed": [
+      "topResumedActivity=ActivityRecord{110839402 u0 com.android.dialer/.main.impl.MainActivity t360}"
+    ],
+    "call_placed": false,
+    "original_api25_unchanged": null,
+    "original_api25_running_during_test": false,
+    "ordinary_guest_app": {
+      "guest_uid": 10017,
+      "kernel_uid": 10174,
+      "connected": true,
+      "dns_addresses": 4,
+      "http_status": 200,
+      "passed": true
+    },
+    "host_sms_composer_resumed": [
+      "topResumedActivity=ActivityRecord{86620816 u0 com.android.messaging/.ui.conversation.ConversationActivity t362}"
+    ],
+    "sms_sent": false,
+    "resumed_from_core_checkpoint": true,
+    "passed": true
+  },
+  "permission_denial": {
+    "guest_elapsed_ms": 101910145,
+    "host": {
+      "protocol": 1,
+      "host_sdk": 36,
+      "network": {
+        "connected": true,
+        "metered": false,
+        "internet": true,
+        "validated": true,
+        "transports": [
+          1
+        ],
+        "dns": [
+          "10.0.2.3"
+        ]
+      },
+      "permissions": {
+        "android.permission.CAMERA": false,
+        "android.permission.RECORD_AUDIO": false,
+        "android.permission.READ_CONTACTS": false,
+        "android.permission.READ_PHONE_STATE": false,
+        "android.permission.ACCESS_FINE_LOCATION": false,
+        "android.permission.ACCESS_COARSE_LOCATION": false
+      },
+      "camera_count": 3,
+      "sensor_count": 15,
+      "ims": {
+        "owner": "host",
+        "guest_registration": "unavailable",
+        "calls": "host dialer delegation",
+        "sms": "host composer delegation",
+        "reason": "Carrier/privileged IMS APIs are not available to an ordinary host app"
+      },
+      "standard_guest_apis": {
+        "battery": "relayed",
+        "dns": "host resolver via guest dnsproxyd",
+        "camera": "HAL adapter pending",
+        "audio": "AudioFlinger/HAL adapter pending",
+        "sensors": "HAL adapter pending",
+        "contacts": "explicit import",
+        "phone": "radio adapter pending"
+      },
+      "status": "ok"
+    },
+    "contacts": {
+      "status": "unavailable",
+      "reason": "java.io.IOException: Host bridge 403: Host permission required: android.permission.READ_CONTACTS"
+    },
+    "location": {
+      "status": "unavailable",
+      "reason": "java.io.IOException: Host bridge 403: Host location permission required"
+    },
+    "phone": {
+      "status": "unavailable",
+      "reason": "java.io.IOException: Host bridge 403: Host permission required: android.permission.READ_PHONE_STATE"
+    },
+    "sensors": {
+      "samples": 4,
+      "type": 1,
+      "status": "ok"
+    },
+    "camera": {
+      "status": "unavailable",
+      "reason": "java.io.IOException: Host bridge 403: Host permission required: android.permission.CAMERA"
+    },
+    "audio": {
+      "status": "unavailable",
+      "reason": "java.io.IOException: Host bridge 403: Host permission required: android.permission.RECORD_AUDIO"
+    }
+  },
+  "limitations": [
+    "Standard guest camera/audio/sensor/location/radio adapters remain pending; broker SDK operations are verified.",
+    "The VM microphone supplied zero-power PCM; acoustic capture/playback is not proven.",
+    "Automatic launch after an APK update can race package-removal processing; explicit Open last app was tested.",
+    "The original API25 session was terminated by Android LOW_MEMORY during concurrent testing; its original PIDs were not preserved."
+  ],
+  "cleanup_and_recovery": {
+    "fixture_removed_and_guest_copies_removed": true,
+    "development_guest_stopped_and_broker_closed": true,
+    "original_api25_restored_from_existing_data": true,
+    "original_api25_new_pids": {
+      "host": 14701,
+      "proot": 14772,
+      "init": 14787,
+      "system_server": 15048
+    },
+    "original_session_preserved": false,
+    "original_termination": {
+      "pid": 17501,
+      "reason": "LOW_MEMORY",
+      "reason_code": 3
+    }
+  }
+}

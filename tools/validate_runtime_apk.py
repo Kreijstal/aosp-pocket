@@ -59,7 +59,12 @@ def main():
         assert {'init', 'system/build.prop', 'system/etc/NOTICE.html.gz'} <= files
         for name in ('ueventd', 'watchdogd'):
             assert layout['entries']['sbin/'+name]['target'] == '../init'
-        assert b'android.permission.ACCESS_COARSE_LOCATION' not in apk.read('AndroidManifest.xml')
+        manifest = apk.read('AndroidManifest.xml')
+        # Optional host-device grants are now declared for the API28 broker.
+        # Calls/SMS must still use the host UI, with no direct-send privileges.
+        for permission in ('READ_PRIVILEGED_PHONE_STATE', 'CALL_PHONE', 'SEND_SMS'):
+            name = 'android.permission.' + permission
+            assert name.encode() not in manifest and name.encode('utf-16le') not in manifest, name
         for name in ("libpocket_runtime.so", "libproot.so"):
             file = Path(temporary) / name
             file.write_bytes(apk.read("lib/arm64-v8a/" + name))

@@ -25,6 +25,7 @@ public final class PocketManifest {
         attributes.put("taskAffinity", 0x01010012);
         attributes.put("resizeableActivity", 0x010104f6);
         attributes.put("supportsPictureInPicture", 0x010104f7);
+        attributes.put("scheme", 0x01010027);
         BinaryXmlEncoder.main(args);
         // The generic builder emits numeric values as integers. These two
         // attributes must instead contain references to public framework IDs.

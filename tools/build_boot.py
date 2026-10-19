@@ -102,7 +102,7 @@ def main():
         "app":("ExtShared","KeyChain","LatinIME","CertInstaller","DeskClock"),
         "priv-app":("SystemUI","Launcher3QuickStep","SettingsProvider","Settings","PackageInstaller",
                     "DefaultContainerService","ExtServices","InputDevices","ExternalStorageProvider",
-                    "MediaProvider","DownloadProvider","Shell","ProxyHandler","FusedLocation","Provision"),
+                    "MediaProvider","DownloadProvider","Shell","ProxyHandler","FusedLocation","Provision","ContactsProvider","Contacts"),
     }
     for directory,names in applications.items():
         for name in names:

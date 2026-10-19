@@ -9,7 +9,7 @@ import android.widget.*;
 
 /** Manager task with a live miniature; the guest screen has its own task/icon. */
 public final class MainActivity extends RuntimeActivity {
-    private Button install, start, stop, apk;
+    private Button install, start, stop, apk, lastApp;
     private Spinner version;
     private boolean updating;
     private android.net.Uri pendingImport, pendingApk;
@@ -37,7 +37,12 @@ public final class MainActivity extends RuntimeActivity {
         install = button("Import guest", controls, v -> importGuest());
         start = button("Start", controls, v -> requestStart());
         stop = button("Stop", controls, v -> { if (runtime != null) runtime.stopGuest(); });
+        lastApp = button("Open last app", controls, v -> { if (runtime != null) runtime.openLastApp(); });
         layout.addView(controls, new LinearLayout.LayoutParams(-1, dp(48)));
+        Button peripherals = new Button(this);
+        peripherals.setText("Host peripherals");
+        peripherals.setOnClickListener(v -> startActivity(new Intent(this, PeripheralsActivity.class)));
+        layout.addView(peripherals, new LinearLayout.LayoutParams(-1, dp(44)));
         TextView caption = new TextView(this);
         caption.setText("Android display");
         caption.setPadding(0, dp(12), 0, dp(8));
@@ -76,6 +81,7 @@ public final class MainActivity extends RuntimeActivity {
         version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());
         updating = false;
         apk.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping());
+        lastApp.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping() && runtime.hasLastApp());
         install.setEnabled(ready && !runtime.directBackend() && !runtime.hasImage() && !runtime.starting() && !runtime.running());
         start.setEnabled(ready && runtime.canStart() && !runtime.running() && !runtime.starting() && !runtime.stopping());
         stop.setEnabled(ready && (runtime.running() || runtime.preparing()) && !runtime.stopping());

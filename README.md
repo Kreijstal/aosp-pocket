@@ -53,10 +53,12 @@ the real system server, SurfaceFlinger, installer and a 480 × 800 software
 display. The VM regression passes the boot property, launcher first draw, APK
 installation, app rendering and an injected tap that increments its button.
 See [the evidence](docs/api28-direct-boot-validation.json) and
-[captured test app](docs/images/api28-guest-test.png). Pocket Manager 0.4 now integrates this direct backend alongside Android 7, with
+[captured test app](docs/images/api28-guest-test.png). Pocket Manager integrates this direct backend alongside Android 7, with
 separate persistent data, live preview/window/PiP, touch and APK installation.
-See [the Manager upgrade](docs/pocket-manager-api28.md). Networking/audio and
-physical phone validation remain outside the Android 9 profile. See
+Version 0.5 adds shared host networking, contact import, host dialer/SMS intent
+delegation and a permission-checked host device broker. Standard guest camera,
+audio, sensor and location adapters and physical phone validation remain
+pending. See [the Manager upgrade and capability matrix](docs/pocket-manager-api28.md) and
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
 
 A separate experimental **direct backend** runs a controlled native program

@@ -30,6 +30,7 @@ def main():
         for path in sorted((ROOT/'out/boot/rootfs').rglob('*')):
             if path.is_file():apk.write(path,'assets/api28-rootfs/'+path.relative_to(ROOT/'out/boot/rootfs').as_posix()+'.payload')
         apk.write(ROOT/'out/manager-guest/pocket-control.jar','assets/api28-rootfs/system/framework/pocket-zygote.jar.payload')
+        apk.write(ROOT/'out/manager-guest/host-phone.apk','assets/api28-rootfs/system/app/PocketHostPhone/PocketHostPhone.apk.payload')
         apk.writestr('assets/api28-rootfs/system/etc/init/init.manager.rc.payload',rc)
         apk.write(ROOT/'out/api28/reference/system/etc/NOTICE.xml.gz','assets/licenses/android9-NOTICE.xml.gz')
         apk.write(ROOT/'out/boot/hooks.json','assets/direct-boot-hooks.json')

@@ -63,6 +63,12 @@ public final class GuestService extends Service {
     void touch(android.view.MotionEvent event, float sx, float sy) { if (direct != null) direct.touch(event, sx, sy); }
     void key(int code) { if (direct != null) direct.key(code); }
     void installApk(Uri uri) { if (direct != null && booted) direct.install(uri); }
+    void importHostContacts() { if (direct != null && booted) direct.importHostContacts(); }
+    void checkHostBridges() { if (direct != null && booted) direct.checkHostBridges(); }
+    void checkHostDevices() { if (direct != null && booted) direct.checkHostDevices(); }
+    void openGuestDialer() { if (direct != null && booted) direct.openGuestDialer(); }
+    boolean hasLastApp() { return direct != null && direct.hasLastApp(); }
+    void openLastApp() { if (direct != null && booted) direct.openLastApp(); }
     void selectSdk(int value) {
         if (value == sdk || running() || starting || preparing() || stopping || value != 25 && value != 28) return;
         if (value == 28 && !directAvailable()) return;
@@ -85,7 +91,7 @@ public final class GuestService extends Service {
             @Override public void status(String text) { if (!destroyed) message(text); }
             @Override public void ready() {
                 starting = false; booted = true;
-                message("Android 9 running · 480 × 800 · network and audio unavailable");
+                message("Android 9 running · 480 × 800");
             }
             @Override public void frame(android.graphics.Bitmap bitmap) {
                 android.graphics.Bitmap old = frame; frame = bitmap;
