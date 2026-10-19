@@ -3,7 +3,7 @@
 """Fetch a pinned ARM64 Android 9 ABI reference and sparse AOSP headers.
 
 Does not start Docker, execute the image, or touch the working API 25 guest.
-The reference supplies bionic/platform libraries for the Binder bring-up only.
+The reference supplies bionic/platform/ART libraries for isolated bring-up.
 """
 import argparse
 import hashlib

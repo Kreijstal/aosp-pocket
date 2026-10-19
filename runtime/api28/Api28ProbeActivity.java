@@ -16,7 +16,7 @@ import org.json.JSONObject;
 /** Isolated development APK: real Android 9 libraries, no full guest boot. */
 public final class Api28ProbeActivity extends Activity {
     private final GuestBinder receiver = new GuestBinder();
-    private volatile java.lang.Process manager, client, propertyServer, propertyWaiter;
+    private volatile java.lang.Process manager, client, propertyServer, propertyWaiter, initProcess;
     private volatile boolean closed;
     private HandlerThread receiverThread;
     private TextView status;
@@ -27,7 +27,7 @@ public final class Api28ProbeActivity extends Activity {
         status.setTextSize(18);
         status.setPadding(24, 48, 24, 24);
         setContentView(status);
-        status.setText("Android 9 / API 28 foundations\nPreparing independent test…");
+        status.setText("Android 9 / API 28 init integration\nPreparing independent test…");
         receiverThread = new HandlerThread("Api28Binder");
         receiverThread.start();
         IntentFilter filter = new IntentFilter(GuestBinder.ACTION);
@@ -180,14 +180,17 @@ public final class Api28ProbeActivity extends Activity {
             propertyCheck(root, "fresh");
             stopProperties(root);
             result.put("property_restart_passed", true).put("property_restart_log", log("properties"));
+            initIntegration(root, result);
             result.put("passed", true);
-            message("PASS — Android 9 foundations\n\nPrivate properties, update notifications, "
+            message("PASS — Android 9 init integration\n\nPrivate properties, update notifications, "
                 + "restart, Binder and FD transfer passed.\n\nART: threads, reflection, exceptions "
-                + "and native child execution passed.\n\nFull AOSP init, zygote and launcher are not tested.");
+                + "and native child execution passed.\n\nAOSP init actions, sockets, child reaping, "
+                + "restart and shutdown passed. Zygote and launcher are not tested.");
         } catch (Exception error) {
             try { result.put("passed", false).put("error", error.toString()); } catch (Exception ignored) { }
             message("API 28 bring-up failed:\n" + error);
         } finally {
+            if (initProcess != null && initProcess.isAlive()) initProcess.destroyForcibly();
             if (client != null && client.isAlive()) client.destroyForcibly();
             if (manager != null && manager.isAlive()) manager.destroyForcibly();
             if (propertyWaiter != null && propertyWaiter.isAlive()) propertyWaiter.destroyForcibly();
@@ -195,6 +198,32 @@ public final class Api28ProbeActivity extends Activity {
             try { Files.write(new File(getFilesDir(), "api28-result.json").toPath(), result.toString(2).getBytes("UTF-8")); }
             catch (Exception ignored) { }
         }
+    }
+
+    private void initIntegration(File root, JSONObject result) throws Exception {
+        message("Android 9: testing AOSP init parsing, actions and real child services…");
+        resetProperties(root);
+        initProcess = startProgram(root, "pocket-init-api28", new String[]{"/system/etc/init/init.invalid.rc"}, "0:0", "init-invalid");
+        if (!initProcess.waitFor(15, java.util.concurrent.TimeUnit.SECONDS) || initProcess.exitValue() != 66 ||
+                !log("init-invalid").contains("INIT_CONFIG_REJECTED") || log("init-invalid").contains("INIT_CHILD"))
+            throw new IOException("Init accepted unsupported imported configuration:\n" + log("init-invalid"));
+        result.put("init_invalid_config_log", log("init-invalid"));
+        resetProperties(root);
+        initProcess = startProgram(root, "pocket-init-api28", new String[]{"/system/etc/init/init.pocket.rc"}, "0:0", "init");
+        waitForMarker(initProcess, "init", "API28_INIT_READY");
+        client = startProgram(root, "pocket-init-test-api28", new String[]{"client"}, "39999:39999", "init-client");
+        if (!client.waitFor(90, java.util.concurrent.TimeUnit.SECONDS) || client.exitValue() != 0 ||
+                !log("init-client").contains("API28_INIT_CLIENT_PASS"))
+            throw new IOException("Init lifecycle test failed:\n" + log("init-client") + "\n" + log("init"));
+        propertyCheck(root, "stop");
+        if (!initProcess.waitFor(15, java.util.concurrent.TimeUnit.SECONDS) || initProcess.exitValue() != 0 ||
+                !log("init").contains("remaining=0 failed=0"))
+            throw new IOException("Init did not shut down and reap children:\n" + log("init"));
+        client = startProgram(root, "pocket-init-test-api28", new String[]{"stopped"}, "39999:39999", "init-stopped");
+        if (!client.waitFor(15, java.util.concurrent.TimeUnit.SECONDS) || client.exitValue() != 0)
+            throw new IOException("Init left service state or socket behind:\n" + log("init-stopped"));
+        result.put("init_passed", true).put("init_log", log("init"))
+            .put("init_client_log", log("init-client")).put("init_shutdown_log", log("init-stopped"));
     }
 
     private void art(File root, JSONObject result) throws Exception {
@@ -270,6 +299,7 @@ public final class Api28ProbeActivity extends Activity {
 
     @Override public void onDestroy() {
         closed = true;
+        if (initProcess != null && initProcess.isAlive()) initProcess.destroyForcibly();
         if (client != null && client.isAlive()) client.destroyForcibly();
         if (manager != null && manager.isAlive()) manager.destroyForcibly();
         if (propertyWaiter != null && propertyWaiter.isAlive()) propertyWaiter.destroyForcibly();

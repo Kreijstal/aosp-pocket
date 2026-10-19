@@ -73,7 +73,7 @@
     }
   ],
   "guest_api28": {
-    "status": "properties_art_verified_vm",
+    "status": "init_core_verified_vm",
     "sdk": 28,
     "android_tag": "android-9.0.0_r61",
     "full_guest_boot_verified": false,
@@ -126,10 +126,27 @@
           "libc/private",
           "libc/include/sys"
         ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libcxx",
+        "tag": "android-9.0.0_r61",
+        "commit": "b59618d8ec6702824ec117c08d5c99e38c8f3afa",
+        "cache": "libcxx",
+        "paths": [
+          "include"
+        ]
       }
     ],
     "properties_verified_vm": true,
     "art_java_verified_vm": true,
-    "zygote_verified_vm": false
+    "zygote_verified_vm": false,
+    "init_port": {
+      "patch": "runtime/api28/init-rootless.patch",
+      "entry_point": "runtime/api28/init_main.cpp",
+      "profile": "rootless_app_uid",
+      "pid1": false,
+      "privileged_boot_supported": false
+    },
+    "init_core_verified_vm": true
   }
 }

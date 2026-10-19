@@ -20,18 +20,12 @@ def build(ndk):
     headers.mkdir(exist_ok=True)
     (headers / "sys").mkdir(exist_ok=True)
     shutil.copy2(out / "bionic/libc/include/sys/_system_properties.h", headers / "sys/_system_properties.h")
-    config = (llvm / "sysroot/usr/include/c++/v1/__config_site").read_text()
-    if "#define _LIBCPP_ABI_NAMESPACE __ndk1" not in config:
-        raise SystemExit("Unsupported NDK C++ namespace configuration")
-    (headers / "__config_site").write_text(config.replace(
-        "#define _LIBCPP_ABI_NAMESPACE __ndk1", "#define _LIBCPP_ABI_NAMESPACE __1"))
     includes = [headers, out / "frameworks-native/libs/binder/include"]
     includes += [out / "system-core" / (part + "/include") for part in
                  ("libutils", "libcutils", "liblog", "libsystem", "base")]
     common = [str(llvm / "bin/aarch64-linux-android28-clang++"), "-DPOCKET_GUEST_API=28",
-              # API 28 libc++ predates the NDK's verbose-abort symbol. With
-              # exceptions disabled, use the header's supported abort override.
-              "-D_LIBCPP_VERBOSE_ABORT(...)=__builtin_abort()",
+              # Match Android 9 libc++ ABI instead of the modern NDK headers.
+              "-nostdinc++", "-isystem", str(out / "libcxx/include"),
               "-std=c++14", "-O2", "-fno-rtti", "-fno-exceptions", "-nostdlib++", "-Wall", "-Wextra", "-Werror"]
     common += ["-I" + str(path) for path in includes]
     libs = reference / "system/lib64"
@@ -41,6 +35,7 @@ def build(ndk):
     probe = native / "pocket-api28-probe"
     property_service = native / "pocket-property-service-api28"
     property_probe = native / "pocket-property-probe-api28"
+    init = native / "pocket-init-api28"
     subprocess.run(common + ["-fPIC", "-shared", str(ROOT / "runtime/api28/binder_bridge.cpp"),
                              str(ROOT / "runtime/api28/guest_credentials.cpp")]
                    + link + ["-Wl,-soname," + bridge.name, "-o", str(bridge)], check=True)
@@ -57,6 +52,26 @@ def build(ndk):
                    ["-o", str(property_service)], check=True)
     subprocess.run(common + ["-fPIE", "-pie", str(ROOT / "runtime/api28/property_probe.cpp")]
                    + link + ["-o", str(property_probe)], check=True)
+    # Build the actual pinned AOSP init core with the reviewed rootless patch.
+    init_source = out / "rootless-init"
+    if init_source.exists():
+        shutil.rmtree(init_source)
+    shutil.copytree(out / "system-core/init", init_source)
+    subprocess.run(["patch", "--batch", "-p1", "-i", str(ROOT / "runtime/api28/init-rootless.patch")],
+                   cwd=init_source, check=True)
+    init_sources = [init_source / (name + ".cpp") for name in
+                    ("action", "action_manager", "action_parser", "parser", "tokenizer",
+                     "import_parser", "service", "rlimit_parser", "descriptors", "util")]
+    subprocess.run(common + ["-std=c++17", "-fPIE", "-pie", "-DPOCKET_INIT_INTEGRATION",
+                   "-Wno-unused-parameter", "-Wno-missing-field-initializers",
+                   "-I" + str(init_source), "-I" + str(ROOT / "runtime/api28")]
+                   + property_includes + list(map(str, init_sources + serializer_sources)) +
+                   [str(parser / "property_info_parser.cpp"), str(ROOT / "runtime/api28/property_info.cpp"),
+                    str(ROOT / "runtime/api28/property_service.cpp"), str(ROOT / "runtime/api28/init_main.cpp"),
+                    str(libs / "libc.so"), "-lbase", "-lcutils"] + link + ["-o", str(init)], check=True)
+    init_test = native / "pocket-init-test-api28"
+    subprocess.run(common + ["-fPIE", "-pie", str(ROOT / "runtime/api28/init_test.cpp")]
+                   + link + ["-o", str(init_test)], check=True)
     # Include exactly the dependency closure, not the entire reference image.
     stage = out / "probe-rootfs"
     stage.mkdir(exist_ok=True)
@@ -65,6 +80,8 @@ def build(ndk):
              (property_probe, "system/bin/" + property_probe.name),
              (reference / "system/bin/linker64", "system/bin/linker64")]
     queue.append((reference / "system/bin/dalvikvm64", "system/bin/dalvikvm64"))
+    queue.append((init, "system/bin/" + init.name))
+    queue.append((init_test, "system/bin/" + init_test.name))
     # ART and core JNI libraries are loaded dynamically, beyond DT_NEEDED.
     for name in ("libart.so", "libjavacore.so", "libopenjdk.so", "libopenjdkjvm.so"):
         queue.append((libs / name, "system/lib64/" + name))
@@ -104,6 +121,11 @@ def build(ndk):
         destination = stage / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(reference / name, destination)
+    for path in (ROOT / "runtime/api28").glob("*.rc"):
+        destination = stage / "system/etc/init" / path.name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination)
+        data_files.add(destination.relative_to(stage).as_posix())
     (stage / "tmp").mkdir(exist_ok=True)
     elf = subprocess.check_output([readelf, "-hlsWd", bridge], text=True)
     assert "AArch64" in elf and "__ndk1" not in elf

@@ -43,7 +43,9 @@ and integration APK. The VM tests pass Binder/FD/virtual-UID forwarding, private
 properties with change notifications and clean restart, and real Android 9 ART
 execution of Java threads/reflection/exceptions plus a native child process.
 These run under an ordinary host app UID; ART/platform binaries are pinned
-upstream prebuilts. Full AOSP init, zygote and guest UI boot remain unverified. See
+upstream prebuilts. The rootless AOSP init core also passes service startup,
+property actions, inherited sockets, crash/restart and clean shutdown tests.
+Full platform init, zygote and guest UI boot remain unverified. See
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
 
 ## What works

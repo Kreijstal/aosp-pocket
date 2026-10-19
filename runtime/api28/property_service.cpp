@@ -20,13 +20,20 @@
 #include <string.h>
 #include <unistd.h>
 #include <string>
+#include "pocket_properties.h"
 
 bool pocketCreatePropertyInfo();
 
 namespace {
 constexpr const char* socketPath = "/dev/socket/property_service";
 volatile sig_atomic_t stopped;
+int serverFd = -1;
+uid_t serverOwner;
+PropertyChanged changed;
+PropertyControl control;
+#ifndef POCKET_INIT_INTEGRATION
 void stop(int) { stopped = 1; }
+#endif
 
 bool receive(int fd, void* data, size_t size) {
     auto* next = static_cast<char*>(data);
@@ -59,7 +66,9 @@ bool legalName(const std::string& name) {
 
 uint32_t put(const std::string& name, const std::string& value) {
     if (!legalName(name)) return PROP_ERROR_INVALID_NAME;
-    if (name.compare(0, 4, "ctl.") == 0 || name == "sys.powerctl" || name == "selinux.restorecon_recursive")
+    if (name.compare(0, 4, "ctl.") == 0)
+        return control ? control(name.substr(4), value) : PROP_ERROR_PERMISSION_DENIED;
+    if (name == "sys.powerctl" || name == "selinux.restorecon_recursive")
         return PROP_ERROR_PERMISSION_DENIED; // No host init/control forwarding.
     bool readOnly = name.compare(0, 3, "ro.") == 0;
     if (value.size() >= PROP_VALUE_MAX && !readOnly) return PROP_ERROR_INVALID_VALUE;
@@ -67,7 +76,9 @@ uint32_t put(const std::string& name, const std::string& value) {
     if (info && readOnly) return PROP_ERROR_READ_ONLY_PROPERTY;
     int result = info ? __system_property_update(const_cast<prop_info*>(info), value.c_str(), value.size()) :
         __system_property_add(name.c_str(), name.size(), value.c_str(), value.size());
-    return result == 0 ? PROP_SUCCESS : PROP_ERROR_SET_FAILED;
+    if (result != 0) return PROP_ERROR_SET_FAILED;
+    if (changed) changed(name, value);
+    return PROP_SUCCESS;
 }
 
 bool defaults() {
@@ -134,11 +145,10 @@ void request(int fd, uid_t owner) {
 }
 }
 
-int main() {
-    setbuf(stdout, nullptr);
-    signal(SIGTERM, stop);
-    signal(SIGINT, stop);
-    signal(SIGPIPE, SIG_IGN);
+int pocketPropertiesStart(PropertyChanged onChange, PropertyControl onControl) {
+    stopped = 0;
+    changed = std::move(onChange);
+    control = std::move(onControl);
     uid_t owner = kernelUid();
     if (getuid() != 0 || owner == static_cast<uid_t>(-1)) return 1;
     if (!pocketCreatePropertyInfo()) return 2;
@@ -167,18 +177,44 @@ int main() {
     }
     chmod(socketPath, 0600);
     printf("API28_PROPERTIES_READY pid=%d uid=%d kernel_uid=%u sdk=%s area_init=%d\n", getpid(), getuid(), owner, sdk, initialized);
-    while (!stopped) {
-        pollfd event{fd, POLLIN, 0};
-        int ready = poll(&event, 1, 200);
-        if (ready < 0) { if (errno == EINTR) continue; return 6; }
-        if (ready == 0) continue;
-        int client = accept4(fd, nullptr, nullptr, SOCK_CLOEXEC);
-        if (client < 0) continue;
-        request(client, owner);
-        close(client);
-    }
-    close(fd);
-    unlink(socketPath);
-    puts("API28_PROPERTIES_STOPPED");
+    serverFd = fd;
+    serverOwner = owner;
     return 0;
 }
+
+bool pocketPropertiesPoll(int timeout_ms) {
+    pollfd event{serverFd, POLLIN, 0};
+    int ready = poll(&event, 1, timeout_ms);
+    if (ready < 0) return errno == EINTR;
+    if (ready == 0) return true;
+    if (!(event.revents & POLLIN)) return false;
+    int client = accept4(serverFd, nullptr, nullptr, SOCK_CLOEXEC);
+    if (client >= 0) { request(client, serverOwner); close(client); }
+    return true;
+}
+
+bool pocketPropertiesStopped() { return stopped != 0; }
+uint32_t pocketPropertySet(const std::string& name, const std::string& value) { return put(name, value); }
+
+void pocketPropertiesClose() {
+    if (serverFd >= 0) close(serverFd);
+    serverFd = -1;
+    unlink(socketPath);
+    puts("API28_PROPERTIES_STOPPED");
+}
+
+#ifndef POCKET_INIT_INTEGRATION
+int main() {
+    setbuf(stdout, nullptr);
+    signal(SIGTERM, stop);
+    signal(SIGINT, stop);
+    signal(SIGPIPE, SIG_IGN);
+    int result = pocketPropertiesStart();
+    if (result) return result;
+    while (!pocketPropertiesStopped()) {
+        if (!pocketPropertiesPoll(200)) { pocketPropertiesClose(); return 6; }
+    }
+    pocketPropertiesClose();
+    return 0;
+}
+#endif

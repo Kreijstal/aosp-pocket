@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-only
+import /system/etc/init/pocket-invalid-import.rc
+on boot
+    start must-not-run
+service must-not-run /system/bin/pocket-init-test-api28 hold
+    user 39999

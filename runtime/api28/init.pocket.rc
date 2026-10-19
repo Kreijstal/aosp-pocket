@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Development profile for the real AOSP Android 9 init core, not stock init.rc.
+import /system/etc/init/pocket-import.rc
+
+on early-init
+    setprop pocket.test.order early
+
+on init && property:pocket.test.order=early
+    setprop pocket.test.order init
+
+on boot && property:pocket.test.order=init
+    setprop pocket.test.boot boot-ok
+    class_start pocket
+    trigger pocket-ready
+
+on pocket-ready && property:pocket.test.boot=boot-ok
+    setprop pocket.test.event boot-ok
+
+on property:pocket.test.event=boot-ok
+    setprop pocket.test.trigger ${pocket.test.boot}
+    start pocket-once
+
+service pocket-once /system/bin/pocket-init-test-api28 once ${pocket.test.trigger}
+    class pocket
+    disabled
+    oneshot
+    user 39999
+    group 39999
+    setenv POCKET_INIT_ENV from-rc
+    socket pocket_init_test stream 0600 39999 39999
+
+service pocket-daemon /system/bin/pocket-init-test-api28 daemon
+    class pocket
+    user 39999
+    group 39999
+    onrestart setprop pocket.test.onrestart yes
+
+service pocket-hold /system/bin/pocket-init-test-api28 hold
+    class pocket
+    disabled
+    user 39999
+    group 39999

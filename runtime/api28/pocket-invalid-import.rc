@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+service forbidden /system/bin/pocket-init-test-api28 hold
+    capabilities SYS_ADMIN
+on boot
+    mount tmpfs tmpfs /mnt

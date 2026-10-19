@@ -21,7 +21,7 @@ c.shell(f"am force-stop {package}")
 c.shell(f"su -c 'rm -f {directory}/files/api28-result.json'")
 c.shell(f"am start -W -n {package}/{activity}")
 result = None
-for _ in range(200):
+for _ in range(260):
     output = c.shell(f"su -c 'cat {directory}/files/api28-result.json 2>/dev/null || true'")
     if output.strip():
         result = json.loads(output)
@@ -51,7 +51,10 @@ caller = re.search(r"caller_uid=(\d+) caller_pid=(\d+)", output)
 assert caller and int(caller[1]) == uid and caller[2] == match[2], output
 assert result["ordinary_uid_passed"] and result["virtual_uid_passed"], result
 assert result["properties_passed"] and result["property_restart_passed"] and result["host_property_area_unchanged"], result
+assert result["init_passed"] and "API28_INIT_CLIENT_PASS" in result["init_client_log"], result
+assert "remaining=0 failed=0" in result["init_log"] and "grandchild=gone" in result["init_shutdown_log"], result
+assert "status=42" in result["init_log"] and "INIT_ONESHOT_PASS" in result["init_log"], result
 assert result["art_passed"] and "API28_ART_PASS" in result["art_log"], result
 assert "sdk=28" in output and "serial_changed=1 uid=39999" in result["property_wait_log"], result
 assert "server_uid=0 client_uid=39999 fd=api28fd caller_uid=39999" in result["virtual_client_log"], result
-print("PASS: API 28 Binder/FD/virtual UID, private properties/read-only/notify/clean restart, ART Java/thread/reflection/exception/native child, ordinary host app UID + enforcing SELinux + seccomp")
+print("PASS: API 28 Binder/FD/virtual UID, private properties/read-only/notify/clean restart, ART Java/thread/reflection/exception/native child, AOSP init parser/actions/service crash + restart + sockets + shutdown, ordinary host app UID + enforcing SELinux + seccomp")

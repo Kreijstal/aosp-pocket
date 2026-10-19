@@ -35,3 +35,10 @@ serializer sources under Apache-2.0; their copyright notices remain in the
 pinned upstream source files. The probe includes the matching upstream ART,
 core JNI libraries, boot images and runtime data with the Android 9 notices.
 These are bring-up milestones, not a full bootable Android 9 guest.
+
+The API 28 init integration compiles AOSP android-9.0.0_r61 init action, parser,
+service, descriptor, rlimit and utility sources with the rootless adaptation
+in runtime/api28/init-rootless.patch. Original Apache-2.0 notices remain in
+the pinned sources. Compilation uses matching pinned AOSP libc++ headers
+(LLVM/University of Illinois and MIT licenses retained upstream). The APK's
+Android 9 NOTICE asset covers the corresponding platform runtime libraries.

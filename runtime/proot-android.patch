@@ -262,3 +262,94 @@
  		/* Override only if the file is owned by the current user.
  		 * Errors are not fatal here.  */
  		if (uid == getuid())
+--- a/src/extension/fake_id0/fake_id0.c
++++ b/src/extension/fake_id0/fake_id0.c
+@@ -353,61 +353,34 @@
+ #define HAS_CAP(cap) ((config->effective & (1 << cap)) != 0)
+ #define CAP_SETuid CAP_SETUID
+ #define CAP_SETgid CAP_SETGID
+-#define SETXID(id) do {							\
+-	id ## _t id = peek_reg(tracee, ORIGINAL, SYSARG_1);		\
+-	bool allowed;							\
+-									\
+-	allowed = (HAS_CAP(CAP_SET ## id)                                  \
+-		|| id == config->r ## id				\
+-		|| id == config->s ## id);				\
+-	if (!allowed)							\
+-		return -EPERM;						\
+-        /**                                                             \
+-         * "setuid() sets the effective user ID of the calling process. If the \
+-         * effective UID of the caller is root (more precisely: if the caller has \
+-         * the CAP_SETUID capability), the real UID and saved set-user-ID are also \
+-         * set." - setuid(2)                                            \
+-         */                                                             \
+-        if (allowed) {                                                  \
+-               /*                                                       \
+-                * "If one or more of the real, effective or saved set user IDs was \
+-                * previously 0, and as a result of the UID changes all of these IDs have a \
+-                * nonzero value, then all capabilities are cleared from the permitted and \
+-                *  effective capability sets." - capabilities(7)        \
+-                */                                                      \
+-                if (config->r ## id == 0                                \
+-                        || config->e ## id == 0                         \
+-                        || config->s ## id == 0) {                      \
+-                    if (id != 0 && !config->keepCaps) {                 \
+-                        config->permitted = 0;                          \
+-                        config->effective = 0;                          \
+-                    }                                                   \
+-                }                                                       \
+-                if (HAS_CAP(CAP_SETUID)) {                              \
+-                    config->r ## id = id;				\
+-                    config->s ## id = id;				\
+-                }                                                       \
+-                /**                                                     \
+-                 * If the effective user ID is changed from 0 to nonzero, then all \
+-                 * capabilities are cleared from the effective set.     \
+-                 */                                                     \
+-                if (config->e ## id == 0 && id != 0) {                  \
+-                    config->effective = 0;                              \
+-                }                                                       \
+-                /**                                                     \
+-                 * If the effective user ID is changed from nonzero to 0, then the \
+-                 * permitted set is copied to the effective set.        \
+-                 */                                                     \
+-                if (config->e ## id != 0 && id == 0) {                  \
+-                    config->effective = config->permitted;              \
+-                }                                                       \
+-	        config->e ## id  = id;					\
++#define SETXID(id) do {                                                  \
++    id ## _t value = peek_reg(tracee, ORIGINAL, SYSARG_1);                 \
++    bool privileged = HAS_CAP(CAP_SET ## id);                             \
++    bool had_root = config->r ## id == 0 || config->e ## id == 0 ||        \
++                    config->s ## id == 0;                                \
++    id ## _t old_effective = config->e ## id;                             \
++    if (!privileged && value != config->r ## id &&                       \
++        value != config->s ## id) return -EPERM;                         \
++    /* Decide privilege before dropping any emulated UID capabilities. */\
++    if (privileged) {                                                    \
++        config->r ## id = value;                                         \
++        config->s ## id = value;                                         \
++    }                                                                   \
++    config->e ## id = value;                                             \
++    config->fs ## id = value;                                            \
++    /* GID changes never clear UID capability state (capabilities(7)). */\
++    if (CAP_SET ## id == CAP_SETUID) {                                   \
++        if (had_root && config->r ## id != 0 &&                          \
++            config->e ## id != 0 && config->s ## id != 0) {              \
++            if (!config->keepCaps) config->permitted = 0;                 \
++            config->effective = 0;                                       \
+         }                                                               \
+-									\
+-	config->fs ## id = id;						\
+-									\
+-	poke_reg(tracee, SYSARG_RESULT, 0);				\
+-	return 0;							\
++        if (old_effective == 0 && value != 0) config->effective = 0;      \
++        if (old_effective != 0 && value == 0)                             \
++            config->effective = config->permitted;                       \
++    }                                                                   \
++    poke_reg(tracee, SYSARG_RESULT, 0);                                   \
++    return 0;                                                           \
+ } while (0)
+ 
+ /**

@@ -52,4 +52,4 @@ verify: $(APK)
 
 # Keep the development signing identity so an ordinary rebuild can update the app.
 clean:
-	python3 -c 'import pathlib,shutil; [(shutil.rmtree(p) if p.is_dir() else p.unlink()) for p in pathlib.Path("out").iterdir() if p.name != "debug.keystore"]' 
+	python3 -c 'import pathlib,shutil; [(shutil.rmtree(p) if p.is_dir() else p.unlink()) for p in pathlib.Path("out").iterdir() if p.name != "debug.keystore"]'

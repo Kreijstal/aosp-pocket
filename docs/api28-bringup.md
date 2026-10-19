@@ -14,8 +14,9 @@ ART, exercises threads/reflection/exceptions, and launches a native child that
 retains UID 39999 and reads the SDK 28 property area.
 
 This is **runtime bring-up, not a bootable Android 9 guest**. The bootable
-runtime continues to use its tested Android 7.1/API 25 image. Full AOSP init,
-zygote, system services, launcher and graphics integration remain unverified.
+runtime continues to use its tested Android 7.1/API 25 image. The init core now
+has a rootless integration profile; full platform init, zygote, system services,
+launcher and graphics integration remain unverified.
 Hardware bridges are not added here.
 
 ## Separate builds and SDK checks
@@ -34,6 +35,10 @@ Outputs:
 - `out/api28/native/pocket-property-service-api28`: source-built rootless
   property service using the real Android 9 bionic shared-memory ABI.
 - `out/api28/native/pocket-property-probe-api28`: separate native clients.
+- `out/api28/native/pocket-init-api28`: source-built AOSP init core with the
+  rootless entry point and shared property backend.
+- `out/api28/native/pocket-init-test-api28`: real child services and an independent
+  bionic control/observation client.
 - `out/api28/aosp-pocket-api28-probe.apk`: independent development application,
   package `dev.kreijstal.aosppocket.api28probe`, about 74 MiB with ART assets.
 - `out/api28/probe-rootfs`: ELF dependency closure, boot images and metadata;
@@ -72,8 +77,9 @@ The Android 9 bionic reference and property-info parser/serializer source are
 also pinned. The property service builds the actual AOSP serialized property
 trie and calls Android 9 libc's property-area/add/update APIs. Its socket
 speaks the legacy and v2 property write protocols; test clients use the public
-bionic read/set/wait APIs. The NDK header's verbose-abort override avoids
-introducing a modern libc++ symbol absent from Android 9's system libc++.
+bionic read/set/wait APIs. Builds use the pinned Android 9 libc++ headers with
+`-nostdinc++`, matching the platform library ABI, including init's C++17
+variants and stream-based errors. Modern NDK libc++ headers are not substituted.
 
 ## Binder path
 
@@ -203,14 +209,88 @@ A read-only listing of the VMOS image confirms it also supplies `dalvikvm64`,
 comparison, not execution or proof of its ART initialization mechanism. The
 files bundled here come from the pinned open-source Android/Redroid reference.
 
+## Rootless init integration
+
+The `0.3-api28-init` development APK additionally runs the real AOSP
+`android-9.0.0_r61` init core. `tools/build_api28.py` copies the pinned upstream
+`system/core/init` directory into `out/api28/rootless-init`, applies
+[`init-rootless.patch`](../runtime/api28/init-rootless.patch), and compiles:
+
+- `parser.cpp`, `tokenizer.cpp`, `import_parser.cpp`, `action_parser.cpp`;
+- `action.cpp`, `action_manager.cpp`;
+- `service.cpp`, `descriptors.cpp`, `rlimit_parser.cpp`, `util.cpp`.
+
+[`init_main.cpp`](../runtime/api28/init_main.cpp) provides the ordinary-process
+entry point, property/control dispatch and event loop. AOSP's `Service` class
+forks/executes children, publishes `init.svc.*` and `ro.boottime.*`, handles
+oneshot/disabled services, executes `onrestart`, and manages restart states.
+The entry point uses AOSP's five-second restart interval and keeps a zombie's
+PID allocated with `waitid(WNOWAIT)` until `Service::Reap` finishes signalling
+the process group. Children are stopped in reverse start order and reaped on
+shutdown, with a bounded SIGTERM grace period before SIGKILL.
+
+The property daemon and init share one backend and one private Android 9
+property area. Property writes queue real AOSP actions. `ctl.start`, `ctl.stop`
+and `ctl.restart` resolve only this process's service list. The standalone
+property daemon continues to reject all control messages. Neither backend
+forwards power control or SELinux requests to host init.
+
+This is a **rootless init profile, not the entire AOSP init executable**.
+It is not PID 1 and cannot adopt every descendant. It keeps the real host app
+UID, SELinux domain and supplementary groups; guest UID/GID changes use PRoot.
+AOSP's cgroup setup is replaced with POSIX child process groups. Service logs
+inherit the APK's redirected output. SELinux domain transitions, capabilities,
+Linux namespaces, console, cgroup settings, supplementary group changes and
+unimplemented builtins are rejected. The supported service options are
+`class`, `disabled`, `group` (one primary GID), `oneshot`, `onrestart`, `override`,
+`rlimit`, `setenv`, `socket` (without a SELinux context), and `user`. Supported
+builtins are `setprop`, `trigger`, `start`, `stop` and `class_start`.
+
+The upstream parser normally logs some imported-file errors without returning
+them to its caller. The patch accumulates these errors so the rootless entry
+point refuses the entire configuration before any service starts. It never
+loads the reference image's stock `init.rc` or reports `sys.boot_completed`.
+
+The integration scenario in [`init.pocket.rc`](../runtime/api28/init.pocket.rc)
+exercises import, ordered early-init/init/boot events, event/property conjunctions,
+property-only triggers and argument expansion. A real UID-39999 oneshot checks
+its environment and inherited Unix socket. A daemon exits with status 42,
+automatically restarts, forks a descendant, and is explicitly restarted again.
+The separate client starts/stops a disabled service and checks unknown/control
+rejection. Shutdown checks stopped states, removed sockets and descendant death.
+The PRoot adapter preserves emulated UID capabilities across GID changes and
+updates real/effective/saved guest IDs before dropping UID capabilities. The
+oneshot regression verifies all three IDs and that returning to virtual root
+is denied after the drop. Actual host UID/SELinux/seccomp remain unchanged.
+A negative imported configuration requests capabilities and a mount; it must
+fail parsing and launch no child. All earlier Binder, properties and ART cases
+run in the same APK before this scenario.
+
+[VM evidence](api28-init-validation.json) records a successful run under real
+host UID 10171, enforcing `untrusted_app_27` SELinux and seccomp mode 2.
+The daemon's status-42 exit, two restart generations, inherited socket and
+oneshot checks, five child reaps, stopped states and removed descendant are
+captured in the logs. The API 25 host PID 17501 was checked separately and
+remained running during the experiment.
+
+Exact validation commands:
+
+```sh
+make -f runtime/Makefile -j2 api28-verify check-profiles
+ssh pi@juanraspberry python3 - < tools/validate_api28_on_pi.py
+```
+
+Both passed. The VM-side helper uses the instance's dedicated ADB server on
+port 5043, never a default server or physical-phone connection.
+
 ## Next boot gates
 
-1. Integrate the verified property path into a source-built Android 9 init port:
-   service supervision/actions, logging, writable paths, SELinux and
-   mount/namespace assumptions. The standalone property service is not init.
-2. Build on the verified ART execution to start zygote and system services with consistent guest credentials and
-   the private service registry. Add manager death/restart and nested Binder
-   regression cases before treating this as a general framework IPC layer.
+1. Start Android 9 zygote through the tested init core and private registry.
+   Add missing service/socket/property behavior as required, while keeping
+   privileged operations explicit and guest credentials consistent. The init
+   integration scenario alone does not establish zygote or system-server boot.
+2. Add manager death/restart and nested Binder regression cases before treating
+   the private registry as a general framework IPC layer.
 3. Adapt Android 9 graphics/HAL transports and linker namespace configuration,
    then demonstrate launcher display, APK installation and forwarded touch.
 4. Enable an explicitly versioned API 28 image/profile in Pocket Manager only
