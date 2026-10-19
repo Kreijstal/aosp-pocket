@@ -51,6 +51,14 @@ an image-only development profile with lazy preload and a JVMTI bootstrap.
 System-server and guest UI boot remain unverified. See
 [API 28 builds, evidence and remaining boot gates](docs/api28-bringup.md).
 
+A separate experimental **direct backend** runs a controlled native program
+with the pinned Android 9 linker/bionic without PRoot or a tracer. Its path,
+directory-FD, symlink, thread and fork/exec tests pass on Linux and in the
+Android VM. The same program under full-ptrace PRoot supplies a measured
+comparison. This is a build-controlled native ABI prototype, not a complete
+Android execution engine or VMOS image compatibility. See
+[the implementation, limits and benchmark](docs/api28-bringup.md#experimental-direct-backend).
+
 ## What works
 
 - A 57 KiB development APK with no requested permissions, network access, ADB

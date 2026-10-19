@@ -359,6 +359,100 @@ The [Ananbox fork comparison](ananbox-fork-review.md) records useful upstream
 guest-management and Binder lifecycle work; the inspected fork does not
 provide an Android 9 port or a different execution backend.
 
+## Experimental direct backend
+
+The independent `0.1-direct` APK, package
+`dev.kreijstal.aosppocket.directprobe`, tests a source-controlled native ABI
+without PRoot. It does not modify Pocket Manager, the installed API 25 guest,
+or the API 28 init/zygote probe. It incorporates no VMOS code or YLINKER binary.
+
+[`guest_paths.c`](../runtime/direct/guest_paths.c) implements GNU link-time
+`--wrap` targets for controlled callers of `open/openat`, `stat/lstat/fstatat`,
+`readlink/readlinkat`, `mkdir/mkdirat`, `unlink/unlinkat/rmdir`,
+`symlink/symlinkat`, `chdir/fchdir/getcwd`, and `execve`. The build tool passes
+the same wrapper list on Linux and Android. The adapter issues real kernel
+syscalls in the guest process; no tracer, signal trap or seccomp filter is
+installed. It preserves real host credentials and does not emulate guest root.
+
+Absolute paths resolve inside `POCKET_DIRECT_ROOT`. Relative paths derive from
+the kernel cwd or an actual directory FD. Resolution walks directory FDs,
+interprets absolute symlink contents relative to the guest root, follows
+relative links in order before applying `..`, clamps `..` at root and caps
+symlink traversal at 40. Foreign directory FDs fail with EXDEV. Unsupported
+metadata flags, O_TMPFILE and trailing-slash removal/link creation fail
+explicitly. The regression covers creation, reading, metadata, symlink loops,
+O_NOFOLLOW, missing paths, non-directory errors, nested symlink/.. ordering,
+directory-relative operations, cwd buffer limits and a reader thread.
+
+The Android APK bundles the pinned API 28 `linker64`, `libc.so`, `libdl.so` and
+`libm.so` already used by the other probe. Android 9's linker does not provide
+the newer command-line execution interface. The controlled executable reserves
+512 bytes in PT_INTERP; extraction writes the app-private linker path there.
+The comparison copy instead names `/system/bin/linker64` inside PRoot. Both
+copies originate from the same built executable. A private linker configuration
+and explicit library path select only the bundled libraries. The reference
+loader's development `LD_CONFIG_FILE` feature supplies this configuration;
+a production loader build will need an equivalent supported setup.
+
+A real forked child execs `/system/bin/pocket-direct-probe`. Its caller supplies
+a fresh environment omitting the runtime configuration. The adapter preserves
+the guest root, private library path and linker configuration, while retaining
+the caller's marker. The child checks its cwd, reads through a guest symlink
+and reports real UID/tracer identity. The parent waits for its successful exit.
+The host APK separately inspects the parent's `/proc` UID, TracerPid, SELinux,
+seccomp and mappings while it waits on a private release file.
+
+[VM evidence](direct-backend-validation.json) records real UID 10172,
+`TracerPid=0`, enforcing `untrusted_app_27` and seccomp 2 in direct mode. The
+maps show the private Android 9 loader, libc and libdl with no host shared
+libraries. The PRoot comparison retains the same real UID and confinement but
+has a nonzero tracer. It runs with `PROOT_NO_SECCOMP=1`, matching our current
+working full-ptrace backend. [Linux evidence](direct-backend-host-validation.txt)
+records the same path/thread/fork/exec tests under native x86-64 glibc. This
+demonstrates portability of the adapter, not ARM64 execution on x86 without
+CPU translation.
+
+The benchmark times only 400 repetitions of open/read/close/stat on the same
+small fixture. Three rounds alternate the baseline/direct/PRoot order. The
+baseline uses pinned Android 9 bionic and a real private host pathname without
+path translation. Timing excludes process startup and is a small VM workload,
+not an Android boot, graphics or application benchmark. Raw per-round durations
+are retained in the evidence; results must not be generalized to all workloads.
+
+Recorded median durations for those 400 iterations:
+
+| Mode | Duration |
+|---|---:|
+| Untranslated path baseline | 9.59 ms |
+| Direct adapter | 24.88 ms |
+| Full-ptrace PRoot | 447.28 ms |
+
+The direct adapter was about 18.0 times faster than PRoot and 2.6 times slower
+than the untranslated baseline in this run.
+
+This is **not a complete YLINKER replacement**. Link-time wrappers cover calls
+from objects built with these flags. They do not automatically redirect libc's
+internal calls, arbitrary shared libraries, inline syscalls or runtime-generated
+code. A negative test deliberately demonstrates that a raw syscall is outside
+the path ABI. Android 9 libc startup currently reads permitted host property
+areas; this backend has no private property area, virtual UID, Binder or HAL
+integration. The namespace configuration restricts library lookup, not kernel
+permissions. All processes share the host app sandbox; this is not an isolation
+boundary against hostile guest code or filesystem races.
+
+Build and validate:
+
+```sh
+make -f runtime/Makefile -j2 direct-verify direct-check-host
+scp out/direct/aosp-pocket-direct-probe.apk pi@juanraspberry:/home/pi/aosp-pocket-direct-probe.apk
+ssh pi@juanraspberry python3 - < tools/validate_direct_on_pi.py
+```
+
+Output is `out/direct/aosp-pocket-direct-probe.apk`, approximately 1.6 MiB.
+The next direct-backend milestone is to route controlled platform/bionic
+operations through the adapter, then port the already tested property/Binder
+and init/zygote paths. Keep PRoot available until equivalent regressions pass.
+
 ## Next boot gates
 
 1. Extend the tested zygote profile toward system-server startup. Implement

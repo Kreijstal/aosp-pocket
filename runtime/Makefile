@@ -81,6 +81,7 @@ $(OUT)/guest-test.apk: $(shell find runtime/smoke -name '*.java' -o -name '*.xml
 	java -cp $(SIGNER) com.android.apksigner.ApkSignerTool verify --verbose $@
 
 include runtime/api28/Makefile
+include runtime/direct/Makefile
 
 check-profiles:
 	mkdir -p out/profile-tests

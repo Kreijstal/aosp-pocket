@@ -1,0 +1,8 @@
+python3 tools/validate_direct_host.py
+DIRECT_BENCH iterations=100 elapsed_ns=1210711
+DIRECT_ID mode=direct pid=1326895 uid=1001 tracer=0 seccomp=0 libc=/usr/lib/libc.so.6
+DIRECT_CHILD_PASS fork_exec=1 cwd=/data
+DIRECT_ID mode=direct pid=1326893 uid=1001 tracer=0 seccomp=0 libc=/usr/lib/libc.so.6
+DIRECT_READY mode=direct pid=1326893
+DIRECT_SUITE_PASS paths=1 dirfd=1 symlinks=1 cwd=1 thread=1 fork_exec=1
+PASS: Linux controlled path ABI, negative cases, threads, fork/exec, zero tracer
