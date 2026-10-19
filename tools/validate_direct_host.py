@@ -22,5 +22,6 @@ with tempfile.TemporaryDirectory(prefix="pocket-direct-") as tmp:
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=20)
     print(result.stdout, end="")
     assert result.returncode == 0 and "DIRECT_SUITE_PASS" in result.stdout
+    assert "DIRECT_FILES_PASS" in result.stdout and "DIRECT_SOCKET_PASS" in result.stdout
     subprocess.run([binary, "bench", "/data/fixture", "100"], env=env, check=True, timeout=10)
-    print("PASS: Linux controlled path ABI, negative cases, threads, fork/exec, zero tracer")
+    print("PASS: Linux direct paths/stdio/directories/metadata/rename/hardlinks/Unix sockets/credentials/FD transfer, negative cases, threads, fork/exec, zero tracer")

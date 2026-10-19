@@ -2,8 +2,8 @@
 DIRECT_OUT := out/direct
 .PHONY: direct-native direct-verify direct-check-host
 
-direct-native: $(DIRECT_OUT)/build.stamp $(DIRECT_OUT)/rootfs/system/bin/pocket-direct-probe
-$(DIRECT_OUT)/build.stamp $(DIRECT_OUT)/rootfs/system/bin/pocket-direct-probe &: runtime/direct/guest_paths.c runtime/direct/guest_paths.h runtime/direct/probe.c tools/build_direct.py tools/prepare_api28.py sources.lock.json
+direct-native: $(DIRECT_OUT)/build.stamp $(DIRECT_OUT)/abi.json $(DIRECT_OUT)/rootfs/system/bin/pocket-direct-probe
+$(DIRECT_OUT)/build.stamp $(DIRECT_OUT)/abi.json $(DIRECT_OUT)/rootfs/system/bin/pocket-direct-probe &: runtime/direct/guest_paths.c runtime/direct/guest_paths.h runtime/direct/probe.c tools/build_direct.py tools/prepare_api28.py sources.lock.json
 	python3 tools/build_direct.py --ndk $(NDK)
 
 $(DIRECT_OUT)/host-probe: runtime/direct/guest_paths.c runtime/direct/guest_paths.h runtime/direct/probe.c tools/build_direct.py
@@ -21,12 +21,12 @@ $(DIRECT_OUT)/classes.dex: runtime/direct/DirectProbeActivity.java $(ANDROID_JAR
 
 $(DIRECT_OUT)/AndroidManifest.xml: runtime/direct/AndroidManifest.xml runtime/direct/Makefile $(OUT)/tools/PocketManifest.class
 	mkdir -p $(DIRECT_OUT)
-	java -cp $(TOOLS):$(OUT)/tools PocketManifest $< $@ 28 28 1 0.1-direct
+	java -cp $(TOOLS):$(OUT)/tools PocketManifest $< $@ 28 28 2 0.2-direct-calls
 
 $(DIRECT_OUT)/base.apk: $(DIRECT_OUT)/classes.dex $(DIRECT_OUT)/AndroidManifest.xml
 	java -cp $(TOOLS) com.example.build.ApkBuilder $(DIRECT_OUT)/AndroidManifest.xml $(DIRECT_OUT)/classes.dex $@
 
-$(DIRECT_OUT)/packed.apk: $(DIRECT_OUT)/base.apk $(DIRECT_OUT)/build.stamp out/runtime-native/libproot.so tools/pack_direct_probe.py runtime/NOTICE sources.lock.json runtime/licenses/talloc.txt runtime/licenses/GPL-3.0-only.txt vendor/proot/COPYING
+$(DIRECT_OUT)/packed.apk: $(DIRECT_OUT)/base.apk $(DIRECT_OUT)/build.stamp $(DIRECT_OUT)/abi.json out/runtime-native/libproot.so tools/pack_direct_probe.py runtime/NOTICE sources.lock.json runtime/licenses/talloc.txt runtime/licenses/GPL-3.0-only.txt vendor/proot/COPYING
 	python3 tools/pack_direct_probe.py
 
 $(DIRECT_OUT)/aosp-pocket-direct-probe.apk: $(DIRECT_OUT)/packed.apk out/debug.keystore

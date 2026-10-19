@@ -10,6 +10,7 @@ with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(out / "packed.ap
     for entry in base.infolist():
         apk.writestr(entry, base.read(entry))
     apk.write(ROOT / "out/runtime-native/libproot.so", "lib/arm64-v8a/libproot.so")
+    apk.write(out / "abi.json", "assets/direct-abi.json")
     for path in sorted((out / "rootfs").rglob("*")):
         if path.is_file():
             apk.write(path, "assets/direct-rootfs/" + path.relative_to(out / "rootfs").as_posix() + ".payload")

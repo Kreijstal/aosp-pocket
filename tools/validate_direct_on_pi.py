@@ -36,10 +36,13 @@ result["host_property_area_unchanged"] = c.shell("getprop ro.build.version.sdk")
 Path("/home/pi/pocket-direct-validation.json").write_text(json.dumps(result, indent=2) + "\n")
 print(json.dumps(result, indent=2))
 assert result["passed"], result.get("error")
+assert result["abi"]["abi_version"] == 2 and len(result["abi"]["controlled_calls"]) == 38
+assert not result["abi"]["guest_uid_emulation"] and not result["abi"]["third_party_syscall_interception"]
 assert result["host_uid"] >= 10000 and result["host_selinux_enforcing"] and result["host_property_area_unchanged"]
 for mode in ("direct", "proot"):
     section = result[mode]
     assert "untrusted_app" in section["selinux"] and "DIRECT_CHILD_PASS" in section["log"]
+    assert "DIRECT_FILES_PASS" in section["log"] and "DIRECT_SOCKET_PASS" in section["log"]
     assert re.search(r"^Seccomp:\s+2$", section["status"], re.M)
     uids = re.search(r"^Uid:\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)", section["status"], re.M)
     assert uids and all(int(uid) == result["host_uid"] for uid in uids.groups())
@@ -54,4 +57,4 @@ for line in result["direct"]["maps"].splitlines():
     if path.startswith("/") and path.endswith(".so"):
         assert path.startswith(directory + "/files/direct-root/system/lib64/"), path
 assert len(result["benchmark"]) == 3 and result["full_guest_boot_verified"] is False
-print("PASS: Android 9 linker/bionic controlled path ABI + thread + fork/exec; zero tracer in direct mode; PRoot comparison; real app UID/SELinux/seccomp retained")
+print("PASS: Android 9 direct paths + stdio + directories + metadata + atomic rename + hardlinks + Unix sockets/credentials/FD transfer + threads + fork/exec; zero tracer; PRoot comparison; app confinement retained")

@@ -1,8 +1,10 @@
 python3 tools/validate_direct_host.py
-DIRECT_BENCH iterations=100 elapsed_ns=1210711
-DIRECT_ID mode=direct pid=1326895 uid=1001 tracer=0 seccomp=0 libc=/usr/lib/libc.so.6
+DIRECT_BENCH iterations=100 elapsed_ns=1193448
+DIRECT_FILES_PASS stdio=1 directory=1 realpath=1 access=1 rename=1 hardlink=1 metadata=1 truncate=1
+DIRECT_SOCKET_PASS bind=1 connect=1 names=1 peer_credentials=1 fd_transfer=1
+DIRECT_ID mode=direct pid=1349549 uid=1001 tracer=0 seccomp=0 libc=/usr/lib/libc.so.6
 DIRECT_CHILD_PASS fork_exec=1 cwd=/data
-DIRECT_ID mode=direct pid=1326893 uid=1001 tracer=0 seccomp=0 libc=/usr/lib/libc.so.6
-DIRECT_READY mode=direct pid=1326893
+DIRECT_ID mode=direct pid=1349546 uid=1001 tracer=0 seccomp=0 libc=/usr/lib/libc.so.6
+DIRECT_READY mode=direct pid=1349546
 DIRECT_SUITE_PASS paths=1 dirfd=1 symlinks=1 cwd=1 thread=1 fork_exec=1
-PASS: Linux controlled path ABI, negative cases, threads, fork/exec, zero tracer
+PASS: Linux direct paths/stdio/directories/metadata/rename/hardlinks/Unix sockets/credentials/FD transfer, negative cases, threads, fork/exec, zero tracer

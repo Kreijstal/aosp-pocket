@@ -32,6 +32,13 @@ public final class DirectProbeActivity extends Activity {
     }
     private void message(String text) { runOnUiThread(() -> status.setText(text)); }
     private String read(File file) throws IOException { return new String(Files.readAllBytes(file.toPath()), "UTF-8"); }
+    private JSONObject abi() throws Exception {
+        try (InputStream in = getAssets().open("direct-abi.json"); ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            for (int n; (n = in.read(buffer)) != -1;) bytes.write(buffer, 0, n);
+            return new JSONObject(bytes.toString("UTF-8"));
+        }
+    }
     private void write(File file, String text) throws IOException { Files.write(file.toPath(), text.getBytes("UTF-8")); }
 
     private File extract(String mode) throws Exception {
@@ -152,6 +159,7 @@ public final class DirectProbeActivity extends Activity {
         write(new File(root, "data/release"), "release\n");
         String log = finish(p, mode + "-suite");
         if (!log.contains("DIRECT_SUITE_PASS") || !log.contains("DIRECT_CHILD_PASS") ||
+            !log.contains("DIRECT_FILES_PASS") || !log.contains("DIRECT_SOCKET_PASS") ||
             !log.contains(root.getPath() + "/system/lib64/libc.so") && mode.equals("direct"))
             throw new IOException("Suite/guest bionic verification failed: " + log);
         return new JSONObject().put("pid", pid).put("status", proc).put("selinux", context).put("maps", maps).put("log", log);
@@ -166,10 +174,10 @@ public final class DirectProbeActivity extends Activity {
         JSONObject result = new JSONObject();
         try {
             result.put("nonce", nonce).put("host_uid", Process.myUid()).put("full_guest_boot_verified", false)
-                .put("scope", "controlled_native_abi").put("third_party_syscall_interception", false);
+                .put("scope", "controlled_native_abi").put("third_party_syscall_interception", false).put("abi", abi());
             message("Preparing isolated Android 9 linker/bionic fixtures…");
             File direct = extract("direct"), proot = extract("proot");
-            message("Testing file operations, threads and fork/exec without PRoot…");
+            message("Testing stdio, metadata, Unix sockets and fork/exec without PRoot…");
             result.put("direct", suite(direct, "direct"));
             message("Checking the same guest program under PRoot…");
             result.put("proot", suite(proot, "proot"));
@@ -186,7 +194,7 @@ public final class DirectProbeActivity extends Activity {
                 samples.put(sample);
             }
             result.put("benchmark", samples).put("passed", true);
-            message("PASS: controlled guest paths, threads and fork/exec run without PRoot.\n\nAndroid 9 linker/bionic verified; host UID, SELinux and seccomp retained.\n\nThis is not a complete Android guest.");
+            message("PASS: guest files, stdio, directories, metadata, Unix sockets, FD transfer and fork/exec run without PRoot.\n\nAndroid 9 linker/bionic verified; host UID, SELinux and seccomp retained.\n\nThis is not a complete Android guest.");
         } catch (Exception e) {
             try { result.put("passed", false).put("error", e.toString()); } catch (Exception ignored) { }
             message("Direct backend failed:\n" + e);

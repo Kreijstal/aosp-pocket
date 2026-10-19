@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 import argparse
+import json
 from pathlib import Path
 import re
 import subprocess
 import tempfile
 import zipfile
+from build_direct import WRAPS
 
 parser = argparse.ArgumentParser(description="Validate the isolated controlled native guest APK")
 parser.add_argument("apk", type=Path)
@@ -17,6 +19,9 @@ with zipfile.ZipFile(args.apk) as apk, tempfile.TemporaryDirectory() as tmp:
     manifest = apk.read("AndroidManifest.xml")
     assert "dev.kreijstal.aosppocket.directprobe".encode("utf-16le") in manifest
     assert "android.permission.".encode("utf-16le") not in manifest
+    abi = json.loads(apk.read("assets/direct-abi.json"))
+    assert abi["abi_version"] == 2 and abi["controlled_calls"] == list(WRAPS)
+    assert not abi["guest_uid_emulation"] and not abi["third_party_syscall_interception"]
     prefix = "assets/direct-rootfs/"
     names = {name[len(prefix):-8] for name in apk.namelist() if name.startswith(prefix)}
     assert names == {"system/bin/pocket-direct-probe", "system/bin/linker64", "system/lib64/libc.so", "system/lib64/libdl.so", "system/lib64/libm.so", "system/build.prop"}, names

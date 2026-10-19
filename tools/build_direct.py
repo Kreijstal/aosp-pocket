@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Build the controlled syscall ABI; no PRoot, proprietary code or new loader."""
 import argparse
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -9,7 +10,10 @@ from prepare_api28 import prepare, ROOT
 
 WRAPS = ("open", "openat", "stat", "lstat", "fstatat", "readlink", "readlinkat",
          "mkdir", "mkdirat", "unlink", "unlinkat", "rmdir", "symlink", "symlinkat",
-         "chdir", "fchdir", "getcwd", "execve")
+         "chdir", "fchdir", "getcwd", "execve", "fopen", "opendir", "realpath",
+         "access", "faccessat", "rename", "renameat", "link", "linkat", "chmod",
+         "fchmodat", "chown", "lchown", "fchownat", "truncate", "utimensat",
+         "bind", "connect", "getsockname", "getpeername")
 
 
 def compile_probe(compiler, output, android=False):
@@ -52,6 +56,12 @@ def main():
     shutil.copy2(reference / "system/build.prop", stage / "system/build.prop")
     dynamic = subprocess.check_output([llvm / "llvm-readelf", "-d", binary], text=True)
     assert "libc.so" in dynamic and "libdl.so" in dynamic and "libc++" not in dynamic
+    (out / "abi.json").write_text(json.dumps({
+        "abi_version": 2, "controlled_calls": list(WRAPS),
+        "third_party_syscall_interception": False, "guest_uid_emulation": False,
+        "unix_socket_addresses": "absolute_pathname_only",
+        "kernel_permissions": "inherited_host_app",
+    }, indent=2) + "\n")
     (out / "build.stamp").touch()
     print("PASS: ARM64 controlled guest ABI built; pinned Android 9 linker/bionic staged")
 

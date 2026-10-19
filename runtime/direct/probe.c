@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #define _GNU_SOURCE
 #include "guest_paths.h"
+#include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,7 +14,9 @@
 #include <string.h>
 #include <sys/prctl.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <sys/syscall.h>
+#include <sys/un.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -34,6 +38,176 @@ static void* reader(void* arg) {
     (void)arg;
     for (int i = 0; i < 8; ++i) read_fixture("/data/fixture");
     return NULL;
+}
+static void extended_files(const char* mode) {
+    const char* remove[] = {"config", "config.pending", "hard", "meta-link", "hard-link", "follow-hard", "renamed-link", NULL};
+    for (int i = 0; remove[i]; ++i) {
+        char path[128]; snprintf(path, sizeof(path), "/data/%s", remove[i]); unlink(path);
+    }
+    FILE* stream = fopen("/data/config", "we"); REQUIRE(stream);
+    REQUIRE(fcntl(fileno(stream), F_GETFD) & FD_CLOEXEC);
+    REQUIRE(fputs("old", stream) >= 0 && !fclose(stream));
+    stream = fopen("/data/config.pending", "wxe"); REQUIRE(stream);
+    REQUIRE(fputs("new-value", stream) >= 0 && !fflush(stream) && !fclose(stream));
+    REQUIRE(!fopen("/data/config.pending", "wx") && errno == EEXIST);
+    int data = open("/data", O_RDONLY | O_DIRECTORY | O_CLOEXEC); REQUIRE(data >= 0);
+    REQUIRE(!renameat(data, "config.pending", data, "config"));
+    REQUIRE(access("/data/config.pending", F_OK) == -1 && errno == ENOENT);
+    REQUIRE(!faccessat(data, "config", R_OK | W_OK, 0));
+    stream = fopen("/data/config", "re"); REQUIRE(stream);
+    char text[32] = {0}; REQUIRE(fread(text, 1, sizeof(text), stream) == 9 && !strcmp(text, "new-value"));
+    REQUIRE(!fclose(stream));
+    struct stat target, alias, st;
+    int link_result = link("/data/config", "/data/hard");
+    bool hardlinks = link_result == 0;
+    int link_error = errno;
+    if (hardlinks) {
+        REQUIRE(!stat("/data/config", &target) && !stat("/data/hard", &alias));
+        REQUIRE(target.st_ino == alias.st_ino && target.st_dev == alias.st_dev && target.st_nlink == 2);
+    } else {
+        REQUIRE(link_error == EACCES || link_error == EPERM);
+        // Independent descriptor-relative kernel call must deny the same link.
+        REQUIRE(syscall(SYS_linkat, data, "config", data, "hard", 0) == -1 && errno == link_error);
+        REQUIRE(lstat("/data/hard", &st) == -1 && errno == ENOENT);
+        printf("DIRECT_HARDLINK_HOST_DENIED errno=%d raw_kernel_matches=1\n", link_error);
+    }
+    REQUIRE(!symlink("/data/config", "/data/meta-link"));
+    int nofollow = linkat(data, "meta-link", data, "hard-link", 0);
+    if (hardlinks) {
+        REQUIRE(!nofollow);
+        REQUIRE(!lstat("/data/meta-link", &target) && !lstat("/data/hard-link", &alias));
+        REQUIRE(S_ISLNK(alias.st_mode) && target.st_ino == alias.st_ino);
+    } else REQUIRE(nofollow == -1 && errno == link_error);
+    int follow = linkat(data, "meta-link", data, "follow-hard", AT_SYMLINK_FOLLOW);
+    if (hardlinks) {
+        REQUIRE(!follow);
+        REQUIRE(!stat("/data/config", &target) && !stat("/data/follow-hard", &alias) && target.st_ino == alias.st_ino);
+    } else REQUIRE(follow == -1 && errno == link_error);
+    REQUIRE(!rename("/data/meta-link", "/data/renamed-link"));
+    REQUIRE(!lstat("/data/renamed-link", &st) && S_ISLNK(st.st_mode));
+    REQUIRE(!chmod("/data/renamed-link", 0640));
+    REQUIRE(!stat("/data/config", &st) && (st.st_mode & 0777) == 0640);
+    REQUIRE(!fchmodat(data, "config", 0600, 0));
+    REQUIRE(!stat("/data/config", &st) && (st.st_mode & 0777) == 0600);
+    // These retain real ownership; they do not implement privileged guest chown.
+    REQUIRE(!chown("/data/config", getuid(), getgid()));
+    REQUIRE(!lchown("/data/renamed-link", getuid(), getgid()));
+    REQUIRE(!fchownat(data, "config", getuid(), getgid(), 0));
+    struct timespec times[2] = {{1700000000, 123000000}, {1700000001, 456000000}};
+    REQUIRE(!utimensat(data, "config", times, 0));
+    REQUIRE(!stat("/data/config", &st) && st.st_mtim.tv_sec == times[1].tv_sec && st.st_mtim.tv_nsec == times[1].tv_nsec);
+    REQUIRE(!truncate(hardlinks ? "/data/hard" : "/data/config", 3));
+    REQUIRE(!stat("/data/config", &st) && st.st_size == 3);
+    REQUIRE(truncate("/data/config", -1) == -1 && errno == EINVAL);
+    char canonical[4096];
+    REQUIRE(realpath("/data/deep-link/../nested", canonical) && !strcmp(canonical, "/data/dir/nested"));
+    char* allocated = realpath("/data/renamed-link", NULL);
+    REQUIRE(allocated && !strcmp(allocated, "/data/config")); free(allocated);
+    REQUIRE(realpath("/../../", canonical) && !strcmp(canonical, "/"));
+    REQUIRE(!realpath("/data/does-not-exist", canonical) && errno == ENOENT);
+    unlink("/data/trailing-link"); REQUIRE(!symlink("fixture/", "/data/trailing-link"));
+    stream = fopen("/data/trailing-link", "r");
+    if (!strcmp(mode, "direct")) REQUIRE(!stream && errno == ENOTDIR);
+    else if (stream) {
+        char bytes[64] = {0}; REQUIRE(fread(bytes, 1, sizeof(bytes), stream) == strlen(content) && !strcmp(bytes, content));
+        REQUIRE(!fclose(stream));
+        puts("DIRECT_PROOT_DIFFERENCE trailing_symlink_fopen=success expected_linux=ENOTDIR");
+    } else {
+        REQUIRE(errno == ENOTDIR || errno == ENOENT);
+        if (errno != ENOTDIR) printf("DIRECT_PROOT_DIFFERENCE trailing_symlink_fopen_errno=%d expected_linux=%d\n", errno, ENOTDIR);
+    }
+    char* result = realpath("/data/trailing-link", canonical);
+    if (!strcmp(mode, "direct")) REQUIRE(!result && errno == ENOTDIR);
+    else if (result) {
+        REQUIRE(!strcmp(result, "/data/fixture"));
+        puts("DIRECT_PROOT_DIFFERENCE trailing_symlink_realpath=success expected_linux=ENOTDIR");
+    } else {
+        REQUIRE(errno == ENOTDIR || errno == ENOENT);
+        if (errno != ENOTDIR) printf("DIRECT_PROOT_DIFFERENCE trailing_symlink_realpath_errno=%d expected_linux=%d\n", errno, ENOTDIR);
+    }
+    DIR* directory = opendir("/data"); REQUIRE(directory);
+    bool config = false, fixture = false;
+    for (struct dirent* entry; (entry = readdir(directory));) {
+        config |= !strcmp(entry->d_name, "config"); fixture |= !strcmp(entry->d_name, "fixture");
+    }
+    REQUIRE(config && fixture && !closedir(directory));
+    if (!strcmp(mode, "direct")) {
+        REQUIRE(faccessat(data, "config", F_OK, AT_EACCESS) == -1 && errno == ENOTSUP);
+        REQUIRE(fchmodat(data, "renamed-link", 0600, AT_SYMLINK_NOFOLLOW) == -1 && errno == ENOTSUP);
+    }
+    close(data);
+    printf("DIRECT_FILES_PASS stdio=1 directory=1 realpath=1 access=1 rename=1 hardlink=%s metadata=1 truncate=1\n", hardlinks ? "1" : "host-denied");
+}
+static struct sockaddr_un unix_address(const char* path) {
+    struct sockaddr_un address = {.sun_family = AF_UNIX};
+    REQUIRE(strlen(path) < sizeof(address.sun_path)); strcpy(address.sun_path, path);
+    return address;
+}
+static void check_socket_name(int fd, bool peer, const char* expected) {
+    struct sockaddr_un address; socklen_t size = sizeof(address);
+    REQUIRE(!(peer ? getpeername(fd, (struct sockaddr*)&address, &size) : getsockname(fd, (struct sockaddr*)&address, &size)));
+    REQUIRE(address.sun_family == AF_UNIX && !strcmp(address.sun_path, expected));
+}
+static void socket_timeout(int fd) {
+    struct timeval time = {5, 0};
+    REQUIRE(!setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &time, sizeof(time)));
+    REQUIRE(!setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &time, sizeof(time)));
+}
+static void extended_sockets(const char* mode) {
+    unlink("/data/service.sock"); unlink("/data/client.sock");
+    int server = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0); REQUIRE(server >= 0);
+    struct sockaddr_un address = unix_address("/data/service.sock");
+    REQUIRE(!bind(server, (struct sockaddr*)&address, sizeof(address)) && !listen(server, 1));
+    check_socket_name(server, false, "/data/service.sock");
+    // Truncated address buffers must still report the full guest address size.
+    unsigned char tiny[2]; socklen_t tiny_size = sizeof(tiny);
+    REQUIRE(!getsockname(server, (struct sockaddr*)tiny, &tiny_size) && tiny_size > sizeof(tiny));
+    REQUIRE(!chmod("/data/service.sock", 0600));
+    pid_t pid = fork(); REQUIRE(pid >= 0);
+    if (!pid) {
+        alarm(10); close(server);
+        int client = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0); REQUIRE(client >= 0); socket_timeout(client);
+        struct sockaddr_un local = unix_address("/data/client.sock");
+        REQUIRE(!bind(client, (struct sockaddr*)&local, sizeof(local)));
+        REQUIRE(!connect(client, (struct sockaddr*)&address, sizeof(address)));
+        check_socket_name(client, false, "/data/client.sock");
+        check_socket_name(client, true, "/data/service.sock");
+        char bytes[4], control[CMSG_SPACE(sizeof(int))];
+        struct iovec iov = {bytes, sizeof(bytes)};
+        struct msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1, .msg_control = control, .msg_controllen = sizeof(control)};
+        REQUIRE(recvmsg(client, &msg, 0) == 4 && !memcmp(bytes, "FD28", 4));
+        REQUIRE(!(msg.msg_flags & (MSG_CTRUNC | MSG_TRUNC)));
+        struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+        REQUIRE(cmsg && cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS && cmsg->cmsg_len == CMSG_LEN(sizeof(int)));
+        int fd; memcpy(&fd, CMSG_DATA(cmsg), sizeof(fd));
+        char data[64] = {0}; REQUIRE(read(fd, data, sizeof(data)) == (ssize_t)strlen(content) && !strcmp(data, content));
+        close(fd); REQUIRE(write(client, "OK28", 4) == 4); close(client); _exit(0);
+    }
+    struct pollfd wait = {server, POLLIN, 0}; REQUIRE(poll(&wait, 1, 5000) == 1);
+    int connection = accept4(server, NULL, NULL, SOCK_CLOEXEC); REQUIRE(connection >= 0); socket_timeout(connection);
+    check_socket_name(connection, true, "/data/client.sock");
+    struct ucred peer; socklen_t size = sizeof(peer);
+    REQUIRE(!getsockopt(connection, SOL_SOCKET, SO_PEERCRED, &peer, &size) && peer.uid == getuid() && peer.pid == pid);
+    int fixture = open("/data/fixture", O_RDONLY | O_CLOEXEC); REQUIRE(fixture >= 0);
+    char control[CMSG_SPACE(sizeof(int))] = {0}; struct iovec iov = {"FD28", 4};
+    struct msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1, .msg_control = control, .msg_controllen = sizeof(control)};
+    struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+    cmsg->cmsg_level = SOL_SOCKET; cmsg->cmsg_type = SCM_RIGHTS; cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+    memcpy(CMSG_DATA(cmsg), &fixture, sizeof(fixture)); REQUIRE(sendmsg(connection, &msg, 0) == 4); close(fixture);
+    char answer[4]; REQUIRE(read(connection, answer, sizeof(answer)) == 4 && !memcmp(answer, "OK28", 4));
+    close(connection); close(server);
+    int status; REQUIRE(waitpid(pid, &status, 0) == pid && WIFEXITED(status) && !WEXITSTATUS(status));
+    if (!strcmp(mode, "direct")) {
+        int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0); REQUIRE(fd >= 0);
+        struct sockaddr_un abstract = {.sun_family = AF_UNIX}; memcpy(abstract.sun_path + 1, "pocket-test", 11);
+        REQUIRE(bind(fd, (struct sockaddr*)&abstract, sizeof(abstract)) == -1 && errno == ENOTSUP);
+        struct sockaddr_un long_path = {.sun_family = AF_UNIX};
+        strcpy(long_path.sun_path, "/data/"); memset(long_path.sun_path + 6, 'x', 90); long_path.sun_path[96] = 0;
+        REQUIRE(bind(fd, (struct sockaddr*)&long_path, sizeof(long_path)) == -1 && errno == ENAMETOOLONG);
+        close(fd);
+    }
+    REQUIRE(!unlink("/data/service.sock") && !unlink("/data/client.sock"));
+    puts("DIRECT_SOCKET_PASS bind=1 connect=1 names=1 peer_credentials=1 fd_transfer=1");
 }
 static long status_number(const char* key) {
     // Read the real kernel surface independently of our controlled path ABI.
@@ -98,6 +272,8 @@ static void suite(const char* mode) {
     REQUIRE(file >= 0 && write(file, "test", 4) == 4); close(file);
     REQUIRE(open("/data/dir/file", O_CREAT | O_EXCL | O_WRONLY, 0600) == -1 && errno == EEXIST);
     REQUIRE(!unlinkat(data, "dir/file", 0));
+    extended_files(mode);
+    extended_sockets(mode);
     if (!strcmp(mode, "direct")) {
         int outside = syscall(SYS_openat, AT_FDCWD, "/", O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
         REQUIRE(outside >= 0);

@@ -361,7 +361,7 @@ provide an Android 9 port or a different execution backend.
 
 ## Experimental direct backend
 
-The independent `0.1-direct` APK, package
+The independent `0.2-direct-calls` APK, package
 `dev.kreijstal.aosppocket.directprobe`, tests a source-controlled native ABI
 without PRoot. It does not modify Pocket Manager, the installed API 25 guest,
 or the API 28 init/zygote probe. It incorporates no VMOS code or YLINKER binary.
@@ -374,6 +374,27 @@ the same wrapper list on Linux and Android. The adapter issues real kernel
 syscalls in the guest process; no tracer, signal trap or seccomp filter is
 installed. It preserves real host credentials and does not emulate guest root.
 
+Version 0.2 adds 20 entry points, for 38 controlled calls in total:
+
+| Group | Added calls |
+|---|---|
+| Stdio, directories and canonical paths | `fopen`, `opendir`, `realpath` |
+| Access checks | `access`, `faccessat` |
+| Rename and hard links | `rename`, `renameat`, `link`, `linkat` |
+| Permissions and ownership | `chmod`, `fchmodat`, `chown`, `lchown`, `fchownat` |
+| File size and timestamps | `truncate`, `utimensat` |
+| Unix socket addresses | `bind`, `connect`, `getsockname`, `getpeername` |
+
+The generated `assets/direct-abi.json` lists the exact build-controlled entry
+points and limitations. The APK validator checks it against the build's wrapper
+list, and the VM evidence includes the same manifest. `fopen` opens through the
+adapter before passing the FD to real libc `fdopen`; `opendir` similarly uses
+`fdopendir`. These adapt higher-level APIs whose hidden libc file opens would
+otherwise bypass executable-level link wrapping. Stream modes `r`, `w` and `a`
+with `+`, `b`, `e` and `x` are supported. Other extensions fail explicitly.
+The adapter's root initialization now uses a kernel directory FD rather than
+calling `realpath` recursively. Wrapped `realpath` returns a guest pathname.
+
 Absolute paths resolve inside `POCKET_DIRECT_ROOT`. Relative paths derive from
 the kernel cwd or an actual directory FD. Resolution walks directory FDs,
 interprets absolute symlink contents relative to the guest root, follows
@@ -382,7 +403,30 @@ symlink traversal at 40. Foreign directory FDs fail with EXDEV. Unsupported
 metadata flags, O_TMPFILE and trailing-slash removal/link creation fail
 explicitly. The regression covers creation, reading, metadata, symlink loops,
 O_NOFOLLOW, missing paths, non-directory errors, nested symlink/.. ordering,
-directory-relative operations, cwd buffer limits and a reader thread.
+directory-relative operations, cwd buffer limits and a reader thread. A
+trailing slash inside a symlink target also enforces directory semantics.
+
+The extended file scenario writes a pending configuration through stdio and
+atomically replaces its destination with `renameat`. It verifies access,
+directory enumeration, symlink-aware canonical paths, renamed symlinks, real
+file modes/ownership, nanosecond timestamps and truncation. Hard-link tests
+verify inode identity and both link-following modes on the Linux host. The
+Android VM denies hard links with EACCES in both direct and PRoot modes; an
+independent descriptor-relative `linkat` syscall confirms the same host denial.
+The adapter preserves this error and does not substitute a copy. Ownership
+operations likewise retain real kernel permissions rather than virtual root.
+
+Absolute pathname Unix sockets map into the private guest root. Socket-name
+queries return canonical guest paths with normal caller-buffer truncation.
+A forked client binds its own endpoint and exchanges a request/response with
+a server, which verifies real SO_PEERCRED and transfers an open fixture FD via
+SCM_RIGHTS. The child reads the transferred FD successfully. Abstract,
+anonymous and relative Unix socket bind/connect addresses are not implemented.
+Paths that exceed the kernel's Unix-address limit after root translation return
+ENAMETOOLONG. Other socket families retain their ordinary host behavior.
+Access/chmod flags requiring unsupported newer syscall behavior are rejected;
+the backend does not attempt syscalls that older Android seccomp policies may
+trap. These limits remain separate from path translation.
 
 The Android APK bundles the pinned API 28 `linker64`, `libc.so`, `libdl.so` and
 `libm.so` already used by the other probe. Android 9's linker does not provide
@@ -428,7 +472,17 @@ Recorded median durations for those 400 iterations:
 | Full-ptrace PRoot | 447.28 ms |
 
 The direct adapter was about 18.0 times faster than PRoot and 2.6 times slower
-than the untranslated baseline in this run.
+than the untranslated baseline in this run. These numbers and the preceding
+baseline evidence are from version 0.1; the version 0.2 regression retains new
+raw benchmark samples without treating the earlier ratio as a guarantee.
+
+[Version 0.2 VM evidence](direct-backend-calls-validation.json) covers the added
+entry points, host hard-link denial, the Unix-socket credential/FD round trip,
+and unchanged app confinement. The PRoot comparison explicitly records its
+different behavior for a symlink target ending in `/`: it opens a regular file
+that direct mode and native Linux reject with ENOTDIR. This difference is not
+reported as equivalent behavior. [Updated Linux evidence](direct-backend-host-validation.txt)
+records the extended file and socket cases with no tracer.
 
 This is **not a complete YLINKER replacement**. Link-time wrappers cover calls
 from objects built with these flags. They do not automatically redirect libc's
