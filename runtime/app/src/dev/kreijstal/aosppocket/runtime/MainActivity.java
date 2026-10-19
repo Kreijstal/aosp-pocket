@@ -39,10 +39,10 @@ public final class MainActivity extends RuntimeActivity {
         stop = button("Stop", controls, v -> { if (runtime != null) runtime.stopGuest(); });
         layout.addView(controls, new LinearLayout.LayoutParams(-1, dp(48)));
         TextView caption = new TextView(this);
-        caption.setText("Live Android preview");
+        caption.setText("Android display");
         caption.setPadding(0, dp(12), 0, dp(8));
         layout.addView(caption);
-        display = new GuestDisplay(this);
+        display = new GuestDisplay(this, false);
         display.limitPreviewHeight(dp(300));
         layout.addView(display, new LinearLayout.LayoutParams(-1, 0, 1));
         LinearLayout open = new LinearLayout(this);

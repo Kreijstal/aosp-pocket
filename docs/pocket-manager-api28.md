@@ -13,6 +13,11 @@ it must not inject the older Binder bootstrap into an arbitrary API 28 ROM.
 
 `GuestService` owns the session and its foreground notification. Manager,
 full-screen Android and PiP share one guest. Closing a window does not stop it.
+Only one window owns its display at a time. The Android window (including PiP)
+takes precedence over Manager; Manager hides its SurfaceView and shows a return
+link while that window is visible. Closing Android's window hands its display
+back to Manager. Changing windows does not create another guest or mirror its
+screen. This ownership rule applies to both backends.
 The Stop button terminates the guest init supervisor, which stops and reaps its
 service process groups before Start becomes available again.
 
@@ -90,5 +95,9 @@ real APK installation, four guest button taps through Manager/full-screen
 windows, PiP, closing/reopening Manager, and Stop/Start. Shutdown reaped every
 guest process; the original API 25 host/PRoot/init PIDs stayed unchanged. The
 [VM screenshot](images/api28-manager.png) shows the live counter and RGB bars.
+The [exclusive-display check](images/api28-manager-pip.png) confirms that Manager hides its guest surface
+while PiP owns the display, that its return link opens the existing Android
+window, and that closing that window restores interactive display ownership to
+Manager without restarting the guest.
 The full distribution contains byte-identical host DEX/native libraries and
 the same 1,369 guest payload entries as the tested seed plus host update.

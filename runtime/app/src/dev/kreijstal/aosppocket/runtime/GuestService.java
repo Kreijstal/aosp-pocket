@@ -14,7 +14,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /** Owns one guest independently of the manager, full-screen or floating UI. */
 public final class GuestService extends Service {
     interface Listener { void onGuestChanged(); }
-    interface FrameListener { void onGuestFrame(); }
+    interface FrameListener {
+        int displayPriority();
+        void onDisplayOwnership(boolean owned);
+        void onGuestFrame();
+    }
     public final class LocalBinder extends Binder { GuestService get() { return GuestService.this; } }
     private static final String START = "dev.kreijstal.aosppocket.START";
     private static final String STOP = "dev.kreijstal.aosppocket.STOP";
@@ -34,14 +38,27 @@ public final class GuestService extends Service {
     private int sdk, legacyWidth, legacyHeight, legacyDpi;
     private DirectSession direct;
     private android.graphics.Bitmap frame;
-    private final java.util.Set<FrameListener> visibleDisplays = new java.util.HashSet<>();
+    private final java.util.Set<FrameListener> visibleDisplays = new java.util.LinkedHashSet<>();
+    private FrameListener displayOwner;
     boolean directBackend() { return sdk == 28; }
     int selectedSdk() { return sdk; }
     boolean directAvailable() { return DirectImage.bundled(this); }
     android.graphics.Bitmap frame() { return frame; }
     void displayVisible(FrameListener id, boolean visible) {
         if (visible) visibleDisplays.add(id); else visibleDisplays.remove(id);
-        if (direct != null) direct.visible(!visibleDisplays.isEmpty());
+        FrameListener next = null;
+        for (FrameListener candidate : visibleDisplays)
+            if (next == null || candidate.displayPriority() >= next.displayPriority()) next = candidate;
+        if (next != displayOwner) {
+            FrameListener previous = displayOwner;
+            displayOwner = next;
+            // Revoke first: neither backend may present to two windows during a handoff.
+            if (previous != null) previous.onDisplayOwnership(false);
+            if (next != null) next.onDisplayOwnership(true);
+            Log.i("PocketWindows", "Display owner=" + (next == null ? "none" :
+                next.displayPriority() > 0 ? "Android window" : "Manager"));
+        }
+        if (direct != null) direct.visible(displayOwner != null);
     }
     void touch(android.view.MotionEvent event, float sx, float sy) { if (direct != null) direct.touch(event, sx, sy); }
     void key(int code) { if (direct != null) direct.key(code); }
@@ -72,7 +89,7 @@ public final class GuestService extends Service {
             }
             @Override public void frame(android.graphics.Bitmap bitmap) {
                 android.graphics.Bitmap old = frame; frame = bitmap;
-                for (FrameListener view : new java.util.ArrayList<>(visibleDisplays)) view.onGuestFrame();
+                if (displayOwner != null) displayOwner.onGuestFrame();
                 if (old != null) old.recycle();
             }
             @Override public void stopped(String text) {
@@ -81,7 +98,7 @@ public final class GuestService extends Service {
                 if (!destroyed) { message(text); releaseForeground(); }
             }
         });
-        direct.visible(!visibleDisplays.isEmpty());
+        direct.visible(displayOwner != null);
         direct.start();
         changed();
     }
@@ -331,6 +348,9 @@ public final class GuestService extends Service {
     }
     @Override public void onDestroy() {
         destroyed = true;
+        visibleDisplays.clear();
+        if (displayOwner != null) displayOwner.onDisplayOwnership(false);
+        displayOwner = null;
         if (direct != null) direct.close();
         if (imageWorker != null) imageWorker.interrupt();
         if (guest != null) guest.destroyForcibly();

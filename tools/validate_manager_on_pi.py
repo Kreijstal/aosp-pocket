@@ -42,7 +42,7 @@ def main():
     def launch(activity):
         print(shell('am start -f 0x10000000 -n '+PACKAGE+'/'+CLASS+activity),flush=True)
     def hierarchy():
-        for attempt in range(3):
+        for attempt in range(5):
             path='/sdcard/pocket-manager-ui-'+str(time.time_ns())+'.xml'
             output=shell('uiautomator dump '+path)
             try:return ET.fromstring(shell('cat '+path))
@@ -60,12 +60,22 @@ def main():
     deadline=time.monotonic()+480
     while time.monotonic()<deadline:
         text=log()
-        if 'POCKET_CONTROL_READY' in text and 'API28_INIT_STOPPED' not in text:break
+        if 'POCKET_CONTROL_READY' in text and 'API28_INIT_STOPPED' not in text:
+            # Preparing the image can leave the previous boot's log in place.
+            # Require a live framework under the current host UID as well.
+            rows=[line.split() for line in shell('ps -A -o UID,PID,PPID,NAME').splitlines()[1:]]
+            current_host=next((row for row in rows if row[-1]==PACKAGE),None)
+            if current_host and any(row[0]==current_host[0] and row[-1]=='system_server' for row in rows):break
         if 'POCKET_CONTROL_FAILED' in text or 'FATAL EXCEPTION IN SYSTEM PROCESS' in text:
             raise RuntimeError(text)
         time.sleep(2)
     else:raise RuntimeError('Manager did not boot: '+text)
     time.sleep(3)
+    if any(n.get('text','').startswith('Android is open in its own window.')
+           for n in hierarchy().iter('node')):
+        click('Android is open in its own window.')
+        click('Close window')
+        launch('MainActivity')
     assert before==original(),'Original API25 guest changed'
     processes=shell('ps -A -o UID,PID,PPID,NAME')
     host=next(line.split() for line in processes.splitlines() if line.endswith(PACKAGE))
@@ -82,7 +92,8 @@ def main():
     assert 'untrusted_app' in domain,domain
     tree=hierarchy()
     assert any(n.get('class')=='android.view.SurfaceView' and n.get('package')==PACKAGE for n in tree.iter('node'))
-    assert any('Android 9 running' in n.get('text','') for n in tree.iter('node')),ET.tostring(tree).decode()
+    assert any(n.get('text')=='Install APK' and n.get('enabled')=='true'
+               for n in tree.iter('node')),'Manager has not enabled the booted direct guest controls'
     shell('screencap -p /sdcard/pocket-manager9.png')
     adb('pull','/sdcard/pocket-manager9.png','/home/pi/pocket-manager9.png')
     result={'passed':True,'scope':'manager_android9_boot','host_uid':int(uid),'host_pid':int(host[1]),
@@ -127,10 +138,12 @@ def main():
             l,t,r,b=map(int,re.findall(r'\d+',node.get('bounds')));return (r-l)*(b-t)
         node=max(surfaces,key=area)
         l,t,r,b=map(int,re.findall(r'\d+',node.get('bounds')))
+        offset=int(shell('stat -c %s '+ROOT+'/logs/manager-init.log',True))
         shell(f'input touchscreen -d 0 tap {l+x*(r-l)//480} {t+y*(b-t)//800}')
         deadline=time.monotonic()+10
         while time.monotonic()<deadline:
-            if re.search(r'tag=PocketGuestTest tap='+str(expected)+r'\b',guest_log()):return
+            new_text=shell('tail -c +'+str(offset+1)+' '+ROOT+'/logs/manager-init.log',True)
+            if re.search(r'tag=PocketGuestTest tap='+str(expected)+r'\b',new_text):return
             time.sleep(.3)
         raise RuntimeError('Preview/window touch did not reach guest counter')
     tap_guest(1)
@@ -146,12 +159,37 @@ def main():
     click('Float')
     time.sleep(1)
     launch('MainActivity')
+    tree=hierarchy()
+    def displays(tree):
+        return [n for n in tree.iter('node') if n.get('package')==PACKAGE and
+                n.get('class')=='android.view.SurfaceView']
+    assert any(n.get('text','').startswith('Android is open in its own window.')
+               for n in tree.iter('node')),'Manager is mirroring the floating guest'
+    # dump reports the active Manager window, not the separate PiP hierarchy.
+    assert not displays(tree),'Manager still exposes its hidden guest surface'
+    tasks=shell('dumpsys activity activities')
+    assert any(PACKAGE+'.android' in line and 'mode=pinned' in line and 'visible=true' in line
+               for line in tasks.splitlines()),'The separate guest PiP window is not visible'
+    shell('screencap -p /sdcard/pocket-manager9-exclusive.png')
+    adb('pull','/sdcard/pocket-manager9-exclusive.png','/home/pi/pocket-manager9-exclusive.png')
+    # The placeholder returns to the existing Android task, then closing that
+    # window hands the same guest back to Manager without restarting it.
+    click('Android is open in its own window.')
+    click('Close window')
+    launch('MainActivity')
+    tree=hierarchy()
+    assert len(displays(tree))==1,'Manager did not regain its display'
+    assert not any(n.get('text','').startswith('Android is open in its own window.')
+                   for n in tree.iter('node')),'Manager still thinks Android owns the display'
     tap_guest(4)
     assert before==original(),'Original API25 guest changed after windows/input test'
     generations=shell("grep 'system_server=1' "+ROOT+'/logs/manager-init.log',True)
     assert len(set(re.findall(r'DIRECT_ZYGOTE_FORK pid=([1-9][0-9]*) system_server=1',generations)))==1,generations
     result['system_server_restarts_during_test']=0
     result['window_lifetime_verified']=True
+    result['exclusive_display_verified']=True
+    result['display_handback_verified']=True
+    result['exclusive_display_screenshot']='/home/pi/pocket-manager9-exclusive.png'
     result['apk_install_verified']=True
     result['guest_taps']=4
     result['pip_verified']='Guest PiP=true' in shell('logcat -d --pid='+host[1]+' -s PocketWindows:I')
@@ -180,6 +218,6 @@ def main():
     result['scope']='manager_android9_integration'
     Path('/home/pi/pocket-manager9-validation.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2),flush=True)
-    print('PASS: Android9 rootless direct boot, APK installation, four real preview/window taps, PiP, window lifetime, stop/reap/restart and preserved API25 guest',flush=True)
+    print('PASS: Android9 rootless direct boot, APK installation, four real display taps, exclusive PiP display and handback, window lifetime, stop/reap/restart and preserved API25 guest',flush=True)
 
 if __name__=='__main__':main()

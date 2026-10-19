@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.view.*;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import java.util.concurrent.atomic.AtomicLong;
 
 /** A letterboxed, interactive view of the service's fixed-resolution display. */
@@ -12,20 +13,32 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     private static final AtomicLong NEXT = new AtomicLong();
     private final long id = NEXT.incrementAndGet();
     private final SurfaceView surface;
+    private final TextView elsewhere;
+    private final boolean dedicated;
     private GuestService runtime;
     private int logicalWidth = 1, logicalHeight = 1;
-    private boolean attached;
+    private boolean attached, owned;
     private int previewHeight = Integer.MAX_VALUE;
 
-    GuestDisplay(Context context) {
+    GuestDisplay(Context context, boolean dedicated) {
         super(context);
+        this.dedicated = dedicated;
         setBackgroundColor(Color.BLACK);
         surface = new SurfaceView(context);
         surface.getHolder().addCallback(this);
         surface.setContentDescription("Android guest display");
+        surface.setVisibility(INVISIBLE);
         addView(surface);
+        elsewhere = new TextView(context);
+        elsewhere.setTextColor(Color.WHITE);
+        elsewhere.setGravity(Gravity.CENTER);
+        elsewhere.setText("Connecting to Android…");
+        elsewhere.setOnClickListener(view -> {
+            if (runtime != null && !owned) context.startActivity(GuestActivity.intent(context));
+        });
+        addView(elsewhere);
         surface.setOnTouchListener((view, event) -> {
-            if (runtime == null || !runtime.running()) return false;
+            if (!owned || runtime == null || !runtime.running()) return false;
             if (runtime.directBackend()) {
                 if (event.getActionMasked() == MotionEvent.ACTION_DOWN) getParent().requestDisallowInterceptTouchEvent(true);
                 runtime.touch(event, (float)logicalWidth / Math.max(1, surface.getWidth()),
@@ -51,10 +64,9 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
     }
     void limitPreviewHeight(int height) { previewHeight = height; requestLayout(); }
     void setRuntime(GuestService value) {
-        if (runtime != value && attached) { Native.detach(id); attached = false; }
-        if (runtime != null && runtime != value) runtime.displayVisible(this, false);
+        GuestService previous = runtime;
         runtime = value;
-        if (value != null) value.displayVisible(this, true);
+        if (previous != null && previous != value) previous.displayVisible(this, false);
         if (value != null) {
             if (logicalWidth != value.width || logicalHeight != value.height) {
                 logicalWidth = value.width;
@@ -62,11 +74,27 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
                 surface.getHolder().setFixedSize(logicalWidth, logicalHeight);
                 requestLayout();
             }
+            if (previous != value) {
+                onDisplayOwnership(false);
+                value.displayVisible(this, true);
+            }
             attach();
-        }
+        } else onDisplayOwnership(false);
+    }
+    @Override public int displayPriority() { return dedicated ? 1 : 0; }
+    @Override public void onDisplayOwnership(boolean value) {
+        owned = value;
+        if (!value && attached) { Native.detach(id); attached = false; }
+        // Hiding the SurfaceView also removes its stale last buffer from composition.
+        surface.setVisibility(value ? VISIBLE : INVISIBLE);
+        elsewhere.setText(runtime == null ? "Connecting to Android…" :
+            "Android is open in its own window.\nTap to return to it.");
+        elsewhere.setVisibility(value ? GONE : VISIBLE);
+        if (value) attach();
     }
     @Override public void onGuestFrame() { attach(); }
     private void attach() {
+        if (!owned) return;
         SurfaceHolder holder = surface.getHolder();
         if (runtime != null && runtime.directBackend()) {
             if (attached) { Native.detach(id); attached = false; }
@@ -98,21 +126,25 @@ final class GuestDisplay extends FrameLayout implements SurfaceHolder.Callback, 
         if (childHeight > limit) { childHeight = limit; childWidth = (int)((long)limit * logicalWidth / logicalHeight); }
         surface.measure(MeasureSpec.makeMeasureSpec(Math.max(1, childWidth), MeasureSpec.EXACTLY),
             MeasureSpec.makeMeasureSpec(Math.max(1, childHeight), MeasureSpec.EXACTLY));
+        elsewhere.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
     }
     @Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         int x = (getWidth() - surface.getMeasuredWidth()) / 2;
         int y = (getHeight() - surface.getMeasuredHeight()) / 2;
         surface.layout(x, y, x + surface.getMeasuredWidth(), y + surface.getMeasuredHeight());
+        elsewhere.layout(0, 0, getWidth(), getHeight());
     }
     android.graphics.Rect contentBounds() {
         android.graphics.Rect bounds = new android.graphics.Rect();
         surface.getGlobalVisibleRect(bounds);
         return bounds;
     }
-    @Override public void surfaceCreated(SurfaceHolder holder) { if (runtime != null) runtime.displayVisible(this, true); attach(); }
+    @Override public void surfaceCreated(SurfaceHolder holder) { attach(); }
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { attach(); }
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
-        if (runtime != null) runtime.displayVisible(this, false);
+        // Window lifecycle, not SurfaceView visibility, controls ownership. A losing
+        // window hides its surface without withdrawing its request for later handback.
         if (attached) { Native.detach(id); attached = false; }
     }
 }

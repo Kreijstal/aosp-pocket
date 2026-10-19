@@ -32,7 +32,7 @@ public final class GuestActivity extends RuntimeActivity {
         button("Close window", controls, v -> finishAndRemoveTask());
         layout.addView(controls, new LinearLayout.LayoutParams(-1, dp(48)));
         FrameLayout content = new FrameLayout(this);
-        display = new GuestDisplay(this);
+        display = new GuestDisplay(this, true);
         content.addView(display, new FrameLayout.LayoutParams(-1, -1));
         status = new TextView(this);
         status.setTextColor(0xffffffff);
