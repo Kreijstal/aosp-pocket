@@ -1,0 +1,59 @@
+{
+  "guest_release": "7.1.1",
+  "guest_sdk": 25,
+  "boot_completed": true,
+  "boot_marker": true,
+  "guest_apk_installed": true,
+  "guest_app_rendered": true,
+  "forwarded_touch": true,
+  "host_app_uid": 10170,
+  "host_seccomp": 2,
+  "fresh_nonroot_property_probe": {
+    "guest_uid": 39999,
+    "property_uid": 0,
+    "property_gid": 0,
+    "host_api": "36"
+  },
+  "host_untrusted_app": true,
+  "nested_kvm_required": false,
+  "warm_restart": true,
+  "screenshot": "/home/pi/pocket-guest-test.png",
+  "tested_on": "2026-10-19",
+  "evidence": "VM verified",
+  "host": "ARM64 Android 16 LineageOS Cuttlefish on Raspberry Pi",
+  "physical_samsung_verified": false,
+  "guest_image_built_locally": false,
+  "host_native_process_cap": 256,
+  "rgb_bands": [
+    {
+      "rgb": [
+        255,
+        0,
+        0
+      ],
+      "first_row": 583,
+      "last_row": 662,
+      "rows": 80
+    },
+    {
+      "rgb": [
+        0,
+        255,
+        0
+      ],
+      "first_row": 663,
+      "last_row": 742,
+      "rows": 80
+    },
+    {
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "first_row": 743,
+      "last_row": 822,
+      "rows": 80
+    }
+  ]
+}

@@ -1,0 +1,264 @@
+--- a/src/cli/cli.c
++++ b/src/cli/cli.c
+@@ -29,6 +29,8 @@
+ #include <assert.h>        /* assert(3),  */
+ #include <sys/types.h>     /* getpid(2),  */
+ #include <unistd.h>        /* getpid(2),  */
++#include <signal.h>
++#include <sys/prctl.h>
+ #include <errno.h>         /* errno(3), */
+ #include <limits.h>        /* INT_MAX, */
+ 
+@@ -453,6 +455,21 @@
+ 
+ int main(int argc, char *const argv[])
+ {
++	/* Only the Pocket launcher opts in. A killed Android app must not leave
++	 * an orphan tracer; EXITKILL then contains the traced descendants. */
++	const char *pocket_parent = getenv("POCKET_PARENT_PID");
++	if (pocket_parent != NULL) {
++		char *end;
++		errno = 0;
++		long expected = strtol(pocket_parent, &end, 10);
++		if (errno || *end || expected <= 1 || expected > INT_MAX ||
++		    getppid() != (pid_t) expected || prctl(PR_SET_PDEATHSIG, SIGKILL) != 0 ||
++		    getppid() != (pid_t) expected) {
++			fprintf(stderr, "Pocket tracer parent disappeared or death signal setup failed\n");
++			return EXIT_FAILURE;
++		}
++		unsetenv("POCKET_PARENT_PID");
++	}
+ 	Tracee *tracee;
+ 	int status;
+ 
+--- a/src/syscall/enter.c
++++ b/src/syscall/enter.c
+@@ -42,6 +42,7 @@
+ #include "tracee/mem.h"
+ #include "tracee/abi.h"
+ #include "path/path.h"
++#include "path/binding.h"
+ #include "path/canon.h"
+ #include "arch.h"
+ 
+--- a/src/tracee/tracee.c
++++ b/src/tracee/tracee.c
+@@ -35,6 +35,7 @@
+ 
+ #include "tracee/tracee.h"
+ #include "tracee/reg.h"
++#include "tracee/mem.h"
+ #include "path/binding.h"
+ #include "syscall/sysnum.h"
+ #include "tracee/event.h"
+--- a/src/tracee/event.c
++++ b/src/tracee/event.c
+@@ -36,8 +36,10 @@
+ #include <talloc.h>     /* talloc_*, */
+ #include <inttypes.h>   /* PRI*, */
+ #include <linux/version.h> /* KERNEL_VERSION, */
++#ifdef POCKET_UNWIND
+ #include <libunwind.h>
+ #include <libunwind-ptrace.h>
++#endif
+ 
+ #include "tracee/event.h"
+ #include "cli/note.h"
+@@ -51,6 +53,10 @@
+ 
+ #include "attribute.h"
+ #include "compat.h"
++#if defined(ARCH_ARM64)
++#include <linux/elf.h>
++#include <sys/uio.h>
++#endif
+ 
+ 
+ /**
+@@ -276,6 +282,7 @@
+ 		"A 64-bit version that supports 32-bit binaries is required");
+ }
+ 
++#ifdef POCKET_UNWIND
+ static char bt_func_buf[256];
+ void print_backtrace(pid_t pid) {
+     unw_cursor_t cursor, resume_cursor;
+@@ -318,6 +325,10 @@
+     _UPT_destroy(rctx);
+ }
+ 
++#else
++static void print_backtrace(pid_t pid) { note(NULL, INFO, USER, "backtrace disabled for pid %d", pid); }
++#endif
++
+ void dump_mem_info(pid_t pid) {
+     char path[256];
+     snprintf(path, sizeof(path), "/proc/%d/maps", pid);
+@@ -363,6 +374,12 @@
+ 	/* Handle all signals.  */
+ 	for (signum = 0; signum < SIGRTMAX; signum++) {
+ 		switch (signum) {
++		case SIGTERM:
++			/* Android Process.destroyForcibly() sends SIGTERM too.
++			 * EXITKILL cleans the tracees when this tracer exits. */
++			signal_action.sa_sigaction = (void *)SIG_DFL;
++			break;
++
+ 		case SIGQUIT:
+ 		case SIGILL:
+ 		case SIGABRT:
+@@ -428,6 +445,29 @@
+                     note(NULL, ERROR, SYSTEM, "bad syscall, si_syscall: %d, si_arch: %u", siginfo.si_syscall, siginfo.si_arch);
+                 // get backtrace of process, SIGSEGV, SIGBUS，SIGABRT
+                 if (siginfo.si_signo == 11 || siginfo.si_signo == 7 || siginfo.si_signo == 6) {
++#if defined(ARCH_ARM64)
++                    if (getenv("POCKET_DEBUG_SIGNALS")) {
++                        struct user_regs_struct frame;
++                        struct iovec view = { &frame, sizeof(frame) };
++                        if (ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, &view) == 0) {
++                            fprintf(stderr, "POCKET_SIGNAL pid=%d signal=%d address=%p pc=%llx lr=%llx sp=%llx fp=%llx\n",
++                                pid, siginfo.si_signo, siginfo.si_addr,
++                                (unsigned long long) frame.pc, (unsigned long long) frame.regs[30],
++                                (unsigned long long) frame.sp, (unsigned long long) frame.regs[29]);
++                            unsigned long fp = frame.regs[29];
++                            for (int depth = 0; depth < 12 && fp >= frame.sp && fp - frame.sp < 1024 * 1024 && !(fp & 15); ++depth) {
++                                errno = 0;
++                                unsigned long next = ptrace(PTRACE_PEEKDATA, pid, (void *) fp, NULL);
++                                if (errno) break;
++                                unsigned long lr = ptrace(PTRACE_PEEKDATA, pid, (void *) (fp + 8), NULL);
++                                if (errno) break;
++                                fprintf(stderr, "POCKET_FRAME depth=%d lr=%lx\n", depth, lr);
++                                if (next <= fp) break;
++                                fp = next;
++                            }
++                        }
++                    }
++#endif
+                     print_backtrace(pid);
+                     dump_mem_info(pid);
+                 }
+@@ -514,6 +554,8 @@
+ 			static bool deliver_sigtrap = false;
+ 
+ 		case SIGTRAP: {
++			/* Keep descendants from running without translation if the tracer
++			 * is killed (e.g. by Android's phantom-process limiter). */
+ 			const unsigned long default_ptrace_options = (
+ 				PTRACE_O_TRACESYSGOOD	|
+ 				PTRACE_O_TRACEFORK	|
+@@ -521,6 +563,7 @@
+ 				PTRACE_O_TRACEVFORKDONE	|
+ 				PTRACE_O_TRACEEXEC	|
+ 				PTRACE_O_TRACECLONE	|
++				PTRACE_O_EXITKILL	|
+ 				PTRACE_O_TRACEEXIT);
+ 
+ 			/* Distinguish some events from others and
+@@ -743,6 +786,8 @@
+ 			static bool deliver_sigtrap = false;
+ 
+ 		case SIGTRAP: {
++			/* Keep descendants from running without translation if the tracer
++			 * is killed (e.g. by Android's phantom-process limiter). */
+ 			const unsigned long default_ptrace_options = (
+ 				PTRACE_O_TRACESYSGOOD	|
+ 				PTRACE_O_TRACEFORK	|
+@@ -750,6 +795,7 @@
+ 				PTRACE_O_TRACEVFORKDONE	|
+ 				PTRACE_O_TRACEEXEC	|
+ 				PTRACE_O_TRACECLONE	|
++				PTRACE_O_EXITKILL	|
+ 				PTRACE_O_TRACEEXIT);
+ 
+ 			/* Distinguish some events from others and
+
+--- a/src/syscall/sysnum.c
++++ b/src/syscall/sysnum.c
+@@ -137,6 +137,12 @@
+  */
+ void set_sysnum(Tracee *tracee, Sysnum sysnum)
+ {
++#ifdef __ANDROID__
++	/* Android app seccomp traps syscall -1. Use a harmless permitted call
++	 * for fully emulated operations; their exit handlers use ORIGINAL. */
++	if (sysnum == PR_void)
++		sysnum = PR_getpid;
++#endif
+ 	poke_reg(tracee, SYSARG_NUM, detranslate_sysnum(get_abi(tracee), sysnum));
+ }
+ 
+--- a/src/syscall/heap.c
++++ b/src/syscall/heap.c
+@@ -164,6 +164,9 @@
+ 
+ 	switch (sysnum) {
+ 	case PR_void:
++#ifdef __ANDROID__
++	case PR_getpid: /* Android-safe syscall placeholder, see set_sysnum(). */
++#endif
+ 		poke_reg(tracee, SYSARG_RESULT, tracee->heap->base + tracee->heap->size);
+ 		break;
+ 
+--- a/src/syscall/exit.c
++++ b/src/syscall/exit.c
+@@ -54,6 +54,13 @@
+ 	word_t syscall_result;
+ 	int status;
+ 
++#ifdef __ANDROID__
++	/* Preserve the former skipped-syscall result for existing exit handlers;
++	 * do not leak the placeholder's real host PID as a guest return value. */
++	if (get_sysnum(tracee, MODIFIED) == PR_getpid &&
++	    get_sysnum(tracee, ORIGINAL) != PR_getpid)
++		poke_reg(tracee, SYSARG_RESULT, (word_t) -ENOSYS);
++#endif
+ 	status = notify_extensions(tracee, SYSCALL_EXIT_START, 0, 0);
+ 	if (status < 0) {
+ 		poke_reg(tracee, SYSARG_RESULT, (word_t) status);
+--- a/src/extension/fake_id0/fake_id0.c
++++ b/src/extension/fake_id0/fake_id0.c
+@@ -20,6 +20,7 @@
+  * 02110-1301 USA.
+  */
+ 
++#include <stdio.h>
+ #include <assert.h>      /* assert(3), */
+ #include <stdint.h>      /* intptr_t, */
+ #include <errno.h>       /* E*, */
+@@ -68,6 +69,21 @@
+ 	char *path;
+ 	mode_t mode;
+ } ModifiedNode;
++
++/* Bionic validates root ownership when a newly exec'd app/compiler maps its
++ * property area. These guest files remain owned by guest root independently
++ * of the caller's emulated UID, while the real host ownership never changes. */
++static bool is_guest_property_fd(const Tracee *tracee, int fd)
++{
++	char proc_path[64], actual[PATH_MAX + 1], prefix[PATH_MAX + 1];
++	snprintf(proc_path, sizeof(proc_path), "/proc/%d/fd/%d", tracee->pid, fd);
++	ssize_t length = readlink(proc_path, actual, PATH_MAX);
++	if (length < 0) return false;
++	actual[length] = '\0';
++	int n = snprintf(prefix, sizeof(prefix), "%s/dev/__properties__/", get_root(tracee));
++	return n > 0 && n < (int) sizeof(prefix) && length >= n &&
++		memcmp(actual, prefix, n) == 0;
++}
+ 
+ /* List of syscalls handled by this extensions.  */
+ static FilteredSysnum filtered_sysnums[] = {
+@@ -795,6 +811,14 @@
+ 		if (errno != 0)
+ 			gid = 0; /* Not fatal.  */
+ 
++		if ((sysnum == PR_fstat || sysnum == PR_fstat64) &&
++		    uid == getuid() && gid == getgid() &&
++		    is_guest_property_fd(tracee, (int) peek_reg(tracee, ORIGINAL, SYSARG_1))) {
++			poke_uint32(tracee, address + uid_offset, 0);
++			poke_uint32(tracee, address + gid_offset, 0);
++			return 0;
++		}
++
+ 		/* Override only if the file is owned by the current user.
+ 		 * Errors are not fatal here.  */
+ 		if (uid == getuid())

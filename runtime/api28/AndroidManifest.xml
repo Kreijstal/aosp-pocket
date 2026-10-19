@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="dev.kreijstal.aosppocket.api28probe">
+    <application android:label="Pocket API 28 Probe" android:allowBackup="false"
+        android:extractNativeLibs="true" android:debuggable="false"
+        android:hardwareAccelerated="false">
+        <activity android:name="dev.kreijstal.aosppocket.runtime.Api28ProbeActivity"
+            android:exported="true" android:screenOrientation="1">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

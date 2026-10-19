@@ -1,0 +1,47 @@
+{
+  "two_launcher_entries": true,
+  "distinct_tasks": {
+    "android": 267,
+    "manager": 268
+  },
+  "preview_touch": true,
+  "fullscreen_touch": true,
+  "aspect_preserved": true,
+  "picture_in_picture": true,
+  "pip_restore_from_launcher": true,
+  "pip_visible_bounds": [
+    461,
+    790,
+    696,
+    1184
+  ],
+  "host_resolution": [
+    720,
+    1280
+  ],
+  "manager_close_preserves_guest": true,
+  "guest_window_close_preserves_guest": true,
+  "all_windows_closed_preserves_guest": true,
+  "unchanged_host_pid": 9056,
+  "background_guest_binder_client": true,
+  "unchanged_guest_init_pid": 10400,
+  "guest_resolution": [
+    720,
+    1208
+  ],
+  "foreground_service": true,
+  "screenshots": [
+    "/home/pi/pocket-manager-preview.png",
+    "/home/pi/pocket-android-window.png",
+    "/home/pi/pocket-floating-android.png",
+    "/home/pi/pocket-android-restored.png"
+  ],
+  "task_ids_rechecked_after_restore": true,
+  "tested_on": "2026-10-19",
+  "runtime_version": "0.2-windows",
+  "evidence": "VM verified",
+  "host": "ARM64 Android 16 LineageOS Cuttlefish on Raspberry Pi",
+  "physical_samsung_verified": false,
+  "guest_image_built_locally": false,
+  "host_native_process_cap": 256
+}

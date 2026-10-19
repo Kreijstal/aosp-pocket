@@ -1,0 +1,46 @@
+--- a/Device.cpp
++++ b/Device.cpp
+@@ -23,6 +23,7 @@
+ #include "anbox/qemu/null_message_processor.h"
+ 
+ #include <time.h>
++#include <boost/system/system_error.hpp>
+ 
+ namespace anbox::input {
+ std::shared_ptr<Device> Device::create(
+@@ -68,7 +69,7 @@
+   struct timespec spec;
+   clock_gettime(CLOCK_MONOTONIC, &spec);
+ 
+-  auto data = new CompatEvent[events.size()];
++  std::vector<CompatEvent> data(events.size());
+   int n = 0;
+   for (const auto &event : events) {
+     data[n].sec = spec.tv_sec;
+@@ -79,9 +80,15 @@
+     n++;
+   }
+ 
+-  for (unsigned n = 0; n < connections_->size(); n++) {
+-    connections_->at(n)->send(reinterpret_cast<const char *>(data),
+-                              events.size() * sizeof(struct CompatEvent));
++  for (const auto& connection : connections_->snapshot()) {
++    try {
++      connection->send(reinterpret_cast<const char *>(data.data()),
++                       events.size() * sizeof(struct CompatEvent));
++    } catch (const boost::system::system_error& error) {
++      // A client may disconnect after the snapshot. Drop it, not the host.
++      DEBUG("Input connection closed: %s", error.what());
++      connections_->remove(connection->id());
++    }
+   }
+ }
+ 
+@@ -166,5 +173,7 @@
+   // Send all necessary information about our device so that the remote
+   // side can properly configure itself for this input device
+   connection->send(reinterpret_cast<char const *>(&info_), sizeof(info_));
++  // Observe EOF so restarts do not retain dead input clients.
++  connection->read_next_message();
+ }
+ }

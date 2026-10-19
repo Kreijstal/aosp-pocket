@@ -1,0 +1,37 @@
+AOSP Pocket Runtime is an experimental GPL-3.0-only runtime host.
+
+It links Ananbox's Anbox fork:
+https://github.com/Ananbox/anbox
+The Anbox core retains its original GPLv3 notices, including Simon Fels and
+Canonical contributors. Its Android emulator graphics code retains Android
+Open Source Project Apache-2.0 notices. Third-party sources and notices are
+preserved in vendor/anbox. Consult individual source headers and the lockfile.
+
+PRoot is built from https://github.com/Ananbox/proot under GPL-2.0-or-later,
+with the local Android compatibility patch in runtime/proot-android.patch.
+PRoot includes contributions from STMicroelectronics and its other authors;
+its original COPYING and AUTHORS are preserved in vendor/proot.
+
+Boost 1.83.0 is used under Boost Software License 1.0.
+talloc 2.4.1 is used under LGPL-3.0-or-later; original copyright notices and
+the LGPL license are included. Exact sources are in sources.lock.json.
+
+The runtime APK bundles the Ananbox AOSP 7.1.1 ARM64 reference guest. This guest
+image is an upstream prebuilt, not a locally built ROM. Its source manifest,
+reference-image provenance and pinned download are in sources.lock.json.
+Guest license notices, including system/etc/NOTICE.html.gz, are preserved in
+the bundled filesystem. Manually imported images have their own provenance.
+No VMOS executable, library or guest image is incorporated into this runtime.
+
+The separate API 28 integration probe contains selected Android 9 platform
+libraries from a pinned redroid/redroid ARM64 OCI image. These are upstream
+prebuilts, not locally rebuilt platform libraries. Android 9 license notices
+are included as assets/licenses/android9-NOTICE.xml.gz. The image digest and
+AOSP header revisions are recorded in sources.lock.json under guest_api28.
+The API 28 Binder bridge, guest credential header, property service and native/
+Java test programs are built from this project's runtime/api28 sources. The
+property service also compiles AOSP android-9.0.0_r61 property-info parser/
+serializer sources under Apache-2.0; their copyright notices remain in the
+pinned upstream source files. The probe includes the matching upstream ART,
+core JNI libraries, boot images and runtime data with the Android 9 notices.
+These are bring-up milestones, not a full bootable Android 9 guest.

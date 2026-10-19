@@ -1,0 +1,142 @@
+--- a/Renderer.cpp
++++ b/Renderer.cpp
+@@ -27,6 +27,10 @@
+ // #include "gles2_dec.h"
+ 
+ #include <stdio.h>
++#include <cstring>
++#ifdef __ANDROID__
++#include <android/native_window.h>
++#endif
+ 
+ #include <glm/glm.hpp>
+ #include <glm/gtc/type_ptr.hpp>
+@@ -34,6 +38,8 @@
+ #include <EGL/eglext.h>
+ 
+ namespace {
++
++std::mutex pocket_presentation_lock;
+ 
+ // Helper class to call the bind_locked() / unbind_locked() properly.
+ class ScopedBind {
+@@ -293,19 +299,56 @@
+ struct RendererWindow {
+   EGLNativeWindowType native_window = 0;
+   EGLSurface surface = EGL_NO_SURFACE;
++  bool cpu_present = false;
++  int cpu_width = 0, cpu_height = 0;
++  std::vector<unsigned char> pixels;
+   anbox::graphics::Rect viewport;
+   glm::mat4 screen_to_gl_coords = glm::mat4(1.0f);
+   glm::mat4 display_transform = glm::mat4(1.0f);
+ };
+ 
++#ifdef __ANDROID__
++// Avoid vkQueueSignalReleaseImageANDROID/queuePresent on the software-only
++// nested test host. Read back the actual rendered pixels and post a CPU buffer.
++static bool pocket_present_cpu(RendererWindow* window) {
++  const int width = window->cpu_width, height = window->cpu_height;
++  window->pixels.resize(static_cast<size_t>(width) * height * 4);
++  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, window->pixels.data());
++  if (glGetError() != GL_NO_ERROR) return false;
++  ANativeWindow_Buffer output;
++  if (ANativeWindow_lock(window->native_window, &output, nullptr) != 0) return false;
++  const int rows = std::min(height, output.height);
++  const int columns = std::min(width, output.width);
++  for (int y = 0; y < rows; ++y) {
++    auto* destination = static_cast<unsigned char*>(output.bits) + static_cast<size_t>(y) * output.stride * 4;
++    const auto* source = window->pixels.data() + static_cast<size_t>(height - 1 - y) * width * 4;
++    std::memcpy(destination, source, static_cast<size_t>(columns) * 4);
++  }
++  return ANativeWindow_unlockAndPost(window->native_window) == 0;
++}
++#endif
++
+ RendererWindow *Renderer::createNativeWindow(
+     EGLNativeWindowType native_window) {
++  std::unique_lock<std::mutex> presentation(pocket_presentation_lock);
+   m_lock.lock();
+ 
+   auto window = new RendererWindow;
+   window->native_window = native_window;
+-  window->surface = eglCreateWindowSurface(
+-      m_eglDisplay, m_eglConfig, window->native_window, nullptr);
++#ifdef __ANDROID__
++  window->cpu_present = m_glRenderer && std::strstr(m_glRenderer, "SwiftShader");
++  if (window->cpu_present) {
++    window->cpu_width = ANativeWindow_getWidth(native_window);
++    window->cpu_height = ANativeWindow_getHeight(native_window);
++    const EGLint attributes[] = {EGL_WIDTH, window->cpu_width, EGL_HEIGHT, window->cpu_height, EGL_NONE};
++    window->surface = eglCreatePbufferSurface(m_eglDisplay, m_eglConfig, attributes);
++    ANativeWindow_setBuffersGeometry(native_window, window->cpu_width, window->cpu_height, WINDOW_FORMAT_RGBA_8888);
++  } else
++#endif
++  {
++    window->surface = eglCreateWindowSurface(
++        m_eglDisplay, m_eglConfig, window->native_window, nullptr);
++  }
+   if (window->surface == EGL_NO_SURFACE) {
+     delete window;
+     m_lock.unlock();
+@@ -321,7 +364,19 @@
+ 
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                   GL_STENCIL_BUFFER_BIT);
+-  eglSwapBuffers(m_eglDisplay, window->surface);
++  const auto previous_context = m_prevContext;
++  const auto previous_read = m_prevReadSurf;
++  const auto previous_draw = m_prevDrawSurf;
++  m_lock.unlock();
++#ifdef __ANDROID__
++  if (window->cpu_present) pocket_present_cpu(window);
++  else
++#endif
++    eglSwapBuffers(m_eglDisplay, window->surface);
++  m_lock.lock();
++  m_prevContext = previous_context;
++  m_prevReadSurf = previous_read;
++  m_prevDrawSurf = previous_draw;
+ 
+   unbind_locked();
+ 
+@@ -333,6 +388,7 @@
+ }
+ 
+ void Renderer::destroyNativeWindow(EGLNativeWindowType native_window) {
++  std::unique_lock<std::mutex> presentation(pocket_presentation_lock);
+   auto w = m_nativeWindows.find(native_window);
+   if (w == m_nativeWindows.end()) return;
+ 
+@@ -940,6 +996,7 @@
+                     const anbox::graphics::Rect &window_frame,
+                     const RenderableList &renderables) {
+ 
++  std::unique_lock<std::mutex> presentation(pocket_presentation_lock);
+   std::unique_lock<std::mutex> l(m_lock);
+ 
+   auto w = m_nativeWindows.find(native_window);
+@@ -957,7 +1014,22 @@
+   for (const auto &r : renderables)
+     draw(w->second, r, r.alpha() < 1.0f ? m_alphaProgram : m_defaultProgram);
+ 
+-  eglSwapBuffers(m_eglDisplay, w->second->surface);
++  const auto surface = w->second->surface;
++  const auto previous_context = m_prevContext;
++  const auto previous_read = m_prevReadSurf;
++  const auto previous_draw = m_prevDrawSurf;
++  // Presentation can await another context's submission. Keep the window
++  // alive, but let other contexts acquire the renderer resource mutex.
++  l.unlock();
++#ifdef __ANDROID__
++  if (w->second->cpu_present) pocket_present_cpu(w->second);
++  else
++#endif
++    eglSwapBuffers(m_eglDisplay, surface);
++  l.lock();
++  m_prevContext = previous_context;
++  m_prevReadSurf = previous_read;
++  m_prevDrawSurf = previous_draw;
+ 
+   unbind_locked();
+ 

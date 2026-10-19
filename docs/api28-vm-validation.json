@@ -1,0 +1,40 @@
+{
+  "guest_sdk": 28,
+  "host_sdk": 36,
+  "host_uid": 10171,
+  "full_guest_boot_verified": false,
+  "ordinary_uid_passed": true,
+  "client_log": "API28_START mode=client pid=28832 uid=10171\nAPI28_RESULT status=0 answer=28 server_pid=28816 client_pid=28832 server_uid=10171 client_uid=10171 fd=api28fd caller_uid=10171 caller_pid=28832\n",
+  "manager_log": "API28_START mode=manager pid=28816 uid=10171\nAPI28_PUBLISH status=0\nAPI28_READY\n",
+  "virtual_uid_passed": true,
+  "virtual_client_log": "API28_START mode=client-virtual pid=28849 uid=39999\nAPI28_RESULT status=0 answer=28 server_pid=28836 client_pid=28849 server_uid=0 client_uid=39999 fd=api28fd caller_uid=39999 caller_pid=28849\n",
+  "virtual_manager_log": "API28_START mode=manager pid=28836 uid=0\nAPI28_PUBLISH status=0\nAPI28_READY\n",
+  "passed": true,
+  "host_process_uid": 10171,
+  "host_seccomp": 2,
+  "host_selinux": "u:r:untrusted_app_27:s0:c171,c256,c512,c768\u0000",
+  "host_selinux_enforcing": true,
+  "schema": 1,
+  "evidence_classification": "vm_verified",
+  "scope": "api28_binder_bringup_only",
+  "recorded_at": "2026-10-19T10:42:28.709165+00:00",
+  "validation_commands": [
+    "make -f runtime/Makefile -j2 api28-verify",
+    "make -f runtime/Makefile check-profiles",
+    "ssh pi@juanraspberry python3 - < tools/validate_api28_on_pi.py"
+  ],
+  "api25_guest_preserved": {
+    "host_pid": 17501,
+    "init_pid": 18007,
+    "system_server_pid": 18325,
+    "launcher_pid": 19301,
+    "host_uid": 10170
+  },
+  "limitations": [
+    "No full API 28 guest boot",
+    "No API 28 init/property/ART/graphics validation",
+    "Only host API 36 on 4 KiB-page ARM64 VM tested",
+    "No physical phone validation",
+    "Virtual guest UIDs are not a security boundary"
+  ]
+}

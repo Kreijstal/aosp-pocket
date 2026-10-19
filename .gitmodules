@@ -1,0 +1,9 @@
+[submodule "vendor/toybox"]
+	path = vendor/toybox
+	url = https://android.googlesource.com/platform/external/toybox
+[submodule "vendor/anbox"]
+	path = vendor/anbox
+	url = https://github.com/Ananbox/anbox.git
+[submodule "vendor/proot"]
+	path = vendor/proot
+	url = https://github.com/Ananbox/proot.git

@@ -1,0 +1,135 @@
+{
+  "toybox": {
+    "url": "https://android.googlesource.com/platform/external/toybox",
+    "tag": "android-16.0.0_r1",
+    "commit": "e21e76d30fa15996188b79affbc25cfd0c13deff",
+    "path": "vendor/toybox",
+    "license": "0BSD"
+  },
+  "guest_framework": {
+    "status": "boot_bringup",
+    "intended_base": "AOSP via Ananbox",
+    "version": "7.1.1_r13",
+    "manifest_url": "https://github.com/Ananbox/platform_manifests/tree/anbox",
+    "reference_image_url": "https://github.com/Ananbox/ananbox/releases/download/v0.0.2/rootfs_arm64.7z",
+    "reference_image_sha256": "31c7976b6b3b6f6df1028b8dde67fffc2d7b3b7a1abb5f948de3d6517860fe4b",
+    "source_built_locally": false
+  },
+  "anbox": {
+    "url": "https://github.com/Ananbox/anbox.git",
+    "commit": "fbe569a8a3a42cfdf7276422ba5da128cfb2e124",
+    "path": "vendor/anbox",
+    "license": "GPL-3.0-only (core); Apache-2.0 and other upstream licenses (emugl/external)"
+  },
+  "proot": {
+    "url": "https://github.com/Ananbox/proot.git",
+    "commit": "8c60d0287ce9ece3f21df1dc60de55e33f6bdba3",
+    "path": "vendor/proot",
+    "license": "GPL-2.0-or-later",
+    "patch": "runtime/proot-android.patch"
+  },
+  "boost": {
+    "url": "https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.bz2",
+    "sha256": "6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e",
+    "license": "BSL-1.0"
+  },
+  "talloc": {
+    "url": "https://download.samba.org/pub/talloc/talloc-2.4.1.tar.gz",
+    "sha256": "410a547f08557007be0e88194f218868358edc0ab98c98ba8c167930db3d33f9",
+    "license": "LGPL-3.0-or-later"
+  },
+  "guest_build_headers": [
+    {
+      "url": "https://github.com/Ananbox/platform_frameworks_native.git",
+      "commit": "73b003cb0b69c8f9c079e77cce7f48fed8952ae3",
+      "branch": "anbox/master",
+      "cache": "ananbox-frameworks-native",
+      "paths": [
+        "include/binder",
+        "libs/binder",
+        "services/surfaceflinger",
+        "cmds/servicemanager"
+      ]
+    },
+    {
+      "url": "https://github.com/Ananbox/platform_system_core.git",
+      "commit": "80311d4168d49e696cf9061870fdf0dd23d437bd",
+      "branch": "anbox/master",
+      "cache": "ananbox-system-core",
+      "paths": [
+        "include",
+        "liblog/include",
+        "libutils/include"
+      ]
+    },
+    {
+      "url": "https://android.googlesource.com/platform/libnativehelper",
+      "commit": "8ebb2fb2e4b92592368c1360d49d5dfa16ef56cc",
+      "branch": "android-7.1.1_r13",
+      "cache": "guest-libnativehelper",
+      "paths": [
+        "include"
+      ]
+    }
+  ],
+  "guest_api28": {
+    "status": "properties_art_verified_vm",
+    "sdk": 28,
+    "android_tag": "android-9.0.0_r61",
+    "full_guest_boot_verified": false,
+    "abi_reference": {
+      "image": "redroid/redroid:9.0.0-latest",
+      "platform": "linux/arm64",
+      "manifest_digest": "sha256:ea740d3e3dbbdde88bf1229094a204eaf0eff83cb2bf10aab062278f29ac4c6b",
+      "layer_digest": "sha256:8e95e590895f55a010e5e38e66d25c86f5e480c33a85093dcaa3439b4da86ad7",
+      "use": "Pinned platform, property and ART reference; not a complete rootless-compatible guest; prebuilt upstream libraries and boot images"
+    },
+    "headers": [
+      {
+        "url": "https://android.googlesource.com/platform/frameworks/native",
+        "tag": "android-9.0.0_r61",
+        "commit": "76923a32ab6ea25115b65ff86ade7235ba7b3a33",
+        "cache": "frameworks-native",
+        "paths": [
+          "libs/binder"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/core",
+        "tag": "android-9.0.0_r61",
+        "commit": "3655b3122e299c619cc42b874077e4952fb5fb21",
+        "cache": "system-core",
+        "paths": [
+          "libutils/include",
+          "libcutils/include",
+          "liblog/include",
+          "libsystem/include",
+          "libbacktrace/include",
+          "libprocessgroup/include",
+          "base/include",
+          "libvndksupport/include",
+          "property_service",
+          "init",
+          "base",
+          "libprocessgroup",
+          "libcutils",
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/bionic",
+        "tag": "android-9.0.0_r61",
+        "commit": "196632fb3c59ebbf1184d791a3e7124dd0c3f22b",
+        "cache": "bionic",
+        "paths": [
+          "libc/system_properties",
+          "libc/private",
+          "libc/include/sys"
+        ]
+      }
+    ],
+    "properties_verified_vm": true,
+    "art_java_verified_vm": true,
+    "zygote_verified_vm": false
+  }
+}

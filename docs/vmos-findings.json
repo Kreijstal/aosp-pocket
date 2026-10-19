@@ -1,0 +1,171 @@
+{
+  "artifact": {
+    "package": "com.vmos.virtual",
+    "version_name": "2.0.0-alpha09",
+    "version_code": "20009",
+    "url": "https://file.vmoscloud.com/userFile/a806ddbfc3340f17cf966c47ad0fb0ee.apk",
+    "sha256": "b3cbc9858cf4e0b04ec98b176265fd4a17cdee65625a2595d449fa7c7a8eefd4",
+    "executed": false,
+    "installed_version_match": "unknown"
+  },
+  "findings": [
+    {
+      "id": "VMOS-001",
+      "classification": "binary_derived",
+      "finding": "Bundled ARM64 Android 9 guest requires YLINKER, engine version at least 216",
+      "evidence": [
+        "assets/rootfs_info",
+        "guest/system/build.prop",
+        "com.vmos.model.RomInfo"
+      ]
+    },
+    {
+      "id": "VMOS-002",
+      "classification": "binary_derived",
+      "finding": "API 29+ startup branch links guest initlinker paths to installed engine executables",
+      "evidence": [
+        "com.vmos.core.t",
+        "com.vmos.core.utils.NativeUtil.forkAndExecvePolicy"
+      ]
+    },
+    {
+      "id": "VMOS-003",
+      "classification": "binary_derived",
+      "finding": "YLINKER exposes a saved-register syscall dispatcher",
+      "evidence": [
+        "libylinker64.so:0x17a28",
+        "libylinker64.so:0x76f14"
+      ],
+      "unresolved": [
+        "Interposition coverage",
+        "Path translation",
+        "Credential translation"
+      ]
+    },
+    {
+      "id": "VMOS-004",
+      "classification": "synthetic_offline_emulation",
+      "finding": "Preloader constructs a 39-instruction seccomp filter with selected mmap and SIGSYS registration handling",
+      "evidence": [
+        "libprelinker64.so:0x35d0",
+        "out/research/vmos/analysis/seccomp-emulation.json"
+      ],
+      "checks_passed": 5,
+      "hardware_verified": false,
+      "traps_all_syscalls": false
+    },
+    {
+      "id": "VMOS-005",
+      "classification": "binary_derived",
+      "finding": "Guest libbinder contains android and vbinder implementations; vbinder issues BINDER_WRITE_READ",
+      "evidence": [
+        "guest/system/lib64/libbinder.so:0x1358e0"
+      ],
+      "unresolved": [
+        "Driver backend",
+        "Private service namespace",
+        "FD and handle translation",
+        "Death notifications"
+      ]
+    },
+    {
+      "id": "VMOS-006",
+      "classification": "binary_derived",
+      "finding": "Separate native graphics and input bridge accepts Android Surface objects",
+      "evidence": [
+        "com.vmos.core.utils.VMTools",
+        "libvmtools.so"
+      ]
+    },
+    {
+      "id": "VMOS-007",
+      "classification": "binary_derived",
+      "finding": "HAL bridge provides camera, sensor, cellular, Wi-Fi and location callbacks",
+      "evidence": [
+        "libhalbox.so",
+        "com.vmos.core.utils.NativeUtil"
+      ]
+    },
+    {
+      "id": "VMOS-008",
+      "classification": "binary_derived",
+      "finding": "Inspected activation method sends device_config put activity_manager max_phantom_processes 1024",
+      "evidence": [
+        "com.vmos.virtual.viewmodel.VmActivationViewModel.u",
+        "out/research/vmos/analysis/activation-dex.txt"
+      ],
+      "executed": false,
+      "complete_adb_behavior_audit": false
+    },
+    {
+      "id": "VMOS-009",
+      "classification": "binary_derived",
+      "finding": "Installed host apps are imported by APK/base-and-splits file-descriptor transfer and guest pm installation sessions",
+      "evidence": [
+        "ImportDeviceAppFragment.p: sourceDir/splitNames",
+        "InstallAppFragment.v and virtual.manager.f.i",
+        "exsocket.engine.EngineSession$d.run: file descriptors",
+        "exsocket.rom.c.m: ancillary file descriptors",
+        "sample.rom.apks.a.f/k/m: split source and install-create/write/commit",
+        "out/research/vmos/analysis/app-import-checks.json"
+      ],
+      "dex_methods_verified": 12,
+      "target_executed": false,
+      "host_private_app_data_in_examined_path": false,
+      "host_apk_export_copy_required_on_local_socket_path": false,
+      "guest_package_manager_still_writes_files": true
+    },
+    {
+      "id": "VMOS-010",
+      "classification": "binary_derived",
+      "finding": "Embedded guest installation helper declares system shared UID and package installation/deletion privileges",
+      "evidence": [
+        "assets/romex_cn.apk AndroidManifest.xml",
+        "out/research/vmos/analysis/app-import-rom-helper.json"
+      ],
+      "package": "com.android.secex",
+      "declared_shared_user_id": "android.uid.system",
+      "permissions": [
+        "android.permission.INSTALL_PACKAGES",
+        "android.permission.DELETE_PACKAGES"
+      ],
+      "runtime_uid_verified": false,
+      "host_system_privileges_established": false
+    },
+    {
+      "id": "VMOS-011",
+      "classification": "binary_derived",
+      "finding": "Guest IPCThreadState caller-UID accessor consults TLS; normal android::Parcel token writer sets Android 9 strict-mode gather bit",
+      "evidence": [
+        "libbinder.so getCallingUid 0x72dfc",
+        "libbinder.so writeInterfaceToken 0x7c48c",
+        "out/research/vmos/analysis/api28-binder-compatibility.txt"
+      ],
+      "target_executed": false,
+      "complete_credential_protocol_recovered": false,
+      "runtime_implementation_source": "AOSP and Ananbox, not VMOS"
+    },
+    {
+      "id": "VMOS-012",
+      "classification": "binary_derived",
+      "finding": "Bundled guest archive contains dalvikvm64, event-log-tags, public.libraries.txt and init.environ.rc",
+      "evidence": [
+        "out/research/vmos/analysis/api28-runtime-files.txt"
+      ],
+      "target_executed": false,
+      "scope": "Archive filenames only; no VMOS payload imported into the runtime"
+    }
+  ],
+  "tools": {
+    "androguard": "4.1.4",
+    "jadx": "1.5.6",
+    "unicorn": "2.1.4"
+  },
+  "limitations": [
+    "Static analysis and synthetic emulation only",
+    "JADX reported 155 errors across the whole application",
+    "No guest boot or graphics protocol replay",
+    "No complete syscall or Binder transport recovery",
+    "No proprietary implementation imported into the runtime"
+  ]
+}
