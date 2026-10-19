@@ -10,14 +10,14 @@ static void fail(JNIEnv* env,const char* reason) {
 }
 JNIEXPORT jint JNICALL Java_dev_kreijstal_aosppocket_bridge_AnonymousFrames_createRegion(JNIEnv* env,jclass type,jint bytes) {
     (void)type;
-    if(bytes<8 || bytes>128*1024*1024){fail(env,"Invalid shared display size");return -1;}
+    if(bytes<8 || bytes>192*1024*1024){fail(env,"Invalid shared display size");return -1;}
     int fd=ASharedMemory_create("pocket-display",bytes);
     if(fd<0)fail(env,"Cannot allocate anonymous display memory");
     return fd;
 }
 JNIEXPORT jobject JNICALL Java_dev_kreijstal_aosppocket_bridge_AnonymousFrames_mapRegion(JNIEnv* env,jclass type,jobject descriptor,jint bytes) {
     (void)type;
-    if(bytes<8 || bytes>128*1024*1024 || !descriptor){fail(env,"Invalid shared display mapping");return NULL;}
+    if(bytes<8 || bytes>192*1024*1024 || !descriptor){fail(env,"Invalid shared display mapping");return NULL;}
     jfieldID field=(*env)->GetFieldID(env,(*env)->GetObjectClass(env,descriptor),"descriptor","I");
     if(!field)return NULL;
     int fd=(*env)->GetIntField(env,descriptor,field);struct stat status;

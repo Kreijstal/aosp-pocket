@@ -79,9 +79,10 @@ public final class SettingsActivity extends RuntimeActivity {
             performanceReport=new String(java.nio.file.Files.readAllBytes(new java.io.File(getFilesDir(),"api28-rootfs/logs/display-performance.json").toPath()),"UTF-8");
             org.json.JSONObject report=new org.json.JSONObject(performanceReport);
             performance.setText(String.format(java.util.Locale.ROOT,
-                "Last visible display sample: %.1f FPS · %d × %d\nCapture: %.1f ms · Present: %.1f ms\nShared RGBA buffers · software guest rendering",
+                "Last visible display sample: %.1f FPS · %d × %d\nCompositor copy: %.1f ms · Present: %.1f ms\nPresenter: %s\nHost renderer: %s\nGuest rendering: SwiftShader",
                 report.getDouble("interval_fps"),report.getInt("width"),report.getInt("height"),
-                report.getDouble("mean_capture_ms"),report.getDouble("mean_present_ms")));
+                report.getDouble("mean_capture_ms"),report.getDouble("mean_present_ms"),
+                report.optString("presenter","unknown"),report.optString("host_gl_renderer","unknown")));
         } catch(Exception unavailable) {performanceReport=null;performance.setText("Display timing appears after Android 9 has been visible for a few seconds.");}
     }
     @Override public void onGuestChanged() {

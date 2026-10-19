@@ -43,6 +43,20 @@ public final class MainActivity extends Activity {
             }
         };
         layout.addView(circle,new LinearLayout.LayoutParams(-1,Math.round(140*metrics.density)));
+        View moving=new View(this) {
+            private int phase;
+            private final Paint marker=new Paint();
+            @Override protected void onDraw(Canvas canvas) {
+                canvas.drawColor(Color.LTGRAY);marker.setColor(Color.MAGENTA);
+                int width=Math.max(1,getWidth()/8),left=(phase++*9)%Math.max(1,getWidth()-width);
+                canvas.drawRect(left,0,left+width,getHeight(),marker);
+                // The first tap freezes the marker: subsequent window handoffs
+                // must also work when no guest animation supplies fresh frames.
+                if(taps==0)postInvalidateOnAnimation();
+            }
+        };
+        moving.setContentDescription("Continuous frame marker");
+        layout.addView(moving,new LinearLayout.LayoutParams(-1,Math.round(12*metrics.density)));
         setContentView(layout);report();
     }
     @Override public void onSaveInstanceState(Bundle state){state.putInt("taps",taps);super.onSaveInstanceState(state);}

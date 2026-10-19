@@ -35,10 +35,11 @@ final class DirectSession implements AutoCloseable {
     private Connection input;
     private final Object frameLock=new Object(), visibilityLock=new Object();
     private volatile Surface surface;
+    private long surfaceGeneration;
     private AnonymousFrames sharedFrames;
     private int front=-1;
-    void surface(Surface value) {synchronized(frameLock){surface=value;}wakeDisplay();}
-    void detach(Surface value) {synchronized(frameLock){if(surface==value)surface=null;}wakeDisplay();}
+    void surface(Surface value) {synchronized(frameLock){surface=value;surfaceGeneration++;}wakeDisplay();}
+    void detach(Surface value) {synchronized(frameLock){if(surface==value){surface=null;surfaceGeneration++;}}wakeDisplay();}
     private void wakeDisplay(){synchronized(visibilityLock){visibilityLock.notifyAll();}}
     Bitmap snapshot() {
         synchronized(frameLock) {
@@ -76,56 +77,52 @@ final class DirectSession implements AutoCloseable {
             }
             if(frames==null)throw new IOException("Android 9 did not open its display/input endpoint; see api28-rootfs/logs/manager-init.log");
             AnonymousFrames shared=AnonymousFrames.create(geometry);
-            try(Connection channel=frames) {
-                channel.socket.setFileDescriptorsForSend(new FileDescriptor[]{shared.descriptor()});
-                channel.out.writeInt(11);channel.out.flush();
-                channel.socket.setFileDescriptorsForSend(null);
-                if(!channel.in.readBoolean())throw new IOException("Guest refused shared display memory");
+            long presenter=Native.createFramePresenter();
+            try(Connection control=frames;ComposerConnection channel=new ComposerConnection(shared)) {
                 synchronized(frameLock){sharedFrames=shared;front=-1;}
                 ready=true;main.post(()->{if(!closed)listener.ready();});
-                long sequence=0,framesPresented=0,intervalFrames=0;
-                long measuredAt=SystemClock.elapsedRealtimeNanos(),captureTotal=0,presentTotal=0,maxCapture=0;
+                long sequence=0,renderedGeneration=-1;FrameReport report=new FrameReport(presenter,channel.fps,shared.frameBytes);
+                int release=-1;boolean active=false;
                 while(!closed && init.isAlive()) {
-                    boolean waited=false;
                     synchronized(visibilityLock) {
-                        while(!closed && init.isAlive() && (!visible || surface==null || !surface.isValid())){waited=true;visibilityLock.wait(1000);}
+                        if(!visible || surface==null || !surface.isValid()) {
+                            if(active){channel.command(3);active=false;}
+                            while(!closed && init.isAlive() && (!visible || surface==null || !surface.isValid()))visibilityLock.wait(1000);
+                        }
                     }
-                    if(waited){measuredAt=SystemClock.elapsedRealtimeNanos();intervalFrames=0;}
                     if(closed || !init.isAlive())break;
-                    long began=SystemClock.elapsedRealtimeNanos();int slot=(int)(sequence&1);sequence++;
-                    channel.out.writeInt(10);channel.out.writeInt(slot);channel.out.writeLong(sequence);channel.out.flush();
-                    if(channel.in.readLong()!=sequence || channel.in.readInt()!=slot)throw new IOException("Shared frame ownership mismatch");
-                    long capture=channel.in.readLong();if(capture<0)throw new IOException("Invalid capture duration");
+                    if(!active){channel.command(1);active=true;report.resume();}
+                    synchronized(frameLock) {
+                        Surface target=surface;
+                        if(front>=0 && surfaceGeneration!=renderedGeneration && target!=null && target.isValid()) {
+                            long began=SystemClock.elapsedRealtimeNanos();
+                            boolean shown=Native.presentFrame(presenter,target,shared.slot(front),geometry.width,geometry.height);
+                            if(shown)renderedGeneration=surfaceGeneration;
+                            report.redraw(SystemClock.elapsedRealtimeNanos()-began,shown);
+                        }
+                    }
+                    channel.out.writeInt(2);channel.out.writeLong(sequence);channel.out.writeInt(release);channel.out.flush();release=-1;
+                    long actual=channel.in.readLong();
+                    if(actual==0){report.sample();continue;} // Idle output has no screenshot or pixel copy.
+                    int slot=channel.in.readInt();long capture=channel.in.readLong();
+                    if(actual<=sequence || slot<0 || slot>=dev.kreijstal.aosppocket.bridge.SharedFrames.SLOT_COUNT || capture<0)
+                        throw new IOException("Invalid composer buffer ownership");
+                    sequence=actual;
                     long presentBegan=SystemClock.elapsedRealtimeNanos();boolean presented=false;
                     synchronized(frameLock) {
-                        front=slot;
+                        release=front;front=slot;
                         Surface target=surface;
                         if(!closed && visible && target!=null && target.isValid())
-                            presented=Native.presentFrame(target,shared.slot(slot),geometry.width,geometry.height);
+                            presented=Native.presentFrame(presenter,target,shared.slot(slot),geometry.width,geometry.height);
+                        renderedGeneration=presented?surfaceGeneration:-1;
                     }
-                    if(presented){framesPresented++;intervalFrames++;}
-                    captureTotal+=capture;maxCapture=Math.max(maxCapture,capture);
-                    presentTotal+=SystemClock.elapsedRealtimeNanos()-presentBegan;
-                    long now=SystemClock.elapsedRealtimeNanos(),elapsed=now-measuredAt;
-                    if(elapsed>=2000000000L) {
-                        org.json.JSONObject report=new org.json.JSONObject()
-                            .put("transport","shared-rgba").put("backing","anonymous").put("codec","none")
-                            .put("pixel_bytes_over_socket",0).put("target_fps",60)
-                            .put("width",geometry.width).put("height",geometry.height).put("shared_bytes",2L*shared.frameBytes)
-                            .put("frames_presented",framesPresented).put("frames_requested",sequence)
-                            .put("interval_fps",intervalFrames*1000000000.0/elapsed)
-                            .put("mean_capture_ms",captureTotal/sequence/1000000.0)
-                            .put("max_capture_ms",maxCapture/1000000.0)
-                            .put("mean_present_ms",presentTotal/sequence/1000000.0);
-                        java.nio.file.Files.write(new File(root,"logs/display-performance.json").toPath(),report.toString().getBytes("UTF-8"));
-                        android.util.Log.i("PocketFrames",report.toString());
-                        measuredAt=now;intervalFrames=0;
-                    }
-                    // Pace the producer without building a stale frame or UI callback queue.
-                    long remaining=16666667L-(SystemClock.elapsedRealtimeNanos()-began);
-                    if(remaining>0)Thread.sleep(remaining/1000000L,(int)(remaining%1000000L));
+                    report.record(sequence,capture,SystemClock.elapsedRealtimeNanos()-presentBegan,presented);
+                    report.sample();
                 }
-            } finally {synchronized(frameLock){sharedFrames=null;front=-1;shared.close();}}
+            } finally {
+                synchronized(frameLock){sharedFrames=null;front=-1;shared.close();}
+                Native.destroyFramePresenter(presenter);
+            }
 
             if(!closed)ended="Android 9 exited unexpectedly. See api28-rootfs/logs/manager-init.log.";
         } catch(InterruptedException cancelled){Thread.currentThread().interrupt();}
@@ -160,6 +157,59 @@ final class DirectSession implements AutoCloseable {
                 if(!geometry.equals(actual))throw new IOException("Guest display "+actual+" does not match host "+geometry);
             } catch(IOException error){close();throw error;}
         }
+        @Override public void close(){sockets.remove(socket);try{socket.close();}catch(IOException ignored){}}
+    }
+    private final class FrameReport {
+        final long presenter;final int fps,bytes;
+        long sequence,received,presented,attempts,intervalFrames,captureTotal,presentTotal,maxCapture;
+        long measuredAt=SystemClock.elapsedRealtimeNanos();
+        FrameReport(long presenter,int fps,int bytes){this.presenter=presenter;this.fps=fps;this.bytes=bytes;}
+        void resume(){measuredAt=SystemClock.elapsedRealtimeNanos();intervalFrames=0;}
+        void record(long version,long copy,long duration,boolean shown) {
+            sequence=version;received++;captureTotal+=copy;maxCapture=Math.max(maxCapture,copy);redraw(duration,shown);
+        }
+        void redraw(long duration,boolean shown){attempts++;presentTotal+=duration;if(shown){presented++;intervalFrames++;}}
+        void sample()throws Exception {
+            long now=SystemClock.elapsedRealtimeNanos(),elapsed=now-measuredAt;
+            if(received==0 || elapsed<2000000000L)return;
+            String[] gpu=Native.framePresenterInfo(presenter);
+            org.json.JSONObject result=new org.json.JSONObject()
+                .put("transport","composer-rgba").put("backing","anonymous").put("codec","none")
+                .put("pixel_bytes_over_socket",0).put("target_fps",fps).put("screenshot_calls",0)
+                .put("presenter",gpu[0]).put("host_gl_renderer",gpu[1]).put("host_gl_vendor",gpu[2]).put("gpu_fallback_reason",gpu[3])
+                .put("gpu_buffers",gpu[0].equals("ahardwarebuffer-egl")?2:0)
+                .put("width",geometry.width).put("height",geometry.height)
+                .put("shared_bytes",(long)dev.kreijstal.aosppocket.bridge.SharedFrames.SLOT_COUNT*bytes)
+                .put("frames_presented",presented).put("frames_received",received).put("composer_sequence",sequence)
+                .put("interval_fps",intervalFrames*1000000000.0/elapsed)
+                .put("mean_capture_ms",captureTotal/received/1000000.0).put("mean_copy_ms",captureTotal/received/1000000.0)
+                .put("max_capture_ms",maxCapture/1000000.0).put("mean_present_ms",presentTotal/Math.max(1,attempts)/1000000.0);
+            java.nio.file.Files.write(new File(root,"logs/display-performance.json").toPath(),result.toString().getBytes("UTF-8"));
+            android.util.Log.i("PocketFrames",result.toString());measuredAt=now;intervalFrames=0;
+        }
+    }
+    private final class ComposerConnection implements AutoCloseable {
+        final LocalSocket socket=new LocalSocket();
+        final DataInputStream in;
+        final DataOutputStream out;
+        final int fps;
+        ComposerConnection(AnonymousFrames frames)throws IOException {
+            sockets.add(socket);
+            try {
+                if(closed)throw new IOException("Session closed");
+                socket.connect(new LocalSocketAddress(new File(root,"dev/socket/pocket_composer").getPath(),LocalSocketAddress.Namespace.FILESYSTEM));
+                socket.setSoTimeout(15000);
+                in=new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+                out=new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                if(in.readInt()!=0x504b4331 || in.readInt()!=geometry.width || in.readInt()!=geometry.height)
+                    throw new IOException("Composer geometry does not match the guest");
+                fps=in.readInt();if(fps<1 || fps>120)throw new IOException("Invalid composer refresh rate");
+                socket.setFileDescriptorsForSend(new FileDescriptor[]{frames.descriptor()});
+                socket.getOutputStream().write(0);socket.setFileDescriptorsForSend(null);
+                if(in.readInt()!=1)throw new IOException("Composer refused shared memory");
+            }catch(IOException error){close();throw error;}
+        }
+        void command(int op)throws IOException {out.writeInt(op);out.flush();if(in.readInt()!=1)throw new IOException("Composer control failed");}
         @Override public void close(){sockets.remove(socket);try{socket.close();}catch(IOException ignored){}}
     }
     private interface Command {void run(Connection connection)throws Exception;}

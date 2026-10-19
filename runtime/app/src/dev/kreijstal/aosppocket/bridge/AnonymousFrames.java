@@ -15,13 +15,13 @@ public final class AnonymousFrames extends SharedFrames {
         super(geometry,memory);this.memory=memory;this.descriptor=descriptor;
     }
     public static AnonymousFrames create(DisplayGeometry geometry) throws IOException {
-        int bytes=Math.multiplyExact(Math.multiplyExact(geometry.width,geometry.height),8);
+        int bytes=Math.multiplyExact(Math.multiplyExact(geometry.width,geometry.height),4*SLOT_COUNT);
         ParcelFileDescriptor descriptor=ParcelFileDescriptor.adoptFd(createRegion(bytes));
         try {return new AnonymousFrames(geometry,mapRegion(descriptor.getFileDescriptor(),bytes),descriptor);}
         catch(IOException | RuntimeException error){descriptor.close();throw error;}
     }
     public static AnonymousFrames attach(DisplayGeometry geometry,FileDescriptor descriptor) throws IOException {
-        int bytes=Math.multiplyExact(Math.multiplyExact(geometry.width,geometry.height),8);
+        int bytes=Math.multiplyExact(Math.multiplyExact(geometry.width,geometry.height),4*SLOT_COUNT);
         return new AnonymousFrames(geometry,mapRegion(descriptor,bytes),null);
     }
     public FileDescriptor descriptor(){return descriptor.getFileDescriptor();}

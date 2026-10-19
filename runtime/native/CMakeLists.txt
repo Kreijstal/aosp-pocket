@@ -42,5 +42,5 @@ target_include_directories(pocket_runtime PRIVATE
   "${CMAKE_BINARY_DIR}/anbox/external/android-emugl/host/libs/GLESv2_dec"
   "${CMAKE_BINARY_DIR}/anbox/external/android-emugl/host/libs/renderControl_dec"
   ${Boost_INCLUDE_DIRS})
-target_link_libraries(pocket_runtime PRIVATE anbox-core android log)
+target_link_libraries(pocket_runtime PRIVATE anbox-core android log EGL GLESv2)
 target_link_options(pocket_runtime PRIVATE "-Wl,-z,max-page-size=16384")

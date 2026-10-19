@@ -145,9 +145,13 @@ def main():
         if args.shared_frames:
             time.sleep(5)
             performance=json.loads(shell('cat '+ROOT+'/logs/display-performance.json'))
-            assert performance['transport']=='shared-rgba' and performance['codec']=='none',performance
+            assert performance['transport']=='composer-rgba' and performance['codec']=='none',performance
+            assert performance['screenshot_calls']==0 and performance['target_fps']==60,performance
+            assert performance['presenter'] in ('ahardwarebuffer-egl','cpu-surface'),performance
+            result['gpu_presentation_verified']=performance['presenter']=='ahardwarebuffer-egl'
+            assert performance['gpu_buffers']==(2 if result['gpu_presentation_verified'] else 0),performance
             assert performance['frames_presented']>0 and performance['interval_fps']>0,performance
-            assert performance['shared_bytes']==w*h*8,performance
+            assert performance['shared_bytes']==w*h*12,performance
             assert performance['backing']=='anonymous' and performance['pixel_bytes_over_socket']==0,performance
             maps=shell('cat /proc/'+str(boot['host_pid'])+'/maps')
             assert any('pocket-display' in line and 'rw-s' in line for line in maps.splitlines()),'Host has no anonymous shared display mapping'
@@ -206,6 +210,15 @@ def main():
                 time.sleep(.3)
             raise RuntimeError('Scaled touch missed the guest button: ' + window)
         tap_guest(1, 'embedded')
+        if args.shared_frames:
+            time.sleep(3)
+            idle_before=json.loads(shell('cat '+ROOT+'/logs/display-performance.json'))
+            time.sleep(3)
+            idle_after=json.loads(shell('cat '+ROOT+'/logs/display-performance.json'))
+            # Permit the guest status-bar clock tick; the marker has stopped.
+            assert idle_after['composer_sequence']-idle_before['composer_sequence']<=2,(idle_before,idle_after)
+            result['idle_completed_frames_delta']=idle_after['composer_sequence']-idle_before['composer_sequence']
+            result['idle_transport_does_not_recapture']=True
         screenshot('pocket-display-embedded')
         click('Full screen')
         tap_guest(2, 'dedicated')
@@ -296,7 +309,7 @@ def main():
                 raise RuntimeError('Original API25 guest did not restore')
             result['original_restored_from_existing_data'] = True
             result['original_host_pid_after'] = int(host(OLD)[1])
-        report='pocket-shared-display-validation.json' if args.shared_frames else 'pocket-display-page-validation.json' if args.clean_page else 'pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
+        report='pocket-composer-validation.json' if args.shared_frames else 'pocket-display-page-validation.json' if args.clean_page else 'pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
         Path('/home/pi/'+report).write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2), flush=True)
     if failure:

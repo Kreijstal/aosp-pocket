@@ -106,3 +106,5 @@ check-display:
 	javac --release 8 -d out/display-tests runtime/app/src/dev/kreijstal/aosppocket/bridge/DisplayGeometry.java runtime/app/src/dev/kreijstal/aosppocket/bridge/SharedFrames.java runtime/tests/DisplayGeometryTest.java runtime/tests/SharedFramesTest.java
 	java -cp out/display-tests dev.kreijstal.aosppocket.bridge.DisplayGeometryTest
 	java -cp out/display-tests dev.kreijstal.aosppocket.bridge.SharedFramesTest
+	$(CC) -std=c11 -O2 -Wall -Wextra -Werror runtime/tests/composer_slots.c -o out/display-tests/composer-slots
+	out/display-tests/composer-slots

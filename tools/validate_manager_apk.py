@@ -28,11 +28,13 @@ with zipfile.ZipFile(args.apk) as apk:
     assert back_flags==[True],'Guest viewer platform Back callback opt-in missing'
     assert 'lib/arm64-v8a/libproot.so' in names,'API 25 PRoot missing'
     assert 'lib/arm64-v8a/libpocket_frames.so' in names,'Host anonymous display mapper missing'
-    assert 'assets/api28-rootfs/system/lib64/libpocket_frames.so.payload' in names,'Guest anonymous display mapper missing'
+    assert 'assets/api28-rootfs/vendor/lib64/hw/hwcomposer.pocket.so.payload' in names,'Guest direct composer missing'
     layout=json.loads(apk.read('assets/default-guest/pocket-layout.json'))
     assert layout.get('guest_sdk',25)==25
     props=apk.read('assets/api28-rootfs/system/build.prop.payload').decode()
     assert '\nro.build.version.sdk=28\n' in '\n'+props
+    assert '\nro.hardware.hwcomposer=pocket\n' in '\n'+props
+    assert '\nro.boot.redroid_fps=60\n' in '\n'+props
     rc=apk.read('assets/api28-rootfs/system/etc/init/init.manager.rc.payload').decode()
     assert 'start-system-server' in rc and 'GuestControl' in rc
     assert 'socket pocket_control stream 0600 1000 1000' in rc

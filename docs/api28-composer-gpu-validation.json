@@ -1,0 +1,195 @@
+{
+  "version": "0.10-composer-gpu",
+  "evidence": "Android 9 guest on Pi-hosted Android 16 Cuttlefish; application UID without root, capabilities or tracer",
+  "build_command": "make -f runtime/Makefile -j2 manager-verify",
+  "unit_command": "make -f runtime/Makefile check-display",
+  "integration_command": "ssh pi@juanraspberry python3 -u - --clean-page --shared-frames < tools/validate_display_on_pi.py",
+  "unit_slow_consumer_updates": 2000,
+  "production_matches_test_cohort": {
+    "host_dex": true,
+    "native_libraries": [
+      "lib/arm64-v8a/libpocket_runtime.so",
+      "lib/arm64-v8a/libproot.so",
+      "lib/arm64-v8a/libpocket_frames.so"
+    ],
+    "guest_payloads": 1377,
+    "test_apk": "composer-idle-update over 0.4 seed"
+  },
+  "pixel_check": {
+    "passed": true,
+    "colors": {
+      "red": {
+        "rgb": [
+          255,
+          0,
+          0
+        ],
+        "full_width_pixels": 601,
+        "first_row": 308,
+        "last_row": 356
+      },
+      "green": {
+        "rgb": [
+          0,
+          255,
+          0
+        ],
+        "full_width_pixels": 601,
+        "first_row": 358,
+        "last_row": 406
+      },
+      "blue": {
+        "rgb": [
+          0,
+          0,
+          255
+        ],
+        "full_width_pixels": 601,
+        "first_row": 408,
+        "last_row": 456
+      }
+    },
+    "midgray_204_preserved": true,
+    "card_bounds": [
+      59,
+      54,
+      660,
+      1124
+    ],
+    "no_surrounding_black_padding": true
+  },
+  "gralloc_layout_evidence": {
+    "evidence": "Pinned Redroid allocator binary disassembly",
+    "module": "vendor/lib64/hw/gralloc.redroid.so",
+    "instructions": {
+      "0x19c0": "29050091",
+      "0x19c4": "4a050091",
+      "0x19c8": "39f97f92",
+      "0x19cc": "49f97f92"
+    },
+    "derived_stride": "(width+1)&~1 pixels",
+    "derived_height_alignment": "(height+1)&~1 pixels"
+  },
+  "validation": {
+    "passed": true,
+    "sequential_guests": true,
+    "original_was_running": true,
+    "original_host_pid_before": 27618,
+    "boot": {
+      "passed": true,
+      "scope": "manager_android9_boot",
+      "host_uid": 10174,
+      "host_pid": 3728,
+      "system_server_pid": 3914,
+      "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+      "original_api25_unchanged": null,
+      "original_api25_pids": null,
+      "direct_backend": true,
+      "boot_completed": true,
+      "guest_display": {
+        "width": 720,
+        "height": 1280,
+        "density_dpi": 240
+      },
+      "tracer_pid": 0,
+      "seccomp": 2,
+      "effective_capabilities": 0,
+      "screenshot": "/home/pi/pocket-manager9.png"
+    },
+    "existing_display_probe_reused": false,
+    "app_initial": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 0
+    },
+    "gpu_presentation_verified": true,
+    "anonymous_shared_mapping_verified": true,
+    "shared_display_performance": {
+      "transport": "composer-rgba",
+      "backing": "anonymous",
+      "codec": "none",
+      "pixel_bytes_over_socket": 0,
+      "target_fps": 60,
+      "screenshot_calls": 0,
+      "presenter": "ahardwarebuffer-egl",
+      "host_gl_renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 16.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "host_gl_vendor": "Google Inc. (Google)",
+      "gpu_fallback_reason": "",
+      "gpu_buffers": 2,
+      "width": 720,
+      "height": 1280,
+      "shared_bytes": 11059200,
+      "frames_presented": 52,
+      "frames_received": 49,
+      "composer_sequence": 105,
+      "interval_fps": 11.85626605387516,
+      "mean_capture_ms": 5.339478,
+      "mean_copy_ms": 5.339478,
+      "max_capture_ms": 28.943092,
+      "mean_present_ms": 306.955372
+    },
+    "embedded_card_bounds": [
+      59,
+      54,
+      660,
+      1124
+    ],
+    "surface_fills_embedded_card": true,
+    "display_page_has_no_management_controls": true,
+    "hidden_display_pauses_capture": true,
+    "shared_display_resumes": true,
+    "settings_is_separate_page": true,
+    "idle_completed_frames_delta": 0,
+    "idle_transport_does_not_recapture": true,
+    "app_final": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 3
+    },
+    "guest_pixels_constant_across_windows": true,
+    "viewports": [
+      {
+        "window": "embedded",
+        "width": 601,
+        "height": 1070
+      },
+      {
+        "window": "dedicated",
+        "width": 720,
+        "height": 1280
+      },
+      {
+        "window": "embedded_after_pip",
+        "width": 601,
+        "height": 1070
+      }
+    ],
+    "guest_taps": 3,
+    "pip_exclusive": true,
+    "system_server_restarts": 0,
+    "host_dpi_relayed": true,
+    "development_guest_reaped": true,
+    "development_host_closed_after_clean_stop": true,
+    "original_restored_from_existing_data": true,
+    "original_host_pid_after": 27618
+  },
+  "limitations": [
+    "Guest GLES remains SwiftShader. Shared GPU presentation runs on the host driver; the test host driver is also software.",
+    "Two CPU copies remain: completed guest client target to shared pool, then pool to host AHardwareBuffer.",
+    "Sampled FPS uses changing content before the first tap; prior 0.9 statistics used a static probe. These are not controlled speedup measurements.",
+    "Mean presentation includes startup and software-host costs. CPU fallback failure injection was not tested.",
+    "Samsung runtime performance is unmeasured; its APK was copied, not silently installed."
+  ],
+  "samsung_download": {
+    "file": "Download/aosp-pocket-manager-0.10.apk",
+    "bytes": 553515756,
+    "transport": "LAN; final delta 584076 bytes",
+    "installed": false
+  }
+}

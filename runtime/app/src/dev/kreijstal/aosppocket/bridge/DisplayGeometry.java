@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 /** A session's guest pixels, independent of the host window presenting them. */
 public final class DisplayGeometry {
-    private static final int MAGIC=0x504b543b; // v3: shared RGBA slots, including density.
+    private static final int MAGIC=0x504b543c; // v4: direct composer output and three owned RGBA slots.
     public final int width,height,densityDpi;
     public DisplayGeometry(int width,int height,int densityDpi) {
         if(width<1 || height<1 || width>8192 || height>8192 || (long)width*height>16*1024*1024 ||

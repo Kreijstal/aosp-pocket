@@ -23,8 +23,9 @@ service process groups before Start becomes available again.
 
 Android 9 starts a separate `GuestControl` process after its actual
 `sys.boot_completed=1` property trigger. Its inherited app-private Unix socket
-serves compositor frames through anonymous shared memory, pointer events,
-navigation keys and APK installation. This replaces the bounded development probe: Manager does not
+serves pointer events, navigation keys and APK installation. Version 0.9 also
+used it for frames; 0.10 gives composer output its own private endpoint.
+This replaces the bounded development probe: Manager does not
 install a test app or shut down automatically after boot.
 
 Android 9 takes the host display's full portrait pixel dimensions and density
@@ -80,6 +81,61 @@ measured before/after speedup. [Android](images/api28-shared-display.png) and
 Frame sizes scale with guest pixels. Invalid geometry and sizes over
 16 megapixels are rejected; two RGBA slots use eight bytes per guest pixel.
 Android 7 retains its saved display geometry.
+
+Version 0.10 replaces the screenshot producer with a source-built HWC 1.1
+module, loaded through the guest's existing composer 2.1 adapter. Only the
+Manager image selects `hwcomposer.pocket`; the original platform probe retains
+its Redroid configuration. Non-target layers request GLES client composition.
+The completed client target is copied through the pinned linear Redroid
+mapper into a three-slot anonymous pool. No `SurfaceControl.screenshot`, Bitmap
+normalization, PNG codec or per-frame pixel socket payload remains.
+The control handshake is v4; the compositor endpoint has its own versioned
+header and checks the shared region size. The composer uses the Manager's
+60 Hz configuration; achieved frame rates
+remain workload- and device-dependent.
+
+The consumer holds a front slot while displaying or snapshotting it. Acquisition
+holds its replacement before the previous front is released. The composer may
+replace its newest unheld slot under the state mutex when a slow consumer holds
+two slots. This retains the latest content without an accumulating frame queue.
+Pause disables pool copies; resume requests one invalidation so even a static
+scene refreshes. A retained frame is redrawn when the host Surface changes,
+including when no new guest frames arrive. Socket close disables the producer
+before its mapping is released. Three RGBA slots use 12 bytes per guest pixel.
+
+Host presentation now imports two persistent `AHardwareBuffer` objects as
+EGLImage textures. The CPU copies received RGBA rows into the selected hardware
+buffer; GLES samples that same allocation into the host Surface. GPU fences
+protect reuse, and an unlock fence is honored before sampling. Textures and
+hardware buffers survive window handoff. Missing host EGL/allocator support or
+repeated presentation failure uses the native CPU Surface fallback. The
+reported backend and fallback reason identify the selected path.
+
+This is **shared GPU presentation**, with two CPU copies remaining: guest client
+target → anonymous pool, then pool → host hardware buffer. Guest GLES still
+uses SwiftShader. It does not import Samsung/host allocator handles into the
+Android 9 mapper and does not accelerate guest GLES command execution. An
+arbitrary guest image or graphics allocator needs its own compatibility work.
+The pinned gralloc's even-pixel stride is also established from its allocator
+instructions at `0x19c0`–`0x19cc`, not inferred from the test host's 720-pixel
+width. No Samsung performance measurement is implied by VM validation.
+
+The ordinary display probe animates before its first tap, then becomes static.
+This measures changing frames first and tests subsequent idle window handoffs
+without relying on an animation to refresh them. The buffer ownership test
+also exercises a slow consumer and 2,000 producer updates.
+
+The [0.10 VM regression](api28-composer-gpu-validation.json) passed the shared
+GPU path with no CPU fallback, exact red/green/blue and middle-gray pixels,
+three guest taps, hidden copying pause/resume, exclusive PiP and clean teardown.
+After the first tap, the static screen produced zero additional frames over
+the idle check; subsequent window handoffs passed. The original API 25 guest
+was restored from existing data. The 720 × 1280 animated sample measured
+11.86 FPS, 5.34 ms mean composer copy and 306.96 ms cumulative mean presentation
+on the software host renderer. Startup stalls are included in that mean; this
+is neither a Samsung measurement nor a controlled before/after speedup test.
+[Display](images/api28-composer-gpu.png) and
+[Settings](images/api28-composer-settings.png) show the tested output.
 
 Version 0.8 puts the guest on a dedicated **Android** page. Its only page
 navigation is Android/Settings; a small expand control opens the existing

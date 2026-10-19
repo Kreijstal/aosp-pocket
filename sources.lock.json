@@ -280,5 +280,11 @@
       "manager_evidence": "docs/api28-manager-validation.json"
     },
     "pocket_manager_profile": "direct_api28"
+  },
+  "composer_headers": {
+    "url": "https://android.googlesource.com/platform/hardware/libhardware/+archive/108a9f09189786997cb7b29a09a009d85fc3c017/include.tar.gz",
+    "commit": "108a9f09189786997cb7b29a09a009d85fc3c017",
+    "sha256": "e4f369af79a8d645bdbbdc901d6c3dde73ef3f888f965c174d2c06bb095ab21c",
+    "license": "Apache-2.0"
   }
 }

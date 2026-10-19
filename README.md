@@ -71,7 +71,12 @@ fills the card, removing the surrounding black panel.
 Version 0.9 replaces the four-FPS PNG transport with anonymous shared RGBA
 buffers and worker-thread native Surface presentation. Settings exposes timing
 reports without root. Guest rendering still uses SwiftShader; GPU buffer
-sharing and physical Samsung performance validation remain pending.
+sharing and physical Samsung performance validation remain pending for 0.9.
+Version 0.10 forwards completed guest compositor frames through three owned
+buffers and presents them using two reusable host `AHardwareBuffer`/EGLImage
+textures, with a CPU fallback. Screenshot capture is removed. Guest GLES
+remains SwiftShader; the shared GPU path currently accelerates host
+presentation. Settings reports the actual host renderer and presentation mode.
 
 A separate experimental **direct backend** runs a controlled native program
 with the pinned Android 9 linker/bionic without PRoot or a tracer. Its path,
