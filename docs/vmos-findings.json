@@ -154,6 +154,23 @@
       ],
       "target_executed": false,
       "scope": "Archive filenames only; no VMOS payload imported into the runtime"
+    },
+    {
+      "id": "VMOS-013",
+      "classification": "binary_derived",
+      "finding": "Embedded expand opens a separate immersive guest Activity with a 300 ms circular snapshot transition, unchanged configured resolution, guest Back and settings-controlled Home-to-PiP",
+      "evidence": [
+        "VmFragment.H/S: running-state check and startActivity",
+        "VmRenderActivity.G/z: configured display dimensions and immersive flags 5894",
+        "VmRenderActivity$m$a.invokeSuspend: circular reveal and 300 ms duration",
+        "VmRenderActivity.onBackPressed: guest key 4 conditional on SDK p.i()",
+        "VmRenderActivity.onUserLeaveHint and synthetic helpers f/h: PiP aspect ratio and entry",
+        "out/research/vmos/analysis/fullscreen-checks.json"
+      ],
+      "dex_methods_verified": 10,
+      "target_executed": false,
+      "installed_version_match": "unknown",
+      "proprietary_implementation_imported": false
     }
   ],
   "tools": {

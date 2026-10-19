@@ -49,9 +49,15 @@ def main():
         return ET.fromstring(outer('cat /sdcard/pocket-windows.xml'))
     def bounds(node): return tuple(map(int, re.findall(r'\d+', node.get('bounds'))))
     def click(label):
-        nodes = hierarchy().iter('node')
-        button = next(n for n in nodes if n.get('package') == PACKAGE and
-                      n.get('text', '').casefold().startswith(label.casefold()) and n.get('enabled') == 'true')
+        nodes = list(hierarchy().iter('node'))
+        button = next((n for n in nodes if n.get('package') == PACKAGE and
+                       n.get('text', '').casefold().startswith(label.casefold()) and n.get('enabled') == 'true'),None)
+        if button is None and label in ('Float','Close window','Manager'):
+            handle=next(n for n in nodes if n.get('package')==PACKAGE and n.get('content-desc')=='Android controls')
+            left,top,right,bottom=bounds(handle)
+            outer(f'input tap {(left+right)//2} {(top+bottom)//2}')
+            button=next(n for n in hierarchy().iter('node') if n.get('package')==PACKAGE and n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true')
+        assert button is not None,'Missing window control: '+label
         left, top, right, bottom = bounds(button)
         outer(f'input touchscreen -d 0 tap {(left+right)//2} {(top+bottom)//2}')
         time.sleep(1)
@@ -104,7 +110,7 @@ def main():
             unchanged()
         tap_guest()
         screenshot('manager-preview')
-        click('Open Android')
+        click('Full screen')
         tap_guest()
         screenshot('android-window')
         recents = outer('dumpsys activity recents')

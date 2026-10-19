@@ -1,0 +1,106 @@
+{
+  "version": "0.7-fullscreen",
+  "evidence": "Android 9 guest on the Android 16 Cuttlefish host; physical Samsung and Android 9 host validation pending",
+  "build_command": "make -f runtime/Makefile -j2 manager-verify",
+  "development_build_command": "make -f runtime/Makefile -j2 manager-verify MANAGER_PACKAGE=dev.kreijstal.aosppocket.managerdev MANAGER_OUT=out/manager-dev",
+  "integration_command": "ssh pi@juanraspberry python3 -u - --fullscreen --reuse-probe < tools/validate_display_on_pi.py",
+  "static_analysis_command": "out/research/vmos/venv/bin/python tools/inspect_vmos_fullscreen.py out/research/vmos/vmos-official.apk out/research/vmos/analysis",
+  "static_vmos_dex_methods_verified": 10,
+  "vmos_target_executed": false,
+  "production_matches_test_cohort": {
+    "host_dex": true,
+    "host_native_libraries": true,
+    "guest_payloads": 1376
+  },
+  "regression_coverage": "The first onBackPressed-only run failed host Back delivery. The final viewer opts into the platform Back dispatcher and the ordinary guest Activity logs BACK_RECEIVED.",
+  "screenshots": {
+    "embedded": "images/api28-fullscreen-embedded.png",
+    "fullscreen": "images/api28-fullscreen.png",
+    "pip": "images/api28-fullscreen-pip.png"
+  },
+  "validation": {
+    "passed": true,
+    "sequential_guests": true,
+    "original_was_running": true,
+    "original_host_pid_before": 27618,
+    "boot": {
+      "passed": true,
+      "scope": "manager_android9_boot",
+      "host_uid": 10174,
+      "host_pid": 29871,
+      "system_server_pid": 30057,
+      "domain": "u:r:untrusted_app_27:s0:c174,c256,c512,c768",
+      "original_api25_unchanged": null,
+      "original_api25_pids": null,
+      "direct_backend": true,
+      "boot_completed": true,
+      "guest_display": {
+        "width": 720,
+        "height": 1280,
+        "density_dpi": 240
+      },
+      "tracer_pid": 0,
+      "seccomp": 2,
+      "effective_capabilities": 0,
+      "screenshot": "/home/pi/pocket-manager9.png"
+    },
+    "existing_display_probe_reused": true,
+    "app_initial": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 0
+    },
+    "movable_controls": true,
+    "menu_back_dismissal": true,
+    "app_final": {
+      "width": 720,
+      "height": 1280,
+      "density_dpi": 240,
+      "resource_density_dpi": 240,
+      "guest_uid": 10018,
+      "taps": 3
+    },
+    "manager_return": true,
+    "host_back_forwarded_to_guest_activity": true,
+    "host_home_enters_pip": true,
+    "launcher_restores_fullscreen": true,
+    "fullscreen_viewport": {
+      "width": 720,
+      "height": 1280
+    },
+    "guest_pixels_constant_across_windows": true,
+    "viewports": [
+      {
+        "window": "embedded",
+        "width": 340,
+        "height": 605
+      },
+      {
+        "window": "dedicated",
+        "width": 720,
+        "height": 1280
+      },
+      {
+        "window": "embedded_after_pip",
+        "width": 340,
+        "height": 605
+      }
+    ],
+    "guest_taps": 3,
+    "pip_exclusive": true,
+    "system_server_restarts": 0,
+    "host_dpi_relayed": true,
+    "development_guest_reaped": true,
+    "development_host_closed_after_clean_stop": true,
+    "original_restored_from_existing_data": true,
+    "original_host_pid_after": 27618
+  },
+  "limitations": [
+    "VMOS analysis is static and the installed Samsung version was not compared",
+    "The existing screenshot transport still requests at most four frames per second",
+    "The final host UI retest reuses the previously installed diagnostic APK rather than repeating guest package installation"
+  ]
+}

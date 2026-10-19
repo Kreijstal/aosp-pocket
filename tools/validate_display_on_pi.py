@@ -7,6 +7,7 @@ the Pi first. Stop the original guest through its own UI and restore it in
 finally; never updates its APK or deletes either guest's data.
 """
 import json
+import argparse
 import re
 import subprocess
 import sys
@@ -20,6 +21,10 @@ CLASS = 'dev.kreijstal.aosppocket.runtime.'
 ROOT = '/data/user/0/' + DEV + '/files/api28-rootfs'
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--fullscreen',action='store_true',help='Also verify immersive controls, host Back and Home-to-PiP')
+    parser.add_argument('--reuse-probe',action='store_true',help='Reuse the previously installed display probe for focused host UI retesting')
+    args=parser.parse_args()
     sys.path.insert(0, '/home/pi/lineage-cuttlefish/tools')
     import cuttlefish_arm64 as c
     c.require_virtual()
@@ -50,7 +55,8 @@ def main():
         raise RuntimeError('Display test UI unavailable')
     def click(label, package=DEV):
         for _ in range(12):
-            matches = [n for n in hierarchy().iter('node') if n.get('package') == package
+            nodes=list(hierarchy().iter('node'))
+            matches = [n for n in nodes if n.get('package') == package
                        and n.get('enabled') == 'true'
                        and (n.get('text', '').casefold().startswith(label.casefold())
                             or n.get('content-desc', '').casefold().startswith(label.casefold()))]
@@ -62,6 +68,11 @@ def main():
                     shell(f'input tap {(l+r)//2} {(t+b)//2}')
                     time.sleep(1)
                     return
+            if package==DEV and label in ('Float','Close window','Manager'):
+                handle=next((n for n in nodes if n.get('package')==DEV and n.get('content-desc')=='Android controls'),None)
+                if handle is not None:
+                    l,t,r,b=map(int,re.findall(r'\d+',handle.get('bounds')))
+                    shell(f'input tap {(l+r)//2} {(t+b)//2}')
             time.sleep(1)
         raise RuntimeError('Display test control unavailable: ' + label)
     def stop(package):
@@ -77,6 +88,7 @@ def main():
     def log():
         return shell('tail -n 1000 ' + ROOT + '/logs/manager-init.log')
     def screenshot(name):
+        if args.fullscreen:name=name.replace('pocket-display','pocket-fullscreen')
         shell('screencap -p /sdcard/' + name + '.png')
         adb('pull', '/sdcard/' + name + '.png', '/home/pi/' + name + '.png')
     was_running = bool(children(OLD))
@@ -85,12 +97,14 @@ def main():
               'original_host_pid_before': int(original_host[1]) if original_host else None}
     failure = None
     try:
+        print('Stopping the original guest for sequential display testing',flush=True)
         stop(OLD)
         assert not children(OLD), 'Original guest is still running; refusing concurrent boot'
         subprocess.run([sys.executable, '-u', '/home/pi/aosp-pocket-validate-manager.py',
                         '--install', '--boot-only', '--original-stopped'], check=True, timeout=660)
         boot = json.loads(Path('/home/pi/pocket-manager9-validation.json').read_text())
         result['boot'] = boot
+        print('Guest boot verified; opening the ordinary display probe',flush=True)
         geometry = boot['guest_display']
         w, h, dpi = geometry['width'], geometry['height'], geometry['density_dpi']
         assert (w, h) != (480, 800), 'Regression requires a non-480x800 host display'
@@ -98,11 +112,13 @@ def main():
         adb('push', '/home/pi/pocket-display-test.apk', '/sdcard/Download/pocket-display-test.apk')
         launch(DEV)
         offset = int(shell('stat -c %s ' + ROOT + '/logs/manager-init.log'))
-        click('Install APK')
-        click('Show roots', 'com.android.documentsui')
-        click('Downloads', 'com.android.documentsui')
-        click('pocket-display-test.apk', 'com.android.documentsui')
-        time.sleep(4)
+        if not args.reuse_probe:
+            click('Install APK')
+            click('Show roots', 'com.android.documentsui')
+            click('Downloads', 'com.android.documentsui')
+            click('pocket-display-test.apk', 'com.android.documentsui')
+            time.sleep(4)
+        result['existing_display_probe_reused']=args.reuse_probe
         click('Open last app')
         deadline = time.monotonic() + 90
         while time.monotonic() < deadline:
@@ -141,8 +157,24 @@ def main():
             raise RuntimeError('Scaled touch missed the guest button: ' + window)
         tap_guest(1, 'embedded')
         screenshot('pocket-display-embedded')
-        launch(DEV, 'GuestActivity')
+        click('Full screen')
         tap_guest(2, 'dedicated')
+        if args.fullscreen:
+            assert (viewports[-1]['width'],viewports[-1]['height'])==(w,h),viewports[-1]
+            nodes=list(hierarchy().iter('node'))
+            assert not any(n.get('package')==DEV and n.get('text') in ('Manager','Float','Back','Home','Close window') for n in nodes),'Permanent toolbar still visible'
+            handle=next(n for n in nodes if n.get('package')==DEV and n.get('content-desc')=='Android controls')
+            l,t,r,b=map(int,re.findall(r'\d+',handle.get('bounds')))
+            shell(f'input swipe {(l+r)//2} {(t+b)//2} 80 {min(h-100,(t+b)//2+180)} 400')
+            moved=next(n for n in hierarchy().iter('node') if n.get('package')==DEV and n.get('content-desc')=='Android controls')
+            ml,mt,mr,mb=map(int,re.findall(r'\d+',moved.get('bounds')))
+            assert ml<w//2 and ml<mr<=w and 0<=mt<mb<=h,(handle.attrib,moved.attrib)
+            result['movable_controls']=True
+            click('Android controls')
+            shell('input keyevent 4')
+            assert not any(n.get('package')==DEV and n.get('text')=='Float' for n in hierarchy().iter('node')),'Back did not dismiss control menu'
+            result['menu_back_dismissal']=True
+            print('Full host-sized viewport and movable control menu verified',flush=True)
         screenshot('pocket-display-dedicated')
         click('Float')
         launch(DEV)
@@ -157,6 +189,31 @@ def main():
         click('Close window')
         launch(DEV)
         result['app_final'] = tap_guest(3, 'embedded_after_pip')
+        if args.fullscreen:
+            click('Full screen')
+            click('Manager')
+            assert any(n.get('package')==DEV and n.get('text')=='Pocket Manager' for n in hierarchy().iter('node')),'Manager action did not return to preview'
+            result['manager_return']=True
+            click('Full screen')
+            offset=int(shell('stat -c %s '+ROOT+'/logs/manager-init.log'))
+            shell('input keyevent 4')
+            for _ in range(30):
+                if 'tag=PocketDisplayTest BACK_RECEIVED' in shell('tail -c +'+str(offset+1)+' '+ROOT+'/logs/manager-init.log'):break
+                time.sleep(.5)
+            else:raise RuntimeError('Host Back did not reach the guest Activity')
+            assert any(n.get('package')==DEV and n.get('content-desc')=='Android controls' for n in hierarchy().iter('node')),'Host Back closed the guest window'
+            result['host_back_forwarded_to_guest_activity']=True
+            shell('input keyevent 3')
+            time.sleep(2)
+            tasks=shell('dumpsys activity activities')
+            assert any(DEV+'.android' in line and 'mode=pinned' in line and 'visible=true' in line for line in tasks.splitlines()),'Host Home did not enter PiP'
+            result['host_home_enters_pip']=True
+            launch(DEV,'GuestActivity')
+            nodes=list(hierarchy().iter('node'))
+            assert any(n.get('package')==DEV and n.get('content-desc')=='Android controls' for n in nodes),'PiP restoration did not restore controls'
+            result['launcher_restores_fullscreen']=True
+            result['fullscreen_viewport']={'width':w,'height':h}
+            print('Manager return, guest Back and host Home-to-PiP verified',flush=True)
         assert any(int(row[1]) == baseline_server for row in children(DEV)), 'Guest restarted during a view change'
         props = shell('cat ' + ROOT + '/system/build.prop')
         for key, value in [('ro.boot.redroid_width', w), ('ro.boot.redroid_height', h), ('ro.sf.lcd_density', dpi)]:
@@ -166,9 +223,17 @@ def main():
                        'system_server_restarts': 0, 'host_dpi_relayed': True})
     except Exception as error:
         result['error'] = str(error);failure = error
+        print('FAIL: '+str(error),flush=True)
     finally:
+        print('Stopping test guest and restoring original image/data',flush=True)
         stop(DEV)
         result['development_guest_reaped'] = not children(DEV)
+        # Home-to-PiP may leave a viewer task after its guest has stopped.
+        # Close only the test host, after confirming all guest children reaped.
+        if args.fullscreen:
+            assert result['development_guest_reaped']
+            shell('am force-stop '+DEV)
+            result['development_host_closed_after_clean_stop']=True
         if was_running:
             launch(OLD, extras='--ei guest_sdk 25 --ez start_guest true')
             marker = '/data/user/0/' + OLD + '/files/rootfs/data/pocket-boot-complete'
@@ -180,7 +245,8 @@ def main():
                 raise RuntimeError('Original API25 guest did not restore')
             result['original_restored_from_existing_data'] = True
             result['original_host_pid_after'] = int(host(OLD)[1])
-        Path('/home/pi/pocket-display-validation.json').write_text(json.dumps(result, indent=2) + '\n')
+        report='pocket-fullscreen-validation.json' if args.fullscreen else 'pocket-display-validation.json'
+        Path('/home/pi/'+report).write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2), flush=True)
     if failure:
         raise failure

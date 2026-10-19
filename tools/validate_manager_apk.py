@@ -10,6 +10,22 @@ args=parser.parse_args()
 with zipfile.ZipFile(args.apk) as apk:
     names=apk.namelist()
     assert len(names)==len(set(names)),'Duplicate APK entries'
+    host_manifest=apk.read('AndroidManifest.xml');offset=8;host_resources=[];back_flags=[]
+    while offset<len(host_manifest):
+        kind,header,size=struct.unpack_from('<HHI',host_manifest,offset)
+        assert size>=header>=8 and offset+size<=len(host_manifest),'Malformed host manifest'
+        if kind==0x180:
+            host_resources=list(struct.unpack_from('<'+'I'*((size-header)//4),host_manifest,offset+header))
+        elif kind==0x102:
+            start,stride,count=struct.unpack_from('<HHH',host_manifest,offset+24)
+            for index in range(count):
+                attribute=offset+16+start+stride*index
+                name=struct.unpack_from('<I',host_manifest,attribute+4)[0]
+                if name<len(host_resources) and host_resources[name]==0x0101066c:
+                    assert host_manifest[attribute+15]==0x12,'Back opt-in must be a boolean'
+                    back_flags.append(struct.unpack_from('<I',host_manifest,attribute+16)[0]!=0)
+        offset+=size
+    assert back_flags==[True],'Guest viewer platform Back callback opt-in missing'
     assert 'lib/arm64-v8a/libproot.so' in names,'API 25 PRoot missing'
     layout=json.loads(apk.read('assets/default-guest/pocket-layout.json'))
     assert layout.get('guest_sdk',25)==25

@@ -29,6 +29,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".GuestActivity" android:exported="true"
+            android:enableOnBackInvokedCallback="true"
             android:label="Pocket Android" android:icon="0x01080053"
             android:theme="0x0103022f"
             android:taskAffinity="dev.kreijstal.aosppocket.runtime.android"

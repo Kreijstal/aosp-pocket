@@ -63,6 +63,8 @@ pending. See [the Manager upgrade and capability matrix](docs/pocket-manager-api
 Version 0.6 uses the host display's full pixel dimensions and density for
 Android 9, fitting that unchanged guest display into the embedded card,
 dedicated window or PiP with matching touch coordinates.
+Version 0.7 adds an immersive full-screen viewer, preview expand control,
+movable control menu, guest Back navigation and Home-to-PiP transitions.
 
 A separate experimental **direct backend** runs a controlled native program
 with the pinned Android 9 linker/bionic without PRoot or a tracer. Its path,

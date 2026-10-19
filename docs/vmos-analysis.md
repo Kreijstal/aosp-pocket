@@ -214,6 +214,38 @@ or failed checks. Instruction evidence and check results are saved as
 The guest-helper manifest results are in `app-import-rom-helper.json`.
 Only the analysis tool/documentation changed; no APK rebuild was required.
 
+## Full-screen interaction
+
+**DEX derived, same 2.0.0-alpha09 artifact.** `VmFragment.H` checks that the
+VM is running, then `S` opens `VmRenderActivity` with activity/task flags.
+That Activity contains a guest surface and a temporary transition image;
+its view binding declares no permanent host toolbar. `G` reapplies configured
+guest width/height rather than changing guest resolution to the preview size.
+`z` sets system-UI flags 5894 (immersive sticky, hide navigation, full screen,
+layout stable and layout hide navigation), also reapplied on window focus.
+
+`VmRenderActivity$m$a.invokeSuspend` hides the live surface, displays its
+captured image and runs a centered circular reveal/conceal for 300 ms with a
+decelerating interpolator. Back forwards Android key 4 when the SDK's `p.i()`
+check allows it; otherwise it returns through the exit transition. The full
+semantics of that SDK/engine check were not recovered. `onUserLeaveHint`
+consults a PiP setting, uses the surface aspect ratio, and enters Android PiP.
+The PiP API calls go through synthetic helper classes `f` and `h`, which are
+included in the direct DEX checks rather than relying on JADX's inlined output.
+
+Validation:
+
+```sh
+out/research/vmos/venv/bin/python tools/inspect_vmos_fullscreen.py out/research/vmos/vmos-official.apk out/research/vmos/analysis
+```
+
+Passed: ten selected methods verified directly in DEX. Private instruction
+listings are `fullscreen-dex.txt` and `fullscreen-checks.json` under that
+analysis directory. This establishes static behavior for the inspected APK;
+VMOS was not installed or executed, and the installed phone version remains
+uncompared. Pocket implements its own viewer and in-window movable control
+menu. No VMOS code, graphics assets or binaries are included in its APK.
+
 ## What ADB activation changes in the inspected path
 
 **Binary derived, cross-checked against DEX instructions.**

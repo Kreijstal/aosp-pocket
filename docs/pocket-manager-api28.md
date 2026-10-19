@@ -44,6 +44,27 @@ Frame limits scale with the configured pixels rather than imposing the older
 480 × 800 transport limit. The protocol rejects invalid dimensions and sizes
 over 16 megapixels. Android 7 retains its saved display geometry.
 
+Version 0.7 adds a full-screen control in the preview's upper corner and a
+**Full screen** button below it. Both open the existing guest in its own
+immersive task. The guest fills the available display with no permanent host
+toolbar. A movable **Android controls** button snaps to either edge and opens
+Back, Home, Recents, Manager, Float and Close window actions. It stays inside
+the app window and does not require permission to draw over other apps.
+Manager returns to the embedded preview; Close window removes only the viewer.
+On the Android 9 backend, the host Back action goes to the guest Activity;
+Back while the control menu is open dismisses the menu. Leaving with host Home
+enters PiP when the host supports it. PiP hides the control handle, and the
+Android launcher entry restores the full-screen window. Android 7 retains its
+existing touch navigation; the added guest navigation menu requires Android 9.
+On Android 13+ hosts the viewer explicitly opts into the platform Back dispatcher
+and registers an `OnBackInvokedCallback`; older hosts use `onBackPressed`.
+The callback API is isolated behind an SDK check. The manifest validator also
+checks the encoded opt-in attribute, following Android's
+[platform Back guidance](https://developer.android.com/guide/navigation/custom-back/predictive-back-gesture).
+When a guest frame is available, the Android 9 viewer uses a 300 ms circular
+snapshot transition on entry and return, with unchanged guest pixels and one
+display owner throughout.
+
 Use **Install APK** in Manager to select an APK through Android's document
 picker. The service copies it into the guest, uses its real PackageInstaller,
 reports the result and launches its launcher activity when available. The APK
@@ -60,7 +81,7 @@ make -f runtime/Makefile -j2 manager-verify check-profiles check-display
 ```
 
 Upgrade APK: `out/manager/aosp-pocket-manager.apk`, package
-`dev.kreijstal.aosppocket.runtime`, version 0.6 / code 6. Installing it over the
+`dev.kreijstal.aosppocket.runtime`, version 0.7 / code 7. Installing it over the
 old package stops that package's currently running processes, as with any app
 update. Its image and user data remain in place.
 
@@ -162,6 +183,27 @@ APK as `/home/pi/aosp-pocket-manager-dev.apk`, the display probe as
 make -f runtime/Makefile -j2 display-probe check-display
 ssh pi@juanraspberry python3 -u - < tools/validate_display_on_pi.py
 ```
+
+[Version 0.7 full-screen evidence](api28-fullscreen-validation.json) verifies
+the [preview expand control](images/api28-fullscreen-embedded.png), a
+[720 × 1280 guest filling the whole host window](images/api28-fullscreen.png),
+the movable control handle, menu Back dismissal, Manager return and
+[exclusive PiP](images/api28-fullscreen-pip.png). A real Back event reached the
+ordinary guest Activity (`BACK_RECEIVED`), host Home entered PiP, and reopening
+the Android launcher entry restored full screen. The same guest system server
+survived all transitions and three button taps. The final focused run reused
+the previously installed display probe after adding the platform Back callback:
+
+```sh
+ssh pi@juanraspberry python3 -u - --fullscreen --reuse-probe < tools/validate_display_on_pi.py
+```
+
+Omit `--reuse-probe` to also install/update the diagnostic APK through the file
+picker. The test closes its development host after clean guest shutdown, then
+restores the original API 25 guest from its existing image/data. These results
+cover the Android 16 Cuttlefish host; physical Samsung and Android 9 host tests
+remain pending. [VMOS reference findings](vmos-analysis.md#full-screen-interaction)
+are independently checked static DEX observations, not a dynamic VMOS trace.
 
 [Version 0.6 display evidence](api28-host-display-validation.json) records a
 720 × 1280, 240 DPI host and an ordinary guest app reporting the same pixel

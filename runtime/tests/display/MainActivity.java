@@ -46,4 +46,5 @@ public final class MainActivity extends Activity {
         setContentView(layout);report();
     }
     @Override public void onSaveInstanceState(Bundle state){state.putInt("taps",taps);super.onSaveInstanceState(state);}
+    @Override public void onBackPressed(){Log.i("PocketDisplayTest","BACK_RECEIVED");super.onBackPressed();}
 }

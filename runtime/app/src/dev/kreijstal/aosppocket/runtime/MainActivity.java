@@ -9,7 +9,7 @@ import android.widget.*;
 
 /** Manager task with a live miniature; the guest screen has its own task/icon. */
 public final class MainActivity extends RuntimeActivity {
-    private Button install, start, stop, apk, lastApp;
+    private Button install, start, stop, apk, lastApp, expand;
     private Spinner version;
     private boolean updating;
     private android.net.Uri pendingImport, pendingApk;
@@ -48,11 +48,18 @@ public final class MainActivity extends RuntimeActivity {
         caption.setPadding(0, dp(12), 0, dp(8));
         layout.addView(caption);
         display = new GuestDisplay(this, false);
-        layout.addView(display, new LinearLayout.LayoutParams(-1, 0, 1));
+        FrameLayout preview=new FrameLayout(this);
+        preview.addView(display,new FrameLayout.LayoutParams(-1,-1));
+        expand=new Button(this); expand.setText("⛶"); expand.setTextSize(23); expand.setPadding(0,0,0,0);
+        expand.setContentDescription("Full screen");
+        expand.setOnClickListener(v->startActivity(GuestActivity.intent(this)));
+        FrameLayout.LayoutParams expandPosition=new FrameLayout.LayoutParams(dp(48),dp(48),android.view.Gravity.TOP|android.view.Gravity.RIGHT);
+        preview.addView(expand,expandPosition);
+        layout.addView(preview, new LinearLayout.LayoutParams(-1, 0, 1));
         LinearLayout open = new LinearLayout(this);
         apk = button("Install APK", open, v -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
             .setType("application/vnd.android.package-archive").addCategory(Intent.CATEGORY_OPENABLE), 2));
-        button("Open Android ↗", open, v -> startActivity(GuestActivity.intent(this)));
+        button("Full screen ↗", open, v -> startActivity(GuestActivity.intent(this)));
         button("Close manager", open, v -> finishAndRemoveTask());
         layout.addView(open, new LinearLayout.LayoutParams(-1, dp(52)));
         TextView note = new TextView(this);
@@ -75,6 +82,7 @@ public final class MainActivity extends RuntimeActivity {
             runtime.installApk(uri);
         }
         boolean ready = runtime != null;
+        expand.setVisibility(ready && runtime.running() ? android.view.View.VISIBLE : android.view.View.GONE);
         updating = true;
         if (ready) version.setSelection(runtime.selectedSdk() == 28 ? 1 : 0, false);
         version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());

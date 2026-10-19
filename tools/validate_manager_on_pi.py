@@ -55,8 +55,15 @@ def main():
             time.sleep(1)
         raise RuntimeError('UIAutomator could not capture a fresh hierarchy: '+output)
     def click(label):
-        node=next(n for n in hierarchy().iter('node') if n.get('package')==PACKAGE and
-                  n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true')
+        nodes=list(hierarchy().iter('node'))
+        node=next((n for n in nodes if n.get('package')==PACKAGE and
+                   n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true'),None)
+        if node is None and label in ('Float','Close window','Manager'):
+            handle=next(n for n in nodes if n.get('package')==PACKAGE and n.get('content-desc')=='Android controls')
+            l,t,r,b=map(int,re.findall(r'\d+',handle.get('bounds')))
+            shell(f'input tap {(l+r)//2} {(t+b)//2}')
+            node=next(n for n in hierarchy().iter('node') if n.get('package')==PACKAGE and n.get('text','').casefold().startswith(label.casefold()) and n.get('enabled')=='true')
+        assert node is not None,'Missing control: '+label
         l,t,r,b=map(int,re.findall(r'\d+',node.get('bounds')))
         shell(f'input touchscreen -d 0 tap {(l+r)//2} {(t+b)//2}')
         time.sleep(1)
