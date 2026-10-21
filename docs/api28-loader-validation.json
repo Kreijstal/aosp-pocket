@@ -54,10 +54,10 @@
   "directRuntimeRebuild": "PASS: 48 pinned libc hooks verified",
   "generatedLinksRegression": "PASS",
   "apkBuild": "PASS: v3 signature and support-only exclusion validation",
-  "revolutStartup": "UNRESOLVED: launch accepted; native SIGSEGV report observed; full log retrieval interrupted by SSH tunnel loss; faulting process/library not yet identified",
+  "revolutStartup": "FAIL: main process 19277 exited with signal 11; secondary protected activity in process 19325 displayed after 19 seconds; guest remained ready",
   "independentIssue": "Earlier guest init exits with SIGKILL (137); cause unresolved",
-  "installedApkVerified": "0.26",
-  "fullGuestBoot": "PASS: owner console ready=true, sys.boot_completed=1, pocket.magisk.status=ready",
+  "installedApkVerified": "0.27",
+  "fullGuestBoot": "PASS: installed 0.27 owner console running=true ready=true after Revolut main process exit",
   "observedNativeFault": {
     "signal": 11,
     "pc": "0x7c77c866d0",
@@ -74,7 +74,9 @@
       "custom crash recorder opt-in via POCKET_DIRECT_CRASH_DIAGNOSTICS=1",
       "active log checked every 2 seconds; above 16 MiB keep one 2 MiB recent tail and truncate append log"
     ],
-    "validation": "PASS: focused host log tests, ARM64 runtime rebuild, numeric APK build/signature and exclusion checks; live signal and Revolut retest pending installation",
+    "validation": "PASS: focused log tests, ARM64 build, numeric APK build, all eight loader cases and app signal handling on installed 0.27. Revolut still has a native SIGSEGV.",
     "cleanup": "oversized Termux saved copy removed after bounded excerpt was preserved"
-  }
+  },
+  "signalRetest": "PASS: corrected native test preserves platform/default handler and app handler returns normally",
+  "signalTestCorrection": "An initial test incorrectly required SIG_DFL; Android may already have a platform handler. Test now checks whether Pocket owns the handler instead."
 }

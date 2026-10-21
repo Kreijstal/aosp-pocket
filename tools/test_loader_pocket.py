@@ -25,7 +25,7 @@ def main():
                         '-o',args.dir/'libfixture.so'],check=True)
         subprocess.run([clang,*flags,root/'runtime/tests/loader/probe.c','-ldl',
                         '-o',args.dir/'loader-probe'],check=True)
-        subprocess.run([clang,*flags,root/'runtime/tests/loader/signals.c',
+        subprocess.run([clang,*flags,root/'runtime/tests/loader/signals.c','-ldl',
                         '-o',args.dir/'signal-probe'],check=True)
         name='lib/arm64-v8a/libfixture.so'
         entry=zipfile.ZipInfo(name)
