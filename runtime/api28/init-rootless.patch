@@ -346,7 +346,7 @@
          return ErrnoError() << "Cannot find '" << args_[0] << "'";
      }
  
-+    // PRoot supplies guest credentials; the real app UID/domain stay unchanged.
++    // The syscall backend supplies guest credentials; the real app UID/domain stay unchanged.
 +    // No SELinux transition, Linux namespace or capabilities can be requested.
 +    if (!seclabel_.empty() || capabilities_.any() || namespace_flags_ ||
 +        !namespaces_to_enter_.empty()) return Error() << "unsupported rootless attributes";

@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--ndk',type=Path,required=True)
     parser.add_argument('--out',type=Path,default=ROOT/'out/exec-loader')
     parser.add_argument('--diagnostics',action='store_true')
+    parser.add_argument('--init-zygote',action='store_true',help='Include source-built Android 9 init and zygote bring-up')
     args=parser.parse_args();out=args.out.resolve();out.mkdir(parents=True,exist_ok=True)
     root='/data/user/0/'+PACKAGE+'/files/root'
     cc=args.ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang'
@@ -48,8 +49,13 @@ def main():
     else:raise AssertionError('Probe has no interpreter')
     (out/'probe').write_bytes(data)
     binaries={name:(out/name) for name in ('probe','pocket-loader','unprepared')}
-    for name in ('sh','toybox'):
-        binary=out/name;shutil.copy2(ROOT/'out/boot/platform/system/bin'/name,binary)
+    extra_binaries={};extra_libraries={};extra_data={}
+    if args.init_zygote:
+        from build_init_loader import build
+        extra_binaries,extra_libraries,extra_data=build(args.ndk.resolve(),out,run)
+    platform_binaries={name:ROOT/'out/boot/platform/system/bin'/name for name in ('sh','toybox')}
+    for name,source in {**platform_binaries,**extra_binaries}.items():
+        binary=out/name;shutil.copy2(source,binary)
         data=bytearray(binary.read_bytes());assert struct.unpack_from('<H',data,18)[0]==183,'Expected ARM64 platform binary'
         assert reserve_interpreter(binary)
         data=bytearray(binary.read_bytes());phoff=struct.unpack_from('<Q',data,32)[0]
@@ -72,7 +78,7 @@ def main():
         ROOT/'runtime/tests/exec-loader/AndroidManifest.xml',out/'AndroidManifest.xml','28','28','1','0.1')
     run('java','-cp',toolchain/'build/tools','com.example.build.ApkBuilder',out/'AndroidManifest.xml',out/'dex/classes.dex',out/'unsigned.apk')
     reference=reference_dir('arm64')
-    dependencies={};queue=list(binaries.values())
+    dependencies=dict(extra_libraries);queue=list(binaries.values())+list(extra_libraries.values())
     while queue:
         binary=queue.pop()
         elf=subprocess.check_output(['readelf','-dW',binary],text=True)
@@ -88,6 +94,7 @@ def main():
         for name,path in binaries.items():apk.write(path,'assets/root/system/bin/'+name)
         config='dir.pocket = /system/bin\n[pocket]\nnamespace.default.isolated = false\nnamespace.default.search.paths = /system/lib64\nnamespace.default.permitted.paths = /system/lib64\n'
         apk.writestr('assets/root/system/etc/ld.config.txt',config)
+        for name,path in extra_data.items():apk.write(path,'assets/root/'+name)
         apk.writestr('assets/root/fixture.txt','loader-fixture\n')
         apk.writestr('assets/root/script.sh','#!/system/bin/sh\nexit 99\n')
     signer=['java','-cp',toolchain/'build/apksigner.jar','com.android.apksigner.ApkSignerTool']

@@ -18,14 +18,32 @@ public final class MainActivity extends Activity {
             try {
                 File root=new File(getFilesDir(),"root");extract("root",root);
                 Path link=new File(root,"fixture-link").toPath();Files.deleteIfExists(link);Files.createSymbolicLink(link,Paths.get("fixture.txt"));
-                File output=new File(getFilesDir(),"native.log");
-                ProcessBuilder builder=new ProcessBuilder(new File(root,"system/bin/probe").getPath()).directory(root);
-                builder.environment().clear();builder.redirectErrorStream(true);builder.redirectOutput(output);
+                boolean boot=getIntent().getBooleanExtra("boot",false);
+                if(boot)for(String name:new String[]{".pocket-owner","dev/socket","dev/__properties__","dev/input","data","logs"}) {
+                    File directory=new File(root,name);if(!directory.isDirectory() && !directory.mkdirs())throw new IOException("Cannot create "+name);
+                }
+                if(boot) {
+                    // Property areas are volatile per init lifetime. Touch only
+                    // this fixture's own directory, without following links.
+                    File[] stale=new File(root,"dev/__properties__").listFiles();
+                    if(stale!=null)for(File entry:stale) {
+                        if(Files.isSymbolicLink(entry.toPath()) || !entry.isFile())throw new IOException("Unexpected property entry");
+                        Files.delete(entry.toPath());
+                    }
+                }
+                File output=boot?new File(root,"logs/init.log"):new File(getFilesDir(),"native.log");
+                ProcessBuilder builder=new ProcessBuilder(new File(root,boot?"system/bin/init-probe":"system/bin/probe").getPath()).directory(root);
+                builder.environment().clear();if(boot) {
+                    builder.environment().put("POCKET_LOADER_BOOT","1");
+                    builder.environment().put("ANDROID_ROOT","/system");
+                    builder.environment().put("ANDROID_DATA","/data");
+                }
+                builder.redirectInput(new File("/dev/null"));builder.redirectErrorStream(true);builder.redirectOutput(output);
                 java.lang.Process process=builder.start();
-                if(!process.waitFor(75,TimeUnit.SECONDS)){process.destroyForcibly();throw new IOException("Native loader timed out");}
+                if(!process.waitFor(160,TimeUnit.SECONDS)){process.destroyForcibly();throw new IOException("Native loader timed out");}
                 String log=new String(Files.readAllBytes(output.toPath()),"UTF-8");
                 report.put("exitCode",process.exitValue()).put("log",log).put("hostUid",android.os.Process.myUid());
-                report.put("passed",process.exitValue()==0 && log.contains("LOADER_TEST_PASS"));
+                report.put("passed",process.exitValue()==0 && log.contains(boot?"NATIVE_INIT_ZYGOTE_PASS":"LOADER_TEST_PASS"));
             }catch(Throwable error){try{report.put("passed",false).put("error",error.toString());}catch(Exception ignored){}}
             try{Files.write(new File(getFilesDir(),"report.json").toPath(),report.toString(2).getBytes("UTF-8"));}catch(Exception ignored){}
             final String display=report.toString();runOnUiThread(()->text.setText(display));

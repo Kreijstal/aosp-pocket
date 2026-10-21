@@ -245,7 +245,7 @@
                                       jintArray fdsToIgnore, bool is_child_zygote,
                                       jstring instructionSet, jstring dataDir) {
 +  // This profile retains the host app's kernel UID, groups, SELinux domain and
-+  // seccomp filter. Only PRoot guest identity and private filesystem paths vary.
++  // seccomp filter. Only guest identity and private filesystem paths vary.
 +  if (is_system_server || is_child_zygote || mount_external != MOUNT_EXTERNAL_NONE ||
 +      permittedCapabilities || effectiveCapabilities || java_se_info != nullptr ||
 +      (javaGids != nullptr && env->GetArrayLength(javaGids) != 0)) {
@@ -319,7 +319,7 @@
 -    }
 -
 +    // Mounts, cgroups, SELinux transitions and capabilities are unavailable
-+    // here. The supported profile inherits the host sandbox and PRoot binds.
++    // here. The supported profile inherits the host sandbox and syscall path translations.
      std::string error_msg;
      if (!SetGids(env, javaGids, &error_msg)) {
        fail_fn(error_msg);
@@ -473,7 +473,7 @@
 -    }
 -
 -    UnmountTree("/storage");
-+    fprintf(stderr, "POCKET_ZYGOTE_STORAGE proot-private-binds kernel-namespace=unchanged\n");
++    fprintf(stderr, "POCKET_ZYGOTE_STORAGE syscall-private-paths kernel-namespace=unchanged\n");
  }
  
  static const JNINativeMethod gMethods[] = {

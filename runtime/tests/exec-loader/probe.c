@@ -40,6 +40,11 @@ static long direct_open(const char* path) {
 static void contents(int fd) {
     char value[32]={0};CHECK(fd>=0 && read(fd,value,sizeof(value))==15 && !memcmp(value,"loader-fixture\n",15));close(fd);
 }
+static volatile sig_atomic_t on_altstack;
+static void small_stack_signal(int signal) {
+    (void)signal;char value[16]={0};long fd=direct_open("/fixture.txt");
+    if(fd>=0) {if(read((int)fd,value,15)==15 && !memcmp(value,"loader-fixture\n",15))on_altstack=1;close((int)fd);}
+}
 static void* thread(void* arg) {(void)arg;for(unsigned i=0;i<12;i++)contents(direct_open("/fixture.txt"));return NULL;}
 static unsigned status(void) {
     FILE* file=fopen("/proc/self/status","re");CHECK(file);char line[512];int tracer=-1,seccomp=-1,filters=-1;unsigned long caps=~0UL;
@@ -83,6 +88,20 @@ int main(int argc,char** argv) {
     CHECK(execve("/script.sh",bad,empty)==-1 && errno==ENOEXEC);
     struct sigaction action={0};action.sa_handler=dummy;
     CHECK(sigaction(SIGSYS,&action,NULL)==-1 && errno==EBUSY);
+    // ART and pthread startup temporarily block broad signal sets. SIGSYS
+    // is reserved by this backend and must remain deliverable throughout.
+    sigset_t all,previous,current;sigfillset(&all);
+    CHECK(!sigprocmask(SIG_SETMASK,&all,&previous));
+    CHECK(!sigprocmask(SIG_SETMASK,NULL,&current) && sigismember(&current,SIGSYS)==0);
+    contents(direct_open("/fixture.txt"));CHECK(!sigprocmask(SIG_SETMASK,&previous,NULL));
+    size_t alternate=16384;char* signal_memory=mmap(NULL,alternate+2*page,PROT_NONE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+    CHECK(signal_memory!=MAP_FAILED && !mprotect(signal_memory+page,alternate,PROT_READ|PROT_WRITE));
+    stack_t old_stack,small_stack={.ss_sp=signal_memory+page,.ss_size=alternate,.ss_flags=0};
+    CHECK(!sigaltstack(&small_stack,&old_stack));
+    struct sigaction on_stack={0};on_stack.sa_handler=small_stack_signal;on_stack.sa_flags=SA_ONSTACK;sigfillset(&on_stack.sa_mask);
+    CHECK(!sigaction(SIGUSR2,&on_stack,NULL) && !raise(SIGUSR2) && on_altstack==1);
+    CHECK(!sigaltstack(&old_stack,NULL) && !munmap(signal_memory,alternate+2*page));
+    puts("LOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1");
     pthread_t workers[2];for(unsigned i=0;i<2;i++)CHECK(!pthread_create(&workers[i],NULL,thread,NULL));
     for(unsigned i=0;i<2;i++)CHECK(!pthread_join(workers[i],NULL));
     if(argc==4) {

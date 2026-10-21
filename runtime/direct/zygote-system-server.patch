@@ -6,7 +6,7 @@
 +  if (setgroups(gids.size(), reinterpret_cast<const gid_t*>(gids.get())) != 0) {
 +    *error_msg = CREATE_ERROR("guest setgroups failed: %s", strerror(errno));
 @@ -368,5 +368,6 @@
--  // seccomp filter. Only PRoot guest identity and private filesystem paths vary.
+-  // seccomp filter. Only guest identity and private filesystem paths vary.
 -  if (is_system_server || is_child_zygote || mount_external != MOUNT_EXTERNAL_NONE ||
 -      permittedCapabilities || effectiveCapabilities || java_se_info != nullptr ||
 -      (javaGids != nullptr && env->GetArrayLength(javaGids) != 0)) {
@@ -34,5 +34,5 @@
 -                                      MOUNT_EXTERNAL_DEFAULT, NULL, NULL, true, NULL,
 +                                      MOUNT_EXTERNAL_NONE, NULL, NULL, true, NULL,
 @@ -639 +648 @@
--    fprintf(stderr, "POCKET_ZYGOTE_STORAGE proot-private-binds kernel-namespace=unchanged\n");
+-    fprintf(stderr, "POCKET_ZYGOTE_STORAGE syscall-private-paths kernel-namespace=unchanged\n");
 +    fprintf(stderr, "POCKET_ZYGOTE_STORAGE direct-private-paths kernel-namespace=unchanged\n");

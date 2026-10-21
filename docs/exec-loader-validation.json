@@ -1,6 +1,6 @@
 {
   "exitCode": 0,
-  "log": "loader-fixture\nSHELL_EXEC_PASS\nLOADER_CHAIN_PASS execs=16 filters=2 libcBytes=858956 differentBytes=0 tracerPid=0 kernelUid=10174\nLOADER_TEST_PASS fork=1 threads=1 exec=16 empty_env=1 argv=1 mask=1 unchanged_bionic=1 no_tracer=1\n",
+  "log": "LOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nloader-fixture\nSHELL_EXEC_PASS\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_CHAIN_PASS execs=16 filters=2 libcBytes=858956 differentBytes=0 tracerPid=0 kernelUid=10174\nLOADER_TEST_PASS fork=1 threads=1 exec=16 empty_env=1 argv=1 mask=1 unchanged_bionic=1 no_tracer=1\n",
   "hostUid": 10174,
   "passed": true,
   "native": {

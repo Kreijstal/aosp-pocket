@@ -58,8 +58,9 @@ separate persistent data, live preview/window/PiP, touch and APK installation.
 Version 0.34 uses a PRoot fallback with unchanged Bionic code and removes the
 Bionic-patching payload. That fallback does not implement the intended architecture.
 Replacement work now uses [a custom native interpreter and syscall layer](docs/exec-loader.md),
-with exec continuity and unchanged Bionic tested without a tracer. Full Android
-boot integration remains pending. The older direct profile remains a research
+with exec continuity, filesystem/guest credentials, and real Android 9 init/zygote
+fork tests using unchanged Bionic and no tracer. Full framework and Manager
+integration remain pending. The older direct profile remains a research
 baseline; [0.34's fallback and limits](docs/syscall-backend.md) are documented separately.
 Version 0.5 adds shared host networking, contact import, host dialer/SMS intent
 delegation and a permission-checked host device broker. Standard guest camera,

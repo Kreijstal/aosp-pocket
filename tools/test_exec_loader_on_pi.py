@@ -15,6 +15,7 @@ import cuttlefish_arm64 as c
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apk',type=Path,default=Path('/home/pi/loader-test.apk'))
+    parser.add_argument('--boot',action='store_true')
     args=parser.parse_args();c.require_virtual()
     package='dev.kreijstal.aosppocket.loadertest'
     def adb(*argv,timeout=30):
@@ -25,8 +26,8 @@ def main():
     adb('shell','am force-stop '+package)
     report_path='/data/user/0/'+package+'/files/report.json'
     adb('shell','su -c '+shlex.quote('rm -f '+report_path))
-    print(adb('shell','am start -n '+package+'/.MainActivity'),flush=True)
-    for _ in range(100):
+    print(adb('shell','am start -n '+package+'/.MainActivity'+(' --ez boot true' if args.boot else '')),flush=True)
+    for _ in range(190):
         raw=adb('shell','su -c '+shlex.quote('if [ -f '+report_path+' ]; then cat '+report_path+'; fi'))
         if raw.strip():break
         time.sleep(1)
@@ -37,10 +38,10 @@ def main():
         report['native']={name:int(value) for name,value in zip(
             ('execs','filtersPerProcess','bionicExecutableBytesCompared','differentBytes','tracerPid','kernelUid'),chain.groups())}
         assert report['native']['kernelUid']==report['hostUid'],'Fixture changed kernel UID'
-    report['command']='python3 /home/pi/test_exec_loader_on_pi.py'
-    report['scope']='Separate non-debuggable Android APK under its normal untrusted_app domain; not a full Android guest boot'
-    (Path.home()/'exec-loader-validation.json').write_text(json.dumps(report,indent=2)+'\n')
+    report['command']='python3 /home/pi/test_exec_loader_on_pi.py'+(' --boot' if args.boot else '')
+    report['scope']='Separate non-debuggable Android APK; native init/zygote bring-up, no system_server' if args.boot else 'Separate non-debuggable Android APK under its normal untrusted_app domain; not a full Android guest boot'
+    (Path.home()/('init-zygote-validation.json' if args.boot else 'exec-loader-validation.json')).write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report,indent=2),flush=True)
-    assert report.get('passed'),report
+    assert report.get('passed'),'Native fixture failed; see the saved validation JSON'
 
 if __name__=='__main__':main()
