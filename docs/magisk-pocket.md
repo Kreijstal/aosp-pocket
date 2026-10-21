@@ -116,7 +116,11 @@ On the unrooted Samsung SM-G780G, using the paired `pf-phone2` owner console:
   specialization, and `hookJniNativeMethods` interception of `Log.isLoggable`.
 - PASS: initialization without an installed Magisk core; no stale CLI remains.
 - PASS: support-only 0.25 APK signature and embedded-runtime exclusion checks.
-- PENDING: complete Android UI boot and Magisk manager UI with the 0.25 APK.
+- PASS: installed support-only 0.25 reaches `sys.boot_completed=1`, displays
+  `com.android.launcher3/.Launcher`, and processes `BOOT_COMPLETED`. The optional
+  core and `/sbin/magisk` are absent; `pocket.magisk.status=absent`.
+- PENDING: full Android UI boot with an externally installed backend and Magisk
+  manager UI.
 
 The focused device test is `tools/test_magisk_pocket.py`, run in phone Termux
 beside the generated payload tar, fixture ZIP and native test clients. It uses

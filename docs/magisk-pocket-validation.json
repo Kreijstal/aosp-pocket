@@ -13,7 +13,7 @@
   "moduleUpgradeAndScriptExecution": "PASS: actual standalone init restart",
   "modulePropertyAssertion": "PASS: post-fs-data write visible to service script",
   "procMagicLinksAndRealFifo": "PASS",
-  "fullAndroidUiBoot": "pending",
+  "fullAndroidUiBoot": "PASS: support-only 0.25, sys.boot_completed=1 and Launcher displayed; optional backend absent",
   "hostRootInstalled": false,
   "hostKernelModified": false,
   "hostSelinuxPolicyModified": false,
@@ -34,7 +34,17 @@
   "bootWithoutMagiskRuntime": "PASS",
   "magiskBundledInApk": false,
   "magiskManagerBundledInApk": false,
-  "featureValidationScope": "actual guest zygote with test module; full UI and third-party modules pending",
+  "featureValidationScope": "actual guest zygote with test module; full Android UI boot without optional backend verified; full UI with backend and third-party modules pending",
   "optionalBackendCommit": "50e4cec0a1aba34bb30e9ea9ac81346683edf39b",
-  "restartGeneratedLinkCleanup": "PASS: production helper removes only owned links"
+  "restartGeneratedLinkCleanup": "PASS: production helper removes only owned links",
+  "supportOnlyDeviceValidation": {
+    "date": "2026-10-21",
+    "installedVersion": "0.25",
+    "sysBootCompleted": "1",
+    "magiskStatus": "absent",
+    "optionalCorePresent": false,
+    "magiskCliPresent": false,
+    "launcher": "com.android.launcher3/.Launcher",
+    "hostKernelUid": 10430
+  }
 }
