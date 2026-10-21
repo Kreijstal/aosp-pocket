@@ -54,6 +54,15 @@
   "directRuntimeRebuild": "PASS: 48 pinned libc hooks verified",
   "generatedLinksRegression": "PASS",
   "apkBuild": "PASS: v3 signature and support-only exclusion validation",
-  "revolutStartup": "PENDING: user installation of 0.26",
-  "independentIssue": "Earlier guest init exits with SIGKILL (137); cause unresolved"
+  "revolutStartup": "UNRESOLVED: launch accepted; native SIGSEGV report observed; full log retrieval interrupted by SSH tunnel loss; faulting process/library not yet identified",
+  "independentIssue": "Earlier guest init exits with SIGKILL (137); cause unresolved",
+  "installedApkVerified": "0.26",
+  "fullGuestBoot": "PASS: owner console ready=true, sys.boot_completed=1, pocket.magisk.status=ready",
+  "observedNativeFault": {
+    "signal": 11,
+    "pc": "0x7c77c866d0",
+    "lr": "0x7c77c2b558",
+    "faultAddress": "0x0",
+    "attribution": "unknown: full maps pending"
+  }
 }
