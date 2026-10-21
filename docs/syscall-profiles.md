@@ -245,3 +245,18 @@ The final cold boot with the updated optional provider also passed.
 `syscall-module-enabled-coldboot.json` records the fresh two-process result
 after re-enabling the module. The Pi instance was left running with the module
 enabled. No app profiles other than the dedicated fixture were enabled.
+
+## NeoZygisk cooperative provider
+
+The optional [NeoZygisk Pocket adapter](https://github.com/Kreijstal/NeoZygisk/blob/preserve-empty-tmpfs/docs/pocket-adapter.md)
+has now passed the same cold-boot and real-APK translation checks on the Pi.
+The unmodified daemon failure described above remains specific to the privileged
+startup path. The adapter uses the existing Pocket ABI and needs no Manager APK
+change. It uses Magisk for installation and the module filesystem view, while
+NeoZygisk supplies the loaded Zygisk provider and discovers enabled modules itself.
+
+The Magisk fork's `4afd5e5` update preserves a user-installed provider library in
+the merged view, falling back to its own provider when none is supplied. Two
+focused Rust overlay tests passed, including provider selection and restoration
+of the default provider. The updated optional runtime archive includes that fix.
+No provider is added to the Manager APK.
