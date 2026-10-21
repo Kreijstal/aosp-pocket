@@ -1,0 +1,29 @@
+{
+  "environment": "Pi LineageOS VM -> Pocket Android 9 -> real APK with JNI",
+  "command": "python3 /home/pi/test_syscall_app_on_pi.py",
+  "managerApk": null,
+  "exitCode": 0,
+  "moduleExpectedEnabled": false,
+  "launchExisting": true,
+  "profiles": {
+    "adapted": {
+      "libcOk": true,
+      "directOk": false,
+      "libcErrno": 0,
+      "directErrno": 2,
+      "kernelUid": 10177,
+      "profile": "adapted",
+      "guestUid": 10019
+    },
+    "baseline": {
+      "libcOk": true,
+      "directOk": false,
+      "libcErrno": 0,
+      "directErrno": 2,
+      "kernelUid": 10177,
+      "profile": "baseline",
+      "guestUid": 10019
+    }
+  },
+  "scope": "Opt-in openat prefix translation; existing wrappers retained"
+}

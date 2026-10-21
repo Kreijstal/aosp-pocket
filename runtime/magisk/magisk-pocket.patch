@@ -633,3 +633,27 @@ index dd91cd1..829c451 100644
  [ -z $BOOTMODE ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
  [ -z $BOOTMODE ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
  [ -z $BOOTMODE ] && BOOTMODE=false
+diff --git a/native/src/core/magisk.rs b/native/src/core/magisk.rs
+index dfa7a8b..e0a01ab 100644
+--- a/native/src/core/magisk.rs
++++ b/native/src/core/magisk.rs
+@@ -224,10 +224,17 @@ impl MagiskAction {
+             PostFsData(_) => {
+                 let fd = connect_daemon(RequestCode::POST_FS_DATA, true)?;
+                 let mut pfd = [PollFd::new(fd.as_fd(), PollFlags::POLLIN)];
+-                nix::poll::poll(
++                // Pocket copies its private module view instead of mounting it.
++                // Slow storage can outlast Android's normal 40-second window.
++                let wait = if crate::pocket::enabled() { 110 } else { POST_FS_DATA_WAIT_TIME };
++                let ready = nix::poll::poll(
+                     &mut pfd,
+-                    PollTimeout::try_from(POST_FS_DATA_WAIT_TIME * 1000)?,
++                    PollTimeout::try_from(wait * 1000)?,
+                 )?;
++                if crate::pocket::enabled() && ready == 0 {
++                    eprintln!("Pocket post-fs-data did not finish before the startup deadline");
++                    return Ok(1);
++                }
+             }
+             Service(_) => {
+                 let _ = connect_daemon(RequestCode::LATE_START, true)?;

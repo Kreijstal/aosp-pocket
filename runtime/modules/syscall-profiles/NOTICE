@@ -1,0 +1,5 @@
+The public Zygisk SDK header is included without modification from:
+https://github.com/topjohnwu/zygisk-module-sample/blob/8ce26128f81baaed0b969aaf7f52f886b61af4ab/module/jni/zygisk.hpp
+SDK version: 5. Its permissive copyright/license notice is preserved in sdk/zygisk.hpp.
+
+The module and syscall adapter sources are GPL-3.0-only, as marked in those files.

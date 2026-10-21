@@ -23,6 +23,7 @@ public final class PocketManifest {
         if (previous != null && previous != 0x010102d3)
             throw new IllegalStateException("Unexpected hardwareAccelerated resource ID");
         attributes.put("taskAffinity", 0x01010012);
+        attributes.put("process", 0x01010011);
         attributes.put("resizeableActivity", 0x010104f6);
         attributes.put("supportsPictureInPicture", 0x010104f7);
         attributes.put("scheme", 0x01010027);

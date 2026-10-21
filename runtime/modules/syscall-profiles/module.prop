@@ -1,0 +1,6 @@
+id=pocket_syscall_profiles
+name=Pocket syscall profiles
+version=0.1
+versionCode=1
+author=Pocket contributors
+description=Optional ARM64 Android 9 openat compatibility adapter for Pocket. Requires the separately installed Pocket Magisk runtime and Zygisk.

@@ -20,17 +20,26 @@ def main():
                         help='Explicit rebuilt guest bootstrap/control JAR; native image stays pinned')
     parser.add_argument('--guest-file', action='append', default=[], metavar='GUEST_PATH=LOCAL_FILE',
                         help='Explicit replacement/addition under guest system/ or vendor/')
+    parser.add_argument('--remove-guest-file', action='append', default=[], metavar='GUEST_PATH',
+                        help='Omit a retired system/ or vendor/ payload from the new APK')
     args = parser.parse_args()
     if not args.version_name.replace('.', '').isdigit():
         parser.error('Version name must contain only numbers and dots')
     guest_asset = 'assets/api28-rootfs/system/framework/pocket-zygote.jar.payload'
     guest_files = {}
+    removed=set()
+    for name in args.remove_guest_file:
+        if (not name.startswith(('system/', 'vendor/')) or
+                any(part in ('', '.', '..') for part in name.split('/')) or '\\' in name):
+            parser.error('Invalid removed guest path: '+name)
+        removed.add('assets/api28-rootfs/'+name+'.payload')
     for spec in args.guest_file:
         name, separator, local = spec.partition('=')
         if (not separator or not name.startswith(('system/', 'vendor/')) or
                 any(part in ('', '.', '..') for part in name.split('/')) or '\\' in name):
             parser.error('Invalid guest-file path: '+name)
         asset = 'assets/api28-rootfs/'+name+'.payload'
+        if asset in removed:parser.error('Guest path cannot be replaced and removed: '+name)
         if asset in guest_files or (asset == guest_asset and args.guest_control_jar):
             parser.error('Duplicate guest replacement: '+name)
         path = Path(local)
@@ -65,6 +74,7 @@ def main():
         if args.guest_control_jar:
             assert guest_asset in names, 'Expected existing guest bootstrap JAR'
         for entry in base.infolist():
+            if entry.filename in removed:continue
             if entry.filename in ('AndroidManifest.xml', 'classes.dex', 'assets/pocketctl.py') or entry.filename.startswith('META-INF/'):
                 continue
             if args.guest_control_jar and entry.filename == guest_asset:

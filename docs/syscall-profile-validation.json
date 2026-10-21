@@ -1,0 +1,20 @@
+{
+  "guest": "Pocket Android 9 inside Pi ARM64 Cuttlefish VM",
+  "command": "python3 tools/test_syscall_profile_on_pi.py",
+  "exitCode": 0,
+  "passed": [
+    "off",
+    "libc-openat",
+    "direct-svc-openat",
+    "pass-through",
+    "errors-and-flags",
+    "thread-and-fork-inheritance",
+    "existing-sigsys-handler",
+    "chained-sigsys-handler"
+  ],
+  "stdout": "PASS: off status=0\nPASS: libc-openat status=0\nPASS: direct-svc-openat status=0\nPASS: pass-through status=0\nPASS: errors-and-flags status=0\nPASS: thread-and-fork-inheritance status=0\nPASS: existing-sigsys-handler status=0\nPASS: chained-sigsys-handler status=0\nSYSCALL_PROFILE_RESULT failures=0 kernel_uid=10177\n",
+  "stderr": "",
+  "kernelUid": 10177,
+  "productionAppLaunchIntegration": false,
+  "filesystemSandbox": false
+}

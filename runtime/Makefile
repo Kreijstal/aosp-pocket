@@ -27,7 +27,16 @@ $(shell rm -rf out/runtime-native && mkdir -p out/runtime-native)
 endif
 .DEFAULT_GOAL := verify
 .PHONY: native verify smoke check-host check-profiles check-host-wire check-display
+.PHONY: syscall-profile-probe
 .DELETE_ON_ERROR:
+
+# Experimental ARM64 selected-syscall adapter; separate from production APKs.
+syscall-profile-probe: out/syscall-profile/syscall-profile-probe
+
+out/syscall-profile/syscall-profile-probe: runtime/modules/syscall-profiles/syscall_profile.c runtime/modules/syscall-profiles/syscall_profile.h runtime/modules/syscall-profiles/syscall_gate.S runtime/tests/syscall_profile.c
+	@test "$(ARCH)" = arm64 || (echo "syscall-profile-probe requires ARCH=arm64"; exit 1)
+	mkdir -p out/syscall-profile
+	$(LLVM)/aarch64-linux-android28-clang -Wall -Wextra -Werror -O2 -static -fno-emulated-tls -Wl,-z,max-page-size=16384 runtime/modules/syscall-profiles/syscall_profile.c runtime/modules/syscall-profiles/syscall_gate.S runtime/tests/syscall_profile.c -o $@
 
 NATIVE_INPUTS := $(shell find runtime/native -type f) runtime/anbox-renderer.patch runtime/anbox-input.patch runtime/proot-android.patch runtime/talloc.cross tools/build_runtime_native.py sources.lock.json vendor/anbox/CMakeLists.txt vendor/proot/src/GNUmakefile
 native: out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so out/runtime-native/libpocket_frames.so
