@@ -40,6 +40,7 @@ def main():
         apk.writestr('assets/api28-rootfs/system/etc/init/init.manager.rc.payload',rc)
         apk.write(ROOT/'out/api28/reference/system/etc/NOTICE.xml.gz','assets/licenses/android9-NOTICE.xml.gz')
         apk.write(ROOT/'out/boot/hooks.json','assets/direct-boot-hooks.json')
+        apk.write(ROOT/'tools/pocketctl.py','assets/pocketctl.py')
     print('Packed dual-backend manager:',args.out/'packed.apk')
 
 if __name__=='__main__':main()

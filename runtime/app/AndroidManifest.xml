@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="dev.kreijstal.aosppocket.runtime">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -17,6 +18,8 @@
         android:extractNativeLibs="true" android:debuggable="false"
         android:hardwareAccelerated="false">
         <service android:name=".GuestService" android:exported="false" />
+        <activity android:name=".AppImportActivity" android:exported="false" android:label="Install apps"
+            android:screenOrientation="1" />
         <activity android:name=".PeripheralsActivity" android:exported="false" android:label="Host peripherals" />
         <activity android:name=".SettingsActivity" android:exported="false" android:label="Settings"
             android:configChanges="7552" android:screenOrientation="1" />

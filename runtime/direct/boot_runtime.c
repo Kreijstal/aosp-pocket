@@ -42,6 +42,22 @@ DECLARE(inotify_add_watch);
 static uid_t ruid, euid, suid;
 static gid_t rgid, egid, sgid;
 static int root_capable;
+static char runtime_console[PATH_MAX], runtime_parent[32];
+extern int __wrap_mknodat(int, const char*, mode_t, dev_t);
+// Explicit dynamic-call entry points for guest tools such as Magisk/BusyBox.
+// These create real app-owned FIFOs, never substitute kernel privileges.
+int mknodat(int dir, const char* path, mode_t mode, dev_t device) {
+    return __wrap_mknodat(dir, path, mode, device);
+}
+int mknod(const char* path, mode_t mode, dev_t device) {
+    return __wrap_mknodat(AT_FDCWD, path, mode, device);
+}
+int mkfifoat(int dir, const char* path, mode_t mode) {
+    return __wrap_mknodat(dir, path, (mode & 07777) | S_IFIFO, 0);
+}
+int mkfifo(const char* path, mode_t mode) {
+    return mkfifoat(AT_FDCWD, path, mode);
+}
 
 // Guest device events belong to a private channel, never the host's kernel
 // uevent netlink socket. An explicit relay may inject records in the future.
@@ -127,7 +143,10 @@ int pocket_boot_created_at(int dir,const char* path) {
 int pocket_boot_passthrough(const char* path) {
     if (!strncmp(path, "/proc", 5) && (!path[5] || path[5] == '/')) return 1;
     if (!strncmp(path, "/sys", 4) && (!path[4] || path[4] == '/')) return 1;
-    const char* nodes[] = {"/dev/null", "/dev/zero", "/dev/random", "/dev/urandom", "/dev/binder", "/dev/binderfs/binder", "/dev/ashmem", NULL};
+    // PTYs are allocated by the host kernel with the ordinary host app UID.
+    // Access remains subject to its SELinux domain and kernel permissions.
+    if (!strncmp(path, "/dev/pts", 8) && (!path[8] || path[8] == '/')) return 1;
+    const char* nodes[] = {"/dev/null", "/dev/zero", "/dev/random", "/dev/urandom", "/dev/ptmx", "/dev/tty", "/dev/binder", "/dev/binderfs/binder", "/dev/ashmem", NULL};
     for (int n = 0; nodes[n]; ++n) if (!strcmp(path, nodes[n])) return 1;
     return 0;
 }
@@ -160,6 +179,28 @@ static int boot_setreuid(uid_t r, uid_t e) { return boot_setresuid(r,e,e==(uid_t
 static int boot_setregid(gid_t r, gid_t e) { return boot_setresgid(r,e,e==(gid_t)-1?(gid_t)-1:e); }
 static gid_t guest_groups[64];
 static size_t guest_group_count;
+int pocket_boot_exec_value(const char* key,char* value,size_t capacity) {
+    int count;
+    if(!strcmp(key,"POCKET_DIRECT_ID")) count=snprintf(value,capacity,"%u:%u",euid,egid);
+    else if(!strcmp(key,"POCKET_DIRECT_GROUPS")) {
+        size_t used=0;
+        if(!capacity) {errno=ENAMETOOLONG;return -1;}
+        value[0]=0;
+        for(size_t i=0;i<guest_group_count;++i) {
+            count=snprintf(value+used,capacity-used,"%s%u",i?",":"",guest_groups[i]);
+            if(count<0 || (size_t)count>=capacity-used) {errno=ENAMETOOLONG;return -1;}
+            used+=count;
+        }
+        return 1;
+    } else {
+        const char* saved=!strcmp(key,"POCKET_DIRECT_CONSOLE")?runtime_console:
+            !strcmp(key,"POCKET_PARENT_PID")?runtime_parent:NULL;
+        if(!saved || !*saved)return 0;
+        count=snprintf(value,capacity,"%s",saved);
+    }
+    if(count<0 || (size_t)count>=capacity) {errno=ENAMETOOLONG;return -1;}
+    return 1;
+}
 static int boot_setgroups(size_t n, const gid_t* groups) {
     if (!root_capable) { errno=EPERM; return -1; }
     if (n>64) { errno=EINVAL; return -1; }
@@ -274,8 +315,16 @@ static void crash_trace(int number,siginfo_t* info,void* context) {
     ucontext_t* uc=context;
     char line[256],*p=line;
     const char prefix[]="DIRECT_CRASH signal=0x";memcpy(p,prefix,sizeof(prefix)-1);p+=sizeof(prefix)-1;
-    p=crash_hex(p,number);memcpy(p," pc=0x",6);p+=6;p=crash_hex(p,uc->uc_mcontext.pc);
+    p=crash_hex(p,number);memcpy(p," pc=0x",6);p+=6;
+#if defined(__aarch64__)
+    p=crash_hex(p,uc->uc_mcontext.pc);
     memcpy(p," lr=0x",6);p+=6;p=crash_hex(p,uc->uc_mcontext.regs[30]);
+#elif defined(__x86_64__)
+    p=crash_hex(p,uc->uc_mcontext.gregs[REG_RIP]);
+    memcpy(p," sp=0x",6);p+=6;p=crash_hex(p,uc->uc_mcontext.gregs[REG_RSP]);
+#else
+#error "crash_trace: unsupported architecture"
+#endif
     memcpy(p," address=0x",11);p+=11;p=crash_hex(p,(uintptr_t)info->si_addr);*p++='\n';
     syscall(SYS_write,STDERR_FILENO,line,p-line);
     int fd=syscall(SYS_openat,AT_FDCWD,"/proc/self/maps",O_RDONLY|O_CLOEXEC,0);
@@ -301,6 +350,11 @@ static long current_tracer(void) {
 __attribute__((constructor)) static void boot_initialize(void) {
     const char* root=pocket_guest_root();
     if (!root) _exit(125);
+    const char* console=getenv("POCKET_DIRECT_CONSOLE");
+    if(console && strlen(console)<sizeof(runtime_console) && !strncmp(console,root,strlen(root)) && console[strlen(root)]=='/')
+        strcpy(runtime_console,console);
+    const char* parent=getenv("POCKET_PARENT_PID");
+    if(parent && strlen(parent)<sizeof(runtime_parent))strcpy(runtime_parent,parent);
     struct sigaction crash={0};crash.sa_sigaction=crash_trace;crash.sa_flags=SA_SIGINFO|SA_RESETHAND;
     sigemptyset(&crash.sa_mask);sigaction(SIGSEGV,&crash,NULL);sigaction(SIGABRT,&crash,NULL);
     const char* identity=getenv("POCKET_DIRECT_ID");
@@ -329,8 +383,18 @@ __attribute__((constructor)) static void boot_initialize(void) {
         uintptr_t begin=(uintptr_t)address & ~((uintptr_t)page-1);
         size_t size=((uintptr_t)address+16-begin+page-1)&~((uintptr_t)page-1);
         if (mprotect((void*)begin,size,PROT_READ|PROT_WRITE|PROT_EXEC)) { perror("BOOT_HOOK_MPROTECT");_exit(125); }
+#if defined(__aarch64__)
         uint32_t jump[2]={0x58000050,0xd61f0200}; // ldr x16, +8; br x16
         memcpy(address,jump,8);memcpy(address+8,&h->target,8);
+#elif defined(__x86_64__)
+        // RIP-relative indirect jump preserves every argument register,
+        // including AL for variadic calls. The target follows the instruction.
+        const unsigned char jump[6]={0xff,0x25,0,0,0,0};
+        memcpy(address,jump,sizeof(jump));
+        memcpy(address+sizeof(jump),&h->target,sizeof(h->target));
+#else
+#error "boot hooks: unsupported architecture"
+#endif
         __builtin___clear_cache((char*)address,(char*)address+16);
         if (mprotect((void*)begin,size,PROT_READ|PROT_EXEC)) _exit(125);
     }
@@ -340,6 +404,18 @@ __attribute__((constructor)) static void boot_initialize(void) {
     memset(base+PROPERTY_STATE_OFFSET,0,PROPERTY_STATE_SIZE);
     extern int __system_properties_init(void);
     int result=__system_properties_init();
-    fprintf(stderr,"DIRECT_BOOT_READY hooks=%zu kernel_uid=%ld guest_uid=%u properties_init=%d tracer_pid=%ld\n",
-            sizeof(hooks)/sizeof(hooks[0]),syscall(SYS_getuid),euid,result,current_tracer());
+    // App commands may capture stderr as data (for example `id -u 2>&1`).
+    // Keep runtime diagnostics in the session log instead of their pipes.
+    int saved=errno,diagnostics=STDERR_FILENO;
+    if(console) {
+        size_t prefix=strlen(root);
+        diagnostics=(!strncmp(console,root,prefix) && console[prefix]=='/') ?
+            syscall(SYS_openat,AT_FDCWD,console,O_WRONLY|O_APPEND|O_CLOEXEC,0) : -1;
+    }
+    if(diagnostics>=0) {
+        dprintf(diagnostics,"DIRECT_BOOT_READY hooks=%zu kernel_uid=%ld guest_uid=%u properties_init=%d tracer_pid=%ld\n",
+                sizeof(hooks)/sizeof(hooks[0]),syscall(SYS_getuid),euid,result,current_tracer());
+        if(console)close(diagnostics);
+    }
+    errno=saved;
 }

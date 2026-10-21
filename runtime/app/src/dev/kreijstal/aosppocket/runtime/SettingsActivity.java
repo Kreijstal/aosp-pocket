@@ -3,18 +3,25 @@ package dev.kreijstal.aosppocket.runtime;
 
 import android.app.ActivityManager;
 import android.content.*;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.widget.*;
+import java.io.File;
+import java.util.*;
 
 /** Management lives on its own page, away from the guest display. */
 public final class SettingsActivity extends RuntimeActivity {
     private Button install, start, stop, apk, lastApp;
     private Spinner version;
     private TextView performance;
+    private TextView adminStatus;
+    private Button adminToggle,adminCopy,adminRevoke;
     private String performanceReport;
     private boolean updating;
     private android.net.Uri pendingImport, pendingApk;
+    private String pendingHostPackage;
     @Override public void onCreate(Bundle state) {
         setTheme(android.R.style.Theme_Material_Light_NoActionBar);
         super.onCreate(state);
@@ -26,6 +33,17 @@ public final class SettingsActivity extends RuntimeActivity {
         Button androidPage=new Button(this); androidPage.setText("Back to Android");
         androidPage.setOnClickListener(v->androidPage()); layout.addView(androidPage);
         TextView heading=new TextView(this); heading.setText("Settings"); heading.setTextSize(24); layout.addView(heading);
+        Button disableAttestation=new Button(this);
+        disableAttestation.setText("Disable experimental attestation backend");
+        disableAttestation.setOnClickListener(v->{
+            try {
+                boolean disabled=DirectImage.disableAttestation(this);
+                if(disabled && runtime!=null)runtime.stopGuest();
+                Toast.makeText(this,disabled ? "Backend disabled; configuration preserved. Start Android again."
+                    : "Experimental attestation backend is already disabled.",Toast.LENGTH_LONG).show();
+            } catch(Exception error){Toast.makeText(this,"Cannot disable backend: "+error.getMessage(),Toast.LENGTH_LONG).show();}
+        });
+        layout.addView(disableAttestation);
         status = new TextView(this);
         status.setLines(2);
         layout.addView(status);
@@ -50,8 +68,7 @@ public final class SettingsActivity extends RuntimeActivity {
         peripherals.setOnClickListener(v -> startActivity(new Intent(this, PeripheralsActivity.class)));
         layout.addView(peripherals, new LinearLayout.LayoutParams(-1, dp(44)));
         LinearLayout open = new LinearLayout(this);
-        apk = button("Install APK", open, v -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
-            .setType("application/vnd.android.package-archive").addCategory(Intent.CATEGORY_OPENABLE), 2));
+        apk = button("Install APK", open, v -> chooseApk());
         button("Android page", open, v -> androidPage());
         button("Close manager", open, v -> finishAndRemoveTask());
         layout.addView(open, new LinearLayout.LayoutParams(-1, dp(52)));
@@ -59,6 +76,30 @@ public final class SettingsActivity extends RuntimeActivity {
         note.setText("Android has its own launcher icon and Recents window. Closing this manager keeps it running. Shared host UID/kernel.");
         note.setTextColor(Color.DKGRAY);
         layout.addView(note);
+        adminStatus=new TextView(this);layout.addView(adminStatus);
+        adminToggle=new Button(this);adminToggle.setText("Enable Termux administration");
+        adminToggle.setOnClickListener(v->{if(runtime!=null){if(runtime.adminEnabled())runtime.disableAdmin();else runtime.enableAdmin();}});
+        layout.addView(adminToggle);
+        adminCopy=new Button(this);adminCopy.setText("Copy connection token");
+        adminCopy.setOnClickListener(v->{
+            String token=runtime==null?null:runtime.adminToken();
+            if(token!=null){
+                ClipData clip=ClipData.newPlainText("Pocket admin connection token",token);
+                android.os.PersistableBundle extras=new android.os.PersistableBundle();
+                extras.putBoolean("android.content.extra.IS_SENSITIVE",true);clip.getDescription().setExtras(extras);
+                ((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(clip);
+                Toast.makeText(this,"Paste this token into pocketctl pair in Termux",Toast.LENGTH_LONG).show();
+            }
+        });layout.addView(adminCopy);
+        Button saveClient=new Button(this);saveClient.setText("Save Termux client");
+        saveClient.setOnClickListener(v->startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT)
+            .setType("text/x-python").addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,"pocketctl.py"),3));
+        layout.addView(saveClient);
+        adminRevoke=new Button(this);adminRevoke.setText("Revoke connection token");
+        adminRevoke.setOnClickListener(v->{if(runtime!=null)runtime.revokeAdmin();});layout.addView(adminRevoke);
+        TextView adminHelp=new TextView(this);
+        adminHelp.setText("Enable only when you want Termux to administer this guest. In Termux: python pocketctl.py pair, then python pocketctl.py shell. No Samsung root required. Disabling closes admin sessions; revoking requires pairing again. Administration is off after Pocket restarts.");
+        layout.addView(adminHelp);
         performance=new TextView(this);performance.setTextColor(Color.DKGRAY);layout.addView(performance);
         Button copyPerformance=new Button(this);copyPerformance.setText("Copy display report");
         copyPerformance.setOnClickListener(v->{
@@ -93,12 +134,25 @@ public final class SettingsActivity extends RuntimeActivity {
             pendingImport = null;
             runtime.importGuest(uri);
         }
+        if (runtime != null && pendingHostPackage != null) {
+            String name = pendingHostPackage; pendingHostPackage = null;
+            try { installHostApp(getPackageManager().getApplicationInfo(name, 0)); }
+            catch (android.content.pm.PackageManager.NameNotFoundException missing) {
+                Toast.makeText(this, "This app is no longer installed on the device", Toast.LENGTH_LONG).show();
+            }
+        }
         if (runtime != null && pendingApk != null) {
-            android.net.Uri uri = pendingApk; pendingApk = null;
-            runtime.installApk(uri);
+            Uri uri = pendingApk; pendingApk = null;
+            runtime.installApps(Collections.singletonMap("base.apk", uri));
             androidPage();
         }
         boolean ready = runtime != null;
+        if(adminToggle!=null){
+            boolean enabled=ready && runtime.adminEnabled();
+            adminStatus.setText(ready?runtime.adminStatus():"Connecting…");
+            adminToggle.setEnabled(ready);adminToggle.setText(enabled?"Disable Termux administration":"Enable Termux administration");
+            adminCopy.setEnabled(enabled);adminRevoke.setEnabled(ready);
+        }
         updating = true;
         if (ready) version.setSelection(runtime.selectedSdk() == 28 ? 1 : 0, false);
         version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());
@@ -113,6 +167,18 @@ public final class SettingsActivity extends RuntimeActivity {
         startActivity(new Intent(this,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_NO_USER_ACTION));
         finish();
     }
+    /** Icon-grid picker and an APK preview before submitting anything to the guest. */
+    private void chooseApk() {
+        startActivityForResult(new Intent(this, AppImportActivity.class), 2);
+    }
+    private void installHostApp(ApplicationInfo app) {
+        Map<String, Uri> apks = new LinkedHashMap<>();
+        apks.put("base.apk", Uri.fromFile(new File(app.sourceDir)));
+        if (app.splitSourceDirs != null)
+            for (String split : app.splitSourceDirs) apks.put(new File(split).getName(), Uri.fromFile(new File(split)));
+        runtime.installApps(apks);
+        androidPage();
+    }
     private void importGuest() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT).setType("application/zip");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -120,13 +186,29 @@ public final class SettingsActivity extends RuntimeActivity {
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
-        if (result != RESULT_OK || data == null || data.getData() == null) return;
+        if (result != RESULT_OK || data == null) return;
+        if(request==3 && data.getData()!=null){
+            try(java.io.InputStream in=getAssets().open("pocketctl.py");
+                java.io.OutputStream out=getContentResolver().openOutputStream(data.getData())){
+                if(out==null)throw new java.io.IOException("Cannot open client destination");
+                byte[] bytes=new byte[65536];int n;while((n=in.read(bytes))!=-1)out.write(bytes,0,n);
+                Toast.makeText(this,"Termux client saved",Toast.LENGTH_SHORT).show();
+            }catch(java.io.IOException error){Toast.makeText(this,"Cannot save client: "+error.getMessage(),Toast.LENGTH_LONG).show();}
+            return;
+        }
         if (request == 2) {
+            String hostPackage = data.getStringExtra("host_package");
+            if (hostPackage != null) {
+                pendingHostPackage = hostPackage;
+                onGuestChanged();
+                return;
+            }
+            if (data.getData() == null) return;
             pendingApk = data.getData();
             onGuestChanged();
             return;
         }
-        if (request != 1) return;
+        if (request != 1 || data.getData() == null) return;
         pendingImport = data.getData();
         onGuestChanged();
     }

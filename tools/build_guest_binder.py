@@ -11,8 +11,7 @@ import json
 from pathlib import Path
 import subprocess
 import urllib.request
-
-ROOT = Path(__file__).resolve().parents[1]
+from target import ROOT, selected
 
 def run(command, **kwargs):
     subprocess.run(list(map(str, command)), check=True, **kwargs)
@@ -50,6 +49,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ndk", type=Path, required=True)
     args = parser.parse_args()
+    if selected() != "arm64":
+        # The Ananbox 7.1.1 guest is an arm64 rootfs; x86_64 uses the direct backend instead.
+        raise SystemExit("PRoot guest build is arm64-only; use the direct backend for x86_64")
     lock = json.loads((ROOT / "sources.lock.json").read_text())
     for dependency in lock["guest_build_headers"]:
         source = ROOT / "out" / dependency["cache"]

@@ -21,6 +21,8 @@ public final class DisplayGeometryTest {
         require(properties.equals("ro.build.version.sdk=28\nro.boot.redroid_width=1080\nro.boot.redroid_height=2400\nro.sf.lcd_density=420\n"),"Boot property projection");
         require(phone.properties(properties).equals(properties),"Repeated boot is stable");
         require(phone.properties("ro.build.version.sdk=28").contains("\nro.sf.lcd_density=420\n"),"Missing properties are inserted");
+        require(phone.properties("ro.boot.redroid_fps=30\n",120).equals("ro.boot.redroid_fps=120\nro.boot.redroid_width=1080\nro.boot.redroid_height=2400\nro.sf.lcd_density=420\n"),"Guest refresh follows host");
+        try{phone.properties("",0);throw new AssertionError("Invalid refresh accepted");}catch(IllegalArgumentException expected){}
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();phone.write(new DataOutputStream(bytes));
         require(phone.equals(DisplayGeometry.read(new DataInputStream(new ByteArrayInputStream(bytes.toByteArray())))),"Handshake round trip");
         byte[] invalid=bytes.toByteArray();invalid[0]=0;

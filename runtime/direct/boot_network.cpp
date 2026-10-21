@@ -26,10 +26,12 @@
 #include <string>
 #include <unistd.h>
 #include "boot_storage_protocol.h"
+#include "network_permissions.h"
 using namespace android;
 namespace {
 std::set<int> networks;
 std::mutex networkMutex;
+pocket::NetworkPermissions permissions;
 class HostNetd final : public BBinder {
     status_t onTransact(uint32_t code,const Parcel& data,Parcel* reply,uint32_t flags) override {
         if(code>=IBinder::LAST_CALL_TRANSACTION)return BBinder::onTransact(code,data,reply,flags);
@@ -73,6 +75,12 @@ void serve(int fd) {
             else if(!strcmp(command,"ipfwd status")) {code=211;result="Forwarding disabled";}
             else if(!strcmp(command,"tether status")) {code=210;result="Tethering services stopped";}
             else if(!strcmp(command,"clatd status")) {code=223;result="Clatd stopped";}
+            else if(!strncmp(command,"network permission user ",24)) {
+                std::lock_guard<std::mutex> lock(networkMutex);
+                if(permissions.apply(command)) {
+                    code=200;result="Guest UID permission metadata updated; host policy retained";
+                } else result="Invalid guest UID permission request";
+            }
             else if(!strncmp(command,"network default ",16) || !strncmp(command,"resolver setnetdns ",19) ||
                     !strncmp(command,"resolver clearnetdns ",21)) {code=200;result="Guest network metadata accepted; host uplink retained";}
             else if(!strncmp(command,"network create ",15) || !strncmp(command,"network destroy ",16)) {

@@ -61,10 +61,11 @@ public final class FrameworkProbe {
         capture("/data/pocket-launcher.png");
         System.out.println("DIRECT_FRAMEWORK_LAUNCHER_PASS foreground=com.android.launcher3 compositor=verified");
     }
-    static void install(Context context,File apk,String packageName) throws Exception {
+    static void install(Context context,File[] apks,String packageName) throws Exception {
         PackageInstaller installer=context.getPackageManager().getPackageInstaller();
         PackageInstaller.SessionParams params=new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-        params.setAppPackageName(packageName);params.setSize(apk.length());
+        long size=0;for(File apk:apks)size+=apk.length();
+        params.setAppPackageName(packageName);params.setSize(size);
         CountDownLatch delivered=new CountDownLatch(1);final Intent[] result=new Intent[1];
         Binder receiver=new Binder() {
             @Override protected boolean onTransact(int code,Parcel data,Parcel reply,int flags) throws RemoteException {
@@ -79,10 +80,12 @@ public final class FrameworkProbe {
         constructor.setAccessible(true);IntentSender callback=constructor.newInstance(target);
         int sessionId=installer.createSession(params);
         try(PackageInstaller.Session session=installer.openSession(sessionId)) {
-            try(InputStream input=new FileInputStream(apk);OutputStream output=session.openWrite("base.apk",0,apk.length())) {
-                byte[] bytes=new byte[32768];int count;
-                while((count=input.read(bytes))>=0)output.write(bytes,0,count);
-                session.fsync(output);
+            for(File apk:apks) {
+                try(InputStream input=new FileInputStream(apk);OutputStream output=session.openWrite(apk.getName(),0,apk.length())) {
+                    byte[] bytes=new byte[32768];int count;
+                    while((count=input.read(bytes))>=0)output.write(bytes,0,count);
+                    session.fsync(output);
+                }
             }
             session.commit(callback);
         }
@@ -137,7 +140,7 @@ public final class FrameworkProbe {
         try {
             check(args.length==1 && android.os.Process.myUid()==1000,"Expected system role and one APK path");
             check(android.graphics.Typeface.DEFAULT!=null,"Default typeface missing");
-            Context context=context();launcher(context);install(context,new File(args[0]),PACKAGE);launch(new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(PACKAGE,PACKAGE+".MainActivity")));tap();
+            Context context=context();launcher(context);install(context,new File[]{new File(args[0])},PACKAGE);launch(new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(PACKAGE,PACKAGE+".MainActivity")));tap();
             System.out.println("DIRECT_FRAMEWORK_SMOKE_PASS launcher=1 install=1 activity=1 input=1");
         } catch(Throwable error) {
             System.err.println("DIRECT_FRAMEWORK_SMOKE_FAIL "+error);error.printStackTrace();System.exit(1);

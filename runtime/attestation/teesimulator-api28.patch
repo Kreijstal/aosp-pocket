@@ -1,0 +1,472 @@
+diff --git a/common/control.cpp b/common/control.cpp
+index 45fcbb8..66e98f9 100644
+--- a/common/control.cpp
++++ b/common/control.cpp
+@@ -16,6 +16,7 @@
+ #include <unistd.h>
+ 
+ #include <cerrno>
++#include <cstdio>
+ #include <cstddef>
+ #include <cstdint>
+ #include <cstdlib>
+@@ -483,3 +484,28 @@ extern "C" void teesim_control_start(void) {
+     started = false;
+   }
+ }
++
++// Pocket's owner-provisioned, guest-private boot configuration. No root-capable
++// injector or Android 10 Kotlin daemon is needed in the controlled Android 9 image.
++extern "C" bool teesim_control_load_file(const char* path) {
++  FILE* f = fopen(path, "rb");
++  if (!f) return false;
++  std::vector<char> bytes(kMaxFrame + 1);
++  const size_t n = fread(bytes.data(), 1, bytes.size(), f);
++  const bool bad = ferror(f) || n == 0 || n > kMaxFrame;
++  fclose(f);
++  if (bad) return false;
++  tjson::Value config;
++  if (!tjson::parse(bytes.data(), n, config)) return false;
++  // Unlike the modern daemon, this loader cannot harvest hardware boot info.
++  // Require an explicit software profile and boot description from the owner.
++  const auto* boot = config.get("bootInfo");
++  const auto* profiles = config.get("profiles");
++  if (!boot || !boot->get("deviceLocked") || !boot->get("verifiedBootState") ||
++      !profiles || !profiles->is_array()) return false;
++  uint64_t epoch = 0;
++  int applied = 0, total = 0;
++  ApplyConfig(config, epoch, applied, total);
++  LOGI("Pocket boot configuration applied profiles=%d/%d", applied, total);
++  return total > 0 && applied == total;
++}
+diff --git a/keystore/binder_interceptor.cpp b/keystore/binder_interceptor.cpp
+index c587ebe..fc405ce 100644
+--- a/keystore/binder_interceptor.cpp
++++ b/keystore/binder_interceptor.cpp
+@@ -34,7 +34,10 @@ using namespace android;
+ 
+ namespace {
+ 
+-constexpr uint32_t kStubCode = 0xdeadbeef;
++// Stay in the application transaction range. Pocket restores logical guest
++// credentials for that range before BBinder dispatch; a reserved control code
++// would bypass it and make every request appear to come from the host app UID.
++constexpr uint32_t kStubCode = 0x00fffffe;
+ constexpr std::string_view kBinderLibName = "/libbinder.so";
+ 
+ // A handler answers an intercepted transaction. Returning true means it produced
+@@ -189,7 +192,7 @@ bool teesim_install_binder_hook() {
+     LOGE("teesim_install_binder_hook: libbinder.so not found in maps");
+     return false;
+   }
+-  g_stub = sp<BinderStub>::make();
++  g_stub = sp<BinderStub>(new BinderStub());
+   lsplt::RegisterHook(dev, ino, "ioctl", reinterpret_cast<void*>(intercepted_ioctl),
+                       reinterpret_cast<void**>(&g_original_ioctl));
+   lsplt::CommitHook();
+diff --git a/keystore/keystore_entry.cpp b/keystore/keystore_entry.cpp
+index e340992..aaefb47 100644
+--- a/keystore/keystore_entry.cpp
++++ b/keystore/keystore_entry.cpp
+@@ -28,8 +28,9 @@ extern "C" bool teesim_ks_handle(uint32_t code, const Parcel& data, Parcel* repl
+ extern "C" [[gnu::visibility("default")]] bool entry(void* /*handle*/) {
+   int api = teesim_android_api();
+   LOGI("entry: keystore interceptor loading (api=%d, %s transaction codes)", api,
+-       api >= 30 ? "Android 11" : "Android 10");
+-  teesim_control_start();
++       api >= 30 ? "Android 11" : api == 28 ? "Android 9" : "Android 10");
++  // Pocket loads an explicit owner-private boot config; no root-injector socket.
++  if (api != 28) teesim_control_start();
+ 
+   if (!teesim_install_binder_hook()) {
+     LOGE("entry: failed to install the binder hook");
+diff --git a/keystore/keystore_router.cpp b/keystore/keystore_router.cpp
+index 55d3bf6..9dc16b6 100644
+--- a/keystore/keystore_router.cpp
++++ b/keystore/keystore_router.cpp
+@@ -51,6 +51,7 @@ using namespace android;
+ struct TxCodes {
+   uint32_t generateKey, getKeyCharacteristics, exportKey, attestKey, begin, update, finish, abort;
+ };
++constexpr TxCodes kTxP = {23, 24, 26, 35, 27, 28, 29, 30};  // Android 9 (API 28)
+ constexpr TxCodes kTxQ = {18, 19, 21, 29, 22, 23, 24, 25};  // Android 10 (API 29)
+ constexpr TxCodes kTxR = {17, 18, 20, 28, 21, 22, 23, 24};  // Android 11 (API 30)
+ 
+@@ -61,7 +62,10 @@ bool IsAndroidR() {
+   return is_r;
+ }
+ 
++bool IsAndroidP() { return teesim_android_api() == 28; }
++
+ const TxCodes& Codes() {
++  if (IsAndroidP()) return kTxP;
+   static const TxCodes& codes = IsAndroidR() ? kTxR : kTxQ;
+   return codes;
+ }
+@@ -119,6 +123,7 @@ enum {
+ namespace {
+ 
+ const String16 kServiceDescriptor("android.security.keystore.IKeystoreService");
++const String16 kServiceDescriptorP("android.security.IKeystoreService");
+ 
+ // A simulated key, keyed by (uid, alias).
+ struct PendingKey {
+@@ -163,6 +168,7 @@ TaPtr WrapTa(Ta* ta) {
+ // name (needed to synthesise the attestation application id).
+ struct Profile {
+   std::string id;
++  int32_t security_level = 0;
+   TaPtr ta;
+   std::map<int, std::string> uids;  // uid -> package name
+ };
+@@ -212,6 +218,13 @@ TaPtr DefaultTa() {
+ 
+ bool IsTarget(int uid) { return ProfileForUid(uid) != nullptr; }
+ 
++int SecurityLevelForUid(int uid) {
++  std::lock_guard<std::mutex> lk(g_cfg_mutex);
++  for (const auto& prof : g_profiles)
++    if (prof.uids.count(uid)) return prof.security_level;
++  return 0;
++}
++
+ std::string PackageForUid(int uid) {
+   std::lock_guard<std::mutex> lk(g_cfg_mutex);
+   for (const auto& prof : g_profiles) {
+@@ -494,11 +507,34 @@ void InvokeCallback(const sp<IBinder>& cb, const String16& cb_descriptor,
+ }
+ 
+ void ReplyStatus(Parcel* reply, int32_t status) {
+-  if (!reply) return;
++  if (!reply || IsAndroidP()) return;
++  reply->writeNoException();
++  reply->writeInt32(status);
++}
++
++// Android 9 returns results in the transaction reply, without a callback.
++void ReplyPStatus(Parcel* reply, int32_t status) {
+   reply->writeNoException();
+   reply->writeInt32(status);
+ }
+ 
++void WritePCharacteristics(Parcel* reply, int uid, const std::vector<KmParam>& params) {
++  ReplyPStatus(reply, KS_NO_ERROR);
++  BeginTypedObject(*reply);
++  // The frontend generates material which it imports into the TA. Match
++  // the attestation's IMPORTED origin without sending a system tag to importKey.
++  auto attributes = params;
++  attributes.push_back({0x100002be, 2, nullptr, 0});  // TAG_ORIGIN = IMPORTED
++  // Preserve the configured security level; software keys remain software.
++  if (SecurityLevelForUid(uid) == 0) {
++    WriteKeymasterArguments(*reply, attributes);
++    WriteEmptyArguments(*reply);
++  } else {
++    WriteEmptyArguments(*reply);
++    WriteKeymasterArguments(*reply, attributes);
++  }
++}
++
+ // Add the tags the TA needs to build a certificate that Android 10 leaves for
+ // keystore to fill in. app_id_store keeps a synthesised attestation application id
+ // alive for the duration of the import call.
+@@ -606,7 +642,8 @@ void WriteOperationResult(Parcel& p, int32_t code, const sp<IBinder>& token, int
+ // --- Per-method handlers ----------------------------------------------------
+ 
+ bool HandleGenerateKey(int uid, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   String16 alias = in.readString16();
+   std::vector<std::vector<uint8_t>> blobs;
+   std::vector<KmParam> params;
+@@ -625,6 +662,23 @@ bool HandleGenerateKey(int uid, Parcel& in, Parcel* reply) {
+     return false;
+   }
+ 
++  if (IsAndroidP()) {
++    // Authentication-bound keys need a real Gatekeeper/HAT path. Do not
++    // silently convert them into this backend's non-authenticated keys.
++    if (ParamInt(params, 0x700001f7, 0) != 1) return false;  // NO_AUTH_REQUIRED
++    ReadByteArray(in);  // entropy, generated key uses BoringSSL's RNG
++    const int requested_uid = in.readInt32();
++    const int flags = in.readInt32();
++    if (requested_uid != -1 && requested_uid != uid) return false;
++    // StrongBox cannot silently become a software key.
++    if ((flags & 16) && SecurityLevelForUid(uid) != 2) {
++      ReplyPStatus(reply, -68);  // KM_ERROR_HARDWARE_TYPE_UNAVAILABLE
++      BeginTypedObject(*reply);
++      WriteEmptyArguments(*reply);
++      WriteEmptyArguments(*reply);
++      return true;
++    }
++  }
+   PendingKey key;
+   key.params = std::move(params);
+   key.param_blobs = std::move(blobs);  // take ownership so the params' blob pointers stay valid
+@@ -635,6 +689,15 @@ bool HandleGenerateKey(int uid, Parcel& in, Parcel* reply) {
+   }
+   LOGI("generateKey: simulated alias=%s", String8(alias).c_str());
+ 
++  if (IsAndroidP()) {
++    std::vector<KmParam> saved;
++    {
++      std::lock_guard<std::mutex> lk(g_keys_mutex);
++      saved = g_keys.at(KeyId(uid, alias)).params;
++      WritePCharacteristics(reply, uid, saved);
++    }
++    return true;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreKeyCharacteristicsCallback");
+   InvokeCallback(cb, kCb, [](Parcel& p) {
+     WriteKeystoreResponse(p, KS_NO_ERROR);
+@@ -647,9 +710,16 @@ bool HandleGenerateKey(int uid, Parcel& in, Parcel* reply) {
+ }
+ 
+ bool HandleGetKeyCharacteristics(int uid, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   String16 alias = in.readString16();
+   std::vector<KmParam> params;
++  if (IsAndroidP()) {
++    if (in.readInt32() == 1) ReadByteArray(in);  // clientId
++    if (in.readInt32() == 1) ReadByteArray(in);  // appData
++    const int requested_uid = in.readInt32();
++    if (requested_uid != -1 && requested_uid != uid) return false;
++  }
+   {
+     std::lock_guard<std::mutex> lk(g_keys_mutex);
+     auto it = g_keys.find(KeyId(uid, alias));
+@@ -659,6 +729,15 @@ bool HandleGetKeyCharacteristics(int uid, Parcel& in, Parcel* reply) {
+     }
+     params = it->second.params;
+   }
++  if (IsAndroidP()) {
++    std::vector<KmParam> saved;
++    {
++      std::lock_guard<std::mutex> lk(g_keys_mutex);
++      saved = g_keys.at(KeyId(uid, alias)).params;
++      WritePCharacteristics(reply, uid, saved);
++    }
++    return true;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreKeyCharacteristicsCallback");
+   InvokeCallback(cb, kCb, [&](Parcel& p) {
+     WriteKeystoreResponse(p, KS_NO_ERROR);
+@@ -671,9 +750,17 @@ bool HandleGetKeyCharacteristics(int uid, Parcel& in, Parcel* reply) {
+ }
+ 
+ bool HandleExportKey(int uid, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   String16 alias = in.readString16();
+ 
++  if (IsAndroidP()) {
++    if (in.readInt32() != 0) return false;  // KM_KEY_FORMAT_X509
++    if (in.readInt32() == 1) ReadByteArray(in);  // clientId
++    if (in.readInt32() == 1) ReadByteArray(in);  // appData
++    const int requested_uid = in.readInt32();
++    if (requested_uid != -1 && requested_uid != uid) return false;
++  }
+   std::vector<uint8_t> spki;
+   {
+     std::lock_guard<std::mutex> lk(g_keys_mutex);
+@@ -689,6 +776,13 @@ bool HandleExportKey(int uid, Parcel& in, Parcel* reply) {
+     spki = it->second.spki;
+   }
+ 
++  if (IsAndroidP()) {
++    reply->writeNoException();
++    BeginTypedObject(*reply);
++    reply->writeInt32(KS_NO_ERROR);
++    reply->writeByteArray(spki.size(), spki.data());
++    return true;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreExportKeyCallback");
+   InvokeCallback(cb, kCb, [&](Parcel& p) {
+     BeginTypedObject(p);  // ExportResult
+@@ -700,7 +794,8 @@ bool HandleExportKey(int uid, Parcel& in, Parcel* reply) {
+ }
+ 
+ bool HandleAttestKey(int uid, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   String16 alias = in.readString16();
+   std::vector<std::vector<uint8_t>> blobs;
+   std::vector<KmParam> attest_params;
+@@ -754,6 +849,13 @@ bool HandleAttestKey(int uid, Parcel& in, Parcel* reply) {
+   teesim_km_free_result(res);
+   LOGI("attestKey: simulated alias=%s certs=%zu", String8(alias).c_str(), chain.size());
+ 
++  if (IsAndroidP()) {
++    ReplyPStatus(reply, KS_NO_ERROR);
++    BeginTypedObject(*reply);
++    reply->writeInt32(static_cast<int32_t>(chain.size()));
++    for (const auto& c : chain) reply->writeByteArray(c.size(), c.data());
++    return true;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreCertificateChainCallback");
+   InvokeCallback(cb, kCb, [&](Parcel& p) {
+     WriteKeystoreResponse(p, KS_NO_ERROR);
+@@ -766,7 +868,8 @@ bool HandleAttestKey(int uid, Parcel& in, Parcel* reply) {
+ }
+ 
+ bool HandleBegin(int uid, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   in.readStrongBinder();  // appToken (unused)
+   String16 alias = in.readString16();
+   int32_t purpose = in.readInt32();
+@@ -781,6 +884,11 @@ bool HandleBegin(int uid, Parcel& in, Parcel* reply) {
+     }
+   }
+ 
++  if (IsAndroidP()) {
++    ReadByteArray(in);  // entropy
++    const int requested_uid = in.readInt32();
++    if (requested_uid != -1 && requested_uid != uid) return false;
++  }
+   std::vector<uint8_t> blob;
+   {
+     std::lock_guard<std::mutex> lk(g_keys_mutex);
+@@ -817,7 +925,7 @@ bool HandleBegin(int uid, Parcel& in, Parcel* reply) {
+   int64_t op_handle = teesim_km_begin_op_handle(res);
+   teesim_km_free_begin(res);
+ 
+-  sp<IBinder> token = sp<OpToken>::make();
++  sp<IBinder> token = new OpToken();
+   {
+     std::lock_guard<std::mutex> lk(g_ops_mutex);
+     g_ops[token.get()] = {token, op_handle, ta};
+@@ -825,6 +933,11 @@ bool HandleBegin(int uid, Parcel& in, Parcel* reply) {
+   LOGD("begin: purpose=%s alias=%s params=%s", PurposeName(purpose),
+        String8(alias).c_str(), KmDescribeParams(op_params.data(), op_params.size()).c_str());
+ 
++  if (IsAndroidP()) {
++    reply->writeNoException();
++    WriteOperationResult(*reply, KS_NO_ERROR, token, op_handle, 0, {});
++    return true;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreOperationResultCallback");
+   InvokeCallback(cb, kCb,
+                  [&](Parcel& p) { WriteOperationResult(p, KS_NO_ERROR, token, op_handle, 0, {}); });
+@@ -843,8 +956,13 @@ bool OpFor(const sp<IBinder>& token, int64_t* op_handle, TaPtr* ta, bool erase)
+   return true;
+ }
+ 
+-void DeliverOperationResult(const sp<IBinder>& cb, int32_t rc, const sp<IBinder>& token,
++void DeliverOperationResult(const sp<IBinder>& cb, Parcel* reply, int32_t rc, const sp<IBinder>& token,
+                             int32_t input_consumed, const std::vector<uint8_t>& output) {
++  if (IsAndroidP()) {
++    reply->writeNoException();
++    WriteOperationResult(*reply, rc == 0 ? KS_NO_ERROR : rc, token, 0, input_consumed, output);
++    return;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreOperationResultCallback");
+   InvokeCallback(cb, kCb, [&](Parcel& p) {
+     WriteOperationResult(p, rc == 0 ? KS_NO_ERROR : KS_SYSTEM_ERROR, token, 0, input_consumed,
+@@ -853,7 +971,8 @@ void DeliverOperationResult(const sp<IBinder>& cb, int32_t rc, const sp<IBinder>
+ }
+ 
+ bool HandleUpdate(int /*uid*/, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   sp<IBinder> token = in.readStrongBinder();
+   std::vector<std::vector<uint8_t>> blobs;
+   if (in.readInt32() == 1) ReadKeymasterArguments(in, blobs);  // op params (unused)
+@@ -878,13 +997,14 @@ bool HandleUpdate(int /*uid*/, Parcel& in, Parcel* reply) {
+     LOGE("update: TA update failed rc=%d(%s)", rc, teesim_km_err_name(rc));
+   }
+ 
+-  DeliverOperationResult(cb, rc, token, static_cast<int32_t>(input.size()), output);
++  DeliverOperationResult(cb, reply, rc, token, static_cast<int32_t>(input.size()), output);
+   ReplyStatus(reply, KS_NO_ERROR);
+   return true;
+ }
+ 
+ bool HandleFinish(int /*uid*/, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   sp<IBinder> token = in.readStrongBinder();
+   std::vector<std::vector<uint8_t>> blobs;
+   if (in.readInt32() == 1) ReadKeymasterArguments(in, blobs);  // op params (unused)
+@@ -916,13 +1036,14 @@ bool HandleFinish(int /*uid*/, Parcel& in, Parcel* reply) {
+   }
+   LOGD("finish: output=%zu", output.size());
+ 
+-  DeliverOperationResult(cb, rc, token, static_cast<int32_t>(input.size()), output);
++  DeliverOperationResult(cb, reply, rc, token, static_cast<int32_t>(input.size()), output);
+   ReplyStatus(reply, KS_NO_ERROR);
+   return true;
+ }
+ 
+ bool HandleAbort(int /*uid*/, Parcel& in, Parcel* reply) {
+-  sp<IBinder> cb = in.readStrongBinder();
++  sp<IBinder> cb;
++  if (!IsAndroidP()) cb = in.readStrongBinder();
+   sp<IBinder> token = in.readStrongBinder();
+   int64_t op_handle = 0;
+   TaPtr ta;
+@@ -932,6 +1053,10 @@ bool HandleAbort(int /*uid*/, Parcel& in, Parcel* reply) {
+   }
+   teesim_km_abort(ta.get(), op_handle);
+ 
++  if (IsAndroidP()) {
++    ReplyPStatus(reply, KS_NO_ERROR);
++    return true;
++  }
+   static const String16 kCb("android.security.keystore.IKeystoreResponseCallback");
+   InvokeCallback(cb, kCb, [](Parcel& p) { WriteKeystoreResponse(p, KS_NO_ERROR); });
+   ReplyStatus(reply, KS_NO_ERROR);
+@@ -978,6 +1103,7 @@ extern "C" bool teesim_cfg_add_profile(const TsProfile* p) {
+   }
+   Profile prof;
+   prof.id = p->id ? p->id : "";
++  prof.security_level = p->security_level;
+   prof.ta = WrapTa(ta);
+   // uid_packages[] is aligned 1:1 with uids[] and names the package behind each one, or "" for a raw
+   // uid:N or an auto-included app that no entry names. It is carried on the wire rather than read off
+@@ -1016,7 +1142,7 @@ extern "C" bool teesim_ks_handle(uint32_t code, const Parcel& data, Parcel* repl
+   const TxCodes& tx = Codes();
+   if (code != tx.generateKey && code != tx.getKeyCharacteristics && code != tx.exportKey &&
+       code != tx.attestKey && code != tx.begin && code != tx.update && code != tx.finish &&
+-      code != tx.abort)
++      code != tx.abort && !(IsAndroidP() && (code == 4 || code == 5)))
+     return false;
+   int uid = IPCThreadState::self()->getCallingUid();
+   // The target test comes first, and deliberately: stamping a context costs a package lookup and
+@@ -1035,13 +1161,28 @@ extern "C" bool teesim_ks_handle(uint32_t code, const Parcel& data, Parcel* repl
+   snprintf(rid, sizeof(rid), "r%04x", teesim_log_new_rid());
+   LogContext lc_("[" + std::to_string(uid) + (pkg.empty() ? "" : " " + pkg) + " " + rid + "] ");
+   Reader r(data);
+-  if (!r.p.enforceInterface(kServiceDescriptor)) {
++  if (!r.p.enforceInterface(IsAndroidP() ? kServiceDescriptorP : kServiceDescriptor)) {
+     LOGW("teesim_ks_handle: %s(code=%u) from uid %d has the wrong interface descriptor; forwarding untouched",
+          TxName(code), code,
+          uid);
+     return false;
+   }
+ 
++  if (IsAndroidP() && (code == 4 || code == 5)) {
++    const String16 alias = r.p.readString16();
++    const int requested_uid = r.p.readInt32();
++    if (requested_uid != -1 && requested_uid != uid) return false;
++    const std::string raw = String8(alias).c_str();
++    // Only the private-key entry is ours. Certificate entries stay in real keystore.
++    if (raw.compare(0, 8, "USRPKEY_") != 0) return false;
++    std::lock_guard<std::mutex> lk(g_keys_mutex);
++    auto it = g_keys.find(KeyId(uid, alias));
++    if (it == g_keys.end()) return false;
++    if (code == 4) g_keys.erase(it);
++    ReplyPStatus(reply, KS_NO_ERROR);
++    result = OK;
++    return true;
++  }
+   bool done = false;
+   if (code == tx.generateKey)                done = HandleGenerateKey(uid, r.p, reply);
+   else if (code == tx.getKeyCharacteristics) done = HandleGetKeyCharacteristics(uid, r.p, reply);

@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketinstalltest">
+    <application android:label="Pocket import input test" android:allowBackup="false">
+        <activity android:name="dev.kreijstal.aosppocket.runtime.InstallInputTest" android:exported="true" />
+        <provider android:name="dev.kreijstal.aosppocket.runtime.InstallInputTest$StallProvider"
+            android:authorities="dev.kreijstal.pocketinstalltest.stall" android:exported="false" />
+    </application>
+</manifest>

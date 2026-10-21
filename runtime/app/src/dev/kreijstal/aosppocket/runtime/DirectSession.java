@@ -26,6 +26,9 @@ final class DirectSession implements AutoCloseable {
     private final Handler main=new Handler(Looper.getMainLooper());
     private final Set<LocalSocket> sockets=ConcurrentHashMap.newKeySet();
     private final ThreadPoolExecutor commands=new ThreadPoolExecutor(1,1,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(128));
+    // APK copies and PackageInstaller callbacks can take minutes. Input must
+    // keep its ordered socket and worker while those operations are pending.
+    private final ThreadPoolExecutor operations=new ThreadPoolExecutor(1,1,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(8));
     private final Thread worker;
     private volatile boolean closed,visible,ready;
     private volatile java.lang.Process init;
@@ -48,8 +51,9 @@ final class DirectSession implements AutoCloseable {
             bitmap.copyPixelsFromBuffer(sharedFrames.slot(front));return bitmap;
         }
     }
-    DirectSession(Context context,DisplayGeometry geometry,Listener listener) {
-        this.context=context;this.geometry=geometry;this.listener=listener;worker=new Thread(this::run,"PocketAndroid9");
+    private final int refreshHz;
+    DirectSession(Context context,DisplayGeometry geometry,int refreshHz,Listener listener) {
+        this.context=context;this.geometry=geometry;this.refreshHz=refreshHz;this.listener=listener;worker=new Thread(this::run,"PocketAndroid9");
     }
     void start(){worker.start();}
     boolean running(){return init!=null && init.isAlive() && !closed;}
@@ -58,8 +62,14 @@ final class DirectSession implements AutoCloseable {
     private void run() {
         String ended="Android 9 stopped. Tap Start to boot again.";
         try {
+            // A previous app process may have been killed while Android 9 was up.
+            int leftover=DirectImage.stopLeftovers(DirectImage.root(context));
+            if(leftover>0) {
+                android.util.Log.w("PocketRuntime","Stopped "+leftover+" Android 9 process(es) left by an earlier app process");
+                status("Stopped Android 9 left running by an earlier app process.");
+            }
             final int[] percent={-1};
-            root=DirectImage.prepare(context,geometry,(done,total)->{
+            root=DirectImage.prepare(context,geometry,refreshHz,(done,total)->{
                 int value=total==0?0:(int)(100*done/total);
                 if(value!=percent[0]){percent[0]=value;status("Setting up Android 9: "+value+"%");}
             });
@@ -124,11 +134,11 @@ final class DirectSession implements AutoCloseable {
                 Native.destroyFramePresenter(presenter);
             }
 
-            if(!closed)ended="Android 9 exited unexpectedly. See api28-rootfs/logs/manager-init.log.";
+            if(!closed)ended="Android 9 exited with code "+init.exitValue()+". See api28-rootfs/logs/manager-init.log.";
         } catch(InterruptedException cancelled){Thread.currentThread().interrupt();}
         catch(Exception error){if(!closed)ended="Android 9 failed: "+error.getMessage();}
         finally {
-            closed=true;ready=false;commands.shutdownNow();
+            closed=true;ready=false;commands.shutdownNow();operations.shutdownNow();
             for(LocalSocket socket:sockets)try{socket.close();}catch(IOException ignored){}
             java.lang.Process current=init;
             if(current!=null) {
@@ -220,6 +230,15 @@ final class DirectSession implements AutoCloseable {
             catch(Exception error){if(input!=null)input.close();input=null;status("Android 9 control failed: "+error.getMessage());}
         });}catch(RejectedExecutionException full){status("Guest input queue is busy; try again.");}
     }
+    private void submitOperation(Command command) {
+        if(!ready || closed)return;
+        try {operations.execute(()->{
+            // GuestControl serves each connection on its own thread. A second
+            // socket is essential: sharing input's stream would still block it.
+            try(Connection connection=new Connection()){command.run(connection);}
+            catch(Exception error){status("Android 9 operation failed: "+error.getMessage());}
+        });}catch(RejectedExecutionException full){status("Guest operation queue is busy; try again.");}
+    }
     void touch(MotionEvent event,float scaleX,float scaleY) {
         if(event.getPointerCount()>10)return;
         final int count=event.getPointerCount(),action=event.getAction();
@@ -231,8 +250,8 @@ final class DirectSession implements AutoCloseable {
             c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected touch input");});
     }
     void key(int code){submit(c->{c.out.writeInt(3);c.out.writeInt(code);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected navigation");});}
-    void importHostContacts(){submit(c->{c.socket.setSoTimeout(90000);try{c.out.writeInt(5);c.out.flush();status(c.in.readUTF());}finally{c.socket.setSoTimeout(15000);}});}
-    void checkHostBridges(){submit(c->{
+    void importHostContacts(){submitOperation(c->{c.socket.setSoTimeout(90000);c.out.writeInt(5);c.out.flush();status(c.in.readUTF());});}
+    void checkHostBridges(){submitOperation(c->{
         c.socket.setSoTimeout(30000);
         try {
             c.out.writeInt(6);c.out.writeUTF("https://example.com/");c.out.flush();String result=c.in.readUTF();
@@ -242,7 +261,7 @@ final class DirectSession implements AutoCloseable {
                 " · HTTPS "+(report.has("http_status")?report.optInt("http_status"):report.optString("http_error","unavailable")));
         } finally {c.socket.setSoTimeout(15000);}
     });}
-    void checkHostDevices(){submit(c->{
+    void checkHostDevices(){submitOperation(c->{
         c.socket.setSoTimeout(60000);
         try {
             c.out.writeInt(7);c.out.flush();String result=c.in.readUTF();
@@ -253,33 +272,45 @@ final class DirectSession implements AutoCloseable {
             status(summary.toString());
         } finally {c.socket.setSoTimeout(15000);}
     });}
-    void openGuestDialer(){submit(c->{c.out.writeInt(8);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest dialer did not open");});}
+    void openGuestDialer(){submitOperation(c->{c.out.writeInt(8);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest dialer did not open");});}
     boolean hasLastApp(){return !context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE).getString("package","").isEmpty();}
-    void openLastApp(){submit(c->{
+    void openLastApp(){submitOperation(c->{
         String name=context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE).getString("package","");
         if(name.isEmpty())throw new IOException("Install a guest APK first");
         c.out.writeInt(9);c.out.writeUTF(name);c.out.flush();
         if(!c.in.readBoolean())throw new IOException("App did not open");
     });}
-    void install(android.net.Uri uri) {
-        submit(c->{
-            status("Installing APK in Android 9…");
-            File target=new File(root,"system-data/pocket-import.apk"),temp=new File(target.getPath()+".new");
+    /** Installs one package: {@code base.apk} plus any split APKs, keyed by their file name. */
+    void install(java.util.Map<String,android.net.Uri> apks) {
+        submitOperation(c->{
+            File staged=new File(root,"system-data/pocket-import");
+            deleteTree(staged);staged.mkdirs();
             try {
-                try(InputStream in=context.getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(temp)) {
-                    if(in==null)throw new IOException("Cannot open selected APK");GuestImage.copy(in,out,512L*1024*1024);
+                int index=0;
+                for(java.util.Map.Entry<String,android.net.Uri> apk:apks.entrySet()) {
+                    status("Copying "+apk.getKey()+" ("+(++index)+"/"+apks.size()+")…");
+                    File target=new File(staged,apk.getKey());
+                    try(InputStream in=context.getContentResolver().openInputStream(apk.getValue());OutputStream out=new FileOutputStream(target)) {
+                        if(in==null)throw new IOException("Cannot open selected APK");
+                        GuestImage.copy(in,out,2L*1024*1024*1024);
+                    }
                 }
-                java.nio.file.Files.move(temp.toPath(),target.toPath(),java.nio.file.StandardCopyOption.ATOMIC_MOVE,java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                status("Installing APKs in Android 9…");
                 c.socket.setSoTimeout(90000);c.out.writeInt(4);c.out.flush();
                 String result=c.in.readUTF();
                 if(result.startsWith("Installed "))context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE)
                     .edit().putString("package",result.substring(10)).apply();
                 status(result);
-            } finally {temp.delete();target.delete();c.socket.setSoTimeout(15000);}
+            } finally {deleteTree(staged);c.socket.setSoTimeout(15000);}
         });
     }
+    private static void deleteTree(File file) {
+        File[] children=file.listFiles();
+        if(children!=null)for(File child:children)deleteTree(child);
+        file.delete();
+    }
     @Override public synchronized void close() {
-        closed=true;ready=false;wakeDisplay();commands.shutdownNow();
+        closed=true;ready=false;wakeDisplay();commands.shutdownNow();operations.shutdownNow();
         for(LocalSocket socket:sockets)try{socket.close();}catch(IOException ignored){}
         if(init!=null)init.destroy();
         // Do not interrupt waitFor during supervised cleanup: init needs time

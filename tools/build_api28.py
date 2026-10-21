@@ -7,11 +7,13 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
-from prepare_api28 import prepare, ROOT
+from prepare_api28 import prepare
+from target import ROOT, clang, info, selected
 
 
 def build(ndk):
-    reference = prepare(art=True)
+    arch = selected()
+    reference = prepare(art=True, arch=arch)
     out = ROOT / "out/api28"
     native = out / "native"
     native.mkdir(parents=True, exist_ok=True)
@@ -23,7 +25,7 @@ def build(ndk):
     includes = [headers, out / "frameworks-native/libs/binder/include"]
     includes += [out / "system-core" / (part + "/include") for part in
                  ("libutils", "libcutils", "liblog", "libsystem", "base")]
-    common = [str(llvm / "bin/aarch64-linux-android28-clang++"), "-DPOCKET_GUEST_API=28",
+    common = [str(clang(llvm / "bin", 28, cxx=True, name=arch)), "-DPOCKET_GUEST_API=28",
               # Match Android 9 libc++ ABI instead of the modern NDK headers.
               "-nostdinc++", "-isystem", str(out / "libcxx/include"),
               "-std=c++14", "-O2", "-fno-rtti", "-fno-exceptions", "-nostdlib++", "-Wall", "-Wextra", "-Werror"]
@@ -86,7 +88,8 @@ def build(ndk):
                        "-I" + str(out / "libnativehelper/include_jni"),
                        "-I" + str(out / "libnativehelper/header_only_include"),
                        "-I" + str(out / "art/openjdkjvmti/include")]
-    zygote_flags = common + ["-std=c++17", "-Wno-unused-parameter", "-Wno-unused-function",
+    zygote_flags = common + ['-DPOCKET_GUEST_ISA="' + info(arch)["framework"] + '"',
+                            "-std=c++17", "-Wno-unused-parameter", "-Wno-unused-function",
                             "-Wno-writable-strings"] + zygote_includes
     zygote = native / "libpocket_zygote_api28.so"
     app_process = native / "pocket-app-process-api28"
@@ -154,7 +157,7 @@ def build(ndk):
     data_files.add("system/etc/public.libraries.txt")
     data_files.add("system/etc/preloaded-classes")
     data_files.update(path.relative_to(reference).as_posix() for path in
-                      (reference / "system/framework/arm64").glob("boot*"))
+                      (reference / "system/framework" / info(arch)["framework"]).glob("boot*"))
     data_files.update(path.relative_to(reference).as_posix() for path in (reference / "system/usr").rglob("*") if path.is_file())
     for name in sorted(data_files):
         destination = stage / name
@@ -163,11 +166,12 @@ def build(ndk):
     for path in (ROOT / "runtime/api28").glob("*.rc"):
         destination = stage / "system/etc/init" / path.name
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(path.read_text().replace("@BOOTCLASSPATH@", bootclasspath))
+        destination.write_text(path.read_text().replace("@BOOTCLASSPATH@", bootclasspath)
+                               .replace("--abi-list=arm64-v8a", "--abi-list=" + info(arch)["abi"]))
         data_files.add(destination.relative_to(stage).as_posix())
     (stage / "tmp").mkdir(exist_ok=True)
     elf = subprocess.check_output([readelf, "-hlsWd", bridge], text=True)
-    assert "AArch64" in elf and "__ndk1" not in elf
+    assert info(arch)["elf_machine"] in elf and "__ndk1" not in elf
     assert "_ZN7android12ProcessState16getContextObject" in elf
     assert "HostBinder" not in elf, "API 25 class ABI must not leak into API 28"
     print(f"PASS: API 28 bridge + probe linked --no-undefined; {len(done)} ELF files staged in {stage}")

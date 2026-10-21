@@ -38,6 +38,11 @@ public final class DisplayGeometry {
         source=property(source,"ro.boot.redroid_height",height);
         return property(source,"ro.sf.lcd_density",densityDpi);
     }
+    /** Like VMOS, the guest's frame rate defaults to the host display's refresh rate. */
+    public String properties(String source,int refreshHz) {
+        if(refreshHz<1 || refreshHz>120)throw new IllegalArgumentException("Unsupported guest refresh rate");
+        return property(properties(source),"ro.boot.redroid_fps",refreshHz);
+    }
     @Override public boolean equals(Object value) {
         if(!(value instanceof DisplayGeometry))return false;
         DisplayGeometry other=(DisplayGeometry)value;

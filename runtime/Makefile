@@ -10,6 +10,21 @@ SIGNER := $(TOOLCHAIN)/build/apksigner.jar
 JAVA := $(shell find runtime/app/src -name '*.java') runtime/direct/BootBattery.java
 OUT := out/runtime
 BUNDLED_GUEST ?= out/aosp-pocket-guest-arm64.zip
+# ARCH selects the native target: arm64 (default) or x86_64. The Python builders read POCKET_ARCH.
+ARCH ?= arm64
+ifeq ($(ARCH),arm64)
+TRIPLE := aarch64-linux-android
+else ifeq ($(ARCH),x86_64)
+TRIPLE := x86_64-linux-android
+else
+$(error ARCH must be arm64 or x86_64, not $(ARCH))
+endif
+export POCKET_ARCH := $(ARCH)
+# Native outputs are per arch; switching arch discards the old CMake tree and binaries so make rebuilds them.
+# .arch is written only after a successful build, so a failed build is retried from clean.
+ifneq ($(shell cat out/runtime-native/.arch 2>/dev/null),$(ARCH))
+$(shell rm -rf out/runtime-native && mkdir -p out/runtime-native)
+endif
 .DEFAULT_GOAL := verify
 .PHONY: native verify smoke check-host check-profiles check-host-wire check-display
 .DELETE_ON_ERROR:
@@ -19,10 +34,11 @@ native: out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so o
 
 out/runtime-native/libpocket_frames.so: runtime/frame_buffers.c runtime/Makefile
 	mkdir -p out/runtime-native
-	$(LLVM)/aarch64-linux-android28-clang -O2 -Wall -Wextra -Werror -fPIC -shared -Wl,-z,max-page-size=16384 $< -landroid -o $@
+	$(LLVM)/$(TRIPLE)28-clang -O2 -Wall -Wextra -Werror -fPIC -shared -Wl,-z,max-page-size=16384 $< -landroid -o $@
 
 out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so &: $(NATIVE_INPUTS)
 	python3 tools/build_runtime_native.py --ndk $(NDK)
+	echo $(ARCH) > out/runtime-native/.arch
 
 out/runtime-native/libpocket_binder_bootstrap.so: runtime/guest-binder-bootstrap.cpp tools/build_guest_binder.py sources.lock.json
 	python3 tools/build_guest_binder.py --ndk $(NDK)
@@ -74,7 +90,7 @@ smoke: $(OUT)/guest-test.apk $(OUT)/property-probe
 
 $(OUT)/property-probe: runtime/smoke/property_probe.c
 	mkdir -p $(OUT)
-	$(LLVM)/aarch64-linux-android25-clang -O2 -Wall -Wextra -Werror -fPIE -pie -Wl,-z,max-page-size=16384 $< -o $@
+	$(LLVM)/$(TRIPLE)25-clang -O2 -Wall -Wextra -Werror -fPIE -pie -Wl,-z,max-page-size=16384 $< -o $@
 
 $(OUT)/guest-test.apk: $(shell find runtime/smoke -name '*.java' -o -name '*.xml') out/debug.keystore
 	mkdir -p $(OUT)/smoke-classes
@@ -100,6 +116,8 @@ check-host-wire:
 	java -cp out/host-wire-tests dev.kreijstal.aosppocket.bridge.HostWireTest
 
 include runtime/manager/Makefile
+include runtime/attestation/Makefile
+include runtime/magisk/Makefile
 
 check-display:
 	mkdir -p out/display-tests

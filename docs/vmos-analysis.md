@@ -214,6 +214,21 @@ or failed checks. Instruction evidence and check results are saved as
 The guest-helper manifest results are in `app-import-rom-helper.json`.
 Only the analysis tool/documentation changed; no APK rebuild was required.
 
+### App-import visual reference
+
+Further static inspection of the same artifact finds a four-column
+`GridLayoutManager` in `ImportDeviceAppFragment$c$a.invokeSuspend`.
+`ImportAppAdapter.m/H` loads each app's icon and label and updates its selection
+mark. Resource IDs `0x7f0b003a`, `0x7f0b003b` and `0x7f0b0049` resolve to
+`res/pl.xml`, `res/rI.xml` and `res/1s.xml`: the app picker with a bottom import
+button, the tabbed import container, and the icon/name/selection tile.
+`repository.h.n` assigns both APK source paths before resolving archive labels
+and icons. These are static layout/code observations, not a VMOS runtime trace.
+
+Pocket 0.15 independently implements a four-column icon picker, a bottom action
+and a selected-APK preview. Its installed-app and document-file paths share the
+existing guest installer; no VMOS assets or implementation are reused.
+
 ## Full-screen interaction
 
 **DEX derived, same 2.0.0-alpha09 artifact.** `VmFragment.H` checks that the

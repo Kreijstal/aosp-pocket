@@ -1,0 +1,68 @@
+{
+  "passed": true,
+  "classification": "synthetic_only",
+  "termux_version": "0.118.3",
+  "guest_sdk": 28,
+  "guest_arch": "x86_64",
+  "host_kernel_uid": 10118,
+  "termux_pid": 13669,
+  "shell_pid": 13759,
+  "bootstrap_second_stage_success": true,
+  "fresh_prefix": true,
+  "pty_shell_running": true,
+  "app_domain": "u:r:untrusted_app_27:s0:c118,c256,c512,c768",
+  "cap_eff": 0,
+  "seccomp": 2,
+  "tracer_pid": 0,
+  "release": {
+    "version_name": "0.14",
+    "version_code": 14,
+    "apk": "out/manager-0.14/aosp-pocket-manager-0.14.apk",
+    "arm64_runtime_built": true,
+    "physical_samsung_validation": "pending",
+    "modified_apk_entries": [
+      "AndroidManifest.xml",
+      "assets/api28-rootfs/system/lib64/libpocket_direct_boot.so.payload"
+    ],
+    "host_dex_unchanged": true,
+    "signature_verified": true
+  },
+  "exec_cache": {
+    "passed": true,
+    "ordinary_kernel_uid": 10118,
+    "virtual_uid": 10016,
+    "original_interpreter": "/system/bin/linker64",
+    "original_executable_bytes_unchanged": true,
+    "cache_reused": true,
+    "source_update_invalidates_cache": true,
+    "cached_copy_cannot_bypass_source_execute_permission": true,
+    "stdout_and_stderr_unpolluted": true,
+    "execution": {
+      "exit_code": 0,
+      "stdout": "EXEC_CACHE_OK\n10016\n",
+      "stderr": ""
+    },
+    "harness_context": "Native functional checks run through su with the app UID; actual Termux/Bash confinement checked separately."
+  },
+  "setup": [
+    "Separate managerlocal package in local x86-64 Cuttlefish VM, preserving existing packages",
+    "Guest image pre-staged to avoid storing a second complete image in its APK",
+    "Private guest storage threshold set to 16 MiB for package installation",
+    "Only test guest CJK/emoji fonts omitted to fit the VM; production APK retains all original fonts",
+    "Orphan owner metadata from failed test prefixes reclaimed before the final clean run",
+    "Root used by diagnostics harness for setup and inspection; real Termux and Bash retain the app UID, SELinux domain, seccomp and zero capabilities"
+  ],
+  "checks": {
+    "host": "python3 tools/build_direct.py --host && python3 tools/validate_direct_host.py",
+    "fresh_bootstrap": "python3 out/manager-local/validate_fresh_bootstrap.py",
+    "arm64_build": "python3 tools/build_exec_runtime.py --base-apk out/manager/seed-0.10.apk --out-dir out/exec-arm64 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+    "apk": "python3 tools/validate_manager_apk.py out/manager-0.14/aosp-pocket-manager-0.14.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c"
+  },
+  "screenshot": "images/api28-termux.png",
+  "cleanup": {
+    "test_package_uninstalled": true,
+    "clean_stop": "INIT_REAP service=pocket-log-writer pid=13145 code=2 status=15\nINIT_REAP service=pocket-zygote pid=13147 code=2 status=15\nAPI28_INIT_STOPPED reaped=13 remaining=0 failed=0\nAPI28_PROPERTIES_STOPPED",
+    "existing_vm_system_preserved": true,
+    "vm_free_space": "Filesystem       Size Used Avail Use% Mounted on\n/dev/block/dm-98 7.9G 6.9G  963M  89% /data/user/0"
+  }
+}

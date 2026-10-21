@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: GPL-3.0-only
+on property:pocket.data.ready=1
+    start pocket-magisk-prepare
+
+on property:pocket.magisk.prepared=1
+    start pocket-magisk-daemon
+    start pocket-magisk-postfs
+
+on property:pocket.magisk.postfs=1
+    class_start pocket-zygote
+    start pocket-magisk-service
+
+on property:sys.boot_completed=1
+    start pocket-magisk-complete
+
+service pocket-magisk-prepare /system/bin/sh /system/etc/pocket-magisk/setup.sh
+    class pocket-bootstrap
+    disabled
+    oneshot
+    user 0
+    group 0
+
+service pocket-magisk-daemon /sbin/magisk --daemon
+    class pocket-bootstrap
+    disabled
+    user 0
+    group 0
+    setenv POCKET_MAGISK_FOREGROUND 1
+
+service pocket-magisk-postfs /system/bin/sh /system/etc/pocket-magisk/stage.sh post-fs-data
+    class pocket-bootstrap
+    disabled
+    oneshot
+    user 0
+    group 0
+
+service pocket-magisk-service /system/bin/sh /system/etc/pocket-magisk/stage.sh service
+    class pocket-bootstrap
+    disabled
+    oneshot
+    user 0
+    group 0
+
+service pocket-magisk-complete /system/bin/sh /system/etc/pocket-magisk/stage.sh boot-complete
+    class pocket-bootstrap
+    disabled
+    oneshot
+    user 0
+    group 0

@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include "guest_paths.h"
 #include <dirent.h>
+#include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -148,7 +149,8 @@ static int resolve(int dir, const char* path, bool follow, Path* result) {
     }
     int stack[PATH_MAX / 2], depth = 0, links = 0;
 #ifdef POCKET_DIRECT_BOOT
-    stack[0] = raw_open(AT_FDCWD, pocket_boot_passthrough(todo) ? "/" : root, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
+    bool host_tree = pocket_boot_passthrough(todo);
+    stack[0] = raw_open(AT_FDCWD, host_tree ? "/" : root, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
 #else
     stack[0] = raw_open(AT_FDCWD, root, O_PATH | O_DIRECTORY | O_CLOEXEC, 0);
 #endif
@@ -176,7 +178,7 @@ static int resolve(int dir, const char* path, bool follow, Path* result) {
         // Present the selected private data directory as a virtual mount at
         // /data, including lstat/realpath semantics. Its host-side symlink is
         // an implementation detail, not part of the guest filesystem view.
-        if(depth==0 && data_alias[0] && !strcmp(part,"data")) {
+        if(!host_tree && depth==0 && data_alias[0] && !strcmp(part,"data")) {
             int next=raw_open(stack[depth],data_alias,O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC,0);
             if(next<0) {saved=errno;break;}
             stack[++depth]=next;continue;
@@ -332,6 +334,18 @@ int __wrap_fstatat(int dir, const char* path, struct stat* st, int flags) {
 }
 int __wrap_stat(const char* path, struct stat* st) { return __wrap_fstatat(AT_FDCWD, path, st, 0); }
 int __wrap_lstat(const char* path, struct stat* st) { return __wrap_fstatat(AT_FDCWD, path, st, AT_SYMLINK_NOFOLLOW); }
+int __wrap_mknodat(int dir, const char* path, mode_t mode, dev_t device) {
+    int state = active(); if (state < 0) return -1;
+    if (!state) return syscall(SYS_mknodat, dir, path, mode, device);
+    Path p; if (resolve(dir, path, false, &p)) return -1;
+    // Use the real kernel operation: FIFO creation is unprivileged, while
+    // character/block device creation retains the host's permission checks.
+    int rc = syscall(SYS_mknodat, p.dir, p.name, mode, device);
+#ifdef POCKET_DIRECT_BOOT
+    if (!rc) rc = pocket_boot_created_at(p.dir, p.name);
+#endif
+    return finish(&p, rc);
+}
 ssize_t __wrap_readlinkat(int dir, const char* path, char* out, size_t size) {
     int state = active(); if (state < 0) return -1;
     if (!state) return syscall(SYS_readlinkat, dir, path, out, size);
@@ -529,6 +543,9 @@ int __wrap_truncate(const char* path, off_t length) {
 int __wrap_utimensat(int dir, const char* path, const struct timespec times[2], int flags) {
     int state = active(); if (state < 0) return -1;
     if (!state) return syscall(SYS_utimensat, dir, path, times, flags);
+    // Bionic implements futimens through this syscall with a null pathname.
+    // The descriptor already identifies the file; no path translation applies.
+    if (!path) return syscall(SYS_utimensat, dir, NULL, times, flags);
     if (flags & ~AT_SYMLINK_NOFOLLOW) { errno = ENOTSUP; return -1; }
     Path p; if (resolve(dir, path, !(flags & AT_SYMLINK_NOFOLLOW), &p)) return -1;
     if (require_directory(&p)) return finish(&p, -1);
@@ -612,26 +629,274 @@ static int socket_name(int nr, int fd, struct sockaddr* address, socklen_t* leng
 int __wrap_getsockname(int fd, struct sockaddr* address, socklen_t* length) { return socket_name(SYS_getsockname, fd, address, length); }
 int __wrap_getpeername(int fd, struct sockaddr* address, socklen_t* length) { return socket_name(SYS_getpeername, fd, address, length); }
 
-int __wrap_execve(const char* file, char* const argv[], char* const envp[]) {
+// The loader runs before our libc hooks. Translate an executable's embedded
+// library search path for it, without modifying the program or its packages.
+static char* executable_runpath(int fd) {
+    Elf64_Ehdr elf;
+    if (pread(fd, &elf, sizeof(elf), 0) != sizeof(elf) ||
+        memcmp(elf.e_ident, ELFMAG, SELFMAG) || elf.e_ident[EI_CLASS] != ELFCLASS64 ||
+        elf.e_ident[EI_DATA] != ELFDATA2LSB || elf.e_phentsize != sizeof(Elf64_Phdr) ||
+        !elf.e_phnum || elf.e_phnum > 1024 || elf.e_phoff > INT64_MAX) return NULL;
+    size_t bytes = elf.e_phnum * sizeof(Elf64_Phdr);
+    Elf64_Phdr* segments = malloc(bytes);
+    if (!segments) return NULL;
+    if (pread(fd, segments, bytes, elf.e_phoff) != (ssize_t)bytes) { free(segments); return NULL; }
+    uint64_t table = 0, size = 0, runpath = UINT64_MAX, rpath = UINT64_MAX;
+    for (unsigned i = 0; i < elf.e_phnum; ++i) {
+        Elf64_Phdr* p = &segments[i];
+        if (p->p_type != PT_DYNAMIC || p->p_filesz > 65536 || p->p_offset > INT64_MAX-65536) continue;
+        for (uint64_t offset = 0; offset+sizeof(Elf64_Dyn) <= p->p_filesz; offset += sizeof(Elf64_Dyn)) {
+            Elf64_Dyn item;
+            if (pread(fd, &item, sizeof(item), p->p_offset+offset) != sizeof(item) || item.d_tag == DT_NULL) break;
+            if (item.d_tag == DT_STRTAB) table = item.d_un.d_ptr;
+            if (item.d_tag == DT_STRSZ) size = item.d_un.d_val;
+            if (item.d_tag == DT_RUNPATH) runpath = item.d_un.d_val;
+            if (item.d_tag == DT_RPATH) rpath = item.d_un.d_val;
+        }
+    }
+    if (runpath == UINT64_MAX) runpath = rpath;
+    char* value = NULL;
+    for (unsigned i = 0; table && runpath < size && i < elf.e_phnum; ++i) {
+        Elf64_Phdr* p = &segments[i];
+        if (p->p_type != PT_LOAD || table < p->p_vaddr || table-p->p_vaddr >= p->p_filesz) continue;
+        uint64_t delta = table-p->p_vaddr;
+        if (runpath >= p->p_filesz-delta || p->p_filesz > INT64_MAX || p->p_offset > INT64_MAX-p->p_filesz) break;
+        size_t length = size-runpath > PATH_MAX ? PATH_MAX : (size_t)(size-runpath);
+        if (length > p->p_filesz-delta-runpath) length = p->p_filesz-delta-runpath;
+        value = malloc(length);
+        if (value && (pread(fd, value, length, p->p_offset+delta+runpath) != (ssize_t)length || !memchr(value, 0, length))) {
+            free(value); value = NULL;
+        }
+        break;
+    }
+    free(segments); return value;
+}
+static int append_exec_paths(char** paths, const char* search, const char* executable) {
+    if (!search) return 0;
+    char* copy = strdup(search);
+    if (!copy) return -1;
+    char* remaining = copy;
+    char* part;
+    while ((part = strsep(&remaining, ":"))) {
+        char expanded[PATH_MAX], mapped[PATH_MAX];
+        const char* path = *part ? part : ".";
+        size_t token = !strncmp(path, "$ORIGIN", 7) ? 7 : !strncmp(path, "${ORIGIN}", 9) ? 9 : 0;
+        if (token) {
+            const char* slash = strrchr(executable, '/');
+            if (!slash || snprintf(expanded, sizeof(expanded), "%.*s%s", (int)(slash-executable), executable, path+token) >= (int)sizeof(expanded)) {
+                free(copy); errno = ENAMETOOLONG; return -1;
+            }
+            path = expanded;
+        }
+        size_t prefix = strlen(root);
+        if (!strncmp(path, root, prefix) && (path[prefix] == '/' || !path[prefix]))
+            path = path[prefix] ? path+prefix : "/";
+        Path directory;
+        if (resolve(AT_FDCWD, path, true, &directory)) continue;
+        int rc = host_path(&directory, mapped); finish(&directory, rc);
+        if (rc) { free(copy); return -1; }
+        bool present = false;
+        size_t length = strlen(mapped);
+        for (const char* at = *paths; *at;) {
+            const char* end = strchr(at, ':');
+            size_t size = end ? (size_t)(end-at) : strlen(at);
+            if (size == length && !memcmp(at, mapped, length)) { present = true; break; }
+            if (!end) break;
+            at = end+1;
+        }
+        if (present) continue;
+        char* joined;
+        if (asprintf(&joined, "%s:%s", *paths, mapped) < 0) { free(copy); return -1; }
+        free(*paths); *paths = joined;
+    }
+    free(copy); return 0;
+}
+
+#ifdef POCKET_DIRECT_BOOT
+typedef struct {
+    uint64_t magic, device, inode, size;
+    int64_t modified, modified_ns, changed, changed_ns;
+} ExecStamp;
+static ExecStamp exec_stamp(const struct stat* st) {
+    return (ExecStamp){0x504f434b45584531ULL, st->st_dev, st->st_ino, st->st_size,
+        st->st_mtim.tv_sec, st->st_mtim.tv_nsec, st->st_ctim.tv_sec, st->st_ctim.tv_nsec};
+}
+static int write_exec_at(int fd, const void* bytes, size_t size, off_t offset) {
+    while (size) {
+        ssize_t count = pwrite(fd, bytes, size, offset);
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) { if (!count) errno = EIO; return -1; }
+        size -= count; bytes = (const char*)bytes+count; offset += count;
+    }
+    return 0;
+}
+// Downloaded Android executables still name /system/bin/linker64. Keep the
+// original intact and atomically cache a copy beside it, with a private guest
+// PT_INTERP. Keeping the same directory preserves $ORIGIN library resolution.
+static int prepare_exec_interpreter(Path* path, int fd, char* executable) {
+    Elf64_Ehdr elf;
+    if (pread(fd, &elf, sizeof(elf), 0) != sizeof(elf) ||
+        memcmp(elf.e_ident, ELFMAG, SELFMAG) || elf.e_ident[EI_CLASS] != ELFCLASS64 ||
+        elf.e_ident[EI_DATA] != ELFDATA2LSB || elf.e_phentsize != sizeof(Elf64_Phdr) ||
+        elf.e_phnum > 1024 || elf.e_phoff > INT64_MAX-65536) return 0;
+    for (unsigned i = 0; i < elf.e_phnum; ++i) {
+        off_t position = elf.e_phoff+i*sizeof(Elf64_Phdr);
+        Elf64_Phdr program;
+        if (pread(fd, &program, sizeof(program), position) != sizeof(program)) return 0;
+        if (program.p_type != PT_INTERP) continue;
+        char original[PATH_MAX], linker[PATH_MAX];
+        if (!program.p_filesz || program.p_filesz > sizeof(original) || program.p_offset > INT64_MAX-PATH_MAX ||
+            pread(fd, original, program.p_filesz, program.p_offset) != (ssize_t)program.p_filesz ||
+            original[program.p_filesz-1] || strcmp(original, "/system/bin/linker64")) return 0;
+        if (snprintf(linker, sizeof(linker), "%s/system/bin/linker64", root) >= (int)sizeof(linker)) { errno = ENAMETOOLONG; return -1; }
+        if (syscall(SYS_faccessat, path->dir, path->name, X_OK)) return -1;
+        struct stat source;
+        if (syscall(SYS_fstat, fd, &source)) return -1;
+        if (source.st_size < 0 || source.st_size > INT64_MAX-PATH_MAX-(off_t)sizeof(ExecStamp)) { errno = EFBIG; return -1; }
+        ExecStamp stamp = exec_stamp(&source);
+        size_t length = strlen(linker)+1;
+        uint64_t hash = 14695981039346656037ULL;
+        for (const unsigned char* c = (const unsigned char*)path->name; *c; ++c) hash = (hash^*c)*1099511628211ULL;
+        char cache[96], temporary[128];
+        snprintf(cache, sizeof(cache), ".pocket-exec-%016llx", (unsigned long long)hash);
+        int old = raw_open(path->dir, cache, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC, 0);
+        bool valid = false;
+        if (old >= 0) {
+            struct stat stored; ExecStamp saved; char saved_linker[PATH_MAX];
+            valid = !syscall(SYS_fstat, old, &stored) && S_ISREG(stored.st_mode) && (stored.st_mode & S_IXUSR) &&
+                stored.st_size == source.st_size+(off_t)length+(off_t)sizeof(stamp) &&
+                pread(old, &saved, sizeof(saved), source.st_size+length) == sizeof(saved) && !memcmp(&stamp, &saved, sizeof(stamp)) &&
+                pread(old, saved_linker, length, source.st_size) == (ssize_t)length && !memcmp(linker, saved_linker, length);
+            close(old);
+        }
+        if (!valid) {
+            snprintf(temporary, sizeof(temporary), "%s.%d.%ld.tmp", cache, getpid(), syscall(SYS_gettid));
+            int copy = raw_open(path->dir, temporary, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0700);
+            if (copy < 0) return -1;
+            char buffer[65536]; off_t offset = 0;
+            int rc = syscall(SYS_fchmod, copy, 0700);
+            while (!rc && offset < source.st_size) {
+                size_t count = source.st_size-offset > (off_t)sizeof(buffer) ? sizeof(buffer) : (size_t)(source.st_size-offset);
+                ssize_t read_count = pread(fd, buffer, count, offset);
+                if (read_count < 0 && errno == EINTR) continue;
+                if (read_count <= 0) { if (!read_count) errno = EIO; rc = -1; break; }
+                if (write_exec_at(copy, buffer, read_count, offset)) { rc = -1; break; }
+                offset += read_count;
+            }
+            program.p_offset = source.st_size; program.p_vaddr = program.p_paddr = 0;
+            program.p_filesz = program.p_memsz = length;
+            if (!rc) rc = write_exec_at(copy, linker, length, source.st_size) ||
+                write_exec_at(copy, &stamp, sizeof(stamp), source.st_size+length) ||
+                write_exec_at(copy, &program, sizeof(program), position);
+            struct stat after;
+            if (!rc) {
+                rc = syscall(SYS_fstat, fd, &after);
+                if (!rc) { ExecStamp current = exec_stamp(&after); if (memcmp(&stamp, &current, sizeof(stamp))) { errno = EAGAIN; rc = -1; } }
+            }
+            int saved = errno;
+            if (close(copy) && !rc) { rc = -1; saved = errno; }
+            if (!rc && syscall(SYS_renameat, path->dir, temporary, path->dir, cache)) { rc = -1; saved = errno; }
+            syscall(SYS_unlinkat, path->dir, temporary, 0);
+            if (rc) { errno = saved; return -1; }
+        }
+        Path cached = *path; strcpy(cached.name, cache);
+        return host_path(&cached, executable);
+    }
+    return 0;
+}
+#endif
+
+static int exec_guest(const char* file, char* const argv[], char* const envp[], unsigned depth) {
     int state = active(); if (state < 0) return -1;
     if (!state) return syscall(SYS_execve, file, argv, envp);
     Path p; if (resolve(AT_FDCWD, file, true, &p)) return -1;
     char executable[PATH_MAX];
     if (require_directory(&p) || host_path(&p, executable)) return finish(&p, -1);
+    // The kernel cannot resolve a guest-only shebang interpreter. Dispatch it
+    // through the same guest path resolver, retaining Linux's single optional
+    // argument and the caller's script name instead of invoking a host shell.
+    const char* libraries = getenv("POCKET_DIRECT_LIBRARIES");
+#ifdef POCKET_DIRECT_BOOT
+    char pinned_libraries[PATH_MAX*2+32];
+    if (snprintf(pinned_libraries, sizeof(pinned_libraries), "%s/system/lib64:%s/vendor/lib64", root, root) >= (int)sizeof(pinned_libraries)) {
+        close(p.dir); errno = ENAMETOOLONG; return -1;
+    }
+    libraries = pinned_libraries;
+#endif
+    char* runpath = NULL;
+    int fd = raw_open(p.dir, p.name, O_RDONLY | O_NONBLOCK | O_CLOEXEC, 0);
+    if (fd >= 0) {
+        char header[257];
+        ssize_t count;
+        do { count = read(fd, header, sizeof(header)-1); } while (count < 0 && errno == EINTR);
+        if (count >= 2 && header[0] == '#' && header[1] == '!') {
+            close(fd);
+            if (syscall(SYS_faccessat, p.dir, p.name, X_OK)) return finish(&p, -1);
+            close(p.dir);
+            if (depth >= 4) { errno = ELOOP; return -1; }
+            header[count] = 0;
+            char* end = memchr(header, '\n', count);
+            if (!end) {
+                end = memchr(header, 0, count);
+                if (!end) {
+                    // Never execute a truncated interpreter pathname.
+                    end = header + count;
+                    if (count == (ssize_t)sizeof(header)-1) { errno = ENOEXEC; return -1; }
+                }
+            }
+            while (end > header+2 && (end[-1] == ' ' || end[-1] == '\t')) --end;
+            *end = 0;
+            char* interpreter = header+2;
+            while (*interpreter == ' ' || *interpreter == '\t') ++interpreter;
+            if (!*interpreter) { errno = ENOEXEC; return -1; }
+            char* argument = interpreter;
+            while (*argument && *argument != ' ' && *argument != '\t') ++argument;
+            if (*argument) *argument++ = 0;
+            while (*argument == ' ' || *argument == '\t') ++argument;
+            size_t argc = 0;
+            while (argv && argv[argc]) ++argc;
+            if (argc > SIZE_MAX/sizeof(char*)-4) { errno = E2BIG; return -1; }
+            char** args = calloc(argc+4, sizeof(char*));
+            if (!args) { errno = ENOMEM; return -1; }
+            size_t used = 0;
+            args[used++] = interpreter;
+            if (*argument) args[used++] = argument;
+            args[used++] = (char*)file;
+            for (size_t i = 1; i < argc; ++i) args[used++] = argv[i];
+            int rc = exec_guest(interpreter, args, envp, depth+1);
+            int saved = errno;
+            free(args); errno = saved; return rc;
+        }
+        if (libraries) runpath = executable_runpath(fd);
+#ifdef POCKET_DIRECT_BOOT
+        if (prepare_exec_interpreter(&p, fd, executable)) {
+            int saved = errno; close(fd); free(runpath); errno = saved; return finish(&p, -1);
+        }
+#endif
+        close(fd);
+    }
     close(p.dir);
     // Android fixtures have their ELF interpreter set to the pinned guest
     // linker. Preserve its library path when the caller supplies a fresh envp.
     size_t envc = 0;
     while (envp && envp[envc]) ++envc;
-    const char* libraries = getenv("POCKET_DIRECT_LIBRARIES");
+    char* search = libraries ? strdup(libraries) : NULL;
+    if (libraries && !search) { free(runpath); return -1; }
+    for (size_t i = 0; libraries && i < envc; ++i)
+        if (!strncmp(envp[i], "LD_LIBRARY_PATH=", 16) && append_exec_paths(&search, envp[i]+16, executable)) {
+            free(search); free(runpath); return -1;
+        }
+    if (libraries && append_exec_paths(&search, runpath, executable)) { free(search); free(runpath); return -1; }
+    free(runpath);
     char** env = calloc(envc + 24, sizeof(char*));
     char *rootenv = NULL, *searchenv = NULL, *libenv = NULL, *configenv = NULL;
     if (!env || asprintf(&rootenv, "POCKET_DIRECT_ROOT=%s", root) < 0 ||
-        (libraries && (asprintf(&searchenv, "LD_LIBRARY_PATH=%s", libraries) < 0 ||
+        (libraries && (asprintf(&searchenv, "LD_LIBRARY_PATH=%s", search) < 0 ||
                        asprintf(&libenv, "POCKET_DIRECT_LIBRARIES=%s", libraries) < 0 ||
                        asprintf(&configenv, "LD_CONFIG_FILE=%s/system/etc/ld.config.txt", root) < 0))) {
-        free(env); free(rootenv); free(searchenv); free(libenv); free(configenv); errno = ENOMEM; return -1;
+        free(search); free(env); free(rootenv); free(searchenv); free(libenv); free(configenv); errno = ENOMEM; return -1;
     }
+    free(search);
     size_t j = 0;
     for (size_t i = 0; i < envc; ++i)
         if (strncmp(envp[i], "POCKET_DIRECT_ROOT=", 19) &&
@@ -640,11 +905,13 @@ int __wrap_execve(const char* file, char* const argv[], char* const envp[]) {
     env[j++] = rootenv;
     if (libraries) { env[j++] = searchenv; env[j++] = libenv; env[j++] = configenv; }
 #ifdef POCKET_DIRECT_BOOT
-    const char* keys[] = {"POCKET_DIRECT_ID", "POCKET_DIRECT_GROUPS", "POCKET_DIRECT_CONSOLE", "POCKET_PARENT_PID", "LD_PRELOAD", NULL};
+    const char* keys[] = {"POCKET_DIRECT_ID", "POCKET_DIRECT_GROUPS", "POCKET_DIRECT_CONSOLE", "POCKET_PARENT_PID", NULL};
     char* extra[8] = {0}; int extras = 0;
     for (int k = 0; keys[k]; ++k) {
-        const char* value = getenv(keys[k]);
-        if (!value) continue;
+        char value[PATH_MAX];
+        int found = pocket_boot_exec_value(keys[k], value, sizeof(value));
+        if (found < 0) _exit(126);
+        if (!found) continue;
         size_t key_length = strlen(keys[k]);
         for (size_t i = 0; i < j;)
             if (!strncmp(env[i], keys[k], key_length) && env[i][key_length] == '=') env[i] = env[--j]; else ++i;
@@ -652,17 +919,36 @@ int __wrap_execve(const char* file, char* const argv[], char* const envp[]) {
         env[j++] = extra[extras++];
     }
     // Always retain the runtime ahead of any RC-provided guest preload.
-    char preload[PATH_MAX * 3 + 256];
+    char preload[PATH_MAX * 4 + 256];
     snprintf(preload, sizeof(preload), "LD_PRELOAD=%s/system/lib64/libpocket_direct_boot.so:%s/system/lib64/libpocket_binder_api28.so:%s/system/lib64/libpocket_hidl_api28.so", root, root, root);
+    // Explicit owner opt-in, restricted to the guest keystore executable.
+    // Other guest/host processes retain the normal preload list.
+    char keystore_path[PATH_MAX], config_path[PATH_MAX], attestation_library[PATH_MAX];
+    snprintf(keystore_path, sizeof(keystore_path), "%s/system/bin/keystore", root);
+    snprintf(config_path, sizeof(config_path), "%s/%s/misc/keystore/pocket-teesim.json", root, data_alias);
+    snprintf(attestation_library, sizeof(attestation_library), "%s/system/lib64/libpocket_teesim_api28.so", root);
+    struct stat config_stat, library_stat;
+    if (!strcmp(executable, keystore_path) && data_alias[0] &&
+        raw_stat(AT_FDCWD, config_path, &config_stat, AT_SYMLINK_NOFOLLOW) == 0 &&
+        S_ISREG(config_stat.st_mode) && (config_stat.st_mode & 0077) == 0 &&
+        raw_stat(AT_FDCWD, attestation_library, &library_stat, AT_SYMLINK_NOFOLLOW) == 0 &&
+        S_ISREG(library_stat.st_mode)) {
+        size_t used = strlen(preload);
+        snprintf(preload + used, sizeof(preload) - used, ":%s/system/lib64/libpocket_teesim_api28.so", root);
+    }
     for (size_t i = 0; i < j;) if (!strncmp(env[i], "LD_PRELOAD=", 11)) env[i] = env[--j]; else ++i;
     env[j++] = preload;
     env[j] = NULL;
 #endif
     int rc = syscall(SYS_execve, executable, argv, env);
     int e = errno;
-    free(env); free(rootenv); free(searchenv); free(libenv); free(configenv); errno = e;
+    free(env); free(rootenv); free(searchenv); free(libenv); free(configenv);
 #ifdef POCKET_DIRECT_BOOT
     for (int i = 0; i < extras; ++i) free(extra[i]);
 #endif
+    errno = e;
     return rc;
+}
+int __wrap_execve(const char* file, char* const argv[], char* const envp[]) {
+    return exec_guest(file, argv, envp, 0);
 }

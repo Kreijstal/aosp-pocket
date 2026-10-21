@@ -1,0 +1,6 @@
+id=pocket_magisk_fixture
+name=Pocket Magisk integration test
+version=1
+versionCode=1
+author=AOSP Pocket
+description=Offline test of the actual Magisk installer and module boot stages

@@ -7,8 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-
-ROOT = Path(__file__).resolve().parents[1]
+from target import ROOT, clang, info, selected
 
 
 def main():
@@ -23,7 +22,7 @@ def main():
     if subprocess.check_output(["git", "-C", str(source), "status", "--porcelain"], text=True):
         raise SystemExit("Toybox source has local modifications; record a new source revision first")
     llvm = args.ndk.resolve() / "toolchains/llvm/prebuilt/linux-x86_64/bin"
-    cc = llvm / "aarch64-linux-android28-clang"
+    cc = clang(llvm, 28)
     if not cc.is_file():
         raise SystemExit(f"NDK compiler missing: {cc}")
     dest = ROOT / "out/toybox-src"
@@ -38,7 +37,7 @@ def main():
     subprocess.run(["make", "allnoconfig", f"KCONFIG_ALLCONFIG={ROOT / 'guest/toybox.config'}"],
                    cwd=dest, env=env, check=True)
     subprocess.run(["make", "toybox"], cwd=dest, env=env, check=True)
-    output = ROOT / "out/lib/arm64-v8a/libtoybox_exec.so"
+    output = ROOT / "out/lib" / info()["abi"] / "libtoybox_exec.so"
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(dest / "toybox", output)
     output.chmod(0o755)

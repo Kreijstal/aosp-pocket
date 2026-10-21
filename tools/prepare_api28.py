@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Fetch a pinned ARM64 Android 9 ABI reference and sparse AOSP headers.
+"""Fetch a pinned Android 9 ABI reference (arm64 or x86_64) and sparse AOSP headers.
 
 Does not start Docker, execute the image, or touch the working API 25 guest.
 The reference supplies bionic/platform/ART libraries for isolated bring-up.
@@ -16,19 +16,24 @@ import tarfile
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
+# arch -> (lock entry, cache directory). The arm64 entries keep their original names.
+ARCHITECTURES = {
+    "arm64": ("abi_reference", "reference"),
+    "x86_64": ("abi_reference_x86_64", "reference-x86_64"),
+}
 
 
-def prepare(art=False):
+def prepare(art=False, arch="arm64"):
     cache = ROOT / "out/api28"
     cache.mkdir(parents=True, exist_ok=True)
     # Multiple independent backends share this immutable source/reference cache.
     # Serialize Git sparse-checkout updates and archive publication.
     with (cache / ".prepare.lock").open("a") as guard:
         fcntl.flock(guard.fileno(), fcntl.LOCK_EX)
-        return _prepare(art)
+        return _prepare(art, arch)
 
 
-def _prepare(art=False):
+def _prepare(art=False, arch="arm64"):
     lock = json.loads((ROOT / "sources.lock.json").read_text())["guest_api28"]
     cache = ROOT / "out/api28"
     for item in lock["headers"]:
@@ -42,7 +47,7 @@ def _prepare(art=False):
         subprocess.run(["git", "-C", source, "sparse-checkout", "set", *item["paths"]], check=True)
         if subprocess.check_output(["git", "-C", source, "status", "--porcelain"], text=True):
             raise SystemExit(f"API 28 reference headers have local changes: {source}")
-    image = lock["abi_reference"]
+    image = lock[ARCHITECTURES[arch][0]]
     digest = image["layer_digest"].removeprefix("sha256:")
     archive = cache / "downloads" / (digest + ".tar.gz")
     archive.parent.mkdir(parents=True, exist_ok=True)
@@ -56,7 +61,7 @@ def _prepare(art=False):
         with urllib.request.urlopen(request, timeout=60) as src, temporary.open("wb") as dst:
             shutil.copyfileobj(src, dst)
         temporary.rename(archive)
-    root = cache / "reference"
+    root = cache / ARCHITECTURES[arch][1]
     marker = root / ".pocket-reference"
     art_marker = root / ".pocket-art-reference"
     if marker.exists() and marker.read_text().strip() == digest and (root / "system/etc/NOTICE.xml.gz").is_file() and (
@@ -84,13 +89,13 @@ def _prepare(art=False):
                 selected |= name in ("init.environ.rc", "system/bin/dalvikvm64", "system/bin/app_process64", "system/etc/event-log-tags",
                                       "system/etc/public.libraries.txt", "system/etc/preloaded-classes") or (
                     path.parent.as_posix() == "system/framework" and (path.suffix == ".jar" or path.name.startswith("boot"))) or (
-                    name.startswith("system/framework/arm64/boot")) or name.startswith("system/usr/icu/") or (
+                    name.startswith(f"system/framework/{arch}/boot")) or name.startswith("system/usr/icu/") or (
                     name == "system/usr/share/zoneinfo/tzdata")
                 if selected and entry.issym():
                     # Flatten only the known ARM64 boot-image VDEX links into
                     # regular payloads. No archive symlink is created on host.
                     target = PurePosixPath(entry.linkname.removeprefix("/"))
-                    if not (name.startswith("system/framework/arm64/boot") and name.endswith(".vdex") and
+                    if not (name.startswith(f"system/framework/{arch}/boot") and name.endswith(".vdex") and
                             target.parent.as_posix() == "system/framework" and target.name.startswith("boot") and
                             target.suffix == ".vdex" and ".." not in target.parts):
                         raise SystemExit(f"Unexpected ART reference link: {name}: {entry.linkname}")
@@ -115,4 +120,6 @@ def _prepare(art=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--art", action="store_true", help="also stage the Android 9 ART/boot-classpath reference")
-    print("API 28 ABI reference:", prepare(art=parser.parse_args().art))
+    parser.add_argument("--arch", choices=sorted(ARCHITECTURES), default="arm64")
+    arguments = parser.parse_args()
+    print("API 28 ABI reference:", prepare(art=arguments.art, arch=arguments.arch))

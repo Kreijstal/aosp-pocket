@@ -26,6 +26,7 @@ public final class PocketManifest {
         attributes.put("resizeableActivity", 0x010104f6);
         attributes.put("supportsPictureInPicture", 0x010104f7);
         attributes.put("scheme", 0x01010027);
+        attributes.put("authorities", 0x01010018);
         attributes.put("enableOnBackInvokedCallback", 0x0101066c);
         BinaryXmlEncoder.main(args);
         // The generic builder emits numeric values as integers. These two

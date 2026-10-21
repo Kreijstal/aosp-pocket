@@ -1,0 +1,23 @@
+{
+  "device": "Samsung Galaxy S20 FE SM-G780G",
+  "guestApi": 28,
+  "connection": "pf-phone2 owner console",
+  "magiskVersion": "30.7",
+  "magiskFork": "https://github.com/Kreijstal/Magisk/tree/pocket-api28",
+  "nativeBuild": "PASS",
+  "fullApkBuild": "PASS: 0.23; v3 signature verified",
+  "actualDaemonVersionHandshake": "PASS",
+  "magiskSuGuestRoot": "PASS",
+  "nonRootPrivilegedRequestDenied": "PASS",
+  "officialModuleZipInstaller": "PASS",
+  "moduleUpgradeAndScriptExecution": "observed after standalone init restart",
+  "modulePropertyAssertion": "FAIL: resetprop -n value not visible through guest getprop",
+  "procMagicLinksAndRealFifo": "PASS",
+  "fullAndroidUiBoot": "pending",
+  "hostRootInstalled": false,
+  "hostKernelModified": false,
+  "hostSelinuxPolicyModified": false,
+  "hardwareAttestationEstablished": false,
+  "privateKeysBundled": false,
+  "unsupported": ["Magic Mount", "kernel modules", "mount namespaces", "SELinux rules", "Riru", "Zygisk"]
+}

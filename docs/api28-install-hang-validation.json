@@ -1,0 +1,104 @@
+{
+  "version": "0.17",
+  "classification": "synthetic_only",
+  "environment": "ARM64 Cuttlefish on Raspberry Pi; Android 9 direct guest",
+  "causes": [
+    {
+      "component": "host command queue",
+      "effect": "APK copy and installer wait blocked touch/navigation",
+      "before": {
+        "classification": "synthetic_only",
+        "kernel_uid": 10179,
+        "copy": {
+          "input_while_blocked": false,
+          "input_delay_ms": 3001,
+          "install_completed_after_release": true
+        },
+        "commit": {
+          "input_while_blocked": false,
+          "input_delay_ms": 3000,
+          "install_completed_after_release": true
+        },
+        "passed": false
+      },
+      "after": {
+        "classification": "synthetic_only",
+        "kernel_uid": 10179,
+        "copy": {
+          "input_while_blocked": true,
+          "input_delay_ms": 36,
+          "install_completed_after_release": true
+        },
+        "commit": {
+          "input_while_blocked": true,
+          "input_delay_ms": 12,
+          "install_completed_after_release": true
+        },
+        "passed": true
+      }
+    },
+    {
+      "component": "guest netd legacy permission protocol",
+      "effect": "PACKAGE_ADDED after granting CHANGE_NETWORK_STATE killed system_server",
+      "observed_command": "network permission user set NETWORK 10016",
+      "previous_reply": "400 Operation unavailable in host-delegated guest",
+      "exception": "NetworkManagementService.setPermission -> PermissionMonitor.onAppAdded -> fatal exception in system_server",
+      "fix": "Validate and record virtual UID NETWORK/SYSTEM set/clear requests; retain host networking policy"
+    }
+  ],
+  "samsung_hardware_verified": false,
+  "samsung_apk": "/storage/emulated/0/Download/aosp-pocket-manager-0.17.apk",
+  "tests": {
+    "host_queue_regression": true,
+    "permission_parser_regression": true,
+    "arm64_netd_build": true,
+    "apk_signature_v3": true,
+    "permission_fixture_requests": [
+      "android.permission.INTERNET",
+      "android.permission.CHANGE_NETWORK_STATE"
+    ],
+    "actual_permission_broadcast": {
+      "passed": true,
+      "app": "dev.kreijstal.pocketnetpermissiontest",
+      "permission_added": "android.permission.CHANGE_NETWORK_STATE",
+      "activity_launched": true,
+      "netd_reply": 200,
+      "system_server_pid_before": 1781,
+      "system_server_pid_after": 1781,
+      "observation_seconds": 10
+    },
+    "pi_full_integration": {
+      "version": "0.17",
+      "classification": "synthetic_only",
+      "environment": "Pi ARM64 Cuttlefish; Android 9 direct guest",
+      "network_permission_added_by_fixture_update": true,
+      "permission_fixture_launched": true,
+      "legacy_uid_permission_accepted": true,
+      "revolut_import_via_host_app_picker": true,
+      "revolut_split_apk_count": 4,
+      "system_server_pid_before": 1781,
+      "system_server_pid_after": 1781,
+      "system_server_stable": true,
+      "post_install_observation_seconds": 10,
+      "fixture_install_seconds": 8.127927471883595,
+      "revolut_install_seconds": 55.73694234993309,
+      "staging_cleaned": true,
+      "guest_data_preserved_on_upgrade": true
+    },
+    "post_install_guest_home_usable": true,
+    "synthetic_probe_removed_from_pi_host": true
+  },
+  "limitations": [
+    "Guest virtual UID permissions are bookkeeping; guest apps still share the host app kernel UID and network policy",
+    "Revolut account/login and biometric functionality are outside this installation test",
+    "Samsung runtime validation pending"
+  ],
+  "validation_commands": [
+    "make -f runtime/Makefile install-input-probe",
+    "ssh pi@juanraspberry python3 - < tools/validate_install_input_on_pi.py",
+    "make -f runtime/Makefile check-network-permissions",
+    "make -f runtime/Makefile network-permission-probe",
+    "python3 tools/build_guest_netd.py --base-apk out/manager-0.16/aosp-pocket-manager-0.16.apk --out-dir out/netd-arm64 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c"
+  ],
+  "guest_data_cleared": false
+}

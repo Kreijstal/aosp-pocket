@@ -1,0 +1,33 @@
+{
+  "classification": "synthetic_only",
+  "environment": "local Cuttlefish x86_64 Android 16 host; isolated UI probe using production AppImportActivity and host DEX",
+  "manager_version": "0.15",
+  "vmos_reference": "2.0.0-alpha09; static DEX/layout inspection only",
+  "passed": true,
+  "checks": {
+    "four_column_icon_grid": true,
+    "selected_app_icon_preview": true,
+    "toggle_selection": true,
+    "package_name_search": true,
+    "confirmed_host_package_result": "com.android.camera2",
+    "apk_file_preview": {
+      "label": "Termux",
+      "package": "com.termux",
+      "version": "0.118.3",
+      "actual_archive_icon": true
+    },
+    "confirmed_original_document_uri_readable": true,
+    "temporary_preview_copy_removed": true,
+    "apk_signature": "v3 verified",
+    "guest_and_native_payloads_unchanged_from_0_14": true
+  },
+  "limitations": [
+    "No Samsung UI validation yet",
+    "UI result delivery tested; existing guest installation pipeline was not rerun",
+    "One package selected per installation; host split APKs use existing installation path"
+  ],
+  "screenshots": [
+    "images/api28-app-import-grid.png",
+    "images/api28-app-import-file.png"
+  ]
+}

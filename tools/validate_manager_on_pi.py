@@ -154,24 +154,19 @@ def main():
     if args.boot_only:return
     def guest_log():
         return shell('tail -n 800 '+ROOT+'/logs/manager-init.log',True)
-    def document_click(label):
+    def host_app_click(package):
         deadline=time.monotonic()+20
         while time.monotonic()<deadline:
-            nodes=list(hierarchy().iter('node'))
-            node=next((n for n in nodes if n.get('package')=='com.android.documentsui' and
-                       (n.get('text','').casefold().startswith(label.casefold()) or
-                        n.get('content-desc','').casefold().startswith(label.casefold()))),None)
+            node=next((n for n in hierarchy().iter('node') if n.get('package')==PACKAGE and package in n.get('text','')),None)
             if node is not None:break
             time.sleep(.5)
-        else:raise RuntimeError('Document picker control not found: '+label)
+        else:raise RuntimeError('Host app not listed in the install dialog: '+package)
         l,t,r,b=map(int,re.findall(r'\d+',node.get('bounds')))
         shell(f'input touchscreen -d 0 tap {(l+r)//2} {(t+b)//2}')
         time.sleep(1)
-    adb('push','/home/pi/pocket-guest-test.apk','/sdcard/Download/pocket-test.apk')
+    adb('install','--streaming','-r','/home/pi/pocket-guest-test.apk',timeout=360)
     click('Install APK')
-    document_click('Show roots')
-    document_click('Downloads')
-    document_click('pocket-test.apk')
+    host_app_click('dev.kreijstal.pocketguesttest')
     deadline=time.monotonic()+90
     while time.monotonic()<deadline:
         text=guest_log()

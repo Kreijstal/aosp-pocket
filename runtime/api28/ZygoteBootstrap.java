@@ -8,6 +8,19 @@ public final class ZygoteBootstrap {
         System.load("/system/lib64/libpocket_zygote_api28.so");
         install();
         if (System.getenv("POCKET_DIRECT_ROOT")!=null) {
+            // --enable-lazy-preload skips ZygoteInit.warmUpJcaProviders().
+            // Register the stock providers before forking, so ordinary apps
+            // inherit AndroidKeyStore and the matching BC workaround provider.
+            // This class is loaded on the guest bootstrap class path; an
+            // untrusted app cannot perform this hidden framework call.
+            if (java.security.Security.getProvider("AndroidKeyStore")==null) {
+                Class.forName("android.security.keystore.AndroidKeyStoreProvider")
+                    .getMethod("install").invoke(null);
+            }
+            java.security.KeyStore.getInstance("AndroidKeyStore");
+            if (java.security.Security.getProvider("AndroidKeyStoreBCWorkaround")==null)
+                throw new IllegalStateException("AndroidKeyStore BC workaround missing");
+            System.err.println("DIRECT_KEYSTORE_PROVIDER_READY AndroidKeyStore=1 AndroidKeyStoreBCWorkaround=1");
             java.security.cert.CertificateFactory.getInstance("X.509");
             java.security.MessageDigest.getInstance("SHA-256").digest(new byte[]{1,2,3});
             System.err.println("DIRECT_JCA_READY certificate_factory=X.509 digest=SHA-256");

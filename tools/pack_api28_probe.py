@@ -3,15 +3,15 @@
 """Package the API 28 integration probe without replacing the API 25 APK."""
 from pathlib import Path
 import zipfile
+from target import ROOT, info
 
-ROOT = Path(__file__).resolve().parents[1]
 out = ROOT / "out/api28"
 with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(
         out / "packed.apk", "w", zipfile.ZIP_DEFLATED, compresslevel=1) as apk:
     for entry in base.infolist():
         apk.writestr(entry, base.read(entry))
     for name in ("libpocket_runtime.so", "libproot.so"):
-        apk.write(ROOT / "out/runtime-native" / name, "lib/arm64-v8a/" + name)
+        apk.write(ROOT / "out/runtime-native" / name, "lib/" + info()["abi"] + "/" + name)
     for path in sorted((out / "probe-rootfs").rglob("*")):
         if path.is_file():
             apk.write(path, "assets/api28-rootfs/" + path.relative_to(out / "probe-rootfs").as_posix() + ".payload")

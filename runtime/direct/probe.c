@@ -23,6 +23,7 @@
 
 #define REQUIRE(x) do { if (!(x)) { fprintf(stderr, "FAIL line=%d expression=%s errno=%d (%s)\n", __LINE__, #x, errno, strerror(errno)); exit(1); } } while (0)
 extern char** environ;
+extern int __wrap_utimensat(int, const char*, const struct timespec[2], int);
 static const char content[] = "pocket-direct-fixture\n";
 
 static void read_fixture_at(int dir, const char* path) {
@@ -96,6 +97,11 @@ static void extended_files(const char* mode) {
     struct timespec times[2] = {{1700000000, 123000000}, {1700000001, 456000000}};
     REQUIRE(!utimensat(data, "config", times, 0));
     REQUIRE(!stat("/data/config", &st) && st.st_mtim.tv_sec == times[1].tv_sec && st.st_mtim.tv_nsec == times[1].tv_nsec);
+    int timestamp_fd = openat(data, "config", O_RDWR); REQUIRE(timestamp_fd >= 0);
+    times[1].tv_sec += 7;
+    REQUIRE(!__wrap_utimensat(timestamp_fd, NULL, times, 0));
+    REQUIRE(!fstat(timestamp_fd, &st) && st.st_mtim.tv_sec == times[1].tv_sec && st.st_mtim.tv_nsec == times[1].tv_nsec);
+    REQUIRE(!close(timestamp_fd));
     REQUIRE(!truncate(hardlinks ? "/data/hard" : "/data/config", 3));
     REQUIRE(!stat("/data/config", &st) && st.st_size == 3);
     REQUIRE(truncate("/data/config", -1) == -1 && errno == EINVAL);
@@ -238,6 +244,36 @@ static void child(const char* mode) {
     read_fixture("/data/absolute-link");
     puts("DIRECT_CHILD_PASS fork_exec=1 cwd=/data");
 }
+static void script_fixture(const char* path, const char* text, mode_t mode) {
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0700); REQUIRE(fd >= 0);
+    REQUIRE(write(fd, text, strlen(text)) == (ssize_t)strlen(text));
+    REQUIRE(!fchmod(fd, mode) && !close(fd));
+}
+static void script_exec(const char* path, int expected_error) {
+    pid_t pid = fork(); REQUIRE(pid >= 0);
+    if (!pid) {
+        char* args[] = {(char*)path, "one argument", NULL};
+        char* env[] = {"POCKET_CHILD_MARKER=1", NULL};
+        execve(path, args, env);
+        _exit(expected_error && errno == expected_error ? 0 : 127);
+    }
+    int status;
+    REQUIRE(waitpid(pid, &status, 0) == pid && WIFEXITED(status) && !WEXITSTATUS(status));
+}
+static void scripts(void) {
+    script_fixture("/data/script", "#! \t/system/bin/pocket-direct-probe script child \t\n", 0700);
+    script_exec("/data/script", 0);
+    script_fixture("/data/script", "#!/system/bin/pocket-direct-probe script child\n", 0600);
+    script_exec("/data/script", EACCES);
+    script_fixture("/data/script", "#!/missing-guest-interpreter\n", 0700);
+    script_exec("/data/script", ENOENT);
+    script_fixture("/data/script", "#!/data/script\n", 0700);
+    script_exec("/data/script", ELOOP);
+    script_fixture("/data/script", "#! \t\n", 0700);
+    script_exec("/data/script", ENOEXEC);
+    REQUIRE(!unlink("/data/script"));
+    puts("DIRECT_SCRIPTS_PASS argv=1 optional_argument=1 permissions=1 missing=1 recursion=1");
+}
 static void suite(const char* mode) {
     REQUIRE(chdir("/") == 0);
     read_fixture("/data/fixture");
@@ -299,6 +335,7 @@ static void suite(const char* mode) {
         _exit(127);
     }
     int status; REQUIRE(waitpid(pid, &status, 0) == pid && WIFEXITED(status) && !WEXITSTATUS(status));
+    if (!strcmp(mode, "direct")) scripts();
     identity(mode);
     // Hold for independent host inspection; host releases the process via a
     // private file, never by changing global device state.
@@ -321,6 +358,15 @@ static long long nanos(void) {
 int main(int argc, char** argv) {
     setbuf(stdout, NULL);
     REQUIRE(argc >= 3 && !pocket_guest_init());
+    if (!strcmp(argv[1], "exec-file")) {
+        execve(argv[2], argv+2, environ);
+        perror("exec-file"); return 127;
+    }
+    if (!strcmp(argv[1], "script child")) {
+        REQUIRE(argc == 4 && !strcmp(argv[2], "/data/script") && !strcmp(argv[3], "one argument"));
+        REQUIRE(getenv("POCKET_CHILD_MARKER") && !strcmp(getenv("POCKET_CHILD_MARKER"), "1"));
+        puts("DIRECT_SCRIPT_CHILD_PASS optional_argument_preserved=1"); return 0;
+    }
     if (!strcmp(argv[1], "child")) { child(argv[2]); return 0; }
     if (!strcmp(argv[1], "suite")) { suite(argv[2]); return 0; }
     if (!strcmp(argv[1], "bench")) {

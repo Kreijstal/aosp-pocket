@@ -21,6 +21,60 @@ screen. This ownership rule applies to both backends.
 The Stop button terminates the guest init supervisor, which stops and reaps its
 service process groups before Start becomes available again.
 
+Version 0.15 replaces the text-only **Install APK** chooser with a separate
+installer page inspired by VMOS's app-import layout. **Device apps** shows a
+four-column icon grid with app names, selection marks and search. Selecting
+one app shows its icon, package, version, total APK size and split count above
+**Install in Android**. The existing installation path includes its base APK
+and split APKs. One package is selected per installation.
+
+**APK file** opens Android's document picker, then previews the chosen APK's
+actual icon and metadata before confirmation. Archive parsing runs on a worker;
+the temporary preview copy is deleted after its icon and label are read. The
+original document URI supplies installation bytes. Canceling does not install
+anything. Opening this page does not stop the running guest. No VMOS code or
+assets are bundled. [VM UI checks](api28-app-import-validation.json) cover the
+grid, selection, search, result delivery and archive-resource preview; this is
+local VM evidence, with Samsung validation still pending.
+
+Version 0.16 fixes input freezing while an APK is imported. Previously copying
+the host APKs and waiting for the guest's PackageInstaller callback ran on the
+same worker and socket as touch and navigation events. Input queued behind the
+entire installation. Slow operations now use a separate serial worker and
+connection; touch and navigation retain their ordered input channel. Guest
+display transport is unchanged. Status distinguishes copying individual APKs
+from waiting for installation.
+
+The focused ARM64 Pi VM regression deliberately blocks both the source stream
+and the installer response. With the old production host classes, navigation
+cannot arrive during either three-second observation window. With 0.16 it
+arrives in milliseconds during both blocked phases, and installation completes
+after each delay is released. This tests the actual `DirectSession` against a
+synthetic socket peer; it is not proof of Revolut compatibility on Samsung.
+
+```sh
+make -f runtime/Makefile install-input-probe
+rsync out/install-input/probe.apk pi@juanraspberry:/home/pi/pocket-install-input-test.apk
+ssh pi@juanraspberry python3 - < tools/validate_install_input_on_pi.py
+```
+
+Version 0.17 also fixes a guest system-server crash after an app requesting
+`CHANGE_NETWORK_STATE` is installed. Android 9's `PermissionMonitor` sends legacy netd
+commands such as `network permission user set NETWORK 10016` from its
+`PACKAGE_ADDED` receiver. Rejecting this command raised an uncaught
+`IllegalStateException` in `NetworkManagementService.setPermission`, killing
+`system_server` after PackageInstaller had already reported success. The
+network stub now validates and records virtual UID permission set/clear
+commands and returns the expected success response. It does not reconfigure
+host firewall rules or provide separate kernel-UID networking isolation.
+The fixed image includes the 0.16 input-queue change.
+
+`make -f runtime/Makefile check-network-permissions` covers the exact failing
+command, grant updates/removal, UID limits and rejection of malformed batches
+without partial updates. `network-permission-probe` builds a small new app
+requesting `CHANGE_NETWORK_STATE` to exercise the real package-added broadcast independently
+of Revolut's code. See [installation regression evidence](api28-install-hang-validation.json).
+
 Android 9 starts a separate `GuestControl` process after its actual
 `sys.boot_completed=1` property trigger. Its inherited app-private Unix socket
 serves pointer events, navigation keys and APK installation. Version 0.9 also
@@ -394,3 +448,305 @@ Cleanup verified that removing the host fixture also removes its managed guest
 copies. The development guest reaped all children and closed its broker, then
 the original API 25 guest booted again from its existing image and data. Its
 original pre-OOM session was not preserved.
+
+### Termux bootstrap and native execution (0.14)
+
+The direct backend resolves guest shebang interpreters, including their single
+optional argument, and translates ELF64 RUNPATH and caller library directories.
+Downloaded Android executables receive a cached copy beside the original with
+the pinned guest linker as PT_INTERP. Their original bytes remain unchanged;
+the same directory preserves `$ORIGIN`. Cache reuse checks source identity and
+timestamps, and source execute permission is checked even when a cache exists.
+The source directory must be writable to create this cache. This supports
+dynamically linked 64-bit Bionic programs; it does not intercept raw syscalls
+inside arbitrary static programs.
+
+Execution retains the runtime's library paths, current guest identity, groups
+and session log even when a native launcher calls `clearenv()`. Normal runtime
+diagnostics go to the session log rather than contaminating command output.
+Bionic's null-path `utimensat` call for `futimens` operates on its existing file
+descriptor. PTY operations use host `/dev/ptmx` and `/dev/pts` under the ordinary
+host app UID and its existing kernel permissions.
+
+[Recorded local VM results](api28-termux-validation.json) cover Termux 0.118.3
+starting with an absent prefix, extracting its bootstrap, completing the real
+package maintainer scripts and opening a [Bash terminal](images/api28-termux.png).
+The actual Termux shell retained `untrusted_app_27`, zero capabilities, seccomp
+and no tracer. Native checks also verified clean command output, cache reuse,
+invalidation after a source timestamp change, execute-permission enforcement
+and unchanged original executable bytes. Host regression tests cover shebang
+arguments, recursion, missing interpreters, ELF search paths and FD timestamps:
+
+```sh
+python3 tools/build_direct.py --host
+python3 tools/validate_direct_host.py
+```
+
+The test used x86-64 Android 9 inside the local Cuttlefish VM. Root belonged to
+the external setup/inspection harness. Its separate test image omitted large
+fonts and used a lower private-guest storage reserve to fit alongside the VM's
+existing system. The ARM64 0.14 APK retains the full image; only its manifest
+and direct runtime payload differ from the previous distribution. Its shim
+was rebuilt against that distribution's exact libc with all 48 hook prologues
+verified by `tools/build_exec_runtime.py`. Physical Samsung validation is pending.
+
+
+## Termux administration (0.18)
+
+Settings now has **Enable Termux administration**, **Copy connection token**,
+**Save Termux client**, and **Revoke connection token**. Administration is off
+when the Manager process starts. Enabling it starts an app-owned listener on
+`127.0.0.1:2228`; port conflicts are reported without binding to another address.
+The guest need not be running to enable the listener or query its status.
+
+Save the client to Downloads, copy the connection token, then run in Termux:
+
+```sh
+pkg install python
+termux-setup-storage
+python ~/storage/downloads/pocketctl.py pair
+# Paste the token at the hidden prompt.
+python ~/storage/downloads/pocketctl.py status
+python ~/storage/downloads/pocketctl.py start
+python ~/storage/downloads/pocketctl.py shell
+python ~/storage/downloads/pocketctl.py shell -c 'id; getprop ro.build.version.sdk'
+python ~/storage/downloads/pocketctl.py exec -- /system/bin/pm list packages
+python ~/storage/downloads/pocketctl.py push ./example.apk /data/local/tmp/example.apk
+python ~/storage/downloads/pocketctl.py pull /data/local/tmp/example.apk ./copy.apk
+python ~/storage/downloads/pocketctl.py install ./example.apk
+python ~/storage/downloads/pocketctl.py stop
+```
+
+`start` and `stop` request lifecycle transitions; `status` reports readiness.
+Shell/exec require a prepared Android 9 direct image. From 0.21 the owner console
+also works while the guest is stopped, for file access and recovery; commands
+that use Android services still require a running guest. Administration keeps
+its foreground notification while the guest is stopped so Termux can start it
+again. Disabling administration closes the listener and current console sessions.
+Revocation closes current sessions and replaces the key; pair again afterward.
+The token is stored privately by each app, and never passed as a command-line
+argument. Treat it as authority over Pocket and its guest data.
+
+The client uses a challenge-response protocol with mutual HMAC-SHA256
+verification and fresh 32-byte nonces. The server accepts at most four clients,
+bounds request sizes, and times out unauthenticated/request handshakes. Stdin,
+stdout, stderr and exit status are framed independently; binary file transfers
+are not text encoded. Push writes its destination directly; an interrupted push
+can leave a partial file. Pull replaces its local destination only on success.
+
+This is a pipe-based root console, not an SSH server or PTY. Basic interactive
+shell input works; terminal programs/job control and terminal resizing are not
+implemented. Ctrl-C closes the client connection and stops its foreground
+command. A deliberately detached guest process may outlive the connection.
+`install` handles a single APK; use guest package-manager commands for split APK
+sessions. The API 25 PRoot backend does not expose this root-console launcher.
+
+The shell starts with virtual guest UID/GID 0, a guest-only path and a clean
+Android 9 runtime environment. The real Linux UID/SELinux domain remains the
+ordinary Manager app's. It provides no host root, kernel privileges or new
+hardware attestation guarantees. It does not alter boot state or integrity
+results. Data changes persist; subsequent image setup/updates may restore
+bundled system/vendor files, so preserve local system modifications separately.
+
+Focused validation:
+
+```sh
+make -f runtime/Makefile check-admin
+python3 tools/build_manager_update.py \
+  --base-apk out/manager-0.17/aosp-pocket-manager-0.17.apk \
+  --out out/manager-0.18 --version-code 18 --version-name 0.18
+```
+
+The update builder emits a complete installable APK with the current host code
+and client while retaining the known-good base APK's guest/native ABI. It does
+not recompile or replace that base's guest firmware or native libraries.
+Protocol test evidence is written to `out/admin-tests/protocol-validation.json`.
+Host protocol tests alone do not establish root-shell behavior on Android.
+
+## AndroidKeyStore provider registration (0.19)
+
+The offline probe in `runtime/tests/key-attestation` ran as ordinary guest UID
+10018 on the Samsung-hosted Android 9 image. All three cases (plain EC,
+challenge attestation, StrongBox) failed before generation because the
+`AndroidKeyStore` JCA provider was absent. A running keystore daemon and the
+software-only Keymaster service did not establish that apps could use them.
+
+The direct profile uses lazy Zygote preloading, which omits Android 9's
+`warmUpJcaProviders()` call. The bootstrap now installs the stock
+`AndroidKeyStoreProvider`, including its BC workaround provider, before apps
+are forked. It checks provider availability without opening the keystore
+service during this early startup phase. This changes neither the software
+backend's security level nor verified-boot state.
+
+The update builder can explicitly replace guest Java while retaining native
+payloads from a known-good complete APK:
+
+```sh
+make -f runtime/Makefile out/manager-guest/pocket-control.jar key-attestation-probe
+python3 tools/build_manager_update.py \
+  --base-apk out/manager-0.18/aosp-pocket-manager-0.18.apk \
+  --out out/manager-0.19 --version-code 19 --version-name 0.19 \
+  --guest-control-jar out/manager-guest/pocket-control.jar
+```
+
+Both commands passed; APK signature verification passed. Payload comparison
+confirmed that only the manifest and guest bootstrap/control JAR changed
+(apart from signing metadata). Device validation of 0.19 is pending.
+
+TEESimulator is not included in 0.19. Its upstream source at
+`2fda3b1c67f3f00f1a1d343cee760eeb26a190bc` supports Android 10 and newer.
+The Android 10/11 interceptor uses asynchronous Binder callbacks; Android 9's
+`IKeystoreService` returns key characteristics, operation results and
+attestation chains synchronously, with different transaction ordinals.
+Lowering its minimum SDK or installing the existing module is insufficient.
+An Android 9 adapter and startup integration require separate validation.
+The source checkout for that investigation is `out/teesimulator-source`;
+the pinned Android 9 AIDL reference is
+`out/key-attestation/IKeystoreService-api28.aidl`.
+
+## Experimental Android 9 attestation backend (0.22)
+
+`runtime/attestation/teesimulator-api28.patch` ports the pinned upstream legacy
+Keystore router to Android 9. It adds the Android 9 transaction ordinals,
+synchronous reply envelopes, UID checks, software characteristics, private-key
+existence/deletion handling, and StrongBox-unavailable responses. Authentication-
+bound and symmetric keys retain the normal platform path. The adapter builds
+against Android 9's actual Binder headers and the complete distribution APK's
+libraries; it does not reuse the newer upstream Parcel/BBinder object layouts.
+The source commit and Cargo lockfile are pinned in this repository.
+
+The library loads only into the guest `keystore` executable, and only when an
+owner-provisioned regular file at `/data/misc/keystore/pocket-teesim.json` has
+mode 0600. It starts after the guest Keystore service is registered and reads
+that configuration once per process. There is no Magisk/root injector or
+additional control socket. The distribution contains no signing keys or keybox.
+The existing host app sandbox remains the isolation boundary; logical guest
+UIDs and guest root do not create a hardware-protected credential boundary.
+
+Focused build and validation:
+
+```sh
+make -f runtime/Makefile check-teesim-api28
+```
+
+This passed under qemu-user with the pinned Android 9 Binder libraries and the
+real upstream Rust TA. Tests cover synchronous generation, characteristics and
+export replies; cross-UID generation rejection; StrongBox refusal; an EC public
+key and three-certificate chain; certificate signatures; exact caller challenge;
+SOFTWARE security levels; and a TA begin/update/finish signature verified with
+the attested public key. The signer is a newly generated local test CA, not a
+Google-trusted identity. Parcel buffers stay alive until the test process exits
+because Android 9's Parcel destructor eagerly opens a kernel Binder driver.
+These results establish native wire/crypto behavior. A separate device test on
+the unrooted SM-G780G also passed: ordinary guest app UID 10018 generated EC
+keys, signed and verified data, and obtained a three-certificate chain rooted in
+the deployed local test CA. The certificate extension contained its exact
+32-byte challenge and SOFTWARE attestation/Keymaster levels. StrongBox requests
+returned unavailable (-68). This is software simulation inside Pocket, not
+hardware-backed or Google-trusted attestation.
+
+The first live runs exposed two additional routing requirements. Pocket restores
+logical guest Binder identities only for application transaction codes, so the
+interceptor's internal forwarding code must stay within that range. Android 9
+also uses `android.security.IKeystoreService` as its interface descriptor; newer
+versions use `android.security.keystore.IKeystoreService`. Version 0.22 includes
+both fixes. The successful device test used the 0.21 host with the corrected
+guest library, which is packaged in 0.22. Earlier reports using Android's default
+AOSP software attestation chain do not establish that this backend was used.
+
+Public test evidence can be checked without transferring signing keys:
+
+```sh
+python3 tools/validate_attestation_report.py \
+  out/key-attestation/samsung-0.21-descriptor-fixed-report.json \
+  --root out/teesim-api28/deployed-test-root.pem
+```
+
+The validator checks the complete certificate signatures against the deployed
+public root, challenge, software levels, ordinary app UID, sign/verify results,
+and StrongBox refusal. Private configuration and signing keys remain outside
+the distribution APK. Some earlier runs lost guest init to SIGKILL (137); the
+cause is unresolved, and a successful later boot does not establish long-term
+stability.
+
+An owner can prepare a SOFTWARE profile using an existing signing identity:
+
+```sh
+python3 tools/make_pocket_attestation_config.py \
+  --keybox /private/path/keybox.xml --package dev.kreijstal.pocketattestationtest \
+  --uid 10018 --out /private/path/pocket-teesim.json
+```
+
+Use the actual package UID from the guest `/data/system/packages.list`.
+The output is private mode 0600 and existing output files are refused. It
+describes an unlocked/unverified software guest and does not claim hardware
+security. With the guest ready, create a private destination before transferring
+the file through the already-paired Termux owner console:
+
+```sh
+python ~/storage/downloads/pocketctl.py exec -- /system/bin/sh -c \
+  'umask 077; set -C; : > /data/misc/keystore/pocket-teesim.json'
+python ~/storage/downloads/pocketctl.py push \
+  /private/path/pocket-teesim.json /data/misc/keystore/pocket-teesim.json
+python ~/storage/downloads/pocketctl.py stop
+python ~/storage/downloads/pocketctl.py start
+```
+
+The library activates on that next startup. **Disable experimental attestation
+backend** in Pocket Settings renames and preserves the configuration and stops
+the guest. This recovery action works even if the guest cannot boot; start it
+again afterward. No configuration is enabled automatically by installation.
+
+The inherited legacy implementation keeps simulated keys in process memory;
+they do not survive Keystore restarts. Its application-ID construction is also
+minimal (package name/version placeholder, without signing-certificate digests).
+Use temporary-key experiments while those upstream limitations remain. Hardware
+authentication, Google trust, Play Integrity and banking compatibility are not
+established by these tests.
+
+### Reproducing the older VM's attestation claims
+
+The old Cuttlefish experiment recorded a Google-rooted key-attestation chain
+and a locked-bootloader claim, not a demonstrated `MEETS_STRONG_INTEGRITY`
+verdict. On 2026-10-21 the same existing signing identity was tested through
+the Pocket owner console using `pf-phone2`. Its private configuration targets
+only `dev.kreijstal.pocketattestationtest` (guest UID 10018), with a simulated
+TEE level and locked/verified boot claims. No physical boot state or Android
+system properties were changed. This Android 9 adapter uses generation mode;
+the older Cuttlefish setup used patch mode and retained platform key blobs.
+
+The ordinary guest app reported successful EC generation and sign/verify,
+`insideSecureHardware=true`, and a four-certificate chain ending in the old
+Google root. StrongBox correctly remained unavailable (-68). These are
+reproduced claims from a software simulator, not evidence of physical TEE
+enforcement. After reconnecting the SSH tunnel, independent validation of the
+full report passed: all certificate signatures, exact caller challenge, TEE
+attestation/Keymaster levels, and locked/verified RootOfTrust claims matched.
+The three issuer certificates exactly match the old EC keybox chain.
+
+The old root's public key matches Google's published attestation root, but
+Google's current revocation list marks both the old EC and RSA signing
+certificates `REVOKED`, reason `KEY_COMPROMISE`. Thus reproducing that chain
+cannot establish a valid trusted attestation. The check used the public
+endpoints documented by Google:
+
+- <https://android.googleapis.com/attestation/root>
+- <https://android.googleapis.com/attestation/status>
+- <https://developer.android.com/privacy-and-security/security-key-attestation>
+
+The validator now supports explicit expected claims and RSA-signed certificate
+chains, while its defaults still require SOFTWARE. To inspect this experiment's
+report after retrieval, use the exported **public** root:
+
+```sh
+python3 tools/validate_attestation_report.py \
+  out/key-attestation/samsung-previous-vm-profile-report.json \
+  --root /private/path/previous-vm-root.pem \
+  --expected-security-level 1 --chain-length 4 \
+  --expected-device-locked true --expected-boot-state 0
+```
+
+Passing this command checks reported claims and cryptography only; it does not
+override certificate revocation or establish a Play Integrity verdict. The
+private identity and configuration are outside the repository and APK, and the
+normal software profile was preserved separately on the phone before testing.

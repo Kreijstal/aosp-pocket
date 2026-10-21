@@ -84,6 +84,13 @@
       "layer_digest": "sha256:8e95e590895f55a010e5e38e66d25c86f5e480c33a85093dcaa3439b4da86ad7",
       "use": "Pinned platform, property and ART reference; not a complete rootless-compatible guest; prebuilt upstream libraries and boot images"
     },
+    "abi_reference_x86_64": {
+      "image": "redroid/redroid:9.0.0-latest",
+      "platform": "linux/amd64",
+      "manifest_digest": "sha256:c7a889cdc621cf6a10e386bcf8185410dad0276972fdab92ac81afa6c4707a1d",
+      "layer_digest": "sha256:9438b117b103d162995ef6910f9115f6940bfb1705c1c5fca61d91a3375b81e0",
+      "use": "Pinned x86_64 platform, property and ART reference; same role as abi_reference for the x86_64 direct backend"
+    },
     "headers": [
       {
         "url": "https://android.googlesource.com/platform/frameworks/native",
@@ -286,5 +293,26 @@
     "commit": "108a9f09189786997cb7b29a09a009d85fc3c017",
     "sha256": "e4f369af79a8d645bdbbdc901d6c3dde73ef3f888f965c174d2c06bb095ab21c",
     "license": "Apache-2.0"
+  },
+  "teesimulator": {
+    "url": "https://github.com/JingMatrix/TEESimulator.git",
+    "commit": "2fda3b1c67f3f00f1a1d343cee760eeb26a190bc",
+    "path": "out/teesimulator-source",
+    "license": "GPL-3.0-or-later; vendored dependencies retain upstream licenses",
+    "patch": "runtime/attestation/teesimulator-api28.patch",
+    "cargo_lock": "runtime/attestation/Cargo.lock",
+    "port_status": "Android 9 ARM64 native wire and software crypto tested; device Binder integration pending"
+  },
+  "magisk_pocket": {
+    "upstream": "https://github.com/topjohnwu/Magisk.git",
+    "upstream_commit": "e8a58776f1d7bdf852072ad0baa6eceb9a1e4aac",
+    "fork": "https://github.com/Kreijstal/Magisk",
+    "fork_branch": "pocket-api28",
+    "fork_commit": "1c5e8e4",
+    "patch": "runtime/magisk/magisk-pocket.patch",
+    "ondk": "r29.5",
+    "license": "GPL-3.0-only; dependency notices bundled",
+    "build": "tools/build_magisk_pocket.py",
+    "runtime_scope": "guest userspace; host kernel and SELinux unchanged"
   }
 }

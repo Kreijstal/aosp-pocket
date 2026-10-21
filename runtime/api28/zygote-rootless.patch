@@ -254,7 +254,7 @@
 +  }
 +  if (instructionSet != nullptr) {
 +    ScopedUtfChars isa(env, instructionSet);
-+    if (!isa.c_str() || strcmp(isa.c_str(), "arm64")) return -1;
++    if (!isa.c_str() || strcmp(isa.c_str(), POCKET_GUEST_ISA)) return -1;
 +  }
    SetSignalHandlers();
  

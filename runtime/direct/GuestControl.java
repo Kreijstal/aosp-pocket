@@ -59,10 +59,14 @@ public final class GuestControl {
                         accepted&=inject(new KeyEvent(now,SystemClock.uptimeMillis(),action,code,0,0,KeyCharacterMap.VIRTUAL_KEYBOARD,0,KeyEvent.FLAG_FROM_SYSTEM,InputDevice.SOURCE_KEYBOARD));
                     out.writeBoolean(accepted);
                 } else if(op==4) {
-                    File apk=new File("/data/pocket-import.apk");
-                    PackageInfo info=context.getPackageManager().getPackageArchiveInfo(apk.getPath(),0);
+                    // The host stages the base APK and any split APKs together in one folder.
+                    File staged=new File("/data/pocket-import");
+                    File[] apks=staged.listFiles((directory,name)->name.endsWith(".apk"));
+                    File base=new File(staged,"base.apk");
+                    PackageInfo info=apks==null || apks.length==0 || !base.isFile() ? null
+                        : context.getPackageManager().getPackageArchiveInfo(base.getPath(),0);
                     if(info==null)throw new IOException("Invalid Android package");
-                    FrameworkProbe.install(context,apk,info.packageName);
+                    FrameworkProbe.install(context,apks,info.packageName);
                     Intent launch=context.getPackageManager().getLaunchIntentForPackage(info.packageName);
                     if(launch!=null)FrameworkProbe.launch(launch);
                     out.writeUTF("Installed "+info.packageName);

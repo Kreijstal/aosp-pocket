@@ -2,7 +2,9 @@
 package dev.kreijstal.aosppocket.runtime;
 
 import android.content.*;
+import android.system.ErrnoException;
 import android.system.Os;
+import android.system.OsConstants;
 import java.io.*;
 import java.nio.*;
 import java.nio.file.*;
@@ -16,8 +18,55 @@ final class DirectImage {
         try(InputStream in=context.getAssets().open("api28-rootfs/system/build.prop.payload")){return in.read()!=-1;}
         catch(IOException missing){return false;}
     }
-    static File prepare(Context context,DisplayGeometry geometry,GuestImage.Progress progress) throws Exception {
-        File root=new File(context.getFilesDir(),"api28-rootfs");root.mkdirs();
+    static File root(Context context) {
+        return new File(context.getFilesDir(),"api28-rootfs");
+    }
+    /** Owner recovery remains available even when the experimental backend cannot boot. */
+    static boolean disableAttestation(Context context) throws IOException {
+        File image=root(context);
+        File config=new File(image,"data/misc/keystore/pocket-teesim.json");
+        if(!config.exists())return false;
+        if(!config.getParentFile().getCanonicalPath().startsWith(image.getCanonicalPath()+"/"))
+            throw new IOException("Attestation configuration escapes the guest image");
+        File saved=new File(config.getParentFile(),"pocket-teesim.disabled-"+System.nanoTime()+".json");
+        Files.move(config.toPath(),saved.toPath(),StandardCopyOption.ATOMIC_MOVE);
+        return true;
+    }
+    /**
+     * Processes still running from this image. The init is not tied to the app
+     * process, so if Android kills the app while Android 9 is up, the init and
+     * its services survive and hold the guest sockets and data.
+     */
+    static List<Integer> leftovers(File root) {
+        List<Integer> found=new ArrayList<>();
+        String prefix=root.getPath()+"/";
+        File[] entries=new File("/proc").listFiles();
+        if(entries==null)return found;
+        for(File entry:entries) {
+            if(!entry.getName().matches("\\d+"))continue;
+            try {
+                if(Os.readlink(new File(entry,"exe").getPath()).startsWith(prefix))found.add(Integer.parseInt(entry.getName()));
+            } catch(ErrnoException | RuntimeException exited) { /* Exited, or owned by another UID. */ }
+        }
+        return found;
+    }
+    /** Returns how many leftover processes were found; throws if any survive a forced kill. */
+    static int stopLeftovers(File root) throws IOException, InterruptedException {
+        int found=0;
+        for(int attempt=0;attempt<40;attempt++) {
+            List<Integer> pids=leftovers(root);
+            if(pids.isEmpty())return found;
+            found=Math.max(found,pids.size());
+            for(int pid:pids) {
+                try {Os.kill(pid,attempt<20?OsConstants.SIGTERM:OsConstants.SIGKILL);}
+                catch(ErrnoException gone) { /* Already exited. */ }
+            }
+            Thread.sleep(200);
+        }
+        throw new IOException("Leftover Android 9 processes did not exit: "+leftovers(root));
+    }
+    static File prepare(Context context,DisplayGeometry geometry,int refreshHz,GuestImage.Progress progress) throws Exception {
+        File root=root(context);root.mkdirs();
         try (InputStream marker=context.getAssets().open("manager-dev-update.json")) {
             if (!new File(root,"system/bin/pocket-init-api28").isFile())
                 throw new IllegalStateException("Development host update requires an installed full Manager image");
@@ -71,9 +120,17 @@ final class DirectImage {
         GuestBinder.preparePlatform(context,root);
         File properties=new File(root,"system/build.prop"),temporary=new File(properties.getPath()+".display-new");
         String original=new String(Files.readAllBytes(properties.toPath()),"UTF-8");
-        Files.write(temporary.toPath(),geometry.properties(original).getBytes("UTF-8"));
+        // Like VMOS, the guest language follows the host locale.
+        String projected=property(geometry.properties(original,refreshHz),"ro.product.locale",Locale.getDefault().toLanguageTag());
+        Files.write(temporary.toPath(),projected.getBytes("UTF-8"));
         Files.move(temporary.toPath(),properties.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
         return root;
+    }
+    private static String property(String source,String key,String value) {
+        java.util.regex.Pattern pattern=java.util.regex.Pattern.compile("(?m)^"+java.util.regex.Pattern.quote(key)+"=.*$");
+        String line=key+"="+value;
+        if(pattern.matcher(source).find())return pattern.matcher(source).replaceAll(java.util.regex.Matcher.quoteReplacement(line));
+        return source+(source.endsWith("\n")?"":"\n")+line+"\n";
     }
     private static void patchInterpreter(File executable,String interpreter) throws Exception {
         byte[] elf=Files.readAllBytes(executable.toPath());
@@ -101,6 +158,26 @@ final class DirectImage {
         env.put("POCKET_DIRECT_CONSOLE",root+"/logs/manager-init.log");env.put("ANDROID_ROOT","/system");env.put("ANDROID_DATA","/data");env.put("TMPDIR","/tmp");
         File log=new File(root,"logs/manager-init.log");Files.write(log.toPath(),new byte[0]);
         builder.redirectInput(new File("/dev/null"));builder.redirectErrorStream(true);builder.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
+        return builder.start();
+    }
+    /** Owner-authorized shell; retains the host app's actual UID and SELinux domain. */
+    static Process admin(File root,String cwd,List<String> argv) throws IOException {
+        List<String> command=new ArrayList<>();
+        command.add(new File(root,"system/bin/sh").getPath());command.add("-c");
+        command.add("cd \"$1\" || exit; shift; exec \"$@\"");command.add("pocket-admin");command.add(cwd);command.addAll(argv);
+        ProcessBuilder builder=new ProcessBuilder(command).directory(root);
+        Map<String,String> env=builder.environment();
+        // Do not inherit the host's APEX, ART, loader or shell configuration.
+        env.clear();
+        String libs=root+"/system/lib64:"+root+"/vendor/lib64";
+        env.put("POCKET_DIRECT_ROOT",root.getPath());env.put("POCKET_DIRECT_LIBRARIES",libs);env.put("POCKET_DIRECT_ID","0:0");
+        env.put("LD_LIBRARY_PATH",libs);env.put("LD_CONFIG_FILE",root+"/system/etc/ld.config.txt");
+        env.put("LD_PRELOAD",root+"/system/lib64/libpocket_direct_boot.so:"+root+"/system/lib64/libpocket_binder_api28.so:"+root+"/system/lib64/libpocket_hidl_api28.so");
+        env.put("POCKET_PARENT_PID",Integer.toString(android.os.Process.myPid()));
+        env.put("POCKET_DIRECT_CONSOLE",root+"/logs/manager-init.log");
+        env.put("ANDROID_ROOT","/system");env.put("ANDROID_DATA","/data");env.put("TMPDIR","/data/local/tmp");
+        env.put("HOME","/data/local/tmp");env.put("USER","root");env.put("LOGNAME","root");
+        env.put("PATH","/system/bin:/system/xbin:/vendor/bin");env.put("SHELL","/system/bin/sh");env.put("TERM","xterm-256color");
         return builder.start();
     }
 }

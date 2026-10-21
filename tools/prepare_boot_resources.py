@@ -7,12 +7,16 @@ import posixpath
 import shutil
 import tarfile
 from prepare_api28 import ROOT, prepare
+from target import info as arch_info, selected as arch_selected
 
 
-def prepare_resources():
-    reference=prepare(art=True)
-    digest=json.loads((ROOT/'sources.lock.json').read_text())['guest_api28']['abi_reference']['layer_digest'].split(':')[1]
-    root=ROOT/'out/boot/platform'
+def prepare_resources(arch=None):
+    arch=arch or arch_selected()
+    reference=prepare(art=True,arch=arch)
+    key='abi_reference' if arch=='arm64' else 'abi_reference_x86_64'
+    digest=json.loads((ROOT/'sources.lock.json').read_text())['guest_api28'][key]['layer_digest'].split(':')[1]
+    root=ROOT/('out/boot/platform' if arch=='arm64' else 'out/boot/platform-'+arch)
+    framework=arch_info(arch)["framework"]
     marker=root/'.source'
     if marker.exists() and marker.read_text().strip()==digest+'-graphics-v1':
         for path in root.rglob("*"):
@@ -27,7 +31,7 @@ def prepare_resources():
             path=PurePosixPath(entry.name)
             if path.is_absolute() or '..' in path.parts: raise SystemExit('Unsafe platform path')
             name=path.as_posix()
-            selected=name.startswith(('system/etc/','system/fonts/','system/framework/oat/arm64/','system/app/','system/priv-app/','system/bin/','vendor/lib64/','vendor/bin/','vendor/etc/')) or name in ('system/framework/framework-res.apk','vendor/build.prop')
+            selected=name.startswith(('system/etc/','system/fonts/',f'system/framework/oat/{framework}/','system/app/','system/priv-app/','system/bin/','vendor/lib64/','vendor/bin/','vendor/etc/')) or name in ('system/framework/framework-res.apk','vendor/build.prop')
             if not selected: continue
             if entry.issym():
                 target=posixpath.normpath(entry.linkname.lstrip('/') if entry.linkname.startswith('/') else posixpath.join(posixpath.dirname(name),entry.linkname))

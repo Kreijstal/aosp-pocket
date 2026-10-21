@@ -4,7 +4,7 @@
 from pathlib import Path
 import shutil
 import subprocess
-from prepare_api28 import ROOT
+from target import ROOT, clang, info, reference_dir
 from boot_storage_protocol import generate as storage_protocol
 
 
@@ -14,13 +14,14 @@ def build_zygote(ndk, stage, hidl_gen):
     if source.exists(): shutil.rmtree(source)
     shutil.copytree(out/'rootless-frameworks-base',source)
     subprocess.run(['patch','--batch','-p1','-i',str(ROOT/'runtime/direct/zygote-system-server.patch')],cwd=source,check=True)
-    libs=out/'reference/system/lib64'
+    libs=reference_dir()/'system/lib64'
     includes=[out/'headers',out/'frameworks-native/libs/binder/include']
     includes += [out/'system-core'/part/'include' for part in ('libutils','libcutils','liblog','libsystem','base')]
     jni=source/'core/jni'
     includes += [jni,jni/'include',out/'libnativehelper/include',out/'libnativehelper/include_jni',out/'libnativehelper/header_only_include',out/'art/openjdkjvmti/include']
-    command=[ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++',
-             '-DPOCKET_GUEST_API=28','-nostdinc++','-isystem',out/'libcxx/include',
+    command=[str(clang(ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin',28,cxx=True)),
+             '-DPOCKET_GUEST_API=28','-DPOCKET_GUEST_ISA="'+info()['framework']+'"',
+             '-nostdinc++','-isystem',out/'libcxx/include',
              '-std=c++17','-O2','-fno-rtti','-fno-exceptions','-nostdlib++',
              '-Wall','-Wextra','-Werror','-Wno-unused-parameter','-Wno-unused-function','-Wno-writable-strings']
     command += ['-I'+str(path) for path in includes]

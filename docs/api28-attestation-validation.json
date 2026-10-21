@@ -1,0 +1,36 @@
+{
+  "upstreamCommit": "2fda3b1c67f3f00f1a1d343cee760eeb26a190bc",
+  "aospReference": "android-9.0.0_r61/system/security/keystore/binder/android/security/IKeystoreService.aidl",
+  "transactionOrdinals": {
+    "generateKey": 23,
+    "getKeyCharacteristics": 24,
+    "exportKey": 26,
+    "attestKey": 35,
+    "begin": 27,
+    "update": 28,
+    "finish": 29,
+    "abort": 30
+  },
+  "build": "PASS",
+  "wireCryptoValidation": "PASS",
+  "evidenceClassification": "Synthetic only: qemu-user native Android 9 libraries and real Rust TA",
+  "deviceBinderRpc": "PASS: SM-G780G unrooted host; ordinary Android 9 guest app UID 10018",
+  "deviceBuild": "0.21 host with corrected guest descriptor routing; packaged as 0.22",
+  "deviceEvidenceClassification": "Hardware verified: software backend executed on physical SM-G780G; no hardware trust claimed",
+  "deviceReport": "out/key-attestation/samsung-0.21-descriptor-fixed-report.json",
+  "deviceReportValidation": "PASS: generated EC keys, sign/verify, deployed local root and certificate signatures, exact challenge, SOFTWARE levels, StrongBox -68",
+  "routingFixes": [
+    "internal interceptor transaction stays within application range to restore logical guest UID",
+    "Android 9 interface descriptor is android.security.IKeystoreService"
+  ],
+  "googlePlayIntegrityVerdict": "not tested",
+  "signer": "local test CA",
+  "defaultSecurityLevel": "SOFTWARE",
+  "privateKeysBundled": false,
+  "knownLimits": [
+    "simulated keys are not persistent across keystore restarts",
+    "minimal upstream application ID lacks signing certificate digests",
+    "authentication-bound and symmetric keys use normal platform path",
+    "earlier runs lost guest init to SIGKILL 137; cause unresolved"
+  ]
+}

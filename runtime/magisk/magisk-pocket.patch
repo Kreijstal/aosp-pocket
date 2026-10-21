@@ -1,0 +1,326 @@
+diff --git a/native/src/core/bootstages.rs b/native/src/core/bootstages.rs
+index 1ad4c46..e2db013 100644
+--- a/native/src/core/bootstages.rs
++++ b/native/src/core/bootstages.rs
+@@ -130,6 +130,14 @@ impl MagiskD {
+             return true;
+         }
+ 
++        // Kernel-backed features cannot be enabled by a rootless guest.
++        if crate::pocket::enabled() {
++            self.zygisk_enabled.store(false, Ordering::Release);
++            exec_common_scripts(cstr!("post-fs-data"));
++            self.handle_modules();
++            return false;
++        }
++
+         // Check safe mode
+         let boot_cnt = self.get_db_setting(DbEntryKey::BootloopCount);
+         self.set_db_setting(DbEntryKey::BootloopCount, boot_cnt + 1)
+@@ -183,6 +191,7 @@ impl MagiskD {
+             secure_dir.mkdir(0o700).log_ok();
+         }
+ 
++        if crate::pocket::enabled() { return; }
+         setup_preinit_dir();
+         self.ensure_manager();
+         if self.zygisk_enabled.load(Ordering::Relaxed) {
+@@ -224,6 +233,7 @@ impl MagiskD {
+ }
+ 
+ fn check_data() -> bool {
++    if crate::pocket::enabled() { return std::path::Path::new("/data/adb/magisk").is_dir(); }
+     if let Ok(file) = cstr!("/proc/mounts").open(OFlag::O_RDONLY | OFlag::O_CLOEXEC) {
+         let mut mnt = false;
+         BufReader::new(file).for_each_line(|line| {
+diff --git a/native/src/core/daemon.rs b/native/src/core/daemon.rs
+index e1cea28..f467435 100644
+--- a/native/src/core/daemon.rs
++++ b/native/src/core/daemon.rs
+@@ -177,11 +177,16 @@ impl MagiskD {
+     }
+ 
+     fn handle_requests(&'static self, mut client: UnixStream) {
+-        let Ok(cred) = client.peer_cred() else {
++        let Ok(mut cred) = client.peer_cred() else {
+             // Client died
+             return;
+         };
+ 
++        if !crate::pocket::peer_identity(&mut cred) {
++            client.write_pod(&RespondCode::ACCESS_DENIED.repr).log_ok();
++            return;
++        }
++
+         // There are no abstractions for SO_PEERSEC yet, call the raw C API.
+         let mut context = cstr::buf::new::<256>();
+         unsafe {
+@@ -300,7 +305,7 @@ fn daemon_entry() {
+     setsid().log_ok();
+ 
+     // Make sure the current context is magisk
+-    if let Ok(mut current) =
++    if !crate::pocket::enabled() && let Ok(mut current) =
+         cstr!("/proc/self/attr/current").open(OFlag::O_WRONLY | OFlag::O_CLOEXEC)
+     {
+         let con = cstr!(MAGISK_PROC_CON);
+@@ -354,6 +359,7 @@ fn daemon_entry() {
+ 
+     // Escape from cgroup
+     let pid = getpid().as_raw();
++    if !crate::pocket::enabled() {
+     switch_cgroup("/acct", pid);
+     switch_cgroup("/dev/cg2_bpf", pid);
+     switch_cgroup("/sys/fs/cgroup", pid);
+@@ -361,6 +367,8 @@ fn daemon_entry() {
+         switch_cgroup("/dev/memcg/apps", pid);
+     }
+ 
++    }
++
+     // Samsung workaround #7887
+     if cstr!("/system_ext/app/mediatek-res/mediatek-res.apk").exists() {
+         set_prop(cstr!("ro.vendor.mtk_model"), cstr!("0"));
+@@ -414,7 +422,7 @@ fn daemon_entry() {
+     };
+ 
+     sock_path.follow_link().chmod(0o666).log_ok();
+-    sock_path.set_secontext(cstr!(MAGISK_FILE_CON)).log_ok();
++    if !crate::pocket::enabled() { sock_path.set_secontext(cstr!(MAGISK_FILE_CON)).log_ok(); }
+ 
+     // Loop forever to listen for requests
+     let daemon = MagiskD::get();
+@@ -465,6 +473,12 @@ pub fn connect_daemon(code: RequestCode, create: bool) -> LoggedResult<UnixStrea
+                 return log_err!("Start daemon on magisk tmpfs");
+             }
+ 
++            // Pocket init supervises the daemon as an ordinary foreground child.
++            if crate::pocket::enabled() && std::env::var_os("POCKET_MAGISK_FOREGROUND").is_some() {
++                daemon_entry();
++                exit(0);
++            }
++
+             // Fork a process and run the daemon
+             if fork_dont_care() == 0 {
+                 daemon_entry();
+diff --git a/native/src/core/lib.rs b/native/src/core/lib.rs
+index 4445996..a9ad30d 100644
+--- a/native/src/core/lib.rs
++++ b/native/src/core/lib.rs
+@@ -35,6 +35,7 @@ mod magisk;
+ mod module;
+ mod mount;
+ mod package;
++mod pocket;
+ mod resetprop;
+ mod selinux;
+ mod socket;
+diff --git a/native/src/core/logging.rs b/native/src/core/logging.rs
+index 9f8142d..5bfe90e 100644
+--- a/native/src/core/logging.rs
++++ b/native/src/core/logging.rs
+@@ -56,6 +56,12 @@ fn level_to_prio(level: LogLevel) -> i32 {
+ }
+ 
+ fn android_log_write(level: LogLevel, msg: &Utf8CStr) {
++    if crate::pocket::enabled() {
++        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open("/logs/magisk.log") {
++            writeln!(file, "{}: {}", level_to_prio(level), msg.as_str()).ok();
++        }
++        return;
++    }
+     unsafe {
+         __android_log_write(level_to_prio(level), raw_cstr!("Magisk"), msg.as_ptr());
+     }
+diff --git a/native/src/core/module.rs b/native/src/core/module.rs
+index 12a6228..7343336 100644
+--- a/native/src/core/module.rs
++++ b/native/src/core/module.rs
+@@ -720,6 +720,13 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
+             return Ok(());
+         }
+ 
++        if crate::pocket::enabled() && (
++            (dir.contains_path(cstr!("system")) && !dir.contains_path(cstr!("skip_mount"))) ||
++            dir.contains_path(cstr!("sepolicy.rule")) || dir.contains_path(cstr!("zygisk")) ||
++            dir.contains_path(cstr!("riru"))) {
++            info!("{name}: unsupported kernel/mount/injection features in Pocket; skipped");
++            return Ok(());
++        }
+         let mut z32 = -1;
+         let mut z64 = -1;
+ 
+@@ -821,7 +828,7 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
+ 
+ impl MagiskD {
+     pub fn handle_modules(&self) {
+-        setup_module_mount();
++        if !crate::pocket::enabled() { setup_module_mount(); }
+         upgrade_modules().ok();
+ 
+         let zygisk = self.zygisk_enabled.load(Ordering::Acquire);
+@@ -830,7 +837,15 @@ impl MagiskD {
+ 
+         // Recollect modules (module scripts could remove itself)
+         let modules = collect_modules(zygisk, true);
+-        self.apply_modules(&modules);
++        if crate::pocket::enabled() {
++            for m in &modules {
++                let prop = format!("{}/{}/system.prop", MODULEROOT, m.name);
++                let prop = Utf8CString::from(prop);
++                if prop.exists() { load_prop_file(&prop); }
++            }
++        } else {
++            self.apply_modules(&modules);
++        }
+ 
+         self.module_list.set(modules).ok();
+     }
+diff --git a/native/src/core/pocket.rs b/native/src/core/pocket.rs
+new file mode 100644
+index 0000000..6e421ad
+--- /dev/null
++++ b/native/src/core/pocket.rs
+@@ -0,0 +1,28 @@
++// Pocket guest integration. Kernel credentials and host SELinux remain unchanged.
++use std::os::unix::net::UCred;
++
++pub fn enabled() -> bool {
++    std::env::var("POCKET_DIRECT_ROOT").is_ok_and(|root| root.starts_with('/'))
++}
++
++// All guest processes share one host app UID. Restore the logical credentials
++// carried by Pocket's exec boundary, after validating the kernel socket owner.
++// This is guest policy bookkeeping, not an additional host security boundary.
++pub fn peer_identity(cred: &mut UCred) -> bool {
++    if !enabled() { return true; }
++    let host_uid = unsafe { base::libc::syscall(base::libc::SYS_getuid) as u32 };
++    if cred.uid != host_uid { return false; }
++    let Some(pid) = cred.pid else { return false; };
++    let Ok(environment) = std::fs::read(format!("/proc/{pid}/environ")) else { return false; };
++    if environment.len() > 1024 * 1024 { return false; }
++    for item in environment.split(|c| *c == 0) {
++        if let Some(value) = item.strip_prefix(b"POCKET_DIRECT_ID=") {
++            let Ok(value) = std::str::from_utf8(value) else { return false; };
++            let Some((uid, gid)) = value.split_once(':') else { return false; };
++            let (Ok(uid), Ok(gid)) = (uid.parse::<u32>(), gid.parse::<u32>()) else { return false; };
++            cred.uid = uid; cred.gid = gid;
++            return true;
++        }
++    }
++    false
++}
+diff --git a/native/src/core/scripting.cpp b/native/src/core/scripting.cpp
+index 7db172d..4b9c5d4 100644
+--- a/native/src/core/scripting.cpp
++++ b/native/src/core/scripting.cpp
+@@ -23,7 +23,7 @@ static const char *bbpath() {
+ static void set_script_env() {
+     setenv("ASH_STANDALONE", "1", 1);
+     char new_path[4096];
+-    ssprintf(new_path, sizeof(new_path), "%s:%s", getenv("PATH"), get_magisk_tmp());
++    ssprintf(new_path, sizeof(new_path), "%s/" BBPATH ":%s:%s", get_magisk_tmp(), getenv("PATH"), get_magisk_tmp());
+     setenv("PATH", new_path, 1);
+     if (MagiskD::Get().zygisk_enabled())
+         setenv("ZYGISK_ENABLED", "1", 1);
+@@ -226,6 +226,7 @@ void install_module(Utf8CStr file) {
+     xdup2(fd, STDERR_FILENO);
+     close(fd);
+ 
++    set_script_env();
+     const char *argv[] = { BBEXEC_CMD, "-c", install_module_script, nullptr };
+     execve(argv[0], (char **) argv, environ);
+     abort(stdout, "Failed to execute BusyBox shell");
+diff --git a/native/src/core/selinux.rs b/native/src/core/selinux.rs
+index de0c5ec..47ba8a9 100644
+--- a/native/src/core/selinux.rs
++++ b/native/src/core/selinux.rs
+@@ -52,6 +52,7 @@ fn restore_syscon(path: &mut dyn Utf8CStrBuf) -> LoggedResult<()> {
+ }
+ 
+ pub(crate) fn restorecon() {
++    if crate::pocket::enabled() { return; }
+     if let Ok(mut file) = cstr!("/sys/fs/selinux/context")
+         .open(OFlag::O_WRONLY | OFlag::O_CLOEXEC)
+         .log()
+@@ -73,6 +74,7 @@ pub(crate) fn restorecon() {
+ }
+ 
+ pub(crate) fn restore_tmpcon() -> LoggedResult<()> {
++    if crate::pocket::enabled() { return Ok(()); }
+     let tmp = get_magisk_tmp();
+     if tmp == "/sbin" {
+         tmp.set_secontext(ROOT_CON)?;
+diff --git a/native/src/core/su/su.cpp b/native/src/core/su/su.cpp
+index 901b743..c36e9e9 100644
+--- a/native/src/core/su/su.cpp
++++ b/native/src/core/su/su.cpp
+@@ -383,6 +383,8 @@ void exec_root_shell(int client, int pid, SuRequest &req, MntNsMode mode) {
+     close(ptsfd);
+     close(client);
+ 
++    if (getenv("POCKET_DIRECT_ROOT")) mode = MntNsMode::Global;
++
+     // Handle namespaces
+     if (req.target_pid == -1)
+         req.target_pid = pid;
+diff --git a/scripts/util_functions.sh b/scripts/util_functions.sh
+index dd91cd1..829c451 100644
+--- a/scripts/util_functions.sh
++++ b/scripts/util_functions.sh
+@@ -116,6 +116,7 @@ setup_flashable() {
+ }
+ 
+ ensure_bb() {
++  [ -n "$POCKET_DIRECT_ROOT" ] && return
+   if set -o | grep -q standalone; then
+     # We are definitely in busybox ash
+     set -o standalone
+@@ -272,6 +273,12 @@ mount_ro_ensure() {
+ # After calling this method, the following variables will be set:
+ # SLOT, SYSTEM_AS_ROOT, LEGACYSAR
+ mount_partitions() {
++  if [ -n "$POCKET_DIRECT_ROOT" ]; then
++    SLOT=
++    SYSTEM_AS_ROOT=false
++    LEGACYSAR=false
++    return
++  fi
+   # Check A/B slot
+   SLOT=$(grep_cmdline androidboot.slot_suffix)
+   if [ -z $SLOT ]; then
+@@ -606,7 +613,7 @@ set_perm() {
+   chmod $4 $1 || return 1
+   local CON=$5
+   [ -z $CON ] && CON=u:object_r:system_file:s0
+-  chcon $CON $1 || return 1
++  [ -n "$POCKET_DIRECT_ROOT" ] || chcon $CON $1 || return 1
+ }
+ 
+ set_perm_recursive() {
+@@ -645,7 +652,7 @@ set_default_perm() {
+ install_module() {
+   rm -rf $TMPDIR
+   mkdir -p $TMPDIR
+-  chcon u:object_r:system_file:s0 $TMPDIR
++  [ -n "$POCKET_DIRECT_ROOT" ] || chcon u:object_r:system_file:s0 $TMPDIR
+   cd $TMPDIR
+ 
+   setup_flashable
+@@ -674,7 +681,7 @@ install_module() {
+   # Create mod paths
+   rm -rf $MODPATH
+   mkdir -p $MODPATH
+-  chcon u:object_r:system_file:s0 $MODPATH
++  [ -n "$POCKET_DIRECT_ROOT" ] || chcon u:object_r:system_file:s0 $MODPATH
+ 
+   if is_legacy_script; then
+     unzip -oj "$ZIPFILE" module.prop install.sh uninstall.sh 'common/*' -d $TMPDIR >&2
+@@ -755,6 +762,7 @@ install_module() {
+ ##########
+ 
+ # Detect whether in boot mode
++[ -n "$POCKET_DIRECT_ROOT" ] && BOOTMODE=true
+ [ -z $BOOTMODE ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
+ [ -z $BOOTMODE ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
+ [ -z $BOOTMODE ] && BOOTMODE=false

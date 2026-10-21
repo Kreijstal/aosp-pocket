@@ -24,6 +24,7 @@ public final class GuestService extends Service {
     private static final String START = "dev.kreijstal.aosppocket.START";
     private static final String STOP = "dev.kreijstal.aosppocket.STOP";
     private static final String IMPORT = "dev.kreijstal.aosppocket.IMPORT";
+    private static final String ADMIN = "dev.kreijstal.aosppocket.ADMIN";
     private static final String CHANNEL = "guest-runtime";
     private static final int NOTIFICATION = 1;
     private final Handler main = new Handler(Looper.getMainLooper());
@@ -38,10 +39,89 @@ public final class GuestService extends Service {
     int width, height, dpi;
     private int sdk, legacyWidth, legacyHeight, legacyDpi;
     private DisplayGeometry hostDisplay;
+    private int hostRefreshHz = 60;
     private DirectSession direct;
+    private AdminServer admin;
+    private String adminError;
+    private long adminGeneration;
     private final java.util.Set<FrameListener> visibleDisplays = new java.util.LinkedHashSet<>();
     private FrameListener displayOwner;
     boolean directBackend() { return sdk == 28; }
+    boolean adminEnabled() { return admin != null; }
+    String adminStatus() {
+        return admin==null ? adminError==null?"Termux administration is off.":adminError
+            : "Termux administration: 127.0.0.1:"+admin.port()+" · guest root console";
+    }
+    String adminToken() {
+        if(admin==null)return null;
+        return getSharedPreferences("guest-admin",MODE_PRIVATE).getString("key",null);
+    }
+    private byte[] adminKey(boolean rotate) {
+        SharedPreferences prefs=getSharedPreferences("guest-admin",MODE_PRIVATE);
+        String stored=prefs.getString("key","");byte[] key=new byte[32];
+        if(rotate || !stored.matches("[0-9a-f]{64}")) {
+            new java.security.SecureRandom().nextBytes(key);StringBuilder hex=new StringBuilder();
+            for(byte value:key)hex.append(String.format(java.util.Locale.ROOT,"%02x",value&255));
+            if(!prefs.edit().putString("key",hex.toString()).commit())throw new IllegalStateException("Cannot save admin key");
+        } else for(int i=0;i<key.length;i++)key[i]=(byte)Integer.parseInt(stored.substring(i*2,i*2+2),16);
+        return key;
+    }
+    void enableAdmin() {
+        if(admin!=null)return;
+        try{startForegroundService(new Intent(this,GuestService.class).setAction(ADMIN));}
+        catch(RuntimeException error){adminError="Cannot enable Termux administration: "+error.getMessage();changed();}
+    }
+    void disableAdmin() {
+        adminGeneration++;
+        if(admin!=null){admin.close();admin=null;}adminError=null;changed();
+        if(!running() && !starting && !preparing())releaseForeground();
+    }
+    void revokeAdmin() {
+        adminGeneration++;
+        boolean enabled=admin!=null;
+        if(admin!=null){admin.close();admin=null;}
+        try{adminKey(true);if(enabled)openAdmin();else changed();}
+        catch(RuntimeException error){adminError="Cannot revoke admin key: "+error.getMessage();changed();}
+        if(admin==null && !running() && !starting && !preparing())releaseForeground();
+    }
+    private <T>T adminMain(java.util.concurrent.Callable<T> work) throws Exception {
+        java.util.concurrent.FutureTask<T> task=new java.util.concurrent.FutureTask<>(work);
+        if(!main.post(task))throw new IOException("Guest service is stopping");
+        try{return task.get(10,java.util.concurrent.TimeUnit.SECONDS);}
+        catch(Exception error){task.cancel(false);throw error;}
+    }
+    private String adminState() throws org.json.JSONException {
+        return new org.json.JSONObject().put("enabled",admin!=null).put("port",admin==null?0:admin.port())
+            .put("sdk",sdk).put("running",running()).put("ready",booted).put("starting",starting)
+            .put("stopping",stopping).put("status",message).put("shellUid",0).toString();
+    }
+    private void requireAdmin(long generation) throws IOException {
+        if(destroyed || admin==null || generation!=adminGeneration)throw new IOException("Admin authorization was revoked");
+    }
+    private void openAdmin() {
+        if(admin!=null)return;
+        try {
+            final long generation=++adminGeneration;
+            admin=new AdminServer(AdminServer.DEFAULT_PORT,adminKey(false),new AdminServer.Backend(){
+                @Override public String status() throws Exception{return adminMain(()->{requireAdmin(generation);return adminState();});}
+                @Override public String control(boolean start) throws Exception {
+                    return adminMain(()->{requireAdmin(generation);if(start)startGuest();else stopGuest();return adminState();});
+                }
+                @Override public java.lang.Process execute(String cwd,java.util.List<String> argv) throws Exception {
+                    return adminMain(()->{
+                        requireAdmin(generation);
+                        // Owner recovery/file access must also work after a guest crash.
+                        // Only service-dependent commands require a booted Android system.
+                        if(!directBackend() || stopping ||
+                            !new File(DirectImage.root(GuestService.this),"system/bin/sh").isFile())
+                            throw new IOException("Prepare the Android 9 image before using its root console");
+                        return DirectImage.admin(DirectImage.root(GuestService.this),cwd,argv);
+                    });
+                }
+            });
+            adminError=null;changed();
+        } catch(IOException | RuntimeException error){adminError="Cannot open Termux administration: "+error.getMessage();changed();}
+    }
     int selectedSdk() { return sdk; }
     boolean directAvailable() { return DirectImage.bundled(this); }
     android.graphics.Bitmap snapshot() { return direct==null ? null : direct.snapshot(); }
@@ -65,7 +145,7 @@ public final class GuestService extends Service {
     }
     void touch(android.view.MotionEvent event, float sx, float sy) { if (direct != null) direct.touch(event, sx, sy); }
     void key(int code) { if (direct != null) direct.key(code); }
-    void installApk(Uri uri) { if (direct != null && booted) direct.install(uri); }
+    void installApps(java.util.Map<String,Uri> apks) { if (direct != null && booted) direct.install(apks); }
     void importHostContacts() { if (direct != null && booted) direct.importHostContacts(); }
     void checkHostBridges() { if (direct != null && booted) direct.checkHostBridges(); }
     void checkHostDevices() { if (direct != null && booted) direct.checkHostDevices(); }
@@ -89,7 +169,7 @@ public final class GuestService extends Service {
         if (direct != null) return;
         receiver.reset();
         starting = true;
-        direct = new DirectSession(this, new DisplayGeometry(width,height,dpi), new DirectSession.Listener() {
+        direct = new DirectSession(this, new DisplayGeometry(width,height,dpi), hostRefreshHz, new DirectSession.Listener() {
             @Override public void status(String text) { if (!destroyed) message(text); }
             @Override public void ready() {
                 starting = false; booted = true;
@@ -112,7 +192,11 @@ public final class GuestService extends Service {
         message = hasImage() ? "Android is ready. Tap Start." : bundled ?
             "Tap Start to set up the included Android 7.1.1. No download needed." : "Import a trusted guest ZIP, then Start.";
         DisplayMetrics metrics = new DisplayMetrics();
-        ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
+        android.view.Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        display.getRealMetrics(metrics);
+        // Same default as VMOS: the guest runs at the host's refresh rate.
+        float refresh = display.getRefreshRate();
+        hostRefreshHz = refresh >= 1 && refresh <= 120 ? Math.round(refresh) : 60;
         hostDisplay=new DisplayGeometry(Math.min(metrics.widthPixels,metrics.heightPixels),
             Math.max(metrics.widthPixels,metrics.heightPixels),metrics.densityDpi);
         width = Math.min(metrics.widthPixels, metrics.heightPixels);
@@ -143,7 +227,9 @@ public final class GuestService extends Service {
     }
     @Override public IBinder onBind(Intent intent) { return binder; }
     @Override public int onStartCommand(Intent intent, int flags, int id) {
-        if (intent != null && STOP.equals(intent.getAction())) stopGuest();
+        if (intent != null && ADMIN.equals(intent.getAction())) {
+            promote();openAdmin();if(admin==null && !running() && !starting)releaseForeground();
+        } else if (intent != null && STOP.equals(intent.getAction())) stopGuest();
         else if (intent != null && START.equals(intent.getAction())) {
             promote();
             if (directBackend() || hasImage()) boot();
@@ -250,7 +336,10 @@ public final class GuestService extends Service {
             .setOngoing(true).addAction(android.R.drawable.ic_media_pause, "Stop Android", stop).build();
     }
     private void promote() { startForeground(NOTIFICATION, notification()); foreground = true; }
-    private void releaseForeground() { stopForeground(true); foreground = false; stopSelf(); }
+    private void releaseForeground() {
+        if(admin!=null){if(foreground)getSystemService(NotificationManager.class).notify(NOTIFICATION,notification());return;}
+        stopForeground(true);foreground=false;stopSelf();
+    }
     private void boot() {
         if (directBackend()) { bootDirect(); return; }
         if (guest != null) { starting = false; changed(); return; }
@@ -352,6 +441,8 @@ public final class GuestService extends Service {
     }
     @Override public void onDestroy() {
         destroyed = true;
+        adminGeneration++;
+        if(admin!=null){admin.close();admin=null;}
         visibleDisplays.clear();
         if (displayOwner != null) displayOwner.onDisplayOwnership(false);
         displayOwner = null;

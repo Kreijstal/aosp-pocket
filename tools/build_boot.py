@@ -8,8 +8,9 @@ import re
 import shutil
 import struct
 import subprocess
-from prepare_api28 import ROOT, prepare
+from prepare_api28 import prepare
 from prepare_boot_resources import prepare_resources
+from target import ROOT, clang, info, selected
 from build_boot_zygote import build_zygote
 
 TARGETS = {
@@ -59,7 +60,8 @@ def main():
     parser.add_argument("--ndk", type=Path, required=True)
     parser.add_argument("--hidl-gen",type=Path,required=True)
     args = parser.parse_args()
-    reference = prepare(art=True)
+    arch = selected()
+    reference = prepare(art=True, arch=arch)
     llvm = args.ndk / "toolchains/llvm/prebuilt/linux-x86_64/bin"
     out = ROOT / "out/boot"
     out.mkdir(parents=True, exist_ok=True)
@@ -89,7 +91,7 @@ def main():
     if stage.exists():
         shutil.rmtree(stage)
     shutil.copytree(ROOT / "out/api28/probe-rootfs", stage)
-    platform=prepare_resources()
+    platform=prepare_resources(arch)
     # Matching framework resources, stripped-JAR OAT/VDEX and core UI packages.
     for directory in ("system/etc", "system/fonts", "system/framework"):
         shutil.copytree(platform/directory,stage/directory,dirs_exist_ok=True)
@@ -140,7 +142,7 @@ def main():
                 if vndk is None:raise SystemExit("Missing platform dependency "+name)
                 shutil.copy2(vndk,stage/'vendor/lib64'/name);queue.append(vndk)
     props=stage/"system/build.prop"
-    values={"ro.product.cpu.abilist":"arm64-v8a", "ro.product.cpu.abilist64":"arm64-v8a",
+    values={"ro.product.cpu.abilist":info(arch)["abi"], "ro.product.cpu.abilist64":info(arch)["abi"],
             "ro.product.cpu.abilist32":"", "ro.zygote":"zygote64", "ro.hardware.gralloc":"redroid",
             "ro.hardware.hwcomposer":"redroid", "ro.hardware.egl":"swiftshader",
             "dalvik.vm.usejit":"false", "dalvik.vm.usejitprofiles":"false", "dalvik.vm.dexopt.secondary":"false",
@@ -178,7 +180,7 @@ def main():
     rc+="\nservice pocket-installd /system/bin/installd\n    class pocket-zygote\n    user 0\n    group 0\n\nservice pocket-surfaceflinger /system/bin/surfaceflinger\n    class pocket-zygote\n    user 1000\n    group 1000\n"
     (stage/"system/etc/init/init.system-server.rc").write_text(rc)
     build_zygote(args.ndk,stage,args.hidl_gen)
-    compiler = llvm / "aarch64-linux-android28-clang"
+    compiler = clang(llvm, 28, name=arch)
     subprocess.run([compiler, "-std=c11", "-O2", "-g", "-fPIC", "-shared", "-Wall", "-Wextra", "-Werror",
                     "-Wno-misleading-indentation", "-DPOCKET_DIRECT_BOOT", "-I"+str(out),
                     ROOT / "runtime/direct/guest_paths.c", ROOT / "runtime/direct/boot_runtime.c",

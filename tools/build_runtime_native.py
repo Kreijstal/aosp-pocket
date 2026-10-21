@@ -13,9 +13,11 @@ import shutil
 import subprocess
 import tarfile
 import urllib.request
-
-ROOT = Path(__file__).resolve().parents[1]
+from target import ROOT, clang, info, selected
 WORK = ROOT / "out/ananbox-native"
+if selected() != "arm64":
+    # Boost, talloc and PRoot caches skip work when their output exists; keep each target's objects separate.
+    WORK = ROOT / ("out/ananbox-native-" + selected())
 
 def run(command, cwd=None, env=None):
     print("+ " + " ".join(map(str, command)), flush=True)
@@ -50,7 +52,8 @@ def main():
         if revision != lock[name]["commit"] or dirty:
             raise SystemExit(f"{name} source differs from sources.lock.json")
     llvm = args.ndk.resolve() / "toolchains/llvm/prebuilt/linux-x86_64/bin"
-    cc = llvm / "aarch64-linux-android28-clang"
+    arch = selected()
+    cc = clang(llvm, 28, name=arch)
     if not cc.is_file():
         raise SystemExit(f"Missing Android NDK compiler: {cc}")
     WORK.mkdir(parents=True, exist_ok=True)
@@ -107,7 +110,7 @@ def main():
         subprocess.run(["patch", "-p1"], cwd=output, stdin=source, check=True)
     run(["cmake", "-S", ROOT / "runtime/native", "-B", output, "-G", "Ninja",
          f"-DCMAKE_TOOLCHAIN_FILE={args.ndk.resolve() / 'build/cmake/android.toolchain.cmake'}",
-         "-DANDROID_ABI=arm64-v8a", "-DANDROID_PLATFORM=android-28", "-DANDROID_STL=c++_static",
+         f"-DANDROID_ABI={info(arch)['abi']}", "-DANDROID_PLATFORM=android-28", "-DANDROID_STL=c++_static",
          "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
          "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH", "-DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH",
          f"-DBoost_DIR={prefix / 'lib/cmake/Boost-1.83.0'}"])

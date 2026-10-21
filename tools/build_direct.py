@@ -6,7 +6,8 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
-from prepare_api28 import prepare, ROOT
+from prepare_api28 import prepare
+from target import ROOT, clang, info, selected
 
 WRAPS = ("open", "openat", "stat", "lstat", "fstatat", "readlink", "readlinkat",
          "mkdir", "mkdirat", "unlink", "unlinkat", "rmdir", "symlink", "symlinkat",
@@ -41,7 +42,8 @@ def main():
         return
     if not args.ndk:
         parser.error("--ndk or --host required")
-    reference = prepare(art=True)
+    arch = selected()
+    reference = prepare(art=True, arch=arch)
     stage = out / "rootfs"
     if stage.exists():
         shutil.rmtree(stage)
@@ -49,7 +51,7 @@ def main():
     (stage / "system/lib64").mkdir()
     llvm = args.ndk / "toolchains/llvm/prebuilt/linux-x86_64/bin"
     binary = stage / "system/bin/pocket-direct-probe"
-    compile_probe(llvm / "aarch64-linux-android28-clang", binary, android=True)
+    compile_probe(clang(llvm, 28, name=arch), binary, android=True)
     for name in ("libc.so", "libm.so", "libdl.so"):
         shutil.copy2(reference / "system/lib64" / name, stage / "system/lib64" / name)
     shutil.copy2(reference / "system/bin/linker64", stage / "system/bin/linker64")
@@ -63,7 +65,7 @@ def main():
         "kernel_permissions": "inherited_host_app",
     }, indent=2) + "\n")
     (out / "build.stamp").touch()
-    print("PASS: ARM64 controlled guest ABI built; pinned Android 9 linker/bionic staged")
+    print(f"PASS: {info(arch)['abi']} controlled guest ABI built; pinned Android 9 linker/bionic staged")
 
 
 if __name__ == "__main__":
