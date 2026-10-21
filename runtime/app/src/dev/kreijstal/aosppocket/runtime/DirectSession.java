@@ -34,6 +34,7 @@ final class DirectSession implements AutoCloseable {
     private volatile java.lang.Process init;
     private BootBattery battery;
     private HostBroker hostBroker;
+    private RuntimeLog runtimeLog;
     private File root;
     private Connection input;
     private final Object frameLock=new Object(), visibilityLock=new Object();
@@ -77,6 +78,7 @@ final class DirectSession implements AutoCloseable {
                 if(closed)return;
                 java.nio.file.Files.deleteIfExists(new File(root,"logs/display-performance.json").toPath());
                 battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);init=DirectImage.start(root);
+                runtimeLog=new RuntimeLog(new File(root,"logs/manager-init.log"));
             }
             status("Android 9 starting…");
             long deadline=SystemClock.elapsedRealtime()+240000;
@@ -148,6 +150,7 @@ final class DirectSession implements AutoCloseable {
             }
             if(battery!=null)battery.close();
             if(hostBroker!=null)hostBroker.close();
+            if(runtimeLog!=null)runtimeLog.close();
             final String message=ended;main.post(()->listener.stopped(message));
         }
     }

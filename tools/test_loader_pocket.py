@@ -25,6 +25,8 @@ def main():
                         '-o',args.dir/'libfixture.so'],check=True)
         subprocess.run([clang,*flags,root/'runtime/tests/loader/probe.c','-ldl',
                         '-o',args.dir/'loader-probe'],check=True)
+        subprocess.run([clang,*flags,root/'runtime/tests/loader/signals.c',
+                        '-o',args.dir/'signal-probe'],check=True)
         name='lib/arm64-v8a/libfixture.so'
         entry=zipfile.ZipInfo(name)
         pad=(-(30+len(name)+4))%16384
@@ -45,7 +47,7 @@ def main():
 
     base='/data/local/tmp/pocket-loader-tests'
     command(['/system/bin/toybox','mkdir','-p',base+'/allowed',base+'/outside'])
-    for local,remote in [('loader-probe','probe'),('libfixture.so','allowed/libfixture.so'),
+    for local,remote in [('loader-probe','probe'),('signal-probe','signal-probe'),('libfixture.so','allowed/libfixture.so'),
                          ('libfixture.so','outside/libfixture.so'),('fixture.apk','allowed/fixture.apk')]:
         target=base+'/'+remote
         with (args.dir/local).open('rb') as source:
@@ -61,6 +63,8 @@ def main():
     receipt.append({'mode':'namespace','library':'soname search','result':'PASS'})
     result=command([base+'/probe','deny',base+'/outside/libfixture.so']);print(result.strip(),flush=True)
     receipt.append({'mode':'namespace','library':'outside permitted directory','result':'PASS: denied'})
+    result=command([base+'/signal-probe']);print(result.strip(),flush=True)
+    receipt.append({'mode':'signals','result':'PASS: runtime leaves default and app handlers alone'})
     (args.dir/'loader-validation.json').write_text(json.dumps(receipt,indent=2)+'\n')
 
 

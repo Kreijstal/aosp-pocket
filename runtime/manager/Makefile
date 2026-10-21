@@ -7,6 +7,12 @@ MANAGER_GUEST_JAVA := $(BOOT_GUEST_JAVA) runtime/direct/GuestControl.java runtim
 .PHONY: manager-verify
 .PHONY: check-admin
 .PHONY: check-direct-image-links
+.PHONY: check-runtime-log
+check-runtime-log:
+	mkdir -p out/runtime-log-tests
+	javac --release 8 -d out/runtime-log-tests runtime/app/src/dev/kreijstal/aosppocket/runtime/RuntimeLog.java runtime/tests/RuntimeLogTest.java
+	java -cp out/runtime-log-tests dev.kreijstal.aosppocket.runtime.RuntimeLogTest
+
 check-direct-image-links: out/runtime/classes.dex
 	mkdir -p out/direct-image-tests
 	javac --release 8 -cp $(ANDROID_JAR):out/runtime/classes -d out/direct-image-tests runtime/tests/DirectImageLinksFixture.java

@@ -464,8 +464,14 @@ __attribute__((constructor)) static void boot_initialize(void) {
         strcpy(runtime_console,console);
     const char* parent=getenv("POCKET_PARENT_PID");
     if(parent && strlen(parent)<sizeof(runtime_parent))strcpy(runtime_parent,parent);
-    struct sigaction crash={0};crash.sa_sigaction=crash_trace;crash.sa_flags=SA_SIGINFO|SA_RESETHAND;
-    sigemptyset(&crash.sa_mask);sigaction(SIGSEGV,&crash,NULL);sigaction(SIGABRT,&crash,NULL);
+    // ART and apps can legitimately handle synchronous signals. A development
+    // recorder which re-sends them must not participate in their signal chain
+    // during ordinary guest execution.
+    const char* crash_diagnostics=getenv("POCKET_DIRECT_CRASH_DIAGNOSTICS");
+    if (crash_diagnostics && !strcmp(crash_diagnostics,"1")) {
+        struct sigaction crash={0};crash.sa_sigaction=crash_trace;crash.sa_flags=SA_SIGINFO|SA_RESETHAND;
+        sigemptyset(&crash.sa_mask);sigaction(SIGSEGV,&crash,NULL);sigaction(SIGABRT,&crash,NULL);
+    }
     const char* identity=getenv("POCKET_DIRECT_ID");
     unsigned uid=0,gid=0;
     if (identity && sscanf(identity,"%u:%u",&uid,&gid)!=2) _exit(125);

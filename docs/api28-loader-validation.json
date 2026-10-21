@@ -64,5 +64,17 @@
     "lr": "0x7c77c2b558",
     "faultAddress": "0x0",
     "attribution": "unknown: full maps pending"
+  },
+  "nativeFaultAnalysis": {
+    "evidence": "27 repeated reports within the first 2 MiB; PC and LR map to anonymous executable region [anon:1313]",
+    "libraryIdentification": "unknown: anonymous mapping, no file-backed ELF attribution",
+    "signalRecorder": "Pocket custom SIGSEGV recorder forcibly re-sends the signal; possible signal-chain interference, not established as Revolut root cause",
+    "followupVersion": "0.27",
+    "changes": [
+      "custom crash recorder opt-in via POCKET_DIRECT_CRASH_DIAGNOSTICS=1",
+      "active log checked every 2 seconds; above 16 MiB keep one 2 MiB recent tail and truncate append log"
+    ],
+    "validation": "PASS: focused host log tests, ARM64 runtime rebuild, numeric APK build/signature and exclusion checks; live signal and Revolut retest pending installation",
+    "cleanup": "oversized Termux saved copy removed after bounded excerpt was preserved"
   }
 }
