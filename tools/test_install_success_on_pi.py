@@ -54,18 +54,28 @@ preview=hierarchy()
 assert APP in '\n'.join(n.get('text','') for n in preview.iter('node'))
 button=next(n for n in preview.iter('node') if n.get('text')=='Install in Android')
 assert button.get('enabled')=='true'
+def guest_log():
+    return guest_request(2,['/system/bin/toybox','tail','-c','131072','/logs/manager-init.log']).decode(errors='replace')
+def install_records(log):
+    return [line for line in log.splitlines() if 'DIRECT_FRAMEWORK_INSTALL_PASS package='+APP+' ' in line]
+def launch_records(log):
+    return [line for line in log.splitlines() if 'tag=ActivityManager Start proc ' in line and ':'+APP+'/' in line]
+before=guest_log()
+previous_installs=set(install_records(before))
+previous_launches=set(launch_records(before))
 started=time.monotonic()
 tap(button)
 for _ in range(90):
     status=json.loads(guest_request(1))
-    if status['status']=='Installed '+APP:break
+    log=guest_log()
+    fresh_installs=[line for line in install_records(log) if line not in previous_installs]
+    launch=[line for line in launch_records(log) if line not in previous_launches]
+    if status['status']=='Installed '+APP and fresh_installs and launch:break
     assert 'operation failed' not in status['status'],status
     time.sleep(1)
 else:raise AssertionError(status)
 print('Installed via host picker: '+APP,flush=True)
-log=guest_request(2,['/system/bin/toybox','tail','-c','131072','/logs/manager-init.log']).decode(errors='replace')
-launch=[line for line in log.splitlines() if 'tag=ActivityManager Start proc ' in line and ':'+APP+'/' in line]
-assert launch, 'No guest activity process started'
+assert launch, 'No fresh guest activity process started'
 pid=re.search(r'Start proc (\d+):',launch[-1]).group(1)
 cmdline=guest_request(2,['/system/bin/toybox','cat','/proc/'+pid+'/cmdline']).decode().split('\0')[0]
 assert cmdline==APP,cmdline
@@ -74,7 +84,7 @@ last=host_shell('cat /data/user/0/'+PACKAGE+'/shared_prefs/guest-last-app.xml',T
 assert APP in last,last
 report={'command':'python3 /home/pi/test_install_success_on_pi.py','managerVersion':'0.31',
         'package':APP,'path':'Settings > Install APK > Device apps > Open Camera > Install in Android',
-        'compatibleInstallEnabled':True,'status':status['status'],'launchLog':launch[-1],'liveProcess':cmdline,
+        'compatibleInstallEnabled':True,'status':status['status'],'installLog':fresh_installs[-1],'launchLog':launch[-1],'liveProcess':cmdline,
         'lastAppSaved':True,'guestStillReady':True,'elapsedSeconds':round(time.monotonic()-started,1),'exitCode':0}
 Path('/home/pi/pocket-install-success-validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print('PASS: compatible host APK imported, installed, launched; last app saved and guest still ready',flush=True)

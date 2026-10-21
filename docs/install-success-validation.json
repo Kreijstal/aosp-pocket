@@ -5,10 +5,11 @@
   "path": "Settings > Install APK > Device apps > Open Camera > Install in Android",
   "compatibleInstallEnabled": true,
   "status": "Installed net.sourceforge.opencamera",
-  "launchLog": "GUEST_LOG pid=13279 kernel_uid=10177 tid=13299 id=3 priority=4 tag=ActivityManager Start proc 14566:net.sourceforge.opencamera/u0a18 for activity net.sourceforge.opencamera/.MainActivity",
+  "installLog": "DIRECT_FRAMEWORK_INSTALL_PASS package=net.sourceforge.opencamera session=124770013GUEST_LOG pid=13231 kernel_uid=10177 tid=13231 id=0 priority=3 tag=gralloc Registering a buffer in the process that created it. This may cause memory ordering problems.",
+  "launchLog": "GUEST_LOG pid=13279 kernel_uid=10177 tid=13299 id=3 priority=4 tag=ActivityManager Start proc 15027:net.sourceforge.opencamera/u0a18 for activity net.sourceforge.opencamera/.MainActivity",
   "liveProcess": "net.sourceforge.opencamera",
   "lastAppSaved": true,
   "guestStillReady": true,
-  "elapsedSeconds": 2.3,
+  "elapsedSeconds": 5.4,
   "exitCode": 0
 }
