@@ -55,9 +55,12 @@ installation, app rendering and an injected tap that increments its button.
 See [the evidence](docs/api28-direct-boot-validation.json) and
 [captured test app](docs/images/api28-guest-test.png). Pocket Manager integrates this direct backend alongside Android 7, with
 separate persistent data, live preview/window/PiP, touch and APK installation.
-Version 0.34 changes Android 9's default to syscall translation with unchanged
-Bionic code and removes the Bionic-patching payload. The older direct profile
-remains a research baseline. See [the wrapper-free backend and its limits](docs/syscall-backend.md).
+Version 0.34 uses a PRoot fallback with unchanged Bionic code and removes the
+Bionic-patching payload. That fallback does not implement the intended architecture.
+Replacement work now uses [a custom native interpreter and syscall layer](docs/exec-loader.md),
+with exec continuity and unchanged Bionic tested without a tracer. Full Android
+boot integration remains pending. The older direct profile remains a research
+baseline; [0.34's fallback and limits](docs/syscall-backend.md) are documented separately.
 Version 0.5 adds shared host networking, contact import, host dialer/SMS intent
 delegation and a permission-checked host device broker. Standard guest camera,
 audio, sensor and location adapters and physical phone validation remain
