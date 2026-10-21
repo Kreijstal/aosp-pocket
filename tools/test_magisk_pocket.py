@@ -100,6 +100,15 @@ def main():
             time.sleep(.1)
         else:
             raise RuntimeError('Magisk post-fs-data boot stage did not finish')
+        # Exercise direct creation, update and deletion separately from the
+        # property service, and read through an independent guest libc client.
+        key = 'pocket.magisk.direct_test'
+        for value in ('created', 'updated'):
+            command('/sbin/magisk', 'resetprop', '-n', key, value)
+            assert command('/system/bin/getprop', key)[1].strip() == value.encode()
+        command('/sbin/magisk', 'resetprop', '--delete', key)
+        assert command('/system/bin/getprop', key)[1].strip() == b''
+        print('PASS: resetprop direct create/update/delete visible to guest libc.', flush=True)
         result = command('/system/bin/toybox', 'timeout', '5', '/sbin/magisk', 'su', '-c', '/system/bin/toybox id -u')
         assert result[1].strip() == b'0', result
         print('PASS: real MagiskSU returned guest UID 0.', flush=True)
@@ -138,7 +147,7 @@ def main():
                 raise RuntimeError('Second init exited: '+str(state))
             time.sleep(.2)
         else:
-            raise RuntimeError('Installed module did not run both boot stages')
+            raise RuntimeError('Installed module boot-stage/property check failed: '+out.decode(errors='replace'))
         command('/system/bin/setprop', 'sys.boot_completed', '1')
         time.sleep(.3)
         print('PASS: installed module survived restart; post-fs-data precedes service; guest property updated.', flush=True)
@@ -152,6 +161,7 @@ def main():
     receipt = {'guestApi': 28, 'hostRootRequired': False, 'kernelModified': False,
                'realMagiskDaemon': 'PASS', 'magiskSu': 'PASS', 'nonRootDatabaseDenied': 'PASS',
                'realModuleInstaller': 'PASS', 'moduleUpgradeAcrossBoot': 'PASS',
+               'resetpropCreateUpdateDelete': 'PASS',
                'postFsDataAndServiceOrdering': 'PASS', 'procLinksAndFifo': 'PASS',
                'scope': 'standalone real AOSP init and Magisk on SM-G780G; full UI boot pending'}
     (DIRECTORY/'validation.json').write_text(json.dumps(receipt, indent=2)+'\n')

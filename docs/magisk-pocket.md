@@ -38,6 +38,12 @@ Late-start scripts follow, with the boot-complete callback after Android boots.
 Module state remains under `/data/adb/modules` and `/data/adb/modules_update`.
 The actual manager and module protocols are retained.
 
+Preparation enables owner writes on the private guest property-area files.
+Kernel root normally overrides their read-only permissions; Pocket's logical
+root cannot. This lets real `resetprop -n` map the guest areas for writing.
+It does not change host property files or provide isolation between guest
+processes sharing the same host app UID.
+
 Guest owner-console recovery remains available while Android is stopped:
 
 ```sh
@@ -63,15 +69,17 @@ On the unrooted Samsung SM-G780G, using the paired `pf-phone2` owner console:
   `modules_update`; the next boot upgrades it and executes both module scripts.
 - PASS: real FIFO read/write and `/proc/self/cwd`/`exe` traversal regression tests;
   the actual kernel UID stays unprivileged.
-- UNRESOLVED: the fixture's `resetprop -n` write is not visible to the ordinary
-  guest `getprop` client, so the full restart/property assertion currently fails.
+- PASS: `resetprop -n` creation/update and direct deletion are visible through
+  the ordinary guest libc `getprop` client. A module's post-fs-data property
+  is visible to its service script after restart.
 - PENDING: complete Android UI boot and Magisk manager UI with the 0.23 APK.
 
 The focused device test is `tools/test_magisk_pocket.py`, run in phone Termux
 beside the generated payload tar, fixture ZIP and native test clients. It uses
 a small actual AOSP init profile, the real Magisk daemon and no network or
-attestation keys. The current failure is retained as a failing assertion;
-it is not reported as a successful full integration test.
+attestation keys. The complete focused test passed on 2026-10-21; the receipt
+is summarized in `docs/magisk-pocket-validation.json`. This test does not
+establish full Android UI integration.
 
 The direct runtime fixes keep host `/proc` magic-link traversal in the host
 tree and translate dynamically called FIFO-creation functions into the guest

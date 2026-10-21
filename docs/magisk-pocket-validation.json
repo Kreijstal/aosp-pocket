@@ -10,8 +10,8 @@
   "magiskSuGuestRoot": "PASS",
   "nonRootPrivilegedRequestDenied": "PASS",
   "officialModuleZipInstaller": "PASS",
-  "moduleUpgradeAndScriptExecution": "observed after standalone init restart",
-  "modulePropertyAssertion": "FAIL: resetprop -n value not visible through guest getprop",
+  "moduleUpgradeAndScriptExecution": "PASS: actual standalone init restart",
+  "modulePropertyAssertion": "PASS: post-fs-data write visible to service script",
   "procMagicLinksAndRealFifo": "PASS",
   "fullAndroidUiBoot": "pending",
   "hostRootInstalled": false,
@@ -19,5 +19,13 @@
   "hostSelinuxPolicyModified": false,
   "hardwareAttestationEstablished": false,
   "privateKeysBundled": false,
-  "unsupported": ["Magic Mount", "kernel modules", "mount namespaces", "SELinux rules", "Riru", "Zygisk"]
+  "unsupported": [
+    "Magic Mount",
+    "kernel modules",
+    "mount namespaces",
+    "SELinux rules",
+    "Riru",
+    "Zygisk"
+  ],
+  "resetpropCreateUpdateDelete": "PASS: independent guest libc reader"
 }

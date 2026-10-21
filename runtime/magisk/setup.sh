@@ -9,6 +9,15 @@ if [ -f /data/adb/pocket-magisk.disabled ]; then
     setprop pocket.magisk.postfs 1
     exit 0
 fi
+# Real root can open Android's read-only property files for writing via its
+# kernel capabilities. Pocket's logical root has no host DAC override: allow
+# owner writes on these private guest files before resetprop maps them. Every
+# context is created by the guest property service before this script runs.
+# This does not add isolation between guest processes sharing the host app UID.
+$TB chmod u+w /dev/__properties__/properties_serial
+for area in /dev/__properties__/u:object_r:*; do
+    [ ! -f "$area" ] || $TB chmod u+w "$area"
+done
 $TB mkdir -p /sbin/.magisk/device /sbin/.magisk/busybox /data/adb/magisk /data/adb/modules /cache
 $TB chmod 700 /data/adb
 $TB cp /system/etc/pocket-magisk/magisk /sbin/magisk
