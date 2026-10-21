@@ -1,0 +1,28 @@
+{
+  "command": "python3 /home/pi/test_bionic_mode_on_pi.py",
+  "environment": "Pi outer LineageOS VM -> Pocket owner console -> isolated native subprocesses",
+  "modes": {
+    "wrapped": {
+      "mode": "wrapped",
+      "executableBytesCompared": 858956,
+      "differentBytes": 763,
+      "libcUid": 12345,
+      "kernelUid": 10177,
+      "virtualPathErrno": 0,
+      "backingPathReadable": true
+    },
+    "unmodified": {
+      "mode": "unmodified",
+      "executableBytesCompared": 858956,
+      "differentBytes": 0,
+      "libcUid": 10177,
+      "kernelUid": 10177,
+      "virtualPathErrno": 2,
+      "backingPathReadable": true
+    }
+  },
+  "invalidModeExitCode": 125,
+  "guestStillReady": true,
+  "exitCode": 0,
+  "scope": "Unmodified Bionic executable bytes and kernel semantics; full Android boot with this mode is unsupported"
+}

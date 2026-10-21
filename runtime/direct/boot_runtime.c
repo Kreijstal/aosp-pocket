@@ -459,6 +459,16 @@ static long current_tracer(void) {
 __attribute__((constructor)) static void boot_initialize(void) {
     const char* root=pocket_guest_root();
     if (!root) _exit(125);
+    // Explicit native bring-up mode. Preserve the pinned libc's executable
+    // bytes and property state; it then exposes real kernel identities/paths.
+    // This is not a complete replacement for the boot compatibility backend.
+    const char* mode=getenv("POCKET_BIONIC_MODE");
+    if (mode && strcmp(mode,"wrapped") && strcmp(mode,"unmodified")) {
+        const char message[]="DIRECT_BOOT_INVALID_BIONIC_MODE\n";
+        syscall(SYS_write,STDERR_FILENO,message,sizeof(message)-1);
+        _exit(125);
+    }
+    int patch_bionic=!mode || !strcmp(mode,"wrapped");
     const char* console=getenv("POCKET_DIRECT_CONSOLE");
     if(console && strlen(console)<sizeof(runtime_console) && !strncmp(console,root,strlen(root)) && console[strlen(root)]=='/')
         strcpy(runtime_console,console);
@@ -497,6 +507,7 @@ __attribute__((constructor)) static void boot_initialize(void) {
     for (size_t n=0;n<sizeof(hooks)/sizeof(hooks[0]);++n) {
         Hook* h=&hooks[n]; unsigned char* address=base+h->offset;
         if (memcmp(address,h->expected,16)) { fprintf(stderr,"BOOT_HOOK_MISMATCH %s\n",h->name); _exit(125); }
+        if (!patch_bionic) continue;
         uintptr_t begin=(uintptr_t)address & ~((uintptr_t)page-1);
         size_t size=((uintptr_t)address+16-begin+page-1)&~((uintptr_t)page-1);
         if (mprotect((void*)begin,size,PROT_READ|PROT_WRITE|PROT_EXEC)) { perror("BOOT_HOOK_MPROTECT");_exit(125); }
@@ -518,9 +529,12 @@ __attribute__((constructor)) static void boot_initialize(void) {
     // Fresh private property state in this process's pinned guest libc. Startup
     // may have mapped host properties before our constructor; those read-only
     // bootstrap mappings are left mapped, never written. No guest threads exist.
-    memset(base+PROPERTY_STATE_OFFSET,0,PROPERTY_STATE_SIZE);
-    extern int __system_properties_init(void);
-    int result=__system_properties_init();
+    int result=-1;
+    if (patch_bionic) {
+        memset(base+PROPERTY_STATE_OFFSET,0,PROPERTY_STATE_SIZE);
+        extern int __system_properties_init(void);
+        result=__system_properties_init();
+    }
     // App commands may capture stderr as data (for example `id -u 2>&1`).
     // Keep runtime diagnostics in the session log instead of their pipes.
     int saved=errno,diagnostics=STDERR_FILENO;
@@ -530,8 +544,10 @@ __attribute__((constructor)) static void boot_initialize(void) {
             syscall(SYS_openat,AT_FDCWD,console,O_WRONLY|O_APPEND|O_CLOEXEC,0) : -1;
     }
     if(diagnostics>=0) {
-        dprintf(diagnostics,"DIRECT_BOOT_READY hooks=%zu kernel_uid=%ld guest_uid=%u properties_init=%d tracer_pid=%ld\n",
-                sizeof(hooks)/sizeof(hooks[0]),syscall(SYS_getuid),euid,result,current_tracer());
+        dprintf(diagnostics,"DIRECT_BOOT_READY hooks=%zu kernel_uid=%ld guest_uid=%u properties_init=%d tracer_pid=%ld bionic=%s\n",
+                patch_bionic ? sizeof(hooks)/sizeof(hooks[0]) : 0,syscall(SYS_getuid),
+                patch_bionic ? euid : (uid_t)syscall(SYS_geteuid),result,current_tracer(),
+                patch_bionic ? "wrapped" : "unmodified");
         if(console)close(diagnostics);
     }
     errno=saved;

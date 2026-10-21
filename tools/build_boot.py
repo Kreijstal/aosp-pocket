@@ -55,17 +55,7 @@ def reserve_interpreter(path):
     return False
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ndk", type=Path, required=True)
-    parser.add_argument("--hidl-gen",type=Path,required=True)
-    args = parser.parse_args()
-    arch = selected()
-    reference = prepare(art=True, arch=arch)
-    llvm = args.ndk / "toolchains/llvm/prebuilt/linux-x86_64/bin"
-    out = ROOT / "out/boot"
-    out.mkdir(parents=True, exist_ok=True)
-    libc = reference / "system/lib64/libc.so"
+def generate_hooks(libc,llvm,out):
     symbols = {}
     for line in subprocess.check_output([llvm / "llvm-nm", "-a", "-S", libc], text=True).splitlines():
         match = re.fullmatch(r"([0-9a-f]+) ([0-9a-f]+) \w (\S+)", line.strip())
@@ -87,6 +77,21 @@ def main():
     assert prop_size == 0x450, "Review pinned Android 9 SystemProperties layout"
     lines += ["};", f"#define PROPERTY_STATE_OFFSET 0x{prop_address:x}", f"#define PROPERTY_STATE_SIZE {prop_size}"]
     (out / "boot_hooks.h").write_text('\n'.join(lines)+'\n')
+    return manifest,prop_address,prop_size
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--ndk", type=Path, required=True)
+    parser.add_argument("--hidl-gen",type=Path,required=True)
+    args = parser.parse_args()
+    arch = selected()
+    reference = prepare(art=True, arch=arch)
+    llvm = args.ndk / "toolchains/llvm/prebuilt/linux-x86_64/bin"
+    out = ROOT / "out/boot"
+    out.mkdir(parents=True, exist_ok=True)
+    libc = reference / "system/lib64/libc.so"
+    manifest,prop_address,prop_size=generate_hooks(libc,llvm,out)
     stage = out / "rootfs"
     if stage.exists():
         shutil.rmtree(stage)
