@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.widget.*;
 import java.io.File;
 import java.util.*;
+import dev.kreijstal.aosppocket.bridge.AndroidVersions;
 
 /** Management lives on its own page, away from the guest display. */
 public final class SettingsActivity extends RuntimeActivity {
@@ -169,9 +170,16 @@ public final class SettingsActivity extends RuntimeActivity {
     }
     /** Icon-grid picker and an APK preview before submitting anything to the guest. */
     private void chooseApk() {
-        startActivityForResult(new Intent(this, AppImportActivity.class), 2);
+        startActivityForResult(new Intent(this, AppImportActivity.class)
+            .putExtra("guest_sdk",runtime.selectedSdk()), 2);
     }
     private void installHostApp(ApplicationInfo app) {
+        if(app.minSdkVersion>runtime.selectedSdk()) {
+            new android.app.AlertDialog.Builder(this).setTitle("App needs a newer Android version")
+                .setMessage(AndroidVersions.requirement(app.minSdkVersion,runtime.selectedSdk()))
+                .setPositiveButton(android.R.string.ok,null).show();
+            return;
+        }
         Map<String, Uri> apks = new LinkedHashMap<>();
         apks.put("base.apk", Uri.fromFile(new File(app.sourceDir)));
         if (app.splitSourceDirs != null)

@@ -239,7 +239,16 @@ final class DirectSession implements AutoCloseable {
             // GuestControl serves each connection on its own thread. A second
             // socket is essential: sharing input's stream would still block it.
             try(Connection connection=new Connection()){command.run(connection);}
-            catch(Exception error){status("Android 9 operation failed: "+error.getMessage());}
+            catch(Exception error){
+                String detail=error.getMessage();
+                if(detail==null || detail.isEmpty())detail=error instanceof EOFException
+                    ? "Guest closed the connection without returning a result."
+                    : error.getClass().getSimpleName();
+                String message="Android 9 operation failed: "+detail;
+                android.util.Log.e("PocketOperations",message,error);
+                status(message);
+                main.post(()->android.widget.Toast.makeText(context,message,android.widget.Toast.LENGTH_LONG).show());
+            }
         });}catch(RejectedExecutionException full){status("Guest operation queue is busy; try again.");}
     }
     void touch(MotionEvent event,float scaleX,float scaleY) {
@@ -301,6 +310,7 @@ final class DirectSession implements AutoCloseable {
                 status("Installing APKs in Android 9…");
                 c.socket.setSoTimeout(90000);c.out.writeInt(4);c.out.flush();
                 String result=c.in.readUTF();
+                if(!result.startsWith("Installed "))throw new IOException(result);
                 if(result.startsWith("Installed "))context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE)
                     .edit().putString("package",result.substring(10)).apply();
                 status(result);

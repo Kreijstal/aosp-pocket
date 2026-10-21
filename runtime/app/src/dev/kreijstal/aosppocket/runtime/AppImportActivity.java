@@ -15,6 +15,7 @@ import android.widget.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import dev.kreijstal.aosppocket.bridge.AndroidVersions;
 
 /** Host app/APK selection. Only the caller submits the confirmed package to the guest. */
 public final class AppImportActivity extends Activity {
@@ -32,21 +33,23 @@ public final class AppImportActivity extends Activity {
     private Uri fileUri;
     private boolean fileMode;
     private String restorePackage;
+    private int guestSdk;
 
     private static final class Entry {
         final String name, packageName, version;
         final Bitmap icon;
         final long size;
-        final int splits;
-        Entry(String name, String packageName, String version, Bitmap icon, long size, int splits) {
+        final int splits, minSdk;
+        Entry(String name, String packageName, String version, Bitmap icon, long size, int splits, int minSdk) {
             this.name=name; this.packageName=packageName; this.version=version;
-            this.icon=icon; this.size=size; this.splits=splits;
+            this.icon=icon; this.size=size; this.splits=splits; this.minSdk=minSdk;
         }
     }
 
     @Override public void onCreate(Bundle state) {
         setTheme(android.R.style.Theme_Material_Light_NoActionBar);
         super.onCreate(state);
+        guestSdk=getIntent().getIntExtra("guest_sdk",28);
         getWindow().setStatusBarColor(Color.WHITE);
         getWindow().setNavigationBarColor(Color.WHITE);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR |
@@ -173,7 +176,7 @@ public final class AppImportActivity extends Activity {
         try { drawable=app.loadIcon(pm); } catch(RuntimeException missing) { drawable=pm.getDefaultActivityIcon(); }
         Bitmap icon=Bitmap.createBitmap(dp(56),dp(56),Bitmap.Config.ARGB_8888);
         drawable.setBounds(0,0,icon.getWidth(),icon.getHeight()); drawable.draw(new Canvas(icon));
-        return new Entry(app.loadLabel(pm).toString(),info.packageName,info.versionName,icon,size,splits);
+        return new Entry(app.loadLabel(pm).toString(),info.packageName,info.versionName,icon,size,splits,app.minSdkVersion);
     }
     private void filter() {
         if(adapter==null) return;
@@ -195,14 +198,17 @@ public final class AppImportActivity extends Activity {
     private void updatePreview() {
         Entry chosen=fileMode ? fileEntry : selectedApp;
         preview.setVisibility(chosen==null ? View.GONE : View.VISIBLE);
-        install.setEnabled(chosen!=null);
-        install.setBackground(shape(chosen==null ? 0xffb7c9eb : BLUE,0,12));
-        install.setText(chosen==null ? "Select an app to install" : "Install in Android");
+        boolean compatible=chosen!=null && chosen.minSdk<=guestSdk;
+        install.setEnabled(compatible);
+        install.setBackground(shape(compatible ? BLUE : 0xffb7c9eb,0,12));
+        install.setText(chosen==null ? "Select an app to install" : compatible ? "Install in Android" : "Needs a newer Android version");
         if(chosen==null) return;
         previewIcon.setImageBitmap(chosen.icon); previewIcon.setContentDescription(chosen.name+" icon preview");
         previewName.setText(chosen.name);
         previewDetails.setText(chosen.packageName+"\n"+(chosen.version==null ? "" : chosen.version+" · ")+
-                Formatter.formatShortFileSize(this,chosen.size)+(chosen.splits==0 ? "" : " · "+chosen.splits+" splits"));
+                Formatter.formatShortFileSize(this,chosen.size)+(chosen.splits==0 ? "" : " · "+chosen.splits+" splits")+
+                (compatible ? "" : "\n"+AndroidVersions.requirement(chosen.minSdk,guestSdk)));
+        previewDetails.setTextColor(compatible ? MUTED : 0xffa12622);
     }
     @Override protected void onActivityResult(int request,int result,Intent data) {
         super.onActivityResult(request,result,data);
@@ -243,6 +249,8 @@ public final class AppImportActivity extends Activity {
         });
     }
     private void confirm() {
+        Entry chosen=fileMode ? fileEntry : selectedApp;
+        if(chosen==null || chosen.minSdk>guestSdk)return;
         Intent result=new Intent();
         if(fileMode) {
             if(fileEntry==null || fileUri==null) return;

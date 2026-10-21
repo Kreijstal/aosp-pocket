@@ -1,0 +1,14 @@
+{
+  "command": "python3 /home/pi/test_install_errors_on_pi.py",
+  "managerVersion": "0.31",
+  "installFailures": {
+    "missing": "Install failed: The imported base APK is missing or empty.",
+    "malformed": "Install failed: Cannot install this APK: Failed to parse /data/pocket-import/base.apk",
+    "newerAndroid": "Install failed: Cannot install this APK: /data/pocket-import/base.apk (at Binary XML file line #2): Requires newer sdk version #29 (current version is #28)"
+  },
+  "controlAfterFailures": "Existing guest app launched",
+  "exitCode": 0,
+  "previewMessage": "Requires Android 10 or later. This guest runs Android 9.",
+  "installButtonEnabled": false,
+  "controlSurvived": true
+}

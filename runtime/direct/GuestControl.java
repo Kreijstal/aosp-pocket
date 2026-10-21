@@ -19,6 +19,35 @@ public final class GuestControl {
     private static Object input;
     private static Method inject;
     private static Context context;
+    private static String failureMessage(Exception error) {
+        Throwable detail=error;
+        while(detail instanceof InvocationTargetException && detail.getCause()!=null)detail=detail.getCause();
+        String message=detail.getMessage();
+        if(message==null || message.isEmpty())message=detail.getClass().getSimpleName();
+        // DataOutputStream.writeUTF has a 65535-byte limit, including modified UTF-8.
+        return message.length()>8000 ? message.substring(0,8000) : message;
+    }
+    private static String installPackage() throws Exception {
+        File staged=new File("/data/pocket-import"),base=new File(staged,"base.apk");
+        if(!base.isFile() || base.length()==0)throw new IOException("The imported base APK is missing or empty.");
+        File[] apks=staged.listFiles((directory,name)->name.endsWith(".apk"));
+        PackageInfo info=context.getPackageManager().getPackageArchiveInfo(base.getPath(),0);
+        if(info==null) {
+            // getPackageArchiveInfo discards PackageParser's rejection reason.
+            // Recover it on the actual guest instead of guessing at incompatibility.
+            Class<?> parserClass=Class.forName("android.content.pm.PackageParser");
+            Object parser=parserClass.getDeclaredConstructor().newInstance();
+            try {parserClass.getMethod("parsePackage",File.class,int.class).invoke(parser,base,0);}
+            catch(InvocationTargetException rejected) {
+                throw new IOException("Cannot install this APK: "+failureMessage(rejected),rejected.getCause());
+            }
+            throw new IOException("Android could not read this APK's package information.");
+        }
+        FrameworkProbe.install(context,apks,info.packageName);
+        Intent launch=context.getPackageManager().getLaunchIntentForPackage(info.packageName);
+        if(launch!=null)FrameworkProbe.launch(launch);
+        return "Installed "+info.packageName;
+    }
     private static boolean inject(InputEvent event) throws Exception {
         return (Boolean)inject.invoke(input,event,2);
     }
@@ -60,16 +89,12 @@ public final class GuestControl {
                     out.writeBoolean(accepted);
                 } else if(op==4) {
                     // The host stages the base APK and any split APKs together in one folder.
-                    File staged=new File("/data/pocket-import");
-                    File[] apks=staged.listFiles((directory,name)->name.endsWith(".apk"));
-                    File base=new File(staged,"base.apk");
-                    PackageInfo info=apks==null || apks.length==0 || !base.isFile() ? null
-                        : context.getPackageManager().getPackageArchiveInfo(base.getPath(),0);
-                    if(info==null)throw new IOException("Invalid Android package");
-                    FrameworkProbe.install(context,apks,info.packageName);
-                    Intent launch=context.getPackageManager().getLaunchIntentForPackage(info.packageName);
-                    if(launch!=null)FrameworkProbe.launch(launch);
-                    out.writeUTF("Installed "+info.packageName);
+                    try {out.writeUTF(installPackage());}
+                    catch(Exception rejected) {
+                        String message=failureMessage(rejected);
+                        System.err.println("POCKET_INSTALL_FAILED "+message);
+                        out.writeUTF("Install failed: "+message);
+                    }
                 } else if(op==5) {
                     try {out.writeUTF(HostDevices.importContacts(context));}
                     catch(Exception error){out.writeUTF("Contacts import unavailable: "+error.getMessage());}
