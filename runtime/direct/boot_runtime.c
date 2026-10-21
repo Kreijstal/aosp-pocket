@@ -291,23 +291,126 @@ char* __real_realpath(const char* p,char* out) { char*(*fn)(const char*,char*)=d
 int __real_faccessat(int fd,const char* p,int mode,int flags) { (void)flags; return syscall(SYS_faccessat,fd,p,mode); }
 int __real_fchmodat(int fd,const char* p,mode_t mode,int flags) { (void)flags; return syscall(SYS_fchmodat,fd,p,mode); }
 
+// Android can load an uncompressed library directly from an APK. Only the
+// archive is a filesystem path; the !/ suffix belongs to the dynamic linker.
+static int map_library_path(const char* file,char* mapped) {
+    const char* entry=strstr(file,"!/");
+    if (!entry) return pocket_boot_map_path(file,mapped);
+    size_t archive_size=(size_t)(entry-file);
+    char archive[PATH_MAX];
+    if (archive_size>=sizeof(archive)) { errno=ENAMETOOLONG;return -1; }
+    memcpy(archive,file,archive_size);archive[archive_size]=0;
+    if (pocket_boot_map_path(archive,mapped)) return -1;
+    size_t base_size=strlen(mapped),entry_size=strlen(entry);
+    if (entry_size>=PATH_MAX-base_size) { errno=ENAMETOOLONG;return -1; }
+    memcpy(mapped+base_size,entry,entry_size+1);
+    return 0;
+}
+// Namespace lists may name directories not yet present (Android includes
+// /mnt/expand even without adopted storage). Resolve the longest usable prefix
+// without requiring the unused remainder to exist.
+static int map_namespace_path(const char* path,char* mapped) {
+    if (!map_library_path(path,mapped)) return 0;
+    if (errno!=ENOENT && errno!=ENOTDIR) return -1;
+    char prefix[PATH_MAX];
+    size_t length=strlen(path);
+    if (length>=sizeof(prefix)) { errno=ENAMETOOLONG;return -1; }
+    memcpy(prefix,path,length+1);
+    while (length) {
+        while (length && prefix[length-1]!='/') --length;
+        if (length>1) --length;
+        else length=1;
+        prefix[length]=0;
+        if (!pocket_boot_map_path(prefix,mapped)) {
+            size_t size=strlen(mapped),tail=strlen(path+length);
+            if (tail>=PATH_MAX-size) { errno=ENAMETOOLONG;return -1; }
+            memcpy(mapped+size,path+length,tail+1);return 0;
+        }
+        if (length==1 || (errno!=ENOENT && errno!=ENOTDIR)) return -1;
+    }
+    return -1;
+}
+// Search and permitted paths are colon-separated and can contain APK entries.
+// Translate them before the linker records an isolated namespace's boundaries.
+static char* map_library_paths(const char* paths) {
+    if (!paths) return NULL;
+    char* result=calloc(1,1);
+    if (!result) return NULL;
+    size_t used=0;
+    for (const char* part=paths;;) {
+        const char* end=strchr(part,':');
+        size_t length=end?(size_t)(end-part):strlen(part);
+        char input[PATH_MAX],mapped[PATH_MAX];
+        if (length>=sizeof(input)) { free(result);errno=ENAMETOOLONG;return NULL; }
+        memcpy(input,part,length);input[length]=0;
+        const char* value=input;
+        if (input[0]=='/' && !pocket_boot_passthrough(input)) {
+            if (map_namespace_path(input,mapped)) { free(result);return NULL; }
+            value=mapped;
+        }
+        size_t count=strlen(value);
+        char* next=realloc(result,used+count+(end?2:1));
+        if (!next) { free(result);return NULL; }
+        result=next;memcpy(result+used,value,count);used+=count;
+        if (end) result[used++]=':';
+        result[used]=0;
+        if (!end) return result;
+        part=end+1;
+    }
+}
+// Like bionic's libdl stubs, pass the original caller to the linker. Calling
+// the libdl stub from our shim would select the shim's namespace instead.
+extern void* __loader_dlopen(const char*,int,const void*) __attribute__((weak));
+extern void* __loader_android_dlopen_ext(const char*,int,const android_dlextinfo*,const void*) __attribute__((weak));
+extern struct android_namespace_t* __loader_android_create_namespace(const char*,const char*,const char*,uint64_t,const char*,struct android_namespace_t*,const void*) __attribute__((weak));
+
+struct android_namespace_t* android_create_namespace(const char* name,const char* search,const char* defaults,
+        uint64_t type,const char* permitted,struct android_namespace_t* parent) {
+    char* mapped_search=map_library_paths(search);
+    char* mapped_defaults=map_library_paths(defaults);
+    char* mapped_permitted=map_library_paths(permitted);
+    struct android_namespace_t* result=NULL;
+    if ((search && !mapped_search) || (defaults && !mapped_defaults) || (permitted && !mapped_permitted)) goto done;
+    if (__loader_android_create_namespace)
+        result=__loader_android_create_namespace(name,mapped_search,mapped_defaults,type,mapped_permitted,parent,__builtin_return_address(0));
+    else {
+        struct android_namespace_t*(*real)(const char*,const char*,const char*,uint64_t,const char*,struct android_namespace_t*)=dlsym(RTLD_NEXT,"android_create_namespace");
+        if (real) result=real(name,mapped_search,mapped_defaults,type,mapped_permitted,parent);
+    }
+done:
+    free(mapped_search);free(mapped_defaults);free(mapped_permitted);
+    return result;
+}
+bool android_init_anonymous_namespace(const char* shared,const char* paths) {
+    bool(*real)(const char*,const char*)=dlsym(RTLD_NEXT,"android_init_anonymous_namespace");
+    char* mapped=map_library_paths(paths);
+    if (paths && !mapped) return false;
+    bool result=real && real(shared,mapped);free(mapped);return result;
+}
+void android_update_LD_LIBRARY_PATH(const char* paths) {
+    void(*real)(const char*)=dlsym(RTLD_NEXT,"android_update_LD_LIBRARY_PATH");
+    char* mapped=map_library_paths(paths);
+    if (paths && !mapped) return;
+    if (real) real(mapped);
+    free(mapped);
+}
 void* dlopen(const char* file,int flags) {
     void*(*real)(const char*,int)=dlsym(RTLD_NEXT,"dlopen");
     char mapped[PATH_MAX];
     if (file && file[0]=='/' && !pocket_boot_passthrough(file)) {
-        if (pocket_boot_map_path(file,mapped)) return NULL;
+        if (map_library_path(file,mapped)) return NULL;
         file=mapped;
     }
-    return real(file,flags);
+    return __loader_dlopen ? __loader_dlopen(file,flags,__builtin_return_address(0)) : real(file,flags);
 }
 void* android_dlopen_ext(const char* file,int flags,const android_dlextinfo* info) {
     void*(*real)(const char*,int,const android_dlextinfo*)=dlsym(RTLD_NEXT,"android_dlopen_ext");
     char mapped[PATH_MAX];
     if (file && file[0]=='/' && !pocket_boot_passthrough(file)) {
-        if (pocket_boot_map_path(file,mapped)) return NULL;
+        if (map_library_path(file,mapped)) return NULL;
         file=mapped;
     }
-    return real(file,flags,info);
+    return __loader_android_dlopen_ext ? __loader_android_dlopen_ext(file,flags,info,__builtin_return_address(0)) : real(file,flags,info);
 }
 
 // Minimal crash diagnostics for the development profile. Preserve fatal signals;

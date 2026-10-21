@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-21",
+  "device": "Samsung Galaxy S20 FE SM-G780G",
+  "guestApi": 28,
+  "apkVersion": "0.26",
+  "scope": "Pocket native-library loading; no changes to Revolut APK or its security decisions",
+  "before": {
+    "ordinaryLibrary": "PASS",
+    "apkContainedLibrary": "FAIL: no loader error",
+    "isolatedNamespace": "FAIL: translated library not accessible"
+  },
+  "after": [
+    {
+      "mode": "plain",
+      "library": "allowed/libfixture.so",
+      "result": "PASS"
+    },
+    {
+      "mode": "plain",
+      "library": "allowed/fixture.apk!/lib/arm64-v8a/libfixture.so",
+      "result": "PASS"
+    },
+    {
+      "mode": "ext",
+      "library": "allowed/libfixture.so",
+      "result": "PASS"
+    },
+    {
+      "mode": "ext",
+      "library": "allowed/fixture.apk!/lib/arm64-v8a/libfixture.so",
+      "result": "PASS"
+    },
+    {
+      "mode": "namespace",
+      "library": "allowed/libfixture.so",
+      "result": "PASS"
+    },
+    {
+      "mode": "namespace",
+      "library": "allowed/fixture.apk!/lib/arm64-v8a/libfixture.so",
+      "result": "PASS"
+    },
+    {
+      "mode": "namespace",
+      "library": "soname search",
+      "result": "PASS"
+    },
+    {
+      "mode": "namespace",
+      "library": "outside permitted directory",
+      "result": "PASS: denied"
+    }
+  ],
+  "directRuntimeRebuild": "PASS: 48 pinned libc hooks verified",
+  "generatedLinksRegression": "PASS",
+  "apkBuild": "PASS: v3 signature and support-only exclusion validation",
+  "revolutStartup": "PENDING: user installation of 0.26",
+  "independentIssue": "Earlier guest init exits with SIGKILL (137); cause unresolved"
+}

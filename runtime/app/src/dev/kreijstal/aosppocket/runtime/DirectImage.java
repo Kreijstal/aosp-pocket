@@ -67,7 +67,10 @@ final class DirectImage {
     }
     static void clearGeneratedLinks(File root) throws IOException {
         String[][] links={{"system/bin/getprop","/system/etc/pocket-magisk/getprop"},
-                          {"system/bin/setprop","/system/bin/toybox"}};
+                          {"system/bin/setprop","/system/bin/toybox"},
+                          {"system/bin/magisk","/sbin/magisk"},
+                          {"system/bin/su","/sbin/magisk"},
+                          {"system/bin/resetprop","/sbin/magisk"}};
         for(String[] entry:links) {
             Path path=new File(root,entry[0]).toPath();
             if(Files.isSymbolicLink(path) && Files.readSymbolicLink(path).toString().equals(entry[1]))

@@ -11,7 +11,12 @@ public final class DirectImageLinksFixture {
         try {
             Files.createSymbolicLink(getprop,Paths.get("/system/etc/pocket-magisk/getprop"));
             Files.createSymbolicLink(setprop,Paths.get("/system/bin/toybox"));
+            for(String name:new String[]{"magisk","su","resetprop"})
+                Files.createSymbolicLink(bin.resolve(name),Paths.get("/sbin/magisk"));
             DirectImage.clearGeneratedLinks(root.toFile());
+            for(String name:new String[]{"magisk","su","resetprop"})
+                if(Files.exists(bin.resolve(name),LinkOption.NOFOLLOW_LINKS))
+                    throw new AssertionError("Generated Magisk link retained: "+name);
             if(Files.exists(getprop,LinkOption.NOFOLLOW_LINKS) || Files.exists(setprop,LinkOption.NOFOLLOW_LINKS))
                 throw new AssertionError("Generated links were retained");
             Files.createSymbolicLink(getprop,Paths.get("/unexpected-target"));
