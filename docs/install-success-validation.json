@@ -1,0 +1,14 @@
+{
+  "command": "python3 /home/pi/test_install_success_on_pi.py",
+  "managerVersion": "0.31",
+  "package": "net.sourceforge.opencamera",
+  "path": "Settings > Install APK > Device apps > Open Camera > Install in Android",
+  "compatibleInstallEnabled": true,
+  "status": "Installed net.sourceforge.opencamera",
+  "launchLog": "GUEST_LOG pid=13279 kernel_uid=10177 tid=13299 id=3 priority=4 tag=ActivityManager Start proc 14566:net.sourceforge.opencamera/u0a18 for activity net.sourceforge.opencamera/.MainActivity",
+  "liveProcess": "net.sourceforge.opencamera",
+  "lastAppSaved": true,
+  "guestStillReady": true,
+  "elapsedSeconds": 2.3,
+  "exitCode": 0
+}
