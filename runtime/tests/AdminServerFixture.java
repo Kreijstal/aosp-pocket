@@ -12,6 +12,10 @@ public final class AdminServerFixture {
         AdminServer.Backend backend=new AdminServer.Backend(){
             public String status(){return "{\"running\":"+running[0]+",\"executed\":"+executed[0]+"}";}
             public String control(boolean start){running[0]=start;return status();}
+            public String resetModuleView() throws IOException {
+                if(running[0])throw new IOException("Stop the guest first");
+                return "module-view-reset";
+            }
             public Process execute(String cwd,List<String> argv)throws Exception {
                 executed[0]++;
                 List<String> command=new ArrayList<>(argv);

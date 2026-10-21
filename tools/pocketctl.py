@@ -121,7 +121,7 @@ def main():
     sub = parser.add_subparsers(dest='operation', required=True)
     pair = sub.add_parser('pair', help='Authorize this Termux client using the token from Pocket settings')
     pair.add_argument('--port', type=int, default=2228)
-    for name in ('status', 'start', 'stop'):
+    for name in ('status', 'start', 'stop', 'reset-module-view'):
         sub.add_parser(name)
     shell = sub.add_parser('shell', help='Guest root shell (pipes; no PTY/job control)')
     shell.add_argument('-c', dest='command')
@@ -149,8 +149,8 @@ def main():
         print('Paired. Run pocketctl.py shell or pocketctl.py status.')
         return 0
     config = json.loads(args.config.read_text())
-    if args.operation in ('status', 'start', 'stop'):
-        return request(config, {'status': 1, 'start': 3, 'stop': 4}[args.operation])
+    if args.operation in ('status', 'start', 'stop', 'reset-module-view'):
+        return request(config, {'status': 1, 'start': 3, 'stop': 4, 'reset-module-view': 5}[args.operation])
     if args.operation == 'shell':
         argv = ['/system/bin/sh', '-i'] if args.command is None else ['/system/bin/sh', '-c', args.command]
         return request(config, 2, argv, args.cwd, sys.stdin.buffer)

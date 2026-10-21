@@ -107,6 +107,15 @@ public final class GuestService extends Service {
                 @Override public String control(boolean start) throws Exception {
                     return adminMain(()->{requireAdmin(generation);if(start)startGuest();else stopGuest();return adminState();});
                 }
+                @Override public String resetModuleView() throws Exception {
+                    return adminMain(()->{
+                        requireAdmin(generation);
+                        if(!directBackend() || running() || starting || stopping || preparing())
+                            throw new IOException("Stop the Android 9 guest before resetting its module view");
+                        java.nio.file.Files.deleteIfExists(new File(DirectImage.root(GuestService.this),".pocket-module-view/ready").toPath());
+                        return adminState();
+                    });
+                }
                 @Override public java.lang.Process execute(String cwd,java.util.List<String> argv) throws Exception {
                     return adminMain(()->{
                         requireAdmin(generation);

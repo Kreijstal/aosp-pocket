@@ -4,7 +4,7 @@ set -eu
 stage="$1"
 case "$stage" in
     post-fs-data)
-        if /system/bin/toybox timeout 35 /sbin/magisk --post-fs-data; then
+        if /system/bin/toybox timeout 120 /sbin/magisk --post-fs-data; then
             setprop pocket.magisk.status ready
         else
             echo 'Magisk post-fs-data failed; continuing guest boot' >&2

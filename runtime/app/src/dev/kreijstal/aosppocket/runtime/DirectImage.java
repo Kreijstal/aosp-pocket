@@ -65,8 +65,23 @@ final class DirectImage {
         }
         throw new IOException("Leftover Android 9 processes did not exit: "+leftovers(root));
     }
+    static void clearGeneratedLinks(File root) throws IOException {
+        String[][] links={{"system/bin/getprop","/system/etc/pocket-magisk/getprop"},
+                          {"system/bin/setprop","/system/bin/toybox"}};
+        for(String[] entry:links) {
+            Path path=new File(root,entry[0]).toPath();
+            if(Files.isSymbolicLink(path) && Files.readSymbolicLink(path).toString().equals(entry[1]))
+                Files.delete(path);
+        }
+    }
     static File prepare(Context context,DisplayGeometry geometry,int refreshHz,GuestImage.Progress progress) throws Exception {
         File root=root(context);root.mkdirs();
+        // Our optional runtime generates these links after extraction. Remove
+        // only its known targets before validating/re-extracting bundled files.
+        clearGeneratedLinks(root);
+        // A previous boot's module view must not shadow the newly prepared
+        // base image. Magisk publishes a fresh view before guest zygote starts.
+        Files.deleteIfExists(new File(root,".pocket-module-view/ready").toPath());
         try (InputStream marker=context.getAssets().open("manager-dev-update.json")) {
             if (!new File(root,"system/bin/pocket-init-api28").isFile())
                 throw new IllegalStateException("Development host update requires an installed full Manager image");

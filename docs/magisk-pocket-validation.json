@@ -5,7 +5,7 @@
   "magiskVersion": "30.7",
   "magiskFork": "https://github.com/Kreijstal/Magisk/tree/pocket-api28",
   "nativeBuild": "PASS",
-  "fullApkBuild": "PASS: 0.23; v3 signature verified",
+  "fullApkBuild": "PASS: support-only 0.25; v3 signature verified",
   "actualDaemonVersionHandshake": "PASS",
   "magiskSuGuestRoot": "PASS",
   "nonRootPrivilegedRequestDenied": "PASS",
@@ -20,12 +20,21 @@
   "hardwareAttestationEstablished": false,
   "privateKeysBundled": false,
   "unsupported": [
-    "Magic Mount",
+    "kernel mounts and mount namespaces",
     "kernel modules",
-    "mount namespaces",
-    "SELinux rules",
+    "host SELinux rules",
     "Riru",
-    "Zygisk"
+    "device-node whiteouts"
   ],
-  "resetpropCreateUpdateDelete": "PASS: independent guest libc reader"
+  "resetpropCreateUpdateDelete": "PASS: independent guest libc reader",
+  "overlayOpenAndDirectoryEnumeration": "PASS",
+  "moduleDisableRestoresBaseline": "PASS",
+  "zygiskOnLoadPrePostAppSpecialize": "PASS",
+  "zygiskPublicJniHook": "PASS",
+  "bootWithoutMagiskRuntime": "PASS",
+  "magiskBundledInApk": false,
+  "magiskManagerBundledInApk": false,
+  "featureValidationScope": "actual guest zygote with test module; full UI and third-party modules pending",
+  "optionalBackendCommit": "50e4cec0a1aba34bb30e9ea9ac81346683edf39b",
+  "restartGeneratedLinkCleanup": "PASS: production helper removes only owned links"
 }

@@ -16,6 +16,7 @@ final class AdminServer implements AutoCloseable {
         String status() throws Exception;
         String control(boolean start) throws Exception;
         Process execute(String cwd, List<String> argv) throws Exception;
+        default String resetModuleView() throws Exception {throw new IOException("Module-view recovery unavailable");}
     }
     static final byte[] MAGIC="PKADMIN1".getBytes(StandardCharsets.US_ASCII);
     static final int DEFAULT_PORT=2228, CHUNK=65536;
@@ -89,8 +90,8 @@ final class AdminServer implements AutoCloseable {
             out.write(response(key,session));out.flush();
             try {
                 int operation=in.readUnsignedByte();
-                if(operation==1 || operation==3 || operation==4) {
-                    String result=operation==1?backend.status():backend.control(operation==3);
+                if(operation==1 || operation==3 || operation==4 || operation==5) {
+                    String result=operation==5?backend.resetModuleView():operation==1?backend.status():backend.control(operation==3);
                     text(out,1,result+"\n");exit(out,0);return;
                 }
                 if(operation!=2)throw new IOException("Unknown admin operation");

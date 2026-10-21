@@ -33,6 +33,12 @@
 DECLARE(openat); DECLARE(fstatat); DECLARE(readlinkat); DECLARE(mkdirat);
 DECLARE(unlinkat); DECLARE(renameat); DECLARE(linkat); DECLARE(fchownat);
 DECLARE(symlinkat); DECLARE(utimensat); DECLARE(chdir); DECLARE(fchdir);
+int link(const char* source,const char* target) {
+    return __wrap_linkat(AT_FDCWD,source,AT_FDCWD,target,0);
+}
+int linkat(int source_dir,const char* source,int target_dir,const char* target,int flags) {
+    return __wrap_linkat(source_dir,source,target_dir,target,flags);
+}
 DECLARE(bind); DECLARE(connect); DECLARE(getsockname); DECLARE(getpeername);
 DECLARE(faccessat); DECLARE(fchmodat); DECLARE(getcwd); DECLARE(execve);
 DECLARE(getxattr); DECLARE(lgetxattr); DECLARE(setxattr); DECLARE(lsetxattr);
@@ -373,8 +379,10 @@ __attribute__((constructor)) static void boot_initialize(void) {
         free(copy);
     }
     Dl_info image;
-    if (!dladdr((void*)syscall,&image) || strncmp(image.dli_fname,root,strlen(root)) ||
-        strcmp(image.dli_fname+strlen(root),"/system/lib64/libc.so")) _exit(125);
+    if (!dladdr((void*)syscall,&image) || strncmp(image.dli_fname,root,strlen(root))) _exit(125);
+    const char* libc_path=image.dli_fname+strlen(root);
+    if (strcmp(libc_path,"/system/lib64/libc.so") &&
+        strcmp(libc_path,"/.pocket-module-view/system/lib64/libc.so")) _exit(125);
     unsigned char* base=image.dli_fbase;
     long page=sysconf(_SC_PAGESIZE);
     for (size_t n=0;n<sizeof(hooks)/sizeof(hooks[0]);++n) {

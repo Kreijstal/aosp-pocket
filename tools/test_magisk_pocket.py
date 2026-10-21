@@ -58,9 +58,7 @@ def main():
     # upgrades modules_update and runs the installed module's scripts once.
     command('/system/bin/sh', '-c',
         '/system/bin/toybox mkdir -p /sbin/.magisk/device /sbin/.magisk/busybox /data/adb/magisk /data/adb/modules /cache; '
-        '/system/bin/toybox cp /system/etc/pocket-magisk/magisk /sbin/magisk; '
-        '/system/bin/toybox cp /system/etc/pocket-magisk/busybox /data/adb/magisk/busybox; '
-        '/system/bin/toybox cp /system/etc/pocket-magisk/util_functions.sh /data/adb/magisk/util_functions.sh; '
+        '/system/bin/toybox cp /data/adb/magisk/magisk /sbin/magisk; '
         '/system/bin/toybox chmod 755 /sbin/magisk /data/adb/magisk/busybox; '
         '/system/bin/toybox ln -sf /system/etc/pocket-magisk/getprop /system/bin/getprop; '
         '/system/bin/toybox ln -sf /system/bin/toybox /system/bin/setprop; '

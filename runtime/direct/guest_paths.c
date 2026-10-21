@@ -34,7 +34,18 @@ static int init_error;
 static bool enabled;
 #ifdef POCKET_DIRECT_BOOT
 static char data_alias[NAME_MAX+1];
+static bool module_view;
+static bool module_view_ready(void) {
+    if (!module_view && root[0]) {
+        char marker[PATH_MAX]; struct stat st;
+        int n=snprintf(marker,sizeof(marker),"%s/.pocket-module-view/ready",root);
+        if (n>0 && n<(int)sizeof(marker) && !syscall(POCKET_FSTATAT,AT_FDCWD,marker,&st,AT_SYMLINK_NOFOLLOW))
+            module_view=S_ISREG(st.st_mode);
+    }
+    return module_view;
+}
 static void visible_name(const char* path,char* output) {
+    if (!strncmp(path,"/.pocket-module-view/",21)) path+=20;
     size_t length=strlen(data_alias);
     if(length && path[0]=='/' && !strncmp(path+1,data_alias,length) && (!path[length+1] || path[length+1]=='/')) {
         strcpy(output,"/data");strcat(output,path+length+1);
@@ -109,7 +120,11 @@ static int directory_name(int dir, char* guest) {
         errno = EXDEV; return -1;
     }
 #ifdef POCKET_DIRECT_BOOT
-    visible_name(actual[n]?actual+n:"/",guest);
+    // dirfd-relative operations must retain the physical view identity.
+    // Converting it to /system here would redirect view cleanup to the base
+    // image before publication. Only getcwd/realpath presentation hides it.
+    if (!strncmp(actual+n,"/.pocket-module-view/",21)) strcpy(guest,actual+n);
+    else visible_name(actual[n]?actual+n:"/",guest);
 #else
     strcpy(guest, actual[n] ? actual + n : "/");
 #endif
@@ -182,6 +197,19 @@ static int resolve(int dir, const char* path, bool follow, Path* result) {
             int next=raw_open(stack[depth],data_alias,O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC,0);
             if(next<0) {saved=errno;break;}
             stack[++depth]=next;continue;
+        }
+        // Magic Mount compatibility: a fully merged private tree supplies
+        // directory enumeration as well as open/stat/exec/dlopen semantics.
+        // Absolute symlinks still restart at the virtual guest root.
+        if (!host_tree && depth==0 && module_view_ready() &&
+            (!strcmp(part,"system") || !strcmp(part,"vendor"))) {
+            char view[64]; snprintf(view,sizeof(view),".pocket-module-view/%s",part);
+            int next=raw_open(stack[0],view,O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC,0);
+            if(next>=0) {
+                if(last) { close(stack[0]); stack[0]=next; strcpy(result->name,"."); break; }
+                stack[++depth]=next;continue;
+            }
+            if(errno!=ENOENT) {saved=errno;break;}
         }
 #endif
         // Read metadata without following the final link in the host namespace.
@@ -419,6 +447,9 @@ char* __wrap_getcwd(char* out, size_t size) {
     char name[PATH_MAX];
     if (state) { if (directory_name(AT_FDCWD, name)) return NULL; }
     else if (syscall(SYS_getcwd, name, sizeof(name)) < 0) return NULL;
+#ifdef POCKET_DIRECT_BOOT
+    if (state && !strncmp(name,"/.pocket-module-view/",21)) memmove(name,name+20,strlen(name+20)+1);
+#endif
     size_t needed = strlen(name) + 1;
     if (!out) { size = size ? size : needed; out = malloc(size); if (!out) return NULL;
         if (size < needed) { free(out); errno = ERANGE; return NULL; }
@@ -476,6 +507,9 @@ char* __wrap_realpath(const char* path, char* out) {
     }
     finish(&p, rc);
     if (rc) return NULL;
+#ifdef POCKET_DIRECT_BOOT
+    if (!strncmp(canonical,"/.pocket-module-view/",21)) memmove(canonical,canonical+20,strlen(canonical+20)+1);
+#endif
     if (!out) return strdup(canonical);
     strcpy(out, canonical); return out;
 }
@@ -818,7 +852,8 @@ static int exec_guest(const char* file, char* const argv[], char* const envp[], 
     const char* libraries = getenv("POCKET_DIRECT_LIBRARIES");
 #ifdef POCKET_DIRECT_BOOT
     char pinned_libraries[PATH_MAX*2+32];
-    if (snprintf(pinned_libraries, sizeof(pinned_libraries), "%s/system/lib64:%s/vendor/lib64", root, root) >= (int)sizeof(pinned_libraries)) {
+    const char* view=module_view_ready()?"/.pocket-module-view":"";
+    if (snprintf(pinned_libraries, sizeof(pinned_libraries), "%s%s/system/lib64:%s%s/vendor/lib64", root,view,root,view) >= (int)sizeof(pinned_libraries)) {
         close(p.dir); errno = ENAMETOOLONG; return -1;
     }
     libraries = pinned_libraries;

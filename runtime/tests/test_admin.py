@@ -93,8 +93,10 @@ def main():
         checks.append('CLI file transfer, failed-pull preservation and private token config')
 
         assert request(4)[0] == 0
+        assert request(5)[:2] == (0, b'module-view-reset\n')
         assert request(2, ['/bin/sh', '-c', 'printf offline-owner-access'])[:2] == (0, b'offline-owner-access')
         assert request(3)[0] == 0
+        assert request(5)[0] != 0
         assert request(2, ['/bin/true'])[0] == 0
         checks.append('guest lifecycle commands and authenticated owner execution while stopped')
 
