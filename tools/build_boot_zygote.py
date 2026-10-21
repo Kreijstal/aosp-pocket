@@ -82,6 +82,9 @@ def build_zygote(ndk, stage, hidl_gen, zygote_only=False):
         subprocess.run([hidl_gen,'-o',generated,'-Lc++-headers',
             '-randroid.hidl:'+str(out/'libhidl/transport'),'-randroid.hardware:'+str(out/'hardware-interfaces'),
             'android.hardware.health@'+version],check=True)
+    event_object=ROOT/'out/boot/boot_uevent.o'
+    subprocess.run([clang(ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin',28),'-O2','-Wall','-Wextra','-Werror','-fPIC','-c',
+        ROOT/'runtime/direct/boot_uevent.c','-o',event_object],check=True)
     config=out/'hardware-interfaces/configstore/1.1/default'
     prefix=command[:command.index('-fPIC')]
     # Only a forward declaration is needed by IAudioFlinger's createRecord
@@ -92,7 +95,7 @@ def build_zygote(ndk, stage, hidl_gen, zygote_only=False):
                     '-I'+str(out/'frameworks-av/include'),'-I'+str(out/'system-media/audio/include')]
     subprocess.run(prefix+['-I'+str(generated),'-I'+str(out/'libhidl/base/include'),'-I'+str(out/'libhidl/transport/include'),'-I'+str(out/'libhwbinder/include'),
         '-include',ROOT/'runtime/direct/hidl_codegen_compat.h','-I'+str(config)]+audio_includes+[
-        '-fPIC','-shared',ROOT/'runtime/direct/boot_hidl.cpp',ROOT/'runtime/direct/boot_binder.cpp',ROOT/'runtime/direct/boot_health.cpp',ROOT/'runtime/direct/boot_hardware.cpp',ROOT/'runtime/direct/boot_audio.cpp',config/'SurfaceFlingerConfigs.cpp','-L'+str(libs),'-Wl,-rpath-link,'+str(libs),
+        '-fPIC','-shared',ROOT/'runtime/direct/boot_hidl.cpp',ROOT/'runtime/direct/boot_binder.cpp',ROOT/'runtime/direct/boot_health.cpp',ROOT/'runtime/direct/boot_hardware.cpp',ROOT/'runtime/direct/boot_audio.cpp',event_object,config/'SurfaceFlingerConfigs.cpp','-L'+str(libs),'-Wl,-rpath-link,'+str(libs),
         '-l:android.hardware.health@1.0.so','-l:android.hardware.health@2.0.so','-l:android.hardware.configstore@1.0.so','-l:android.hardware.configstore@1.1.so','-lhwbinder','-lhidlbase','-lhidltransport','-lbinder','-lutils','-lc++','-llog','-ldl','-Wl,--no-undefined','-Wl,-z,max-page-size=16384',
         '-o',stage/'system/lib64/libpocket_hidl_api28.so'],check=True)
     # Independent process verifies actual Binder registrations from system_server.

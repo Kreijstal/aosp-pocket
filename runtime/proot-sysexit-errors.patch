@@ -1,0 +1,24 @@
+--- a/src/syscall/exit.c
++++ b/src/syscall/exit.c
+@@ -61,6 +61,10 @@
+ 	    get_sysnum(tracee, ORIGINAL) != PR_getpid)
+ 		poke_reg(tracee, SYSARG_RESULT, (word_t) -ENOSYS);
+ #endif
++	/* Enter-stage errors must precede callbacks: Android uses getpid as
++	 * the skipped-syscall placeholder, whose positive result is not success. */
++	if (tracee->status < 0)
++		poke_reg(tracee, SYSARG_RESULT, (word_t)tracee->status);
+ 	status = notify_extensions(tracee, SYSCALL_EXIT_START, 0, 0);
+ 	if (status < 0) {
+ 		poke_reg(tracee, SYSARG_RESULT, (word_t) status);
+--- a/src/extension/fake_id0/fake_id0.c
++++ b/src/extension/fake_id0/fake_id0.c
+@@ -1040,7 +1040,7 @@
+ 		struct stat mode;
+ 		int status;
+ 
+-		if ((int) result < 0 || sysnum != PR_execve)
++		if ((int) result < 0 || sysnum != PR_execve || tracee->load_info == NULL)
+ 			return 0;
+ 
+ 		/* This has to be done before PRoot pushes the load

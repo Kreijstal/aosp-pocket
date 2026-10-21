@@ -4,6 +4,7 @@
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <link.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,10 +13,17 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+static int find_boot_shim(struct dl_phdr_info* info,size_t size,void* found) {
+    (void)size;
+    if(strstr(info->dlpi_name,"libpocket_direct_boot.so"))*(int*)found=1;
+    return 0;
+}
+
 // Compare the entire loaded executable segments, not just selected symbols.
 int main(int argc,char** argv) {
     if(argc!=4)return 2;
     int unmodified=!strcmp(argv[1],"unmodified");
+    int syscall_backend=!strcmp(argv[1],"syscall");
     Dl_info library;
     if(!dladdr((void*)syscall,&library) || !library.dli_fname)return 3;
     int fd=syscall(SYS_openat,AT_FDCWD,library.dli_fname,O_RDONLY|O_CLOEXEC,0);
@@ -36,7 +44,8 @@ int main(int argc,char** argv) {
         compared+=ph[i].p_filesz;
     }
     munmap(disk,st.st_size);close(fd);
-    unsigned kernel_uid=syscall(SYS_getuid),libc_uid=getuid();
+    unsigned syscall_uid=syscall(SYS_getuid),libc_uid=getuid();
+    int boot_shim=0;dl_iterate_phdr(find_boot_shim,&boot_shim);
     int virtual_fd=openat(AT_FDCWD,argv[2],O_RDONLY|O_CLOEXEC);
     int virtual_errno=virtual_fd<0?errno:0;
     if(virtual_fd>=0)close(virtual_fd);
@@ -45,9 +54,10 @@ int main(int argc,char** argv) {
     int backing_ok=backing_fd>=0 && read(backing_fd,content,sizeof(content)-1)>0 && !strcmp(content,"bionic-mode-fixture\n");
     if(backing_fd>=0)close(backing_fd);
     printf("{\"mode\":\"%s\",\"executableBytesCompared\":%zu,\"differentBytes\":%zu,"
-        "\"libcUid\":%u,\"kernelUid\":%u,\"virtualPathErrno\":%d,\"backingPathReadable\":%s}\n",
-        argv[1],compared,different,libc_uid,kernel_uid,virtual_errno,backing_ok?"true":"false");
-    if(!compared || !backing_ok)return 8;
-    if(unmodified)return different || libc_uid!=kernel_uid || virtual_errno!=ENOENT;
+        "\"libcUid\":%u,\"syscallUid\":%u,\"virtualPathErrno\":%d,\"backingPathReadable\":%s,\"backingPathOpened\":%s,\"bootShimLoaded\":%s}\n",
+        argv[1],compared,different,libc_uid,syscall_uid,virtual_errno,backing_ok?"true":"false",backing_fd>=0?"true":"false",boot_shim?"true":"false");
+    if(!compared || (!syscall_backend && !backing_ok))return 8;
+    if(syscall_backend)return different || boot_shim || libc_uid!=0 || syscall_uid!=0 || virtual_errno!=0 || backing_fd>=0;
+    if(unmodified)return different || libc_uid!=syscall_uid || virtual_errno!=ENOENT;
     return !different || libc_uid!=12345 || virtual_errno!=0;
 }

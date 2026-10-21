@@ -20,6 +20,8 @@
 #include <sys/xattr.h>
 #include <sys/inotify.h>
 #include <unistd.h>
+#include "kernel_identity.h"
+static int syscall_backend;
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"BOOT_PROBE_FAIL line=%d errno=%d %s\n",__LINE__,errno,strerror(errno));return 1; } } while(0)
 static int prepare_data(uid_t kernel_uid) {
     struct Directory { const char* path; mode_t mode; uid_t uid; gid_t gid; };
@@ -63,7 +65,7 @@ static int prepare_data(uid_t kernel_uid) {
         struct stat st;CHECK(stat(d->path,&st)==0 && S_ISDIR(st.st_mode));
         CHECK(st.st_uid==d->uid && st.st_gid==d->gid && (st.st_mode&07777)==d->mode);
         int fd=open(d->path,O_RDONLY|O_DIRECTORY|O_CLOEXEC);CHECK(fd>=0);
-        CHECK(syscall(SYS_fstat,fd,&st)==0 && st.st_uid==kernel_uid);close(fd);
+        CHECK(syscall(SYS_fstat,fd,&st)==0 && st.st_uid==(syscall_backend?d->uid:kernel_uid));close(fd);
     }
     CHECK(symlink("user/0","/data/data")==0 || errno==EEXIST);
     CHECK(mkdir("/storage",0755)==0 || errno==EEXIST);
@@ -87,7 +89,9 @@ static int check_groups(void) {
 }
 int main(int argc,char** argv) {
     setbuf(stdout,NULL);
-    uid_t kernel_uid=syscall(SYS_getuid);
+    const char* backend=getenv("POCKET_SYSCALL_BACKEND");
+    syscall_backend=backend && !strcmp(backend,"proot");
+    uid_t kernel_uid=syscall_backend?pocket_kernel_uid_from_proc():(uid_t)syscall(SYS_getuid);
     gid_t kernel_groups[64], after[64];
     long count=syscall(SYS_getgroups,64,kernel_groups);
     CHECK(kernel_uid>=10000 && count>=0);

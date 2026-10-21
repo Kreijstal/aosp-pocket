@@ -3,6 +3,8 @@
 # Parallel development install: add MANAGER_PACKAGE=dev.kreijstal.aosppocket.managerdev MANAGER_OUT=out/manager-dev
 MANAGER_OUT ?= out/manager
 MANAGER_PACKAGE ?= dev.kreijstal.aosppocket.runtime
+MANAGER_VERSION_CODE ?= 34
+MANAGER_VERSION_NAME ?= 0.34
 MANAGER_GUEST_JAVA := $(BOOT_GUEST_JAVA) runtime/direct/GuestControl.java runtime/direct/HostDevices.java runtime/direct/HostNetwork.java runtime/app/src/dev/kreijstal/aosppocket/bridge/HostWire.java runtime/app/src/dev/kreijstal/aosppocket/bridge/DisplayGeometry.java
 .PHONY: manager-verify
 .PHONY: check-admin
@@ -105,12 +107,16 @@ $(MANAGER_OUT)/manifest-source.xml: runtime/app/AndroidManifest.xml runtime/mana
 	python3 -c 'from pathlib import Path; s=Path("runtime/app/AndroidManifest.xml").read_text(); s=s.replace("android:name=\".","android:name=\"dev.kreijstal.aosppocket.runtime."); s=s.replace("dev.kreijstal.aosppocket.runtime.manager\"","$(MANAGER_PACKAGE).manager\"").replace("dev.kreijstal.aosppocket.runtime.android\"","$(MANAGER_PACKAGE).android\""); s=s.replace("package=\"dev.kreijstal.aosppocket.runtime\"","package=\"$(MANAGER_PACKAGE)\""); Path("$@").write_text(s)'
 
 $(MANAGER_OUT)/AndroidManifest.xml: $(MANAGER_OUT)/manifest-source.xml $(OUT)/tools/PocketManifest.class
-	java -cp $(TOOLS):$(OUT)/tools PocketManifest $< $@ 28 28 25 0.25
+	java -cp $(TOOLS):$(OUT)/tools PocketManifest $< $@ 28 28 $(MANAGER_VERSION_CODE) $(MANAGER_VERSION_NAME)
 
 $(MANAGER_OUT)/base.apk: $(OUT)/classes.dex $(MANAGER_OUT)/AndroidManifest.xml
 	java -cp $(TOOLS) com.example.build.ApkBuilder $(MANAGER_OUT)/AndroidManifest.xml $(OUT)/classes.dex $@
 
-$(MANAGER_OUT)/packed.apk: $(MANAGER_OUT)/base.apk $(OUT)/packed.apk $(BOOT_OUT)/build.stamp out/manager-guest/pocket-control.jar out/manager-guest/host-phone.apk out/runtime-native/libpocket_frames.so out/composer/hwcomposer.pocket.so tools/pack_manager.py tools/pocketctl.py
+out/manager-native/getprop: runtime/magisk/getprop.c
+	mkdir -p out/manager-native
+	$(LLVM)/$(TRIPLE)28-clang -O2 -Wall -Wextra -Werror $< -Wl,-z,max-page-size=16384 -o $@
+
+$(MANAGER_OUT)/packed.apk: $(MANAGER_OUT)/base.apk $(OUT)/packed.apk $(BOOT_OUT)/build.stamp out/manager-guest/pocket-control.jar out/manager-guest/host-phone.apk out/runtime-native/libpocket_frames.so out/runtime-native/libproot.so out/manager-native/getprop out/composer/hwcomposer.pocket.so tools/pack_manager.py tools/syscall_image.py tools/pocketctl.py
 	python3 tools/pack_manager.py --out $(MANAGER_OUT)
 
 $(MANAGER_OUT)/aosp-pocket-manager.apk: $(MANAGER_OUT)/packed.apk out/debug.keystore

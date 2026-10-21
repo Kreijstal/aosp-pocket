@@ -62,7 +62,7 @@ def main():
             assert result['mode']==mode
             assert ('bionic='+mode) in err.decode(),err.decode()
             if mode=='unmodified':
-                assert result['differentBytes']==0 and result['libcUid']==result['kernelUid']
+                assert result['differentBytes']==0 and result['libcUid']==result['syscallUid']
                 assert 'hooks=0 ' in err.decode() and 'properties_init=-1 ' in err.decode()
             reports[mode]=result
             print(json.dumps(result),flush=True)
@@ -73,9 +73,9 @@ def main():
         report={'command':'python3 /home/pi/test_bionic_mode_on_pi.py',
             'environment':'Pi outer LineageOS VM -> Pocket owner console -> isolated native subprocesses',
             'modes':reports,'invalidModeExitCode':rc,'guestStillReady':True,'exitCode':0,
-            'scope':'Unmodified Bionic executable bytes and kernel semantics; full Android boot with this mode is unsupported'}
+            'scope':'Isolated native Bionic modes; full Android boot in unmodified mode is not established'}
         args.output.write_text(json.dumps(report,indent=2)+'\n')
-        print('PASS: executable Bionic bytes intact in unmodified mode; wrapped baseline differs; invalid mode rejected; running guest preserved')
+        print('PASS: original native Bionic modes and running guest preserved')
     finally:
         command('/system/bin/toybox','rm','-f','/pocket-bionic-probe/fixture.txt')
         command('/system/bin/toybox','rmdir','/pocket-bionic-probe')

@@ -1,0 +1,11 @@
+{
+  "command": "python3 /home/pi/test_wrapper_free_init_on_pi.py --framework --timeout 120",
+  "exitCode": 0,
+  "processExitCode": 0,
+  "separateRoot": "/data/user/0/dev.kreijstal.aosppocket.runtime/files/syscall-rootfs",
+  "bionicPreload": false,
+  "initReady": true,
+  "scope": "Real Android 9 framework reaches Pocket control service; does not establish full peripheral compatibility",
+  "controlReady": true,
+  "shutdownRemainingProcesses": 0
+}

@@ -1,0 +1,13 @@
+--- a/src/path/binding.c
++++ b/src/path/binding.c
+@@ -155,7 +155,9 @@
+ 		 */
+ 		if (   side == HOST
+ 		    && compare_paths(get_root(tracee), "/") != PATHS_ARE_EQUAL
+-		    && belongs_to_guestfs(tracee, path))
++		    && belongs_to_guestfs(tracee, path)
++		    && !(getenv("POCKET_PROOT_OWNER") && !strcmp(getenv("POCKET_PROOT_OWNER"), "1")
++		         && compare_paths(get_root(tracee), binding->host.path) == PATH1_IS_PREFIX))
+ 				continue;
+ 
+ 		return binding;

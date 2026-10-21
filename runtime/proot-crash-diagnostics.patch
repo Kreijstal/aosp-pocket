@@ -1,0 +1,39 @@
+--- a/src/tracee/event.c
++++ b/src/tracee/event.c
+@@ -21,6 +21,9 @@
+  */
+ 
+ #include <stdio.h>
++#include <fcntl.h>
++#include <sys/auxv.h>
++#include <ucontext.h>
+ #include <sched.h>      /* CLONE_*,  */
+ #include <sys/types.h>  /* pid_t, */
+ #include <sys/ptrace.h> /* ptrace(1), PTRACE_*, */
+@@ -121,6 +125,26 @@
+  * signal.  */
+ static void kill_all_tracees2(int signum, siginfo_t *siginfo UNUSED, void *ucontext UNUSED)
+ {
++#if defined(__aarch64__)
++    if (getenv("POCKET_PROOT_CRASH_DIAGNOSTICS") && (signum==SIGSEGV || signum==SIGBUS || signum==SIGABRT)) {
++        ucontext_t* uc=(ucontext_t*)ucontext;
++        ProgramHeader64* ph=(ProgramHeader64*)getauxval(AT_PHDR);
++        uintptr_t base=0;
++        for(unsigned i=0;i<getauxval(AT_PHNUM);++i)if(ph[i].p_type==6)base=(uintptr_t)ph-ph[i].p_vaddr;
++        dprintf(STDERR_FILENO,"POCKET_PROOT_CRASH pc=%lx lr=%lx fault=%p base=%lx pc_offset=%lx lr_offset=%lx\n",
++            (unsigned long)uc->uc_mcontext.pc,(unsigned long)uc->uc_mcontext.regs[30],siginfo->si_addr,
++            (unsigned long)base,(unsigned long)(uc->uc_mcontext.pc-base),(unsigned long)(uc->uc_mcontext.regs[30]-base));
++        int memory=open("/proc/self/mem",O_RDONLY|O_CLOEXEC);
++        uintptr_t fp=uc->uc_mcontext.regs[29],pair[2];
++        for(unsigned i=0;memory>=0 && i<8 && fp;++i) {
++            if(pread(memory,pair,sizeof(pair),fp)!=sizeof(pair))break;
++            dprintf(STDERR_FILENO,"POCKET_PROOT_FRAME index=%u return_offset=%lx\n",i,(unsigned long)(pair[1]-base));
++            if(pair[0]<=fp || pair[0]-fp>1024*1024)break;
++            fp=pair[0];
++        }
++        if(memory>=0)close(memory);
++    }
++#endif
+ 	note(NULL, WARNING, INTERNAL, "signal %d received from process %d",
+ 		signum, siginfo->si_pid);
+ 	kill_all_tracees();

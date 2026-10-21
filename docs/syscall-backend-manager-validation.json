@@ -1,0 +1,16 @@
+{
+  "command": "python3 /home/pi/test_wrapper_free_manager_on_pi.py",
+  "exitCode": 0,
+  "version": "0.34",
+  "sdk": 28,
+  "ready": true,
+  "backend": "proot",
+  "bionicWrapperPresent": false,
+  "checks": [
+    "real Manager display/control session ready",
+    "owner console logical root",
+    "Android 9 private properties readable",
+    "data realpath and cwd use guest /data"
+  ],
+  "scope": "Installed Manager on Pi Android VM; physical Samsung and all peripherals not validated"
+}

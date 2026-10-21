@@ -7,7 +7,7 @@ public final class ZygoteBootstrap {
     public static void main(String[] args) throws Exception {
         System.load("/system/lib64/libpocket_zygote_api28.so");
         install();
-        if (System.getenv("POCKET_DIRECT_ROOT")!=null) {
+        if (System.getenv("POCKET_DIRECT_ROOT")!=null || "proot".equals(System.getenv("POCKET_SYSCALL_BACKEND"))) {
             // --enable-lazy-preload skips ZygoteInit.warmUpJcaProviders().
             // Register the stock providers before forking, so ordinary apps
             // inherit AndroidKeyStore and the matching BC workaround provider.

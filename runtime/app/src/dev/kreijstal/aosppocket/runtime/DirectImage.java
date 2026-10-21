@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.zip.*;
 import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
-/** The pinned direct Android 9 image. Never modifies the API 25 rootfs/data. */
+/** The pinned Android 9 image with syscall translation and unchanged Bionic. */
 final class DirectImage {
     static boolean bundled(Context context) {
         try(InputStream in=context.getAssets().open("api28-rootfs/system/build.prop.payload")){return in.read()!=-1;}
@@ -33,9 +33,9 @@ final class DirectImage {
         return true;
     }
     /**
-     * Processes still running from this image. The init is not tied to the app
-     * process, so if Android kills the app while Android 9 is up, the init and
-     * its services survive and hold the guest sockets and data.
+     * Processes left by an earlier session or the legacy direct backend.
+     * The syscall backend ties its tracer to the app and kills tracees if that
+     * tracer dies. Finding the tracer here also lets cleanup stop descendants.
      */
     static List<Integer> leftovers(File root) {
         List<Integer> found=new ArrayList<>();
@@ -124,17 +124,29 @@ final class DirectImage {
         }
         stamps.commit();
         if(GuestProfile.detect(root).sdk!=28)throw new IOException("Direct backend requires the pinned Android 9 image");
-        for(String name:new String[]{"system-data","dev/socket","dev/__properties__","logs","tmp"})new File(root,name).mkdirs();
+        for(String name:new String[]{"system-data","dev/socket","dev/__properties__","dev/input","logs","tmp"})new File(root,name).mkdirs();
         File data=new File(root,"data");
-        if(Files.isSymbolicLink(data.toPath()))Files.delete(data.toPath());
-        else if(data.exists())throw new IOException("Unexpected Android 9 data directory; refusing to replace it");
-        Os.symlink("system-data",data.getPath());
+        if(Files.isSymbolicLink(data.toPath())) {
+            if(!Files.readSymbolicLink(data.toPath()).toString().equals("system-data"))
+                throw new IOException("Unexpected Android 9 data link; refusing to replace it");
+            Files.delete(data.toPath());
+        } else if(data.exists() && (!data.isDirectory() || data.list()==null || data.list().length!=0))
+            throw new IOException("Unexpected nonempty Android 9 data directory; refusing to replace it");
+        // PRoot canonicalizes bind destinations. A symlink here would expose
+        // /system-data as the canonical guest path instead of binding /data.
+        if(!data.isDirectory() && !data.mkdir())throw new IOException("Cannot create guest data binding directory");
         for(File entry:new File(root,"dev/__properties__").listFiles())
             if(!entry.delete())throw new IOException("Cannot reset guest property area");
         File console=new File(root,"pocket-console");Files.deleteIfExists(console.toPath());
         Os.symlink("logs/manager-init.log",console.getPath());
-        for(File executable:new File(root,"system/bin").listFiles())patchInterpreter(executable,new File(root,"system/bin/linker64").getPath());
-        Files.write(new File(root,"system/etc/ld.config.txt").toPath(),("dir.pocket = "+root+"\n[pocket]\nnamespace.default.isolated = false\nnamespace.default.search.paths = "+root+"/system/lib64:"+root+"/vendor/lib64\nnamespace.default.permitted.paths = "+root+"\n").getBytes("UTF-8"));
+        for(File executable:new File(root,"system/bin").listFiles())patchInterpreter(executable,"/system/bin/linker64");
+        Files.write(new File(root,"system/etc/ld.config.txt").toPath(),("dir.pocket = /\n[pocket]\nnamespace.default.isolated = false\nnamespace.default.search.paths = /system/lib64:/vendor/lib64\nnamespace.default.permitted.paths = /\n").getBytes("UTF-8"));
+        // This owned runtime payload is retired; installed user modules/data
+        // remain separate. No Bionic-patching library is loaded by this backend.
+        Files.deleteIfExists(new File(root,"system/lib64/libpocket_direct_boot.so").toPath());
+        new File(root.getParentFile(),"syscall-tmp").mkdirs();
+        Os.symlink("/system/etc/pocket-magisk/getprop",new File(root,"system/bin/getprop").getPath());
+        Os.symlink("/system/bin/toybox",new File(root,"system/bin/setprop").getPath());
         GuestBinder.preparePlatform(context,root);
         File properties=new File(root,"system/build.prop"),temporary=new File(properties.getPath()+".display-new");
         String original=new String(Files.readAllBytes(properties.toPath()),"UTF-8");
@@ -165,37 +177,19 @@ final class DirectImage {
         }
     }
     static java.lang.Process start(File root) throws IOException {
-        ProcessBuilder builder=new ProcessBuilder(new File(root,"system/bin/pocket-init-api28").getPath(),"/system/etc/init/init.manager.rc").directory(root);
-        Map<String,String> env=builder.environment();
-        for(String name:new String[]{"LD_PRELOAD","LD_LIBRARY_PATH","BOOTCLASSPATH","DEX2OATBOOTCLASSPATH","SYSTEMSERVERCLASSPATH","ANDROID_ART_ROOT","ANDROID_RUNTIME_ROOT","ANDROID_I18N_ROOT","ANDROID_TZDATA_ROOT"})env.remove(name);
-        String libs=root+"/system/lib64:"+root+"/vendor/lib64";
-        env.put("POCKET_DIRECT_ROOT",root.getPath());env.put("POCKET_DIRECT_LIBRARIES",libs);env.put("POCKET_DIRECT_ID","0:0");
-        env.put("LD_LIBRARY_PATH",libs);env.put("LD_CONFIG_FILE",root+"/system/etc/ld.config.txt");
-        env.put("LD_PRELOAD",root+"/system/lib64/libpocket_direct_boot.so:"+root+"/system/lib64/libpocket_binder_api28.so:"+root+"/system/lib64/libpocket_hidl_api28.so");
-        env.put("POCKET_PARENT_PID",Integer.toString(android.os.Process.myPid()));
-        env.put("POCKET_DIRECT_CONSOLE",root+"/logs/manager-init.log");env.put("ANDROID_ROOT","/system");env.put("ANDROID_DATA","/data");env.put("TMPDIR","/tmp");
+        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",Arrays.asList(
+            "/system/bin/pocket-init-api28","/system/etc/init/init.syscall.rc"))).directory(root);
+        builder.environment().clear();
+        builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid()));
         File log=new File(root,"logs/manager-init.log");Files.write(log.toPath(),new byte[0]);
         builder.redirectInput(new File("/dev/null"));builder.redirectErrorStream(true);builder.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
         return builder.start();
     }
-    /** Owner-authorized shell; retains the host app's actual UID and SELinux domain. */
+    /** Owner-authorized syscall-translated shell; no host kernel privileges. */
     static Process admin(File root,String cwd,List<String> argv) throws IOException {
-        List<String> command=new ArrayList<>();
-        command.add(new File(root,"system/bin/sh").getPath());command.add("-c");
-        command.add("cd \"$1\" || exit; shift; exec \"$@\"");command.add("pocket-admin");command.add(cwd);command.addAll(argv);
-        ProcessBuilder builder=new ProcessBuilder(command).directory(root);
-        Map<String,String> env=builder.environment();
-        // Do not inherit the host's APEX, ART, loader or shell configuration.
-        env.clear();
-        String libs=root+"/system/lib64:"+root+"/vendor/lib64";
-        env.put("POCKET_DIRECT_ROOT",root.getPath());env.put("POCKET_DIRECT_LIBRARIES",libs);env.put("POCKET_DIRECT_ID","0:0");
-        env.put("LD_LIBRARY_PATH",libs);env.put("LD_CONFIG_FILE",root+"/system/etc/ld.config.txt");
-        env.put("LD_PRELOAD",root+"/system/lib64/libpocket_direct_boot.so:"+root+"/system/lib64/libpocket_binder_api28.so:"+root+"/system/lib64/libpocket_hidl_api28.so");
-        env.put("POCKET_PARENT_PID",Integer.toString(android.os.Process.myPid()));
-        env.put("POCKET_DIRECT_CONSOLE",root+"/logs/manager-init.log");
-        env.put("ANDROID_ROOT","/system");env.put("ANDROID_DATA","/data");env.put("TMPDIR","/data/local/tmp");
-        env.put("HOME","/data/local/tmp");env.put("USER","root");env.put("LOGNAME","root");
-        env.put("PATH","/system/bin:/system/xbin:/vendor/bin");env.put("SHELL","/system/bin/sh");env.put("TERM","xterm-256color");
+        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,cwd,argv)).directory(root);
+        builder.environment().clear();
+        builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid()));
         return builder.start();
     }
 }

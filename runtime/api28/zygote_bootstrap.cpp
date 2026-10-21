@@ -6,6 +6,7 @@
 #include <sys/system_properties.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #ifdef POCKET_ZYGISK
 #include "pocket_art_bridge.h"
 #endif
@@ -50,6 +51,12 @@ extern "C" int pocketInstallZygisk(JNIEnv* env, const JNINativeMethod* methods, 
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kreijstal_aosppocket_guest_ZygoteBootstrap_install(JNIEnv* env, jclass) {
     FileDescriptorWhitelist::Get()->Allow("/pocket-console");
+    // A syscall backend exposes the session log's actual guest pathname.
+    // Accept only a named log directly below /logs, configured before startup.
+    const char* console=getenv("POCKET_GUEST_CONSOLE");
+    if(console && !strncmp(console,"/logs/",6) && console[6] &&
+       !strchr(console+6,'/') && !strstr(console+6,".."))
+        FileDescriptorWhitelist::Get()->Allow(console);
     if (android::pocketRegisterZygote(env) != 0) env->FatalError("Rootless zygote registration failed");
     fputs("POCKET_ZYGOTE_NATIVE_REGISTERED source=android-9.0.0_r61\n", stderr);
 }

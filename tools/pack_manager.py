@@ -4,6 +4,7 @@
 import argparse
 from pathlib import Path
 import zipfile
+from syscall_image import syscall_init
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -30,6 +31,7 @@ def main():
         for path in sorted((ROOT/'out/boot/rootfs').rglob('*')):
             if path.is_file():
                 name=path.relative_to(ROOT/'out/boot/rootfs').as_posix()
+                if name=='system/lib64/libpocket_direct_boot.so':continue
                 if name=='system/build.prop':
                     props=path.read_text().replace('ro.hardware.hwcomposer=redroid','ro.hardware.hwcomposer=pocket').replace('ro.boot.redroid_fps=30','ro.boot.redroid_fps=60')
                     apk.writestr('assets/api28-rootfs/'+name+'.payload',props)
@@ -38,6 +40,9 @@ def main():
         apk.write(ROOT/'out/composer/hwcomposer.pocket.so','assets/api28-rootfs/vendor/lib64/hw/hwcomposer.pocket.so.payload')
         apk.write(ROOT/'out/manager-guest/host-phone.apk','assets/api28-rootfs/system/app/PocketHostPhone/PocketHostPhone.apk.payload')
         apk.writestr('assets/api28-rootfs/system/etc/init/init.manager.rc.payload',rc)
+        apk.writestr('assets/api28-rootfs/system/etc/init/init.syscall.rc.payload',syscall_init(rc))
+        apk.write(ROOT/'out/runtime-native/libproot.so','assets/api28-rootfs/system/bin/pocket-syscall-tracer.payload')
+        apk.write(ROOT/'out/manager-native/getprop','assets/api28-rootfs/system/etc/pocket-magisk/getprop.payload')
         apk.write(ROOT/'out/api28/reference/system/etc/NOTICE.xml.gz','assets/licenses/android9-NOTICE.xml.gz')
         apk.write(ROOT/'out/boot/hooks.json','assets/direct-boot-hooks.json')
         apk.write(ROOT/'tools/pocketctl.py','assets/pocketctl.py')

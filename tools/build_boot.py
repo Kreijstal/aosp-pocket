@@ -188,7 +188,7 @@ def main():
     compiler = clang(llvm, 28, name=arch)
     subprocess.run([compiler, "-std=c11", "-O2", "-g", "-fPIC", "-shared", "-Wall", "-Wextra", "-Werror",
                     "-Wno-misleading-indentation", "-DPOCKET_DIRECT_BOOT", "-I"+str(out),
-                    ROOT / "runtime/direct/guest_paths.c", ROOT / "runtime/direct/boot_runtime.c",
+                    ROOT / "runtime/direct/guest_paths.c", ROOT / "runtime/direct/boot_runtime.c", ROOT / "runtime/direct/boot_uevent.c",
                     reference / "system/lib64/libc.so", "-ldl", "-Wl,--no-undefined", "-Wl,-z,max-page-size=16384", "-Wl,-soname,libpocket_direct_boot.so",
                     "-o", stage / "system/lib64/libpocket_direct_boot.so"], check=True)
     subprocess.run([compiler,"-std=c11","-O2","-Wall","-Wextra","-Werror",

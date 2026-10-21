@@ -48,13 +48,16 @@ property actions, inherited sockets, crash/restart and clean shutdown tests.
 The real Android 9 zygote now accepts ABI queries, forks a Java child, handles
 its Binder calls and reaps it while retaining the host app sandbox. This uses
 an image-only development profile with lazy preload and a JVMTI bootstrap.
-A separate direct platform profile now **boots Android 9 without PRoot**, using
+A separate direct platform profile previously **booted Android 9 without PRoot**, using
 the real system server, SurfaceFlinger, installer and a 480 × 800 software
 display. The VM regression passes the boot property, launcher first draw, APK
 installation, app rendering and an injected tap that increments its button.
 See [the evidence](docs/api28-direct-boot-validation.json) and
 [captured test app](docs/images/api28-guest-test.png). Pocket Manager integrates this direct backend alongside Android 7, with
 separate persistent data, live preview/window/PiP, touch and APK installation.
+Version 0.34 changes Android 9's default to syscall translation with unchanged
+Bionic code and removes the Bionic-patching payload. The older direct profile
+remains a research baseline. See [the wrapper-free backend and its limits](docs/syscall-backend.md).
 Version 0.5 adds shared host networking, contact import, host dialer/SMS intent
 delegation and a permission-checked host device broker. Standard guest camera,
 audio, sensor and location adapters and physical phone validation remain

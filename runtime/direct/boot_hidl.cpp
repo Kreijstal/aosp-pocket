@@ -14,6 +14,9 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(
     using ::android::hidl::base::V1_0::IBase;
     if ((descriptor=="android.hardware.configstore@1.0::ISurfaceFlingerConfigs" ||
          descriptor=="android.hardware.configstore@1.1::ISurfaceFlingerConfigs") && instance=="default") {
+        // Java HwBinder requires a real Bn/Bp transport even for this software
+        // HAL; returning the local implementation exposes an invalid parcel.
+        if (getenv("POCKET_SYSCALL_BACKEND")) return pocketRemoteHardwareService(descriptor,instance);
         fprintf(stderr,"DIRECT_HAL_CONFIGSTORE %s/default source=android-9.0.0_r61\n",descriptor.c_str());
         return new ::android::hardware::configstore::V1_1::implementation::SurfaceFlingerConfigs();
     }

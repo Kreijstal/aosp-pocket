@@ -1,0 +1,33 @@
+{
+  "command": "python3 /home/pi/test_proot_owner_on_pi.py",
+  "exitCode": 0,
+  "nativeOutput": "OWNER_CHILD_EXEC_PASS\nOWNER_METADATA_PASS fstat=1 stat=1 relative_at=1 empty_at=1 symlink=1 existing_create=1 child_exec=1 denied=1",
+  "bionic": {
+    "mode": "syscall",
+    "executableBytesCompared": 858956,
+    "differentBytes": 0,
+    "libcUid": 0,
+    "syscallUid": 0,
+    "virtualPathErrno": 0,
+    "backingPathReadable": false,
+    "backingPathOpened": false,
+    "bootShimLoaded": false
+  },
+  "checks": [
+    "data realpath, fchdir, cwd and directory FD reverse mapping",
+    "file and directory ownership",
+    "relative fchownat",
+    "AT_EMPTY_PATH",
+    "symlink ownership",
+    "existing O_CREAT retains ownership",
+    "fork and exec retain metadata and groups",
+    "unprivileged ownership changes denied",
+    "failed exec preserves errno and credentials",
+    "actual kernel capability mask",
+    "timerfd alarm clock adaptation",
+    "host time changes denied",
+    "host guest-root canary inaccessible and preserved",
+    "killed tracer kills its tracees (PTRACE_O_EXITKILL)"
+  ],
+  "scope": "Installed wrapper-free Manager owner-console subprocesses; framework validation is reported separately"
+}

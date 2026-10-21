@@ -38,7 +38,7 @@ out/syscall-profile/syscall-profile-probe: runtime/modules/syscall-profiles/sysc
 	mkdir -p out/syscall-profile
 	$(LLVM)/aarch64-linux-android28-clang -Wall -Wextra -Werror -O2 -static -fno-emulated-tls -Wl,-z,max-page-size=16384 runtime/modules/syscall-profiles/syscall_profile.c runtime/modules/syscall-profiles/syscall_gate.S runtime/tests/syscall_profile.c -o $@
 
-NATIVE_INPUTS := $(shell find runtime/native -type f) runtime/anbox-renderer.patch runtime/anbox-input.patch runtime/proot-android.patch runtime/talloc.cross tools/build_runtime_native.py sources.lock.json vendor/anbox/CMakeLists.txt vendor/proot/src/GNUmakefile
+NATIVE_INPUTS := $(shell find runtime/native -type f) runtime/anbox-renderer.patch runtime/anbox-input.patch runtime/proot-android.patch runtime/proot-pocket-owner.patch runtime/proot-crash-diagnostics.patch runtime/proot-sysexit-errors.patch runtime/proot-exitkill.patch runtime/proot-nested-bindings.patch runtime/proot_pocket_owner.h runtime/talloc.cross tools/build_runtime_native.py sources.lock.json vendor/anbox/CMakeLists.txt vendor/proot/src/GNUmakefile
 native: out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so out/runtime-native/libpocket_frames.so
 
 out/runtime-native/libpocket_frames.so: runtime/frame_buffers.c runtime/Makefile

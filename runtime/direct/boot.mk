@@ -8,6 +8,7 @@ check-network-permissions:
 	$(CXX) -std=c++17 -O2 -Wall -Wextra -Werror runtime/tests/network_permissions.cpp -o out/network-permissions-test/check
 	out/network-permissions-test/check
 $(BOOT_OUT)/build.stamp: runtime/direct/network_permissions.h
+$(BOOT_OUT)/build.stamp: runtime/direct/boot_uevent.c runtime/direct/kernel_identity.h runtime/api28/zygote_bootstrap.cpp
 BASE_APK ?= out/boot/baseline.apk
 boot-overlay: $(BOOT_OUT)/build.stamp $(BOOT_OUT)/classes.dex $(BOOT_OUT)/AndroidManifest.xml $(BOOT_OUT)/pocket-zygote.jar out/runtime-native/libpocket_runtime.so
 	python3 tools/pack_boot_overlay.py --base-apk $(BASE_APK)

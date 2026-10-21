@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include "kernel_identity.h"
 namespace android {
 status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32_t flags) {
     using Original=status_t(*)(BBinder*,uint32_t,const Parcel&,Parcel*,uint32_t);
@@ -15,8 +16,9 @@ status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32
     if (!original) return INVALID_OPERATION;
     IPCThreadState* thread=IPCThreadState::self();
     bool guest=false;int64_t identity=0;
-    if (code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION && data.dataSize()>=16 &&
-        thread->getCallingUid()==static_cast<uid_t>(syscall(SYS_getuid))) {
+    static const uid_t kernelUid=pocket_kernel_uid_from_proc();
+    if (kernelUid!=static_cast<uid_t>(-1) && code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION && data.dataSize()>=16 &&
+        thread->getCallingUid()==kernelUid) {
         uint64_t claimed;uint32_t policy;int32_t tokenLength;
         memcpy(&claimed,data.data(),8);memcpy(&policy,data.data()+8,4);memcpy(&tokenLength,data.data()+12,4);
         // The kernel reports PID zero for one-way calls. Their claimed PID is

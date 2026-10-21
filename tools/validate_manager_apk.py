@@ -66,6 +66,11 @@ with zipfile.ZipFile(args.apk) as apk:
     assert len(schemes)==len(set(schemes))==3,'Encoded host-phone tel/sms/smsto schemes missing'
     assert 'assets/licenses/android9-NOTICE.xml.gz' in names
     assert not any(n.endswith('.bc') for n in names),'Guest RenderScript must remain opaque to host ABI scan'
-    for name in ('libpocket_direct_boot.so','libpocket_binder_api28.so','libpocket_hidl_api28.so'):
+    assert not any('libpocket_direct_boot.so' in n for n in names),'Retired Bionic wrapper bundled'
+    assert 'assets/api28-rootfs/system/bin/pocket-syscall-tracer.payload' in names
+    syscall_rc=apk.read('assets/api28-rootfs/system/etc/init/init.syscall.rc.payload').decode()
+    assert 'class_start pocket-zygote' in syscall_rc and 'GuestControl' in syscall_rc
+    assert 'import /system/etc/init/init.magisk.rc' not in syscall_rc
+    for name in ('libpocket_binder_api28.so','libpocket_hidl_api28.so'):
         assert 'assets/api28-rootfs/system/lib64/'+name+'.payload' in names
 print('PASS: isolated API 25/API 28 image layouts, direct service, licenses and ABI-safe payloads')

@@ -39,6 +39,44 @@ def extract(path, directory):
     with tarfile.open(path) as archive:
         archive.extractall(WORK, filter="data")
 
+def prepare_proot(llvm):
+    proot = WORK / "proot-build-src"
+    patch = ROOT / "runtime/proot-android.patch"
+    lock=json.loads((ROOT/'sources.lock.json').read_text())
+    source_root=ROOT/lock['proot']['path']
+    revision=subprocess.check_output(['git','-C',source_root,'rev-parse','HEAD'],text=True).strip()
+    dirty=subprocess.check_output(['git','-C',source_root,'status','--porcelain'],text=True)
+    if revision!=lock['proot']['commit'] or dirty:
+        raise SystemExit('proot source differs from sources.lock.json')
+    owner_patch=ROOT/'runtime/proot-pocket-owner.patch'
+    owner_header=ROOT/'runtime/proot_pocket_owner.h'
+    diagnostics_patch=ROOT/'runtime/proot-crash-diagnostics.patch'
+    sysexit_patch=ROOT/'runtime/proot-sysexit-errors.patch'
+    exitkill_patch=ROOT/'runtime/proot-exitkill.patch'
+    nested_patch=ROOT/'runtime/proot-nested-bindings.patch'
+    recipe = lock["proot"]["commit"] + hashlib.sha256(patch.read_bytes()+owner_patch.read_bytes()+owner_header.read_bytes()+diagnostics_patch.read_bytes()+sysexit_patch.read_bytes()+exitkill_patch.read_bytes()+nested_patch.read_bytes()).hexdigest() + str(llvm)
+    stamp = proot / ".pocket-source"
+    if not stamp.exists() or stamp.read_text() != recipe:
+        if proot.exists():
+            shutil.rmtree(proot)
+        shutil.copytree(ROOT / "vendor/proot", proot, ignore=shutil.ignore_patterns(".git"))
+        with patch.open() as source:
+            subprocess.run(["patch", "-p1"], cwd=proot, stdin=source, check=True)
+        with owner_patch.open() as source:
+            subprocess.run(["patch", "-p1"], cwd=proot, stdin=source, check=True)
+        with diagnostics_patch.open() as source:
+            subprocess.run(['patch','-p1'],cwd=proot,stdin=source,check=True)
+        with sysexit_patch.open() as source:
+            subprocess.run(['patch','-p1'],cwd=proot,stdin=source,check=True)
+        with exitkill_patch.open() as source:
+            subprocess.run(['patch','-p1'],cwd=proot,stdin=source,check=True)
+        with nested_patch.open() as source:
+            subprocess.run(['patch','-p1'],cwd=proot,stdin=source,check=True)
+        shutil.copy2(owner_header,proot/'src/extension/fake_id0/proot_pocket_owner.h')
+        stamp.write_text(recipe)
+    return proot
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ndk", type=Path, required=True)
@@ -84,17 +122,7 @@ def main():
         (tprefix / "lib").mkdir(parents=True, exist_ok=True)
         run([llvm / "llvm-ar", "rcs", tprefix / "lib/libtalloc.a", *talloc.glob("bin/default/talloc.c*.o")])
         shutil.copy2(talloc / "talloc.h", tprefix / "include/talloc.h")
-    proot = WORK / "proot-build-src"
-    patch = ROOT / "runtime/proot-android.patch"
-    recipe = lock["proot"]["commit"] + hashlib.sha256(patch.read_bytes()).hexdigest() + str(llvm)
-    stamp = proot / ".pocket-source"
-    if not stamp.exists() or stamp.read_text() != recipe:
-        if proot.exists():
-            shutil.rmtree(proot)
-        shutil.copytree(ROOT / "vendor/proot", proot, ignore=shutil.ignore_patterns(".git"))
-        with patch.open() as source:
-            subprocess.run(["patch", "-p1"], cwd=proot, stdin=source, check=True)
-        stamp.write_text(recipe)
+    proot=prepare_proot(llvm)
     run(["make", "-C", proot / "src", f"-j{args.jobs}", "HAS_SWIG=", "HAS_PYTHON_CONFIG=",
          f"GIT_VERSION=pocket", f"GIT_COMMIT={lock['proot']['commit'][:8]}",
          f"CC={cc}", f"LD={cc}", f"STRIP={llvm / 'llvm-strip'}", f"OBJCOPY={llvm / 'llvm-objcopy'}",

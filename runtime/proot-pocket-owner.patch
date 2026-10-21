@@ -1,0 +1,67 @@
+--- a/src/extension/fake_id0/fake_id0.c
++++ b/src/extension/fake_id0/fake_id0.c
+@@ -63,12 +63,17 @@
+         uint32_t inheritable;
+ 
+         uint32_t keepCaps;
++        int pocket_create;
++        gid_t pocket_groups[64];
++        unsigned pocket_group_count;
+ } Config;
+ 
+ typedef struct {
+ 	char *path;
+ 	mode_t mode;
+ } ModifiedNode;
++
++#include "proot_pocket_owner.h"
+ 
+ /* Bionic validates root ownership when a newly exec'd app/compiler maps its
+  * property area. These guest files remain owned by guest root independently
+@@ -87,6 +90,10 @@
+ 
+ /* List of syscalls handled by this extensions.  */
+ static FilteredSysnum filtered_sysnums[] = {
++    { PR_timerfd_create, FILTER_SYSEXIT }, { PR_settimeofday, FILTER_SYSEXIT },
++    { PR_open, FILTER_SYSEXIT }, { PR_openat, FILTER_SYSEXIT }, { PR_creat, FILTER_SYSEXIT },
++    { PR_mkdir, FILTER_SYSEXIT }, { PR_mkdirat, FILTER_SYSEXIT },
++    { PR_symlink, FILTER_SYSEXIT }, { PR_symlinkat, FILTER_SYSEXIT },
+ 	{ PR_capset,		FILTER_SYSEXIT },
+ 	{ PR_capget,		FILTER_SYSEXIT },
+ 	{ PR_chmod,		FILTER_SYSEXIT },
+@@ -960,6 +966,8 @@
+                 config->permitted = 0xFFFFFFFFU;
+                 config->inheritable = 0xFFFFFFFFU;
+                 config->keepCaps = 0;
++                config->pocket_create = 0;
++                config->pocket_group_count = 0;
+ 
+ 		extension->filtered_sysnums = filtered_sysnums;
+ 		return 0;
+@@ -1009,14 +1016,16 @@
+ 		Tracee *tracee = TRACEE(extension);
+ 		Config *config = talloc_get_type_abort(extension->config, Config);
+ 
+-		return handle_sysenter_end(tracee, config);
++		pocket_owner_enter(tracee,config);
++        return handle_sysenter_end(tracee, config);
+ 	}
+ 
+ 	case SYSCALL_EXIT_END: {
+ 		Tracee *tracee = TRACEE(extension);
+ 		Config *config = talloc_get_type_abort(extension->config, Config);
+ 
+-		return handle_sysexit_end(tracee, config);
++		if(pocket_owner_exit(tracee,config))return 0;
++        return handle_sysexit_end(tracee, config);
+ 	}
+ 
+ 	case SYSCALL_EXIT_START: {
+@@ -1033,6 +1042,7 @@
+ 		/* This has to be done before PRoot pushes the load
+ 		 * script into tracee's stack.  */
+                 config->keepCaps = 0;
++                config->pocket_create = 0;
+ 		adjust_elf_auxv(tracee, config);
+ 
+ 		status = stat(tracee->load_info->host_path, &mode);

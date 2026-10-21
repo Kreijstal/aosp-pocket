@@ -1,0 +1,10 @@
+--- a/src/tracee/event.c
++++ b/src/tracee/event.c
+@@ -580,6 +580,7 @@
+ 			/* Keep descendants from running without translation if the tracer
+ 			 * is killed (e.g. by Android's phantom-process limiter). */
+ 			const unsigned long default_ptrace_options = (
++				PTRACE_O_EXITKILL        |
+ 				PTRACE_O_TRACESYSGOOD	|
+ 				PTRACE_O_TRACEFORK	|
+ 				PTRACE_O_TRACEVFORK	|

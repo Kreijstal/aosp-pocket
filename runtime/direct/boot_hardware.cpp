@@ -3,6 +3,7 @@
 // Host-generated templates bootstrap only this app's opaque Binder endpoint.
 #include "boot_hardware.h"
 #include "boot_health.h"
+#include "kernel_identity.h"
 #include <hwbinder/Binder.h>
 #include <hwbinder/IPCThreadState.h>
 #include <hwbinder/Parcel.h>
@@ -11,6 +12,8 @@
 #include <android/hidl/base/1.0/BpHwBase.h>
 #include <android/hidl/base/1.0/BnHwBase.h>
 #include <android/hardware/health/2.0/BnHwHealth.h>
+#include <android/hardware/configstore/1.1/BnHwSurfaceFlingerConfigs.h>
+#include "SurfaceFlingerConfigs.h"
 #include <android/hidl/manager/1.1/BnHwServiceManager.h>
 #include <utils/String8.h>
 #include <map>
@@ -81,16 +84,17 @@ int readNumber(const char* path) {
 
 sp<IBinder> hostActivity() {
     Parcel request, reply;
-    if (loadTemplate("/activityServiceRequest", request, nullptr) != NO_ERROR) return nullptr;
+    status_t loaded=loadTemplate("/activityServiceRequest", request, nullptr);
+    if (loaded != NO_ERROR) {fprintf(stderr,"DIRECT_HWB_BOOTSTRAP_FAILED stage=template status=%d\n",loaded);return nullptr;}
     // Bootstrap against host handle zero explicitly, avoiding the guest
     // getContextObject interposer and its recursion into itself.
     status_t result = IPCThreadState::self()->transact(0, 1, request, &reply, 0);
-    if (result != NO_ERROR) return nullptr;
+    if (result != NO_ERROR) {fprintf(stderr,"DIRECT_HWB_BOOTSTRAP_FAILED stage=service-query status=%d\n",result);return nullptr;}
     int hostApi = readNumber("/host-api");
-    if (hostApi < 28) return nullptr;
+    if (hostApi < 28) {fprintf(stderr,"DIRECT_HWB_BOOTSTRAP_FAILED stage=host-api value=%d\n",hostApi);return nullptr;}
     // ServiceManager became AIDL in Android 11. Older native SM replies begin
     // directly with the Binder object, without an AIDL exception header.
-    if (hostApi >= 30 && reply.readInt32() != 0) return nullptr;
+    if (hostApi >= 30 && reply.readInt32() != 0) {fprintf(stderr,"DIRECT_HWB_BOOTSTRAP_FAILED stage=service-exception\n");return nullptr;}
     return reply.readStrongBinder(); // Any newer host stability trailer is last.
 }
 
@@ -190,6 +194,7 @@ class Registry final : public BHwBinder {
     Mutex mutex;
     sp<IBinder> health;
     sp<IBinder> hardwareManager;
+    sp<IBinder> configstore;
     class Death final : public IBinder::DeathRecipient {
         wp<Registry> owner;String16 name;
     public:
@@ -202,11 +207,13 @@ class Registry final : public BHwBinder {
     }
     status_t onTransact(uint32_t code,const Parcel& data,Parcel* reply,uint32_t flags,TransactCallback cb) override {
         if(code==kNativePing) {if(cb && reply) cb(*reply);return NO_ERROR;}
-        if(!reply || IPCThreadState::self()->getCallingUid()!=static_cast<uid_t>(syscall(SYS_getuid))) return PERMISSION_DENIED;
+        static const uid_t kernelUid=pocket_kernel_uid_from_proc();
+        if(!reply || kernelUid==static_cast<uid_t>(-1) || IPCThreadState::self()->getCallingUid()!=kernelUid) return PERMISSION_DENIED;
         if(code==kLookupHardware) {
             if(!data.enforceInterface(kHardwareToken)) return PERMISSION_DENIED;
             String16 descriptor=data.readString16(),instance=data.readString16();
             sp<IBinder> service;
+            if((descriptor==String16("android.hardware.configstore@1.0::ISurfaceFlingerConfigs") || descriptor==String16("android.hardware.configstore@1.1::ISurfaceFlingerConfigs")) && instance==String16("default")) service=configstore;
             if(descriptor==String16("android.hardware.health@2.0::IHealth") && (instance==String16("default") || instance==String16("backup"))) service=health;
             if((descriptor==String16("android.hidl.manager@1.0::IServiceManager") || descriptor==String16("android.hidl.manager@1.1::IServiceManager")) && instance==String16("default")) service=hardwareManager;
             reply->writeStrongBinder(service);if(cb) cb(*reply);return NO_ERROR;
@@ -235,6 +242,7 @@ class Registry final : public BHwBinder {
     }
 public:
     Registry() {
+        configstore=new configstore::V1_1::BnHwSurfaceFlingerConfigs(new configstore::V1_1::implementation::SurfaceFlingerConfigs);
         health=new health::V2_0::BnHwHealth(pocketHealthRelay());
         hardwareManager=new ::android::hidl::manager::V1_1::BnHwServiceManager(new HardwareServices);
     }
