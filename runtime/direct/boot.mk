@@ -37,7 +37,7 @@ $(BOOT_OUT)/AndroidManifest.xml: runtime/direct/BootManifest.xml $(OUT)/tools/Po
 $(BOOT_OUT)/base.apk: $(BOOT_OUT)/classes.dex $(BOOT_OUT)/AndroidManifest.xml
 	java -cp $(TOOLS) com.example.build.ApkBuilder $(BOOT_OUT)/AndroidManifest.xml $(BOOT_OUT)/classes.dex $@
 
-$(BOOT_OUT)/packed.apk: $(BOOT_OUT)/base.apk $(BOOT_OUT)/build.stamp $(API28_OUT)/art-probe.dex $(BOOT_OUT)/pocket-zygote.jar out/runtime-native/libpocket_runtime.so tools/pack_boot_probe.py runtime/NOTICE
+$(BOOT_OUT)/packed.apk: $(BOOT_OUT)/base.apk $(BOOT_OUT)/build.stamp $(API28_OUT)/art-probe.dex $(BOOT_OUT)/pocket-zygote.jar out/runtime-native/libpocket_runtime.so tools/pack_boot_probe.py tools/boot_class_manifest.py runtime/NOTICE
 	python3 tools/pack_boot_probe.py
 
 $(BOOT_OUT)/aosp-pocket-boot-probe.apk: $(BOOT_OUT)/packed.apk out/debug.keystore

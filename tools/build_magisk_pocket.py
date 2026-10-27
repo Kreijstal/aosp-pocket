@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """Build Pocket compatibility adapters; optionally build a separate Magisk test runtime."""
 import argparse
+import hashlib
 import io
 import json
 import os
@@ -15,6 +16,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT = 'e8a58776f1d7bdf852072ad0baa6eceb9a1e4aac'
 ONDK = 'r29.5'
+APP_VERSION = '30.7'
+APP_SHA256 = 'e0d32d2123532860f97123d927b1bb86c4e08e6fd8a48bfc6b5bee0afae9ebd5'
 PACKAGES = {
     'busybox': 'pool/main/b/busybox/busybox_1.38.0-1_aarch64.deb',
     'selinux': 'pool/main/liba/libandroid-selinux/libandroid-selinux_14.0.0.11-1_aarch64.deb',
@@ -152,14 +155,40 @@ def main():
     # Magisk copies this front-end into its temporary applet directory. Keep
     # dependency lookup stable at both locations through the guest resolver.
     run('patchelf', '--set-rpath', '/data/adb/magisk/lib', payload/'busybox')
+    # Bionic applies RUNPATH per object. The native loader has no global
+    # library path, so each Termux library must find its own dependencies.
+    for library in libs.iterdir():
+        run('patchelf', '--set-rpath', '/data/adb/magisk/lib', library)
     shutil.copyfile(source/'native/out/arm64-v8a/magisk', payload/'magisk')
+    # The native loader execs only ELF files whose interpreter slot the
+    # Manager binds to its instance; reserve one as for Pocket's own binaries.
+    from build_boot import reserve_interpreter
+    for name in ('magisk', 'busybox'):
+        if not reserve_interpreter(payload/name):
+            raise RuntimeError('Missing ELF interpreter: '+name)
+    # magiskd trusts the Magisk app by the certificate of this stub; take it
+    # from the matching official release so that release app is accepted.
+    app = out/('Magisk-v'+APP_VERSION+'.apk')
+    download('https://github.com/topjohnwu/Magisk/releases/download/v'+APP_VERSION+'/'+app.name, app)
+    if hashlib.sha256(app.read_bytes()).hexdigest() != APP_SHA256:
+        raise RuntimeError('Unexpected Magisk app digest: '+str(app))
+    # The app's environment check expects the boot image tools a release
+    # install keeps in MAGISKBIN. They keep their stock interpreters; the loader
+    # runs unprepared ELFs.
+    tools = {'assets/stub.apk': 'stub.apk', 'assets/boot_patch.sh': 'boot_patch.sh',
+             'lib/arm64-v8a/libmagiskboot.so': 'magiskboot', 'lib/arm64-v8a/libmagiskinit.so': 'magiskinit',
+             'lib/arm64-v8a/libmagiskpolicy.so': 'magiskpolicy', 'lib/arm64-v8a/libinit-ld.so': 'init-ld'}
+    with zipfile.ZipFile(app) as apk:
+        for member, name in tools.items():
+            (payload/name).write_bytes(apk.read(member))
+            if name != 'stub.apk': (payload/name).chmod(0o755)
     shutil.copyfile(source/'LICENSE', notices/'Magisk-LICENSE')
     download('https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt', notices/'BusyBox-GPL-2.0.txt')
     (notices/'libandroid-selinux.txt').write_text('Termux libandroid-selinux 14.0.0.11-1\n'
         'https://github.com/termux/termux-packages/tree/master/packages/libandroid-selinux\n'
         'Package copyright: Public Domain. Upstream: https://selinuxproject.org\n')
     util = (source/'scripts/util_functions.sh').read_text().replace('#MAGISK_VERSION_STUB',
-        'MAGISK_VER=30.7\nMAGISK_VER_CODE=30700')
+        "MAGISK_VER='30.7'\nMAGISK_VER_CODE=30700")
     (payload/'util_functions.sh').write_text(util)
     shutil.copyfile(source/'scripts/module_installer.sh', payload/'module_installer.sh')
     compiler = args.ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang'
@@ -182,6 +211,7 @@ def main():
                 if path.is_file(): archive.add(path,arcname=path.relative_to(tree),recursive=False)
     (out/'provenance.json').write_text(json.dumps({'magiskCommit': COMMIT, 'ondk': ONDK,
         'patch': 'runtime/magisk/magisk-pocket.patch', 'termuxPackages': PACKAGES,
+        'magiskAppStub': {'version': APP_VERSION, 'sha256': APP_SHA256},
         'hostKernelModified': False, 'hostRootRequired': False, 'magiskBundledInApk': False,
         'optionalRuntime': 'pocket-magisk-optional-runtime.zip'}, indent=2)+'\n')
     print('PASS: support-only APK assets and separate optional Magisk runtime prepared:', guest)

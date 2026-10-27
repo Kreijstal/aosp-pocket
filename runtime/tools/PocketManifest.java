@@ -29,6 +29,7 @@ public final class PocketManifest {
         attributes.put("scheme", 0x01010027);
         attributes.put("authorities", 0x01010018);
         attributes.put("enableOnBackInvokedCallback", 0x0101066c);
+        attributes.put("usesCleartextTraffic", 0x010104ec);
         BinaryXmlEncoder.main(args);
         // The generic builder emits numeric values as integers. These two
         // attributes must instead contain references to public framework IDs.

@@ -1,0 +1,123 @@
+{
+  "validation": "PASS",
+  "scope": "Pocket Android 9 software MediaCodec backend in dedicated Pi Android VM; phone unchanged",
+  "artifact": {
+    "version": "0.43",
+    "sha256": "a00090cc5d420519f885e77e6ee83a6c24dab6139ecd1891fd2fedcca8390201",
+    "bytes": 578126510,
+    "changedFiles": [
+      "AndroidManifest.xml",
+      "assets/api28-rootfs/system/bin/mediametrics.payload",
+      "assets/api28-rootfs/system/bin/pocket-media-resources.payload",
+      "assets/api28-rootfs/system/etc/init/init.syscall.rc.payload",
+      "assets/api28-rootfs/system/etc/pocket-media-NOTICE.txt.payload",
+      "assets/api28-rootfs/system/lib64/libpocket_hidl_api28.so.payload",
+      "assets/api28-rootfs/system/lib64/libstagefright_soft_avcdec.so.payload",
+      "assets/api28-rootfs/system/lib64/libstagefright_soft_avcenc.so.payload",
+      "assets/api28-rootfs/system/lib64/libstagefright_soft_g711dec.so.payload",
+      "assets/api28-rootfs/system/lib64/libstagefright_soft_mp3dec.so.payload",
+      "assets/api28-rootfs/system/lib64/libstagefright_soft_rawdec.so.payload",
+      "assets/api28-rootfs/vendor/etc/media_codecs.xml.payload"
+    ],
+    "validation": "PASS",
+    "hostDexLoaderLinkerBionicRetained": true,
+    "codecNoticesIncluded": true
+  },
+  "buildCommand": "python3 tools/build_guest_media.py --base-apk out/manager-0.42/aosp-pocket-manager-0.42.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out-dir out/media-codecs",
+  "commands": [
+    "ssh pi@juanraspberry 'python3 -u ~/test_guest_media_on_pi.py --probe ~/media-codec-probe.jar'",
+    "ssh pi@juanraspberry 'python3 -u ~/validate_attest_on_pi.py'"
+  ],
+  "media": {
+    "validation": "PASS",
+    "scope": "Pocket Android 9 on dedicated Pi Android VM; logical app UID 19990",
+    "status": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": true,
+      "ready": true,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 running \u00b7 720 \u00d7 1280",
+      "shellUid": 0
+    },
+    "exitCode": 0,
+    "stdout": "MEDIA_CODEC OMX.google.g711.alaw.decoder encoder=false\nMEDIA_CODEC OMX.google.g711.mlaw.decoder encoder=false\nMEDIA_CODEC OMX.google.mp3.decoder encoder=false\nMEDIA_CODEC OMX.google.raw.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.encoder encoder=true\nMEDIA_ENUMERATION_PASS count=6 elapsedMs=748\nMEDIA_RAW_PASS bytes=128\nMEDIA_G711_PASS variants=2 samples=64\nMEDIA_MP3_PASS pcmBytes=4608\nMEDIA_AVC_ROUNDTRIP_PASS frames=4 packets=4\nMEDIA_CODEC_PROBE_PASS uid=19990\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmxStore remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=19008\n",
+    "guestDataPreserved": "not updated"
+  },
+  "attestProbe": {
+    "version": "1.10",
+    "summary": {
+      "pass": 44,
+      "fail": 4,
+      "skip": 3,
+      "info": 8,
+      "checks": 59,
+      "scope": "device_checks_excluding_optional_biometrics",
+      "deviceChecks": 59
+    },
+    "codec": {
+      "id": "section_codec",
+      "category": "RIDGE",
+      "description": "Ridge section 'codec'",
+      "status": "PASS",
+      "detail": "collected",
+      "data": {
+        "total": 6,
+        "encoders": 1,
+        "sample": [
+          "OMX.google.g711.alaw.decoder",
+          "OMX.google.g711.mlaw.decoder",
+          "OMX.google.mp3.decoder",
+          "OMX.google.raw.decoder",
+          "OMX.google.h264.decoder",
+          "OMX.google.h264.encoder"
+        ]
+      }
+    },
+    "remainingFailures": [
+      {
+        "id": "build_tags_test_keys",
+        "category": "ATTEST",
+        "description": "Build is not signed with test-keys",
+        "status": "FAIL",
+        "detail": "tags=test-keys type=userdebug"
+      },
+      {
+        "id": "device_secure",
+        "category": "ATTEST",
+        "description": "Device has a secure lock",
+        "status": "FAIL",
+        "detail": "no secure lock screen"
+      },
+      {
+        "id": "storage_encryption",
+        "category": "ATTEST",
+        "description": "Storage is encrypted",
+        "status": "FAIL",
+        "detail": "status=unsupported"
+      },
+      {
+        "id": "gms_present",
+        "category": "ATTEST",
+        "description": "Google Play services present",
+        "status": "FAIL",
+        "detail": "GMS not installed (Play Integrity unavailable)"
+      }
+    ],
+    "permissions": "Headless owner runner granted the four Android 9 device-check permissions; optional camera/microphone checks were not requested."
+  },
+  "preservation": {
+    "guestDataCanaryPreserved": true,
+    "bothGuestImagesPreserved": true,
+    "storageReserveRestored": true,
+    "temporaryDiagnosticLibrariesRemoved": true
+  },
+  "limits": [
+    "Six software codec entries; no hardware codec or MediaPlayer playback claim.",
+    "Byte-buffer pipeline validated; Surface, AudioFlinger output and camera support are separate work.",
+    "All guest processes retain the Manager host app kernel UID."
+  ]
+}

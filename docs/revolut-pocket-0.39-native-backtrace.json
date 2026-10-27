@@ -1,0 +1,35 @@
+{
+  "environment": "Pi Android VM -> Pocket 0.39 -> Android 9 -> Revolut 10.135",
+  "method": "Kernel uprobes on stock guest libart.so; simpleperf; no ptrace attachment, no Revolut patches",
+  "native_frames": [
+    {
+      "symbol": "art::JNI::Throw",
+      "pc": "0x75ef0cb910",
+      "elf_virtual_address": "0x32b910"
+    },
+    {
+      "symbol": "ProtectedRevolutApplication.kk",
+      "registered_entry": "0x75e4c2703c",
+      "saved_return_pc": "0x75e4c27624",
+      "return_offset": "0x5e8",
+      "call_instruction_offset": "0x5e4"
+    }
+  ],
+  "java_caller": "ProtectedRevolutApplication.onCreate(Unknown Source:13)",
+  "pid": 9557,
+  "validation": {
+    "registered_kk_and_throw_lr_correlated": true,
+    "same_process_java_exception": true,
+    "original_qr_code": 4096,
+    "probed_qr_code": 4096,
+    "samples_recorded": 13,
+    "samples_lost": 0,
+    "kernel_probes_cleaned_up": true
+  },
+  "limitations": [
+    "Deeper native frames unavailable; saved frame pointer is not a usable native frame chain",
+    "Specific rejected API or environment condition remains unidentified",
+    "Kernel probes affect timing and execute instrumented ART pages; matching QR code alone does not prove identical internal flags"
+  ],
+  "backtrace": "out/revolut-pocket-0.39/native-backtrace/backtrace.txt"
+}

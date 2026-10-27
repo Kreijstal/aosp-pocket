@@ -26,14 +26,21 @@
 #define FILTER_MARKER 0x504c
 #define PROBE_INPUT 0x504c1001UL
 #define PROBE_OUTPUT 0x504c1002UL
+#define CONTROL_INPUT 0x504c2001UL
+#define STATE_LIMIT 640
+#define PREINIT_NODE "/sbin/.magisk/device/preinit"
 
 struct PocketLoaderConfig { char magic[8],root[1024],interpreter[1024],linker[1024]; };
 __attribute__((section(".pocket_config"),used))
 struct PocketLoaderConfig pocket_loader_config={.magic="PCKELF01"};
 static size_t root_size;
 static size_t page_size;
-static int guest_identity;
+static int guest_identity,data_alias,module_view,denylist_view;
+static unsigned guest_groups[64],guest_group_count;
 static unsigned guest_uid[3],guest_gid[3];
+// Set when this loader runs as the program itself for an unprepared ELF.
+static char exec_target[PATH_LIMIT];
+static const char* exec_request;
 extern long pocket_raw_syscall(long,long,long,long,long,long,long);
 extern long pocket_filter_probe(long);
 extern void pocket_restore_rt(void);
@@ -90,19 +97,46 @@ static long copy_to_user(uintptr_t address,const char* bytes,size_t size) {
     else if(result>=0)result=-EIO;
     raw(__NR_close,pipes[0],0,0,0,0,0);raw(__NR_close,pipes[1],0,0,0,0,0);return result;
 }
+// Latched once published. The Manager and Magisk setup remove a previous
+// boot's marker before init, so an incomplete tree never becomes active.
+static void module_view_check(void) {
+    if(denylist_view){module_view=0;return;}
+    if(module_view)return;
+    char path[1280];struct stat st;const char marker[]="/.pocket-module-view/ready";
+    memcpy(path,pocket_loader_config.root,root_size);memcpy(path+root_size,marker,sizeof(marker));
+    module_view=raw(__NR_newfstatat,AT_FDCWD,(long)path,(long)&st,AT_SYMLINK_NOFOLLOW,0,0)==0 && S_ISREG(st.st_mode);
+}
+static long map_path(const char*,char[PATH_LIMIT]);
+static const char* visible_path(char*);
+#include "denylist_view.h"
 static long map_path(const char* path,char out[PATH_LIMIT]) {
+    if(denylist_view && denylist_hidden(path))return -ENOENT;
     if(equal(path,"/dev/hwbinder",14))path="/dev/binder";
     size_t n=length(path,PATH_LIMIT);
     if(n==PATH_LIMIT)return -ENAMETOOLONG;
     if(path[0]!='/' || prefix(path,pocket_loader_config.root,root_size) ||
        prefix(path,"/proc",5) || prefix(path,"/sys",4) ||
        (prefix(path,"/dev",4) && !prefix(path,"/dev/socket",11) &&
-        !prefix(path,"/dev/__properties__",19) && !prefix(path,"/dev/input",10))) {
+        !prefix(path,"/dev/__properties__",19) && !prefix(path,"/dev/input",10) &&
+        // Recovery/Magisk installer scratch space is guest-private, not a device.
+        !prefix(path,"/dev/tmp",8))) {
         memcpy(out,path,n+1);return 0;
     }
     // Lexical escape rejection only. Symlink containment is not provided.
     for(size_t i=0;i<n;i++)if(path[i]=='/' && path[i+1]=='.' && path[i+2]=='.' &&
         (!path[i+3] || path[i+3]=='/'))return -EPERM;
+    if(data_alias && prefix(path,"/data",5)) {
+        if(root_size+12+n-5>=PATH_LIMIT)return -ENAMETOOLONG;
+        memcpy(out,pocket_loader_config.root,root_size);memcpy(out+root_size,"/system-data",12);
+        memcpy(out+root_size+12,path+5,n-5+1);return 0;
+    }
+    // Magic Mount compatibility: Magisk publishes a fully merged private tree.
+    // It supplies enumeration as well as open/stat/exec/dlopen semantics.
+    if(module_view && !denylist_view && (prefix(path,"/system",7) || prefix(path,"/vendor",7))) {
+        if(root_size+20+n>=PATH_LIMIT)return -ENAMETOOLONG;
+        memcpy(out,pocket_loader_config.root,root_size);memcpy(out+root_size,"/.pocket-module-view",20);
+        memcpy(out+root_size+20,path,n+1);return 0;
+    }
     if(root_size+n>=PATH_LIMIT)return -ENAMETOOLONG;
     memcpy(out,pocket_loader_config.root,root_size);memcpy(out+root_size,path,n+1);return 0;
 }
@@ -121,6 +155,15 @@ static long copy_from_user(void* out,uintptr_t source,size_t size) {
 static const char* visible_path(char* value) {
     if(prefix(value,pocket_loader_config.root,root_size)) {
         if(!value[root_size])return "/";
+        if(data_alias && prefix(value+root_size,"/system-data",12)) {
+            size_t tail=length(value+root_size+12,PATH_LIMIT-root_size-12);
+            // Move downwards in place, retaining the guest /data prefix.
+            for(size_t i=0;i<=tail;i++)value[root_size+5+i]=value[root_size+12+i];
+            memcpy(value+root_size,"/data",5);
+        }
+        if(prefix(value+root_size,"/.pocket-module-view",20) &&
+           (prefix(value+root_size+20,"/system",7) || prefix(value+root_size+20,"/vendor",7)))
+            return value+root_size+20;
         return value+root_size;
     }
     return value;
@@ -197,22 +240,36 @@ static int identity_number(long nr) {
 // environ. It works with an otherwise empty environment and does not need a
 // reserved file descriptor that ART could close before exec.
 #define STATE_KEY "POCKET_LOADER_STATE_V1="
+#define EXEC_KEY "POCKET_LOADER_EXEC_V1="
 static char state_hex(unsigned n) {return "0123456789abcdef"[n&15];}
-static void identity_encode(char state[80]) {
+static void identity_encode(char state[STATE_LIMIT]) {
     memcpy(state,STATE_KEY,sizeof(STATE_KEY)-1);size_t at=sizeof(STATE_KEY)-1;
     state[at++]=guest_identity?'1':'0';
     for(unsigned i=0;i<6;i++) {unsigned n=i<3?guest_uid[i]:guest_gid[i-3];
         for(int j=7;j>=0;j--)state[at++]=state_hex(n>>(j*4));}
+    state[at++]=state_hex(guest_group_count>>4);state[at++]=state_hex(guest_group_count);
+    for(unsigned i=0;i<guest_group_count;i++)for(int j=7;j>=0;j--)state[at++]=state_hex(guest_groups[i]>>(j*4));
+    state[at++]=denylist_view?'1':'0';
     state[at]=0;
 }
+static unsigned hex_value(char c) {return c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:16;}
 static void identity_decode(const char* state) {
     const size_t key=sizeof(STATE_KEY)-1;
-    if(length(state,100)!=key+49 || !equal(state,STATE_KEY,key))return;
+    size_t size=length(state,STATE_LIMIT);
+    if(size<key+51 || !equal(state,STATE_KEY,key))return;
+    unsigned count=(hex_value(state[key+49])<<4)|hex_value(state[key+50]);
+    size_t expected=key+51+count*8;
+    if(count>64 || (size!=expected && size!=expected+1))return;
+    if(size==expected+1 && state[expected]!='0' && state[expected]!='1')return;
     unsigned ids[6];
     for(unsigned i=0;i<6;i++) {unsigned n=0;for(unsigned j=0;j<8;j++) {
-        char c=state[key+1+i*8+j];unsigned d=c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:16;
+        unsigned d=hex_value(state[key+1+i*8+j]);
         if(d==16)return;n=(n<<4)|d;}ids[i]=n;}
+    for(unsigned i=0;i<count;i++) {unsigned n=0;for(unsigned j=0;j<8;j++) {
+        unsigned d=hex_value(state[key+51+i*8+j]);if(d==16)return;n=(n<<4)|d;}guest_groups[i]=n;}
+    guest_group_count=count;
     guest_identity=state[key]=='1';for(unsigned i=0;i<3;i++) {guest_uid[i]=ids[i];guest_gid[i]=ids[i+3];}
+    if(size==expected+1 && state[expected]=='1')denylist_view=1;
 }
 static void identity_start(uintptr_t* stack,uintptr_t argc) {
     uintptr_t first=argc+2,end=first;
@@ -221,6 +278,7 @@ static void identity_start(uintptr_t* stack,uintptr_t argc) {
         const char* value=(const char*)stack[i];
         int internal=equal(value,STATE_KEY,sizeof(STATE_KEY)-1);
         if(equal(value,"POCKET_LOADER_BOOT=1",20)) {guest_identity=1;internal=1;}
+        if(equal(value,EXEC_KEY,sizeof(EXEC_KEY)-1)) {exec_request=value+sizeof(EXEC_KEY)-1;internal=1;}
         if(internal) {
             if(equal(value,STATE_KEY,sizeof(STATE_KEY)-1))identity_decode(value);
             // Remove the private entry and shift the complete auxv too. No
@@ -236,13 +294,16 @@ static int elf_header(const Elf64_Ehdr* e) {
         e->e_phentsize==sizeof(Elf64_Phdr) && e->e_phnum>0 && e->e_phnum<=MAX_PHDR &&
         e->e_phoff<1024*1024;
 }
-// Only prepared ELF executables may exec. Otherwise the kernel could select a
-// host interpreter. Scripts, AT_EMPTY_PATH and unprepared binaries fail clearly.
+// Prepared ELF executables exec directly (0). Others could make the kernel
+// select a host interpreter: unprepared AArch64 ELFs, such as static
+// binaries an app ships, run through this loader as the program (1).
+// Scripts and AT_EMPTY_PATH fail clearly.
 static long prepared_exec(int dir,const char* path) {
     long fd=raw(__NR_openat,dir,(long)path,O_RDONLY|O_CLOEXEC,0,0,0);
     if(fd<0)return fd;
     Elf64_Ehdr e;Elf64_Phdr p;char name[1024];long result=-ENOEXEC;
     if(raw(__NR_pread64,fd,(long)&e,sizeof(e),0,0,0)!=sizeof(e) || !elf_header(&e))goto done;
+    if(e.e_type==ET_EXEC || e.e_type==ET_DYN)result=1;
     for(unsigned i=0;i<e.e_phnum;i++) {
         if(raw(__NR_pread64,fd,(long)&p,sizeof(p),e.e_phoff+i*sizeof(p),0,0)!=sizeof(p))break;
         if(p.p_type!=PT_INTERP)continue;
@@ -250,18 +311,74 @@ static long prepared_exec(int dir,const char* path) {
         if(raw(__NR_pread64,fd,(long)name,p.p_filesz,p.p_offset,0,0)!=(long)p.p_filesz)break;
         size_t size=length(pocket_loader_config.interpreter,sizeof(name));
         if(size<p.p_filesz && equal(name,pocket_loader_config.interpreter,size+1))result=0;
+        // A shared library names no interpreter; a real dynamic one must
+        // be Bionic's, which the loader substitutes with the pinned linker.
+        else if(p.p_filesz!=sizeof("/system/bin/linker64") || !equal(name,"/system/bin/linker64",p.p_filesz))result=-ENOEXEC;
         break;
     }
 done:raw(__NR_close,fd,0,0,0,0,0);return result;
 }
 struct KernelAction {void (*handler)(int,siginfo_t*,void*);unsigned long flags;void (*restorer)(void);unsigned long mask;};
+#include "proc_view.h"
+#include "firewall_runtime.h"
+#include "binder_runtime.h"
+__attribute__((noinline)) static void path_dispatch(long,__u64*,ucontext_t*,char*);
+#include "ce_runtime.h"
 static void path_call(long,__u64*,ucontext_t*);
 static void trapped(int signal,siginfo_t* info,void* opaque) {
     (void)signal;ucontext_t* context=opaque;__u64* r=context->uc_mcontext.regs;
     if(info->si_code!=SYS_SECCOMP || info->si_errno!=FILTER_MARKER || info->si_arch!=AUDIT_ARCH_AARCH64)
         fail("unexpected SIGSYS",info->si_syscall);
     long nr=info->si_syscall;
-    if(nr==__NR_getpid) {r[0]=r[0]==PROBE_INPUT?PROBE_OUTPUT:(unsigned long)raw(nr,0,0,0,0,0,0);return;}
+    if(ce_dispatch(nr,r,context))return;
+    if(proc_fd_dispatch(nr,r))return;
+    if(nr==__NR_pwrite64 || nr==__NR_pwritev || nr==__NR_pwritev2 || nr==__NR_ftruncate) {
+        r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
+    }
+    if(nr==__NR_mmap) {
+        char source[64];struct stat st;
+        if(!(r[3]&MAP_ANONYMOUS) && proc_fd_info((int)r[4],source,&st))r[0]=(uint64_t)-ENODEV;
+        else r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);
+        return;
+    }
+    if(firewall_dispatch(nr,r))return;
+    if(binder_dispatch(nr,r))return;
+    if(nr==__NR_getdents64 && denylist_view){r[0]=denylist_getdents((int)r[0],r[1],r[2]);return;}
+    if(nr==__NR_ioctl || nr==__NR_close || nr==__NR_dup || nr==__NR_dup3 || nr==__NR_fcntl ||
+       nr==__NR_getdents64 || nr==__NR_fchmod || nr==__NR_fsync || nr==__NR_fdatasync || nr==__NR_fstatfs ||
+       nr==__NR_fgetxattr || nr==__NR_fsetxattr || nr==__NR_flistxattr || nr==__NR_fremovexattr){
+        r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
+    }
+    if(nr==__NR_getpid) {
+        if(r[0]==PROBE_INPUT) {r[0]=PROBE_OUTPUT;return;}
+        if(r[0]==CONTROL_INPUT) {
+            if(r[1]==4){r[0]=denylist_view;return;}
+            if(r[1]==3){
+                if(!guest_identity || guest_uid[1]){r[0]=(uint64_t)-EPERM;return;}
+                denylist_view=1;module_view=0;r[0]=0;return;
+            }
+            if(guest_identity && r[1]==2){r[0]=binder_host_scope((unsigned)r[2]);return;}
+            if(!guest_identity || r[1]!=1) {r[0]=(uint64_t)-ENOSYS;return;}
+            if(r[2]>64) {r[0]=(uint64_t)-EINVAL;return;}
+            if(guest_uid[1]) {r[0]=(uint64_t)-EPERM;return;}
+            unsigned groups[64];long rc=copy_from_user(groups,r[3],r[2]*sizeof(unsigned));
+            if(!rc) {guest_group_count=(unsigned)r[2];memcpy(guest_groups,groups,r[2]*sizeof(unsigned));}
+            r[0]=rc;return;
+        }
+        r[0]=raw(nr,0,0,0,0,0,0);return;
+    }
+    if(nr==__NR_getgroups && guest_identity) {
+        if(!r[0]) {r[0]=guest_group_count;return;}
+        if((long)r[0]<0 || r[0]<guest_group_count) {r[0]=(uint64_t)-EINVAL;return;}
+        long rc=copy_to_user(r[1],(const char*)guest_groups,guest_group_count*sizeof(unsigned));
+        r[0]=rc<0?rc:guest_group_count;return;
+    }
+    if(nr==__NR_getgroups) {r[0]=raw(nr,r[0],r[1],0,0,0,0);return;}
+    if(nr==__NR_settimeofday) {r[0]=(uint64_t)-EPERM;return;}
+    if(nr==__NR_timerfd_create) {
+        long clock=r[0];if(clock==8)clock=0;if(clock==9)clock=7;
+        r[0]=raw(nr,clock,r[1],0,0,0,0);return;
+    }
     if(nr==__NR_rt_sigprocmask) {
         if(r[3]!=8) {r[0]=(uint64_t)-EINVAL;return;}
         unsigned long mask,previous=*(unsigned long*)&context->uc_sigmask;
@@ -287,7 +404,8 @@ static void trapped(int signal,siginfo_t* info,void* opaque) {
         r[0]=raw(nr,r[0],address,r[2],r[3],r[4],r[5]);return;
     }
     if(identity_number(nr)) {
-        r[0]=guest_identity?(uint64_t)identity_call(nr,r):(uint64_t)raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
+        r[0]=guest_identity?(uint64_t)identity_call(nr,r):(uint64_t)raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);
+        if(guest_identity && !r[0] && (nr==__NR_setuid || nr==__NR_setresuid || nr==__NR_setreuid))binder_publish_identity();return;
     }
     if(nr==__NR_getcwd) {
         long memory=raw(__NR_mmap,0,PATH_LIMIT,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
@@ -298,6 +416,10 @@ static void trapped(int signal,siginfo_t* info,void* opaque) {
         raw(__NR_munmap,memory,PATH_LIMIT,0,0,0,0);r[0]=rc;return;
     }
     if(nr==__NR_bind || nr==__NR_connect) {
+        if(nr==__NR_connect) {
+            long rc=firewall_address((int)r[0],r[1],r[2]);
+            if(rc<0) {r[0]=rc;return;}
+        }
         // Abstract UNIX addresses and IP sockets retain their kernel ABI.
         struct sockaddr_un address;long rc;
         if(r[2]>sizeof(address) || r[2]<sizeof(address.sun_family)) {
@@ -344,7 +466,7 @@ static void trapped(int signal,siginfo_t* info,void* opaque) {
     }
     if(nr==__NR_fstat) {
         struct stat st;long rc=raw(nr,r[0],(long)&st,0,0,0,0);
-        if(!rc)owner_read(&st);
+        if(!rc) {proc_stat_view((int)r[0],&st);owner_read(&st);}
         r[0]=rc<0?rc:copy_to_user(r[1],(const char*)&st,sizeof(st))<0?-EFAULT:0;return;
     }
     path_call(nr,r,context);
@@ -360,11 +482,16 @@ __attribute__((noinline)) static void path_call(long nr,__u64* r,ucontext_t* con
     raw(__NR_munmap,memory,size,0,0,0,0);
 }
 __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t* context,char* scratch) {
-    unsigned argument=nr==__NR_symlinkat?2:(nr==__NR_execve || nr==__NR_chdir || nr==__NR_truncate)?0:1;
+    unsigned argument=nr==__NR_symlinkat?2:(nr==__NR_execve || nr==__NR_chdir || nr==__NR_truncate || nr==__NR_statfs ||
+        nr==__NR_getxattr || nr==__NR_lgetxattr || nr==__NR_setxattr || nr==__NR_lsetxattr ||
+        nr==__NR_listxattr || nr==__NR_llistxattr || nr==__NR_removexattr || nr==__NR_lremovexattr)?0:1;
     char* original=scratch;char* mapped=scratch+PATH_LIMIT;
+    // Long-lived init execs services after Magisk publishes the view.
+    if(nr==__NR_execve || nr==__NR_execveat)module_view_check();
     long status=copy_path(original,r[argument]);
-    if(status>=0)status=map_path(original,mapped);
+    if(status>=0)status=denylist_view?denylist_at(argument?(int)r[argument-1]:AT_FDCWD,original,mapped,scratch+3*PATH_LIMIT):map_path(original,mapped);
     if(status<0) {r[0]=status;return;}
+    if(denylist_view && denylist_resolved(argument?(int)r[argument-1]:AT_FDCWD,mapped,scratch+3*PATH_LIMIT)){r[0]=(uint64_t)-ENOENT;return;}
 #ifdef POCKET_LOADER_DIAGNOSTICS
     raw(__NR_write,2,(long)"LOADER_PATH ",12,0,0,0);
     raw(__NR_write,2,(long)original,length(original,PATH_LIMIT),0,0,0);
@@ -375,7 +502,7 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
     long a[6];for(unsigned i=0;i<6;i++)a[i]=r[i];a[argument]=(long)mapped;
     char* second=scratch+2*PATH_LIMIT;
     if(nr==__NR_renameat || nr==__NR_renameat2 || nr==__NR_linkat) {
-        char* path=scratch+3*PATH_LIMIT;status=copy_path(path,r[3]);if(status>=0)status=map_path(path,second);
+        char* path=scratch+3*PATH_LIMIT;status=copy_path(path,r[3]);if(status>=0)status=denylist_view?denylist_at((int)r[2],path,second,scratch+5*PATH_LIMIT):map_path(path,second);
         if(status<0) {r[0]=status;return;}a[3]=(long)second;
     }
     if(nr==__NR_symlinkat) {
@@ -393,6 +520,19 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
     }
     if(nr==__NR_newfstatat) {
         struct stat st;status=raw(nr,a[0],a[1],(long)&st,a[3],0,0);
+        if(!status && !(a[3]&AT_SYMLINK_NOFOLLOW) && S_ISREG(st.st_mode) && !st.st_nlink) {
+            if(!mapped[0] && (a[3]&AT_EMPTY_PATH))proc_stat_view((int)a[0],&st);
+            else {
+                long fd=raw(__NR_openat,a[0],a[1],O_PATH|O_CLOEXEC,0,0,0);
+                if(fd>=0) {proc_stat_view((int)fd,&st);raw(__NR_close,fd,0,0,0,0,0);}
+            }
+        }
+        // Magisk's preinit partition: setup.sh backs it with a persistent
+        // directory and leaves this regular file as its node, since the app
+        // cannot create block devices. The node reports its backing filesystem.
+        if(!status && S_ISREG(st.st_mode) && equal(original,PREINIT_NODE,sizeof(PREINIT_NODE))) {
+            st.st_mode=S_IFBLK|(st.st_mode&07777);st.st_rdev=st.st_dev;st.st_size=0;
+        }
         if(!status)owner_read(&st);
         r[0]=status<0?status:copy_to_user(r[2],(const char*)&st,sizeof(st))<0?-EFAULT:0;return;
     }
@@ -401,28 +541,51 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
         char* value=scratch+3*PATH_LIMIT;status=raw(nr,a[0],a[1],(long)value,PATH_LIMIT,0,0);
         if(status<0) {r[0]=status;return;}
         const char* visible=value;size_t size=(size_t)status;
-        if(size>=root_size && equal(value,pocket_loader_config.root,root_size) &&
-           (size==root_size || value[root_size]=='/')) {
-            visible=value+root_size;size-=root_size;
-            if(!size) {visible="/";size=1;}
+        char source[64];struct stat original_stat;
+        if(size<PATH_LIMIT) {
+            value[size]=0;
+            if(proc_decode_link(value,source,&original_stat)) {size=length(source,sizeof(source));memcpy(value,source,size+1);}
+            // A loader-run program sees its own executable, not this loader.
+            else if(exec_target[0] && equal(value,pocket_loader_config.interpreter,size+1)) {
+                size=length(exec_target,PATH_LIMIT);memcpy(value,exec_target,size+1);
+            }
         }
+        if(size<PATH_LIMIT) {value[size]=0;visible=visible_path(value);size=length(visible,PATH_LIMIT);}
         if(size>r[3])size=r[3];
         r[0]=copy_to_user(r[2],visible,size);return;
     }
     if(nr==__NR_execve || nr==__NR_execveat) {
         if(nr==__NR_execveat && a[4]) {r[0]=(uint64_t)-EOPNOTSUPP;return;}
+        // Busybox and Magisk re-exec themselves by this name.
+        if(exec_target[0] && equal(mapped,"/proc/self/exe",15) && (nr==__NR_execve || a[0]==AT_FDCWD))
+            memcpy(mapped,exec_target,length(exec_target,PATH_LIMIT)+1);
         status=prepared_exec(nr==__NR_execve?AT_FDCWD:(int)a[0],mapped);
         if(status<0) {r[0]=status;return;}
+        char* request=scratch+6*PATH_LIMIT;
+        if(status) {
+            // The kernel loads this loader as a static program; it maps the
+            // target with the same handler and identity transport.
+            size_t key=sizeof(EXEC_KEY)-1,n=length(mapped,PATH_LIMIT),at=key;
+            if(mapped[0]!='/') {
+                if(nr==__NR_execveat && a[0]!=AT_FDCWD) {r[0]=(uint64_t)-ENOEXEC;return;}
+                status=raw(__NR_getcwd,(long)request+key,PATH_LIMIT-key,0,0,0,0);
+                if(status<0) {r[0]=status;return;}
+                at=key+length(request+key,PATH_LIMIT-key);request[at++]='/';
+            }
+            if(at+n>=PATH_LIMIT) {r[0]=(uint64_t)-ENAMETOOLONG;return;}
+            memcpy(request,EXEC_KEY,key);memcpy(request+at,mapped,n+1);
+            a[nr==__NR_execve?0:1]=(long)pocket_loader_config.interpreter;
+        } else request=0;
         // Exec preserves signal masks. Restore the pre-trap mask before losing
         // this signal frame, so SIGSYS remains usable in the next interpreter.
-        char state[80];identity_encode(state);
+        char* state=scratch+7*PATH_LIMIT;identity_encode(state);
         uintptr_t* env=(uintptr_t*)(scratch+4*PATH_LIMIT);unsigned count=0;uintptr_t source=nr==__NR_execve?r[2]:r[3];
-        if(source)for(;count<1023;count++) {
+        if(source)for(;count<1022;count++) {
             status=copy_from_user(env+count,source+count*sizeof(uintptr_t),sizeof(uintptr_t));
             if(status<0) {r[0]=status;return;}if(!env[count])break;
         }
-        if(count==1023) {r[0]=(uint64_t)-E2BIG;return;}
-        env[count++]=(uintptr_t)state;env[count]=0;a[nr==__NR_execve?2:3]=(long)env;
+        if(count==1022) {r[0]=(uint64_t)-E2BIG;return;}
+        env[count++]=(uintptr_t)state;if(request)env[count++]=(uintptr_t)request;env[count]=0;a[nr==__NR_execve?2:3]=(long)env;
         status=raw(__NR_rt_sigprocmask,SIG_SETMASK,(long)&context->uc_sigmask,0,8,0,0);
         if(status<0) {r[0]=status;return;}
         r[0]=raw(nr,a[0],a[1],a[2],a[3],a[4],a[5]);return;
@@ -431,6 +594,8 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
     if(guest_identity && (nr==__NR_mkdirat || (nr==__NR_openat && (a[2]&O_CREAT))))
         created=raw(__NR_newfstatat,a[0],a[1],(long)&old,AT_SYMLINK_NOFOLLOW,0,0)==-ENOENT;
     long result=raw(nr,a[0],a[1],a[2],a[3],a[4],a[5]);
+    if(nr==__NR_openat && result<0)result=proc_reopen_at((int)a[0],mapped,(int)a[2],result);
+    if(nr==__NR_openat && result>=0)result=proc_open_view((int)result,(int)a[2]);
     if(result>=0 && created) {
         struct stat st;long rc=nr==__NR_openat?raw(__NR_fstat,result,(long)&st,0,0,0,0):
             raw(__NR_newfstatat,a[0],a[1],(long)&st,AT_SYMLINK_NOFOLLOW,0,0);
@@ -445,7 +610,7 @@ static void install_handler(void) {
     if(result<0)fail("sigaction",result);
 }
 static void install_filter(void) {
-    struct sock_filter code[180];unsigned used=0;
+    struct sock_filter code[320];unsigned used=0;
 #define STMT(c,k) do {code[used++]=(struct sock_filter)BPF_STMT(c,k);}while(0)
 #define JUMP(c,k,t,f) do {code[used++]=(struct sock_filter)BPF_JUMP(c,k,t,f);}while(0)
     STMT(BPF_LD|BPF_W|BPF_ABS,offsetof(struct seccomp_data,arch));
@@ -458,16 +623,22 @@ static void install_filter(void) {
     STMT(BPF_RET|BPF_K,SECCOMP_RET_ALLOW);
     STMT(BPF_LD|BPF_W|BPF_ABS,offsetof(struct seccomp_data,nr));
     // An opt-in getpid argument distinguishes our filter from host filters.
-    JUMP(BPF_JMP|BPF_JEQ|BPF_K,__NR_getpid,0,4);
+    JUMP(BPF_JMP|BPF_JEQ|BPF_K,__NR_getpid,0,5);
     STMT(BPF_LD|BPF_W|BPF_ABS,offsetof(struct seccomp_data,args));
-    JUMP(BPF_JMP|BPF_JEQ|BPF_K,PROBE_INPUT,0,1);
-    STMT(BPF_RET|BPF_K,SECCOMP_RET_TRAP|FILTER_MARKER);
+    JUMP(BPF_JMP|BPF_JEQ|BPF_K,PROBE_INPUT,2,0);
+    JUMP(BPF_JMP|BPF_JEQ|BPF_K,CONTROL_INPUT,1,0);
     STMT(BPF_RET|BPF_K,SECCOMP_RET_ALLOW);
-    const unsigned numbers[]={__NR_openat,__NR_newfstatat,__NR_faccessat,__NR_readlinkat,
+    STMT(BPF_RET|BPF_K,SECCOMP_RET_TRAP|FILTER_MARKER);
+    const unsigned numbers[]={__NR_mmap,__NR_ioctl,__NR_close,__NR_dup,__NR_dup3,__NR_fcntl,__NR_openat,__NR_newfstatat,__NR_faccessat,__NR_readlinkat,
+        __NR_getdents64,__NR_fchmod,__NR_fsync,__NR_fdatasync,
+        __NR_fstatfs,__NR_fgetxattr,__NR_fsetxattr,__NR_flistxattr,__NR_fremovexattr,
+        __NR_sendto,__NR_sendmsg,__NR_sendmmsg,__NR_write,__NR_writev,__NR_pwrite64,__NR_pwritev,__NR_pwritev2,__NR_ftruncate,__NR_sendfile,__NR_splice,__NR_copy_file_range,
         __NR_execve,__NR_execveat,__NR_rt_sigaction,__NR_rt_sigprocmask,__NR_getcwd,__NR_chdir,
         __NR_mkdirat,__NR_unlinkat,__NR_renameat,__NR_renameat2,__NR_linkat,__NR_symlinkat,
         __NR_fchmodat,__NR_fchownat,__NR_utimensat,__NR_truncate,__NR_mknodat,
-        __NR_bind,__NR_connect,__NR_getsockname,__NR_getpeername,__NR_fstat,__NR_fchown,
+        __NR_statfs,__NR_inotify_add_watch,__NR_getxattr,__NR_lgetxattr,__NR_setxattr,__NR_lsetxattr,
+        __NR_listxattr,__NR_llistxattr,__NR_removexattr,__NR_lremovexattr,__NR_getgroups,
+        __NR_timerfd_create,__NR_settimeofday,__NR_bind,__NR_connect,__NR_getsockname,__NR_getpeername,__NR_fstat,__NR_fchown,
         __NR_getuid,__NR_geteuid,__NR_getgid,__NR_getegid,__NR_getresuid,__NR_getresgid,
         __NR_setuid,__NR_setgid,__NR_setreuid,__NR_setregid,__NR_setresuid,__NR_setresgid};
     for(unsigned i=0;i<sizeof(numbers)/sizeof(numbers[0]);i++) {
@@ -484,11 +655,15 @@ static void install_filter(void) {
 }
 static uintptr_t align_down(uintptr_t n,size_t page) {return n&~(page-1);}
 static uintptr_t align_up(uintptr_t n,size_t page) {return (n+page-1)&~(page-1);}
-static uintptr_t load_linker(size_t page,uintptr_t* bias) {
-    long fd=raw(__NR_openat,AT_FDCWD,(long)pocket_loader_config.linker,O_RDONLY|O_CLOEXEC,0,0,0);
+// Maps the pinned linker, or for a loader-run program its executable. An
+// ET_EXEC program keeps its link addresses; *program describes it on return.
+struct Program {uintptr_t phdr,phnum,entry;int interpreter;};
+static uintptr_t load_elf(const char* path,size_t page,uintptr_t* bias,struct Program* program) {
+    long fd=raw(__NR_openat,AT_FDCWD,(long)path,O_RDONLY|O_CLOEXEC,0,0,0);
     if(fd<0)fail("open linker",fd);
     Elf64_Ehdr e;Elf64_Phdr p[MAX_PHDR];
-    if(raw(__NR_pread64,fd,(long)&e,sizeof(e),0,0,0)!=sizeof(e) || !elf_header(&e) || e.e_type!=ET_DYN)
+    if(raw(__NR_pread64,fd,(long)&e,sizeof(e),0,0,0)!=sizeof(e) || !elf_header(&e) ||
+       !(e.e_type==ET_DYN || (program && e.e_type==ET_EXEC)))
         fail("linker ELF",-ENOEXEC);
     size_t bytes=e.e_phnum*sizeof(p[0]);
     if(raw(__NR_pread64,fd,(long)p,bytes,e.e_phoff,0,0)!=(long)bytes)fail("linker phdr",-ENOEXEC);
@@ -500,9 +675,21 @@ static uintptr_t load_linker(size_t page,uintptr_t* bias) {
         if(start<low)low=start;if(end>high)high=end;
     }
     if(low==UINTPTR_MAX || high<=low || high-low>64*1024*1024)fail("linker span",-ENOEXEC);
-    long reserved=raw(__NR_mmap,0,high-low,PROT_NONE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-    if(reserved<0)fail("reserve linker",reserved);
+    int fixed=e.e_type==ET_EXEC;
+    long reserved=raw(__NR_mmap,fixed?low:0,high-low,PROT_NONE,MAP_PRIVATE|MAP_ANONYMOUS|(fixed?MAP_FIXED_NOREPLACE:0),-1,0);
+    if(reserved<0 || (fixed && (uintptr_t)reserved!=low))fail("reserve linker",reserved<0?reserved:-EEXIST);
     *bias=(uintptr_t)reserved-low;
+    if(program) {
+        program->phdr=0;program->phnum=e.e_phnum;program->entry=*bias+e.e_entry;program->interpreter=0;
+        for(unsigned i=0;i<e.e_phnum;i++) {
+            if(p[i].p_type==PT_INTERP)program->interpreter=1;
+            if(p[i].p_type==PT_PHDR)program->phdr=*bias+p[i].p_vaddr;
+        }
+        for(unsigned i=0;!program->phdr && i<e.e_phnum;i++)
+            if(p[i].p_type==PT_LOAD && p[i].p_offset<=e.e_phoff && e.e_phoff+bytes<=p[i].p_offset+p[i].p_filesz)
+                program->phdr=*bias+p[i].p_vaddr+(e.e_phoff-p[i].p_offset);
+        if(!program->phdr)fail("program phdr",-ENOEXEC);
+    }
     for(unsigned i=0;i<e.e_phnum;i++)if(p[i].p_type==PT_LOAD && p[i].p_memsz) {
         uintptr_t start=align_down(p[i].p_vaddr,page),file_end=align_up(p[i].p_vaddr+p[i].p_filesz,page);
         uintptr_t end=align_up(p[i].p_vaddr+p[i].p_memsz,page);
@@ -542,9 +729,33 @@ uintptr_t pocket_loader_start(uintptr_t* stack) {
     }
     if(!base || (page!=4096 && page!=16384))fail("auxv",-ENOEXEC);
     page_size=page;
+    char data_path[1280];memcpy(data_path,pocket_loader_config.root,root_size);
+    memcpy(data_path+root_size,"/system-data",13);struct stat data_stat;
+    data_alias=raw(__NR_newfstatat,AT_FDCWD,(long)data_path,(long)&data_stat,0,0,0)==0 && S_ISDIR(data_stat.st_mode);
+    memcpy(data_path+root_size,"/.pocket-ce-enabled",sizeof("/.pocket-ce-enabled"));
+    ce_enabled=raw(__NR_newfstatat,AT_FDCWD,(long)data_path,(long)&data_stat,0,0,0)==0;
+    if(ce_enabled) {
+        memcpy(data_path+root_size,"/.pocket-ce-device",sizeof("/.pocket-ce-device"));
+        long config=raw(__NR_openat,AT_FDCWD,(long)data_path,O_RDONLY|O_CLOEXEC,0,0,0);
+        if(config>=0){if(raw(__NR_read,config,(long)&ce_fuse_device,sizeof(ce_fuse_device),0,0,0)!=(long)sizeof(ce_fuse_device))ce_fuse_device=0;raw(__NR_close,config,0,0,0,0,0);}
+    }
+    module_view_check();
+    binder_publish_identity();
     install_handler();
     if(pocket_filter_probe(PROBE_INPUT)!=PROBE_OUTPUT)install_filter();
     if(pocket_filter_probe(PROBE_INPUT)!=PROBE_OUTPUT)fail("filter probe",-ENOSYS);
-    uintptr_t bias,entry=load_linker(page,&bias);base->a_un.a_val=bias;
+    if(exec_request) {
+        size_t n=length(exec_request,PATH_LIMIT);
+        if(n==PATH_LIMIT || exec_request[0]!='/')fail("exec target",-ENAMETOOLONG);
+        memcpy(exec_target,exec_request,n+1);
+        struct Program program;uintptr_t bias;load_elf(exec_target,page,&bias,&program);
+        for(unsigned i=0;i<128 && aux[i].a_type!=AT_NULL;i++) {
+            if(aux[i].a_type==AT_PHDR)aux[i].a_un.a_val=program.phdr;
+            if(aux[i].a_type==AT_PHNUM)aux[i].a_un.a_val=program.phnum;
+            if(aux[i].a_type==AT_ENTRY)aux[i].a_un.a_val=program.entry;
+        }
+        if(!program.interpreter) {base->a_un.a_val=0;return program.entry;}
+    }
+    uintptr_t bias,entry=load_elf(pocket_loader_config.linker,page,&bias,NULL);base->a_un.a_val=bias;
     return entry;
 }

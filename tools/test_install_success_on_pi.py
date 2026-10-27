@@ -82,7 +82,8 @@ assert cmdline==APP,cmdline
 assert status['ready'] and status['running'],status
 last=host_shell('cat /data/user/0/'+PACKAGE+'/shared_prefs/guest-last-app.xml',True)
 assert APP in last,last
-report={'command':'python3 /home/pi/test_install_success_on_pi.py','managerVersion':'0.31',
+version=re.search(r'versionName=([^\s]+)',host_shell('dumpsys package '+PACKAGE))[1]
+report={'command':'python3 /home/pi/test_install_success_on_pi.py','managerVersion':version,
         'package':APP,'path':'Settings > Install APK > Device apps > Open Camera > Install in Android',
         'compatibleInstallEnabled':True,'status':status['status'],'installLog':fresh_installs[-1],'launchLog':launch[-1],'liveProcess':cmdline,
         'lastAppSaved':True,'guestStillReady':True,'elapsedSeconds':round(time.monotonic()-started,1),'exitCode':0}

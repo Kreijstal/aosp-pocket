@@ -1,0 +1,28 @@
+{
+  "environment": "AOSP Pocket Android 9 guest inside Pi Android VM",
+  "pocket_version": "0.39",
+  "revolut_version": "10.135",
+  "min_sdk": 28,
+  "target_sdk": 36,
+  "result": "Reproduced device compatibility error",
+  "screen_text": "This app stopped because it is not compatible with your device. Please try updating the app.",
+  "qr_lines": [
+    "01a16244-6b0e-4970-8569-370c6464f38b",
+    "4096"
+  ],
+  "observed_failure": {
+    "exception": "com.revolut.MessageGuardException (obfuscated suffix retained in log)",
+    "native_method": "com.revolut.ProtectedRevolutApplication.kk",
+    "caller": "com.revolut.ProtectedRevolutApplication.onCreate",
+    "main_pid": 7892,
+    "error_activity_pid": 8006,
+    "tracer_pid_during_startup": 0
+  },
+  "conclusion": "Native protection initialization raises a Java exception and opens a separate error activity. Specific failing condition is not established by these logs.",
+  "network_policy": "No firewall rules or internet settings changed",
+  "validation": "Launch through guest ActivityManager, read guest init log, capture guest SurfaceFlinger screenshot; decode screenshot using zbarimg --quiet --raw",
+  "artifacts": [
+    "out/revolut-pocket-0.39/revolut-pocket-039.png",
+    "out/revolut-pocket-0.39/revolut-pocket-039-filtered.log"
+  ]
+}

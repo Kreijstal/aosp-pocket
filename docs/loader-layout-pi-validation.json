@@ -1,0 +1,30 @@
+{
+  "exitCode": 0,
+  "log": "PROC_VIEW_PASS inline_svc=1 dirfd=1 aliases=1 smaps=1 deleted=1 metadata=1 fdinfo=1 readv=1 pread=1 dup=1 threads=1 fork_exec=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nloader-fixture\nSHELL_EXEC_PASS\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_CHAIN_PASS execs=16 filters=2 libcBytes=858956 differentBytes=0 tracerPid=0 kernelUid=10175\nLOADER_TEST_PASS fork=1 threads=1 exec=16 empty_env=1 argv=1 mask=1 unchanged_bionic=1 no_tracer=1\n",
+  "hostUid": 10175,
+  "passed": true,
+  "procView": {
+    "inline_svc": 1,
+    "dirfd": 1,
+    "aliases": 1,
+    "smaps": 1,
+    "deleted": 1,
+    "metadata": 1,
+    "fdinfo": 1,
+    "readv": 1,
+    "pread": 1,
+    "dup": 1,
+    "threads": 1,
+    "fork_exec": 1
+  },
+  "native": {
+    "execs": 16,
+    "filtersPerProcess": 2,
+    "bionicExecutableBytesCompared": 858956,
+    "differentBytes": 0,
+    "tracerPid": 0,
+    "kernelUid": 10175
+  },
+  "command": "python3 /home/pi/test_exec_loader_on_pi.py --apk /home/pi/samsung-loader-fix-test.apk --proc-view",
+  "scope": "Separate non-debuggable Android APK under its normal untrusted_app domain; not a full Android guest boot"
+}

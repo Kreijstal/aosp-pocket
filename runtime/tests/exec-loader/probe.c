@@ -61,8 +61,15 @@ static unsigned status(void) {
     fclose(file);return (unsigned)filters;
 }
 static void dummy(int signal) {(void)signal;}
+#include "proc_view.h"
 int main(int argc,char** argv) {
     setbuf(stdout,NULL);setbuf(stderr,NULL);
+    if(argc==2 && !strcmp(argv[1],"unprepared")) {
+        char name[64]={0};CHECK(readlink("/proc/self/exe",name,sizeof(name))==22 && !memcmp(name,"/system/bin/unprepared",22));
+        bytes_unchanged();contents(open("/fixture.txt",O_RDONLY));puts("LOADER_UNPREPARED_EXEC_PASS");return 0;
+    }
+    if(argc==3 && !strcmp(argv[1],"proc-inherited")) {proc_report(atoi(argv[2]));return 0;}
+    if(argc==1)proc_views();
     unsigned filters=status();bytes_unchanged();contents(open("/fixture.txt",O_RDONLY));contents(direct_open("/fixture.txt"));
     int directory=open("/",O_RDONLY|O_DIRECTORY);CHECK(directory>=0);contents(openat(directory,"fixture.txt",O_RDONLY));close(directory);
     struct stat st;CHECK(!fstatat(AT_FDCWD,"/fixture.txt",&st,0) && st.st_size==15);
@@ -73,7 +80,9 @@ int main(int argc,char** argv) {
     static const char read_only[]="read-only-buffer";
     CHECK(syscall(SYS_readlinkat,AT_FDCWD,"/fixture-link",(void*)read_only,sizeof(read_only))==-1 && errno==EFAULT);
     CHECK(!strcmp(read_only,"read-only-buffer"));
-    memset(link,0,sizeof(link));CHECK(readlink("/proc/self/exe",link,sizeof(link))==17 && !memcmp(link,"/system/bin/probe",17));
+    memset(link,0,sizeof(link));ssize_t executable_size=readlink("/proc/self/exe",link,sizeof(link));
+    if(executable_size!=17 || memcmp(link,"/system/bin/probe",17))fprintf(stderr,"LOADER_EXE actual=%.*s size=%zd\n",(int)(executable_size>0?executable_size:0),link,executable_size);
+    CHECK(executable_size==17 && !memcmp(link,"/system/bin/probe",17));
     CHECK(direct_open((const char*)1)==-EFAULT);
     size_t page=(size_t)sysconf(_SC_PAGESIZE);
     char* guarded=mmap(NULL,2*page,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);CHECK(guarded!=MAP_FAILED);
@@ -84,7 +93,10 @@ int main(int argc,char** argv) {
     CHECK(direct_open(guarded+page)==-EFAULT);CHECK(!munmap(guarded,2*page));
     char* empty[]={NULL};char* bad[]={"bad",NULL};
     CHECK(execve("/missing",bad,empty)==-1 && errno==ENOENT);
-    CHECK(execve("/system/bin/unprepared",bad,empty)==-1 && errno==ENOEXEC);
+    // Current loader runs unprepared ELF programs through its own interpreter.
+    pid_t unprepared=fork();CHECK(unprepared>=0);
+    if(!unprepared){char* args[]={"unprepared","unprepared",NULL};execve("/system/bin/unprepared",args,empty);_exit(120);}
+    int unprepared_status;CHECK(waitpid(unprepared,&unprepared_status,0)==unprepared && WIFEXITED(unprepared_status) && WEXITSTATUS(unprepared_status)==0);
     CHECK(execve("/script.sh",bad,empty)==-1 && errno==ENOEXEC);
     struct sigaction action={0};action.sa_handler=dummy;
     CHECK(sigaction(SIGSYS,&action,NULL)==-1 && errno==EBUSY);

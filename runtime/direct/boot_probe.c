@@ -58,8 +58,11 @@ static int prepare_data(uid_t kernel_uid) {
     CHECK(!strcmp(canonical,"/data") && chdir("/")==0);close(data);
     puts("DIRECT_DATA_VIEW_PASS canonical_cwd_fd=/data mount_semantics=virtual");
     CHECK(mkdir("/dev/input",0755)==0 || errno==EEXIST);
+    int encrypted=access("/.pocket-ce-enabled",F_OK)==0;
     for (size_t i=0;i<sizeof(dirs)/sizeof(*dirs);++i) {
         const struct Directory* d=&dirs[i];
+        if(encrypted && (!strcmp(d->path,"/data/user/0") || !strcmp(d->path,"/data/system_ce/0") ||
+            !strcmp(d->path,"/data/misc_ce/0") || !strcmp(d->path,"/data/media/0")))continue;
         CHECK(mkdir(d->path,d->mode)==0 || errno==EEXIST);
         CHECK(chmod(d->path,d->mode)==0 && chown(d->path,d->uid,d->gid)==0);
         struct stat st;CHECK(stat(d->path,&st)==0 && S_ISDIR(st.st_mode));
@@ -67,12 +70,14 @@ static int prepare_data(uid_t kernel_uid) {
         int fd=open(d->path,O_RDONLY|O_DIRECTORY|O_CLOEXEC);CHECK(fd>=0);
         CHECK(syscall(SYS_fstat,fd,&st)==0 && st.st_uid==(syscall_backend?d->uid:kernel_uid));close(fd);
     }
-    CHECK(symlink("user/0","/data/data")==0 || errno==EEXIST);
+    if(!encrypted)CHECK(symlink("user/0","/data/data")==0 || errno==EEXIST);
     CHECK(mkdir("/storage",0755)==0 || errno==EEXIST);
     CHECK(mkdir("/storage/self",0755)==0 || errno==EEXIST);
     CHECK(symlink("/data/media","/storage/emulated")==0 || errno==EEXIST);
-    CHECK(symlink("../emulated/0","/storage/self/primary")==0 || errno==EEXIST);
-    CHECK(symlink("/storage/emulated/0","/sdcard")==0 || errno==EEXIST);
+    if(!encrypted) {
+        CHECK(symlink("../emulated/0","/storage/self/primary")==0 || errno==EEXIST);
+        CHECK(symlink("/storage/emulated/0","/sdcard")==0 || errno==EEXIST);
+    }
     CHECK(symlink("/data/cache","/cache")==0 || errno==EEXIST);
     struct statvfs cache;CHECK(statvfs("/data/cache",&cache)==0 && cache.f_bsize>0);
     CHECK(__system_property_set("pocket.data.ready","1")==0);
@@ -90,7 +95,7 @@ static int check_groups(void) {
 int main(int argc,char** argv) {
     setbuf(stdout,NULL);
     const char* backend=getenv("POCKET_SYSCALL_BACKEND");
-    syscall_backend=backend && !strcmp(backend,"proot");
+    syscall_backend=backend && (!strcmp(backend,"proot") || !strcmp(backend,"native"));
     uid_t kernel_uid=syscall_backend?pocket_kernel_uid_from_proc():(uid_t)syscall(SYS_getuid);
     gid_t kernel_groups[64], after[64];
     long count=syscall(SYS_getgroups,64,kernel_groups);

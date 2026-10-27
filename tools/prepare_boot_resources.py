@@ -18,7 +18,7 @@ def prepare_resources(arch=None):
     root=ROOT/('out/boot/platform' if arch=='arm64' else 'out/boot/platform-'+arch)
     framework=arch_info(arch)["framework"]
     marker=root/'.source'
-    if marker.exists() and marker.read_text().strip()==digest+'-graphics-v1':
+    if marker.exists() and marker.read_text().strip()==digest+'-graphics-input-v2':
         for path in root.rglob("*"):
             if path.is_file(): path.chmod(path.stat().st_mode | 0o400)
         return root
@@ -31,7 +31,7 @@ def prepare_resources(arch=None):
             path=PurePosixPath(entry.name)
             if path.is_absolute() or '..' in path.parts: raise SystemExit('Unsafe platform path')
             name=path.as_posix()
-            selected=name.startswith(('system/etc/','system/fonts/',f'system/framework/oat/{framework}/','system/app/','system/priv-app/','system/bin/','vendor/lib64/','vendor/bin/','vendor/etc/')) or name in ('system/framework/framework-res.apk','vendor/build.prop')
+            selected=name.startswith(('system/etc/','system/fonts/','system/usr/keychars/','system/usr/keylayout/','system/usr/idc/',f'system/framework/oat/{framework}/','system/app/','system/priv-app/','system/bin/','vendor/lib64/','vendor/bin/','vendor/etc/')) or name in ('system/framework/framework-res.apk','vendor/build.prop')
             if not selected: continue
             if entry.issym():
                 target=posixpath.normpath(entry.linkname.lstrip('/') if entry.linkname.startswith('/') else posixpath.join(posixpath.dirname(name),entry.linkname))
@@ -52,7 +52,7 @@ def prepare_resources(arch=None):
         if source.is_file(): shutil.copy2(source,root/name)
     for name in ('services.jar','ethernet-service.jar','wifi-service.jar','com.android.location.provider.jar'):
         shutil.copy2(reference/'system/framework'/name,root/'system/framework'/name)
-    marker.write_text(digest+'-graphics-v1\n')
+    marker.write_text(digest+'-graphics-input-v2\n')
     return root
 
 

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 from pathlib import Path
 import zipfile
+from boot_class_manifest import manifest, GUEST_PATH
 
 ROOT = Path(__file__).resolve().parents[1]
 out=ROOT / "out/boot"
@@ -12,6 +13,7 @@ with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(out / "packed.ap
         if path.is_file(): apk.write(path,"assets/api28-rootfs/"+path.relative_to(out / "rootfs").as_posix()+".payload")
     apk.write(ROOT / "out/api28/art-probe.dex","assets/api28-rootfs/data/pocket-art-probe.dex.payload")
     apk.write(out / "pocket-zygote.jar","assets/api28-rootfs/system/framework/pocket-zygote.jar.payload")
+    apk.writestr('assets/api28-rootfs/'+GUEST_PATH+'.payload',manifest(out/'pocket-zygote.jar'))
     apk.write(ROOT / "out/api28/bootclasspath.txt","assets/bootclasspath.txt")
     apk.write(out / "hooks.json","assets/direct-boot-hooks.json")
     apk.write(ROOT / "sources.lock.json","assets/sources.lock.json")

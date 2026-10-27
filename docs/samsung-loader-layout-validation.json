@@ -1,0 +1,49 @@
+{
+  "result": "PASS",
+  "device": "SM-G780G",
+  "kernel": "4.19.113-27223811",
+  "checkedAtUtc": "2026-10-22T13:24:43Z",
+  "scope": "Isolated Termux child processes; no full Manager boot claim",
+  "runs": [
+    {
+      "guestIdentity": false,
+      "exitCode": 0,
+      "logicalUid": 10401,
+      "kernelUid": 10401,
+      "tracerPid": 0,
+      "mappingSegments": [
+        "5000000000-500000a000 r-xp 00000000 103:14 216165                        /system/bin/pocket-loader",
+        "500000c000-500000d000 r--p 0000c000 103:14 216165                        /system/bin/pocket-loader",
+        "5000010000-5000014000 rw-p 00010000 103:14 216165                        /system/bin/pocket-loader",
+        "5000300000-5000304000 r-xp 00014000 103:14 216165                        /system/bin/pocket-loader",
+        "7c40f84000-7c41056000 r-xp 00000000 103:14 308493                        /system/lib64/libc.so",
+        "7c4106e000-7c41074000 r--p 000da000 103:14 308493                        /system/lib64/libc.so",
+        "7c41074000-7c41076000 rw-p 000e0000 103:14 308493                        /system/lib64/libc.so",
+        "7c4128b000-7c413b2000 r-xp 00000000 103:14 217917                        /system/bin/linker64",
+        "7c413d0000-7c413db000 r--p 00135000 103:14 217917                        /system/bin/linker64",
+        "7c413db000-7c413dc000 rw-p 00140000 103:14 217917                        /system/bin/linker64"
+      ],
+      "shellAndNestedExec": "PASS"
+    },
+    {
+      "guestIdentity": true,
+      "exitCode": 0,
+      "logicalUid": 0,
+      "kernelUid": 10401,
+      "tracerPid": 0,
+      "mappingSegments": [
+        "5000000000-500000a000 r-xp 00000000 103:14 216165                        /system/bin/pocket-loader",
+        "500000c000-500000d000 r--p 0000c000 103:14 216165                        /system/bin/pocket-loader",
+        "5000010000-5000014000 rw-p 00010000 103:14 216165                        /system/bin/pocket-loader",
+        "5000300000-5000304000 r-xp 00014000 103:14 216165                        /system/bin/pocket-loader",
+        "7019f02000-7019fd4000 r-xp 00000000 103:14 308493                        /system/lib64/libc.so",
+        "7019fec000-7019ff2000 r--p 000da000 103:14 308493                        /system/lib64/libc.so",
+        "7019ff2000-7019ff4000 rw-p 000e0000 103:14 308493                        /system/lib64/libc.so",
+        "701a0ab000-701a1d2000 r-xp 00000000 103:14 217917                        /system/bin/linker64",
+        "701a1f0000-701a1fb000 r--p 00135000 103:14 217917                        /system/bin/linker64",
+        "701a1fb000-701a1fc000 rw-p 00140000 103:14 217917                        /system/bin/linker64"
+      ],
+      "shellAndNestedExec": "PASS"
+    }
+  ]
+}

@@ -19,8 +19,23 @@ public final class MainActivity extends Activity {
                 File root=new File(getFilesDir(),"root");extract("root",root);
                 Path link=new File(root,"fixture-link").toPath();Files.deleteIfExists(link);Files.createSymbolicLink(link,Paths.get("fixture.txt"));
                 boolean boot=getIntent().getBooleanExtra("boot",false);
-                if(boot)for(String name:new String[]{".pocket-owner","dev/socket","dev/__properties__","dev/input","data","logs"}) {
+                boolean firewall=getIntent().getBooleanExtra("firewall",false);
+                boolean denylist=getIntent().getBooleanExtra("denylist",false);
+                if(!denylist)Files.deleteIfExists(new File(root,".pocket-module-view/ready").toPath());
+                if(boot || firewall || denylist)for(String name:new String[]{".pocket-owner","dev/socket","dev/__properties__","dev/input","data","logs"}) {
                     File directory=new File(root,name);if(!directory.isDirectory() && !directory.mkdirs())throw new IOException("Cannot create "+name);
+                }
+                if(denylist) {
+                    for(String name:new String[]{"system/etc","sbin/.magisk","data/adb/modules/test",".pocket-module-view/system/etc"})new File(root,name).mkdirs();
+                    Files.write(new File(root,"system/etc/denylist-view").toPath(),"base".getBytes("UTF-8"));
+                    Files.write(new File(root,".pocket-module-view/system/etc/denylist-view").toPath(),"overlay".getBytes("UTF-8"));
+                    Files.write(new File(root,"system/bin/su").toPath(),"fixture".getBytes("UTF-8"));
+                    Files.write(new File(root,"sbin/magisk").toPath(),"fixture".getBytes("UTF-8"));
+                    Path alias=new File(root,"alias-su").toPath();Files.deleteIfExists(alias);Files.createSymbolicLink(alias,new File(root,"sbin/magisk").toPath());
+                    for(String name:new String[]{"bin","lib64"}) {
+                        Path view=new File(root,".pocket-module-view/system/"+name).toPath();Files.deleteIfExists(view);Files.createSymbolicLink(view,new File(root,"system/"+name).toPath());
+                    }
+                    Files.write(new File(root,".pocket-module-view/ready").toPath(),new byte[]{1});
                 }
                 if(boot) {
                     // Property areas are volatile per init lifetime. Touch only
@@ -32,8 +47,8 @@ public final class MainActivity extends Activity {
                     }
                 }
                 File output=boot?new File(root,"logs/init.log"):new File(getFilesDir(),"native.log");
-                ProcessBuilder builder=new ProcessBuilder(new File(root,boot?"system/bin/init-probe":"system/bin/probe").getPath()).directory(root);
-                builder.environment().clear();if(boot) {
+                ProcessBuilder builder=denylist?new ProcessBuilder(new File(root,"system/bin/denylist-probe").getPath(),root.getPath()).directory(root):new ProcessBuilder(new File(root,firewall?"system/bin/firewall-probe":boot?"system/bin/init-probe":"system/bin/probe").getPath()).directory(root);
+                builder.environment().clear();if(boot || firewall || denylist) {
                     builder.environment().put("POCKET_LOADER_BOOT","1");
                     builder.environment().put("ANDROID_ROOT","/system");
                     builder.environment().put("ANDROID_DATA","/data");
@@ -43,7 +58,19 @@ public final class MainActivity extends Activity {
                 if(!process.waitFor(160,TimeUnit.SECONDS)){process.destroyForcibly();throw new IOException("Native loader timed out");}
                 String log=new String(Files.readAllBytes(output.toPath()),"UTF-8");
                 report.put("exitCode",process.exitValue()).put("log",log).put("hostUid",android.os.Process.myUid());
-                report.put("passed",process.exitValue()==0 && log.contains(boot?"NATIVE_INIT_ZYGOTE_PASS":"LOADER_TEST_PASS"));
+                boolean passed=process.exitValue()==0 && log.contains(denylist?"DENYLIST_VIEW_PASS":firewall?"NATIVE_FIREWALL_PASS":boot?"NATIVE_INIT_ZYGOTE_PASS":"LOADER_TEST_PASS");
+                if(firewall) {
+                    // The native test leaves guest OUTPUT denied. This host
+                    // process must still be able to send its own datagrams.
+                    try(java.net.DatagramSocket receiver=new java.net.DatagramSocket(0,java.net.InetAddress.getLoopbackAddress());
+                        java.net.DatagramSocket sender=new java.net.DatagramSocket()) {
+                        receiver.setSoTimeout(2000);byte[] data={42};
+                        sender.send(new java.net.DatagramPacket(data,1,java.net.InetAddress.getLoopbackAddress(),receiver.getLocalPort()));
+                        java.net.DatagramPacket packet=new java.net.DatagramPacket(new byte[1],1);receiver.receive(packet);
+                        boolean hostOk=packet.getData()[0]==42;report.put("hostTrafficUnaffected",hostOk);passed=passed && hostOk;
+                    }
+                }
+                report.put("passed",passed);
             }catch(Throwable error){try{report.put("passed",false).put("error",error.toString());}catch(Exception ignored){}}
             try{Files.write(new File(getFilesDir(),"report.json").toPath(),report.toString(2).getBytes("UTF-8"));}catch(Exception ignored){}
             final String display=report.toString();runOnUiThread(()->text.setText(display));

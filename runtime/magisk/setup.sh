@@ -30,7 +30,18 @@ $TB mkdir -p /sbin/.magisk/device /sbin/.magisk/busybox /data/adb/magisk /data/a
 $TB chmod 700 /data/adb
 $TB cp /data/adb/magisk/magisk /sbin/magisk
 $TB chmod 755 /sbin/magisk
+# magiskd trusts only a Magisk app whose certificate matches this stub, as
+# magiskinit arranges upstream; without it a release daemon uninstalls the app.
+if [ -f /data/adb/magisk/stub.apk ]; then $TB cp /data/adb/magisk/stub.apk /sbin/stub.apk; fi
 $TB chmod 755 /data/adb/magisk/busybox
+# Emulated preinit partition: persistent storage for module sepolicy.rule, which
+# Magisk mounts at .magisk/preinit. The loader reports the node as a block
+# device. The guest runs with SELinux disabled, so stored rules restrict nothing.
+$TB mkdir -p /data/adb/pocket-preinit
+$TB chmod 700 /data/adb/pocket-preinit
+$TB touch /sbin/.magisk/device/preinit
+$TB chmod 600 /sbin/.magisk/device/preinit
+$TB ln -sfn /data/adb/pocket-preinit /sbin/.magisk/preinit
 $TB ln -sf /sbin/magisk /system/bin/magisk
 $TB ln -sf /sbin/magisk /system/bin/su
 $TB ln -sf /sbin/magisk /system/bin/resetprop

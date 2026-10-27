@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketwebviewtest">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:label="Pocket WebView test" android:allowBackup="false">
+        <activity android:name=".MainActivity" android:exported="true" />
+    </application>
+</manifest>

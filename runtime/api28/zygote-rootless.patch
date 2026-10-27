@@ -493,11 +493,19 @@
  
  #include <binder/IPCThreadState.h>
 -#include <hwbinder/IPCThreadState.h>
-+
++#include "boot_classes.h"
  #include <utils/Log.h>
  #include <cutils/memory.h>
  #include <cutils/properties.h>
-@@ -85,7 +85,7 @@
+@@ -49,6 +49,7 @@
+     virtual void onVmCreated(JNIEnv* env)
+     {
++        pocketLoadBootClasses(env);
+         if (mClassName.isEmpty()) {
+             return; // Zygote. Nothing to do here.
+         }
+ 
+@@ -85,7 +86,7 @@
          ar->callMain(mClassName, mClass, mArgs);
  
          IPCThreadState::self()->stopProcess();

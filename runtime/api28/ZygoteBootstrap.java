@@ -7,11 +7,11 @@ public final class ZygoteBootstrap {
     public static void main(String[] args) throws Exception {
         System.load("/system/lib64/libpocket_zygote_api28.so");
         install();
-        if (System.getenv("POCKET_DIRECT_ROOT")!=null || "proot".equals(System.getenv("POCKET_SYSCALL_BACKEND"))) {
+        if (System.getenv("POCKET_DIRECT_ROOT")!=null || System.getenv("POCKET_SYSCALL_BACKEND")!=null) {
             // --enable-lazy-preload skips ZygoteInit.warmUpJcaProviders().
             // Register the stock providers before forking, so ordinary apps
             // inherit AndroidKeyStore and the matching BC workaround provider.
-            // This class is loaded on the guest bootstrap class path; an
+            // This class is defined by the guest boot class loader; an
             // untrusted app cannot perform this hidden framework call.
             if (java.security.Security.getProvider("AndroidKeyStore")==null) {
                 Class.forName("android.security.keystore.AndroidKeyStoreProvider")
@@ -33,6 +33,11 @@ public final class ZygoteBootstrap {
             float width=(Float)paintClass.getMethod("measureText",String.class).invoke(paint,"Android");
             if(!(width>0) || Float.isInfinite(width))throw new IllegalStateException("Font measurement failed");
             System.err.println("DIRECT_FONTS_READY default_typeface=1 measured_width="+width);
+            // The Binder/HIDL shims are mapped now, and forked apps and
+            // system_server inherit them. Do not pass them on to programs
+            // those processes exec (sh, su, toybox): each preloaded exec
+            // maps the whole Binder stack through the loader first.
+            android.system.Os.unsetenv("LD_PRELOAD");
         }
         Class<?> init = Class.forName("com.android.internal.os.ZygoteInit");
         try { init.getMethod("main", String[].class).invoke(null, (Object)args); }

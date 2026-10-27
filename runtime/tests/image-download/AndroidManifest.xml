@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketimagetest">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:label="Pocket image install test" android:allowBackup="false" android:usesCleartextTraffic="true">
+        <activity android:name="dev.kreijstal.aosppocket.runtime.ImageInstallProbe" android:exported="true" />
+    </application>
+</manifest>

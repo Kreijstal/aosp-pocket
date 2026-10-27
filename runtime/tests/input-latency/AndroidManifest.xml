@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketinputlatency">
+    <application android:label="Pocket input latency test" android:allowBackup="false">
+        <activity android:name=".MainActivity" android:exported="true" />
+        <activity android:name=".TypingActivity" android:exported="true" />
+    </application>
+</manifest>

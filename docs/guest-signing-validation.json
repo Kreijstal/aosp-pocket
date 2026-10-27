@@ -1,0 +1,586 @@
+{
+  "status": "PASS: private-key guest image installed on Pi; disposable upgrade and restored original data verified; Attest Probe has zero failures",
+  "version": "0.70",
+  "baseVersion": "camera 0.69",
+  "guestAndroid": 9,
+  "guestSdk": 28,
+  "buildType": "userdebug",
+  "buildTags": "release-keys",
+  "frameworkRecompiled": false,
+  "privateKeysBundled": false,
+  "privateKeysDirectory": "~/.config/pocket-guest-release-keys (mode 0700; keys mode 0600)",
+  "originalGuestData": "Restored original directories with their inodes; encrypted key/state and package-file hashes matched before boot. Original password and encrypted-data canary verified after boot.",
+  "signingAudit": {
+    "validation": "PASS",
+    "version": "0.70",
+    "baseApkSha256": "789727fe6b590e19bcd2df4b1c6d8ec60089fd7de790fccd42100edc54599ddb",
+    "apkSha256": "49a7af0fa6ba36e58746db706791578b0fd27ec7173377135e11220a0843a5ff",
+    "hostDexSha256": "2714d9387e2dca18a6333ca47ab6f4ad0280bdbf847c3ab0d7b58e770dc82699",
+    "changedEntries": [
+      "AndroidManifest.xml",
+      "assets/api28-rootfs/system/app/CertInstaller/CertInstaller.apk.payload",
+      "assets/api28-rootfs/system/app/DeskClock/DeskClock.apk.payload",
+      "assets/api28-rootfs/system/app/ExtShared/ExtShared.apk.payload",
+      "assets/api28-rootfs/system/app/KeyChain/KeyChain.apk.payload",
+      "assets/api28-rootfs/system/app/LatinIME/LatinIME.apk.payload",
+      "assets/api28-rootfs/system/app/PocketHostPhone/PocketHostPhone.apk.payload",
+      "assets/api28-rootfs/system/build.prop.payload",
+      "assets/api28-rootfs/system/etc/pocket-release-signing.json.payload",
+      "assets/api28-rootfs/system/etc/pocket-smoke.apk.payload",
+      "assets/api28-rootfs/system/etc/prop.default.payload",
+      "assets/api28-rootfs/system/etc/security/otacerts.zip.payload",
+      "assets/api28-rootfs/system/etc/selinux/plat_mac_permissions.xml.payload",
+      "assets/api28-rootfs/system/framework/framework-res.apk.payload",
+      "assets/api28-rootfs/system/priv-app/Contacts/Contacts.apk.payload",
+      "assets/api28-rootfs/system/priv-app/ContactsProvider/ContactsProvider.apk.payload",
+      "assets/api28-rootfs/system/priv-app/DefaultContainerService/DefaultContainerService.apk.payload",
+      "assets/api28-rootfs/system/priv-app/DownloadProvider/DownloadProvider.apk.payload",
+      "assets/api28-rootfs/system/priv-app/ExtServices/ExtServices.apk.payload",
+      "assets/api28-rootfs/system/priv-app/ExternalStorageProvider/ExternalStorageProvider.apk.payload",
+      "assets/api28-rootfs/system/priv-app/FusedLocation/FusedLocation.apk.payload",
+      "assets/api28-rootfs/system/priv-app/InputDevices/InputDevices.apk.payload",
+      "assets/api28-rootfs/system/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk.payload",
+      "assets/api28-rootfs/system/priv-app/MediaProvider/MediaProvider.apk.payload",
+      "assets/api28-rootfs/system/priv-app/PackageInstaller/PackageInstaller.apk.payload",
+      "assets/api28-rootfs/system/priv-app/Provision/Provision.apk.payload",
+      "assets/api28-rootfs/system/priv-app/ProxyHandler/ProxyHandler.apk.payload",
+      "assets/api28-rootfs/system/priv-app/Settings/Settings.apk.payload",
+      "assets/api28-rootfs/system/priv-app/SettingsProvider/SettingsProvider.apk.payload",
+      "assets/api28-rootfs/system/priv-app/Shell/Shell.apk.payload",
+      "assets/api28-rootfs/system/priv-app/SystemUI/SystemUI.apk.payload"
+    ],
+    "guestApks": [
+      {
+        "path": "system/app/CertInstaller/CertInstaller.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "b1daec276d14ebdee09c015c9eb99127073507268d454371ef8966f16afb3138",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "56d2c57490bd4341c5a6ba14de4835abec54bdc89df75f24a9937b190826bb20",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/app/DeskClock/DeskClock.apk",
+        "originalSignerSha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+        "originalApkSha256": "307cb4295219e1fbf797cb008d3a807e0def463fb4e8030ec0a71bd2e35f5b2b",
+        "keyRole": "releasekey",
+        "action": "re-signed",
+        "signerSha256": "92c68006114bc4d93302198d2eb9fc51603956d5433fb6693856635c011a0428",
+        "apkSha256": "43ae8ee108dca690a9ae9cc8f83a93485db0097d562069b126d62b8fbe69e46b",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/app/ExtShared/ExtShared.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "428e3f1cd79c9a28e95d6692da788e66db79fba4a4f9fe36e44b4f668312cad7",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "e52711ffe69f17ea512cda867732cd6db06e33c5481828a1977fc33cc126c0af",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/app/KeyChain/KeyChain.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "f0b41ba072f2caceff30556a96092437aeb4cb0dba99bc738a953573e84b1ab9",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "940c4cca763fcb90756abc871386ee8e4028cc20360b19959792b90e183d92f8",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/app/LatinIME/LatinIME.apk",
+        "originalSignerSha256": "28bbfe4a7b97e74681dc55c2fbb6ccb8d6c74963733f6af6ae74d8c3a6e879fd",
+        "originalApkSha256": "e84a4028df6dcc2bec4b43c99293feeff5adf824b964ea948fb13122b0f22d84",
+        "keyRole": "shared",
+        "action": "re-signed",
+        "signerSha256": "fc62c0f17d6ad572e254fc5ea33475927d209f195f1fa0ef62010c4820f04bf8",
+        "apkSha256": "7b92be642f2ff1d19d59799530ab3f82216e6b54a3ad7e6df342cd08b523c578",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/etc/pocket-smoke.apk",
+        "originalSignerSha256": "b04ea6cd081f4b5afb30b25f5492ccd044c821fd1e17d18c72067f1b9fcf6916",
+        "originalApkSha256": "c65359399309a4796543167e6343ee8c49bdf9c6df5dc9c6e5ae3097d0a4c893",
+        "keyRole": "pocket",
+        "action": "re-signed",
+        "signerSha256": "9fcd8cb76b8c6db29982cc4bb5c63582838850fd84756155980337054da0d8c4",
+        "apkSha256": "28beb26925956f9f128a25e51f37d33c7810804a23c845fca01854dd3e256bdd",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/framework/framework-res.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "19c53ef9e495213031083eb6c961f216b3b94d5095c8d026a696e81c76e1ab54",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "9e92e100f985487ea9f06874ab526761be472031e3f41a67ca56d2300342ba5d",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/Contacts/Contacts.apk",
+        "originalSignerSha256": "28bbfe4a7b97e74681dc55c2fbb6ccb8d6c74963733f6af6ae74d8c3a6e879fd",
+        "originalApkSha256": "c44252c1b351c5f9815c712d9044695e375856a42db0af3ed0f00597c0ac6f3d",
+        "keyRole": "shared",
+        "action": "re-signed",
+        "signerSha256": "fc62c0f17d6ad572e254fc5ea33475927d209f195f1fa0ef62010c4820f04bf8",
+        "apkSha256": "9757ecba662aeccc23217691a921cc5f36bd7d8d271e189bdfc970da45a2b550",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/ContactsProvider/ContactsProvider.apk",
+        "originalSignerSha256": "28bbfe4a7b97e74681dc55c2fbb6ccb8d6c74963733f6af6ae74d8c3a6e879fd",
+        "originalApkSha256": "d3b52fc631a82e4cdc8b3040906ebf9a0025bdcd7c6e113bfb7e0bcf3c4d98fc",
+        "keyRole": "shared",
+        "action": "re-signed",
+        "signerSha256": "fc62c0f17d6ad572e254fc5ea33475927d209f195f1fa0ef62010c4820f04bf8",
+        "apkSha256": "bfd05c2da03615690fbdfc0742f5836478f4fac53499d9934768eebf0db0d2fa",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/DefaultContainerService/DefaultContainerService.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "9bb5c8a1fdbfb5a94d7741768fb4fd715b14453c078c4ee975f9ad69c79ff6dd",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "16f27df92c6e2c45658f3b1025eb8539d146e809e5e280efc1759e88cafd865b",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/DownloadProvider/DownloadProvider.apk",
+        "originalSignerSha256": "465983f7791f2abeb43ea2cbdc7f21a8260b72bc08a55c839fc1a43bc741a81e",
+        "originalApkSha256": "b3d4097a1ca5a7282acb63ff26fbeb13e7f78c6c268b742e49e22d87ec46d7b2",
+        "keyRole": "media",
+        "action": "re-signed",
+        "signerSha256": "a31a2bcceec047e4451a9469ad12bc98616101d33b3622fe1791d78e5ab544f2",
+        "apkSha256": "c605300d1a02cf47a73ff3ceac6bdec5dcfa2e707aff350bac7e528044792530",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/ExtServices/ExtServices.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "141154930cf0d6f4782b5383c1b04214442ce7f84677a671350fd95451b6182e",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "f910906e4a817cfcd2c17e6a7148d99d438f2ba339d268fbcffbcb6d47be6404",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/ExternalStorageProvider/ExternalStorageProvider.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "e1b44c952394938b4b11e51582e037d89d96cab9a2fd0446c7132972fb3222da",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "3bef96378f0a0ee14ec0ed4b63ff0d82a7ddea5f1dba707bd9f3942e2422f8a0",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/FusedLocation/FusedLocation.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "8cd2039e6b196249378af238bf1fe1f3636efaa46972a823012338c7f67bb3bf",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "4fcd35f471b0876e984037cc1fce30dfe4181d05697d718894aa2ec661f3b76e",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/InputDevices/InputDevices.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "78a54255f91c1d764e4b1a607562df407912ee305088880e5200ce97e671ab9a",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "ab45d95a12d442e02d801b3f907ab6ecf8421c67ddcb56ef9ec6b8c0f26e9262",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk",
+        "originalSignerSha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+        "originalApkSha256": "8b1b24876a13490944b959ce104f0e883dcaad4fc4550e50b0b08a15f3dc6261",
+        "keyRole": "releasekey",
+        "action": "re-signed",
+        "signerSha256": "92c68006114bc4d93302198d2eb9fc51603956d5433fb6693856635c011a0428",
+        "apkSha256": "47da1fb41e188fc90b586f80f3b6f5642a80d1e38207edb6e397b60f23b8f107",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/MediaProvider/MediaProvider.apk",
+        "originalSignerSha256": "465983f7791f2abeb43ea2cbdc7f21a8260b72bc08a55c839fc1a43bc741a81e",
+        "originalApkSha256": "e35f6d76704ef615dcf18b5446d7bf5ee85589b427f4211e5464d7822a62e35f",
+        "keyRole": "media",
+        "action": "re-signed",
+        "signerSha256": "a31a2bcceec047e4451a9469ad12bc98616101d33b3622fe1791d78e5ab544f2",
+        "apkSha256": "d05224ca5115a0e7508af09d33cff3894d3e2f8ceac6f4a2715e567192da535c",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/PackageInstaller/PackageInstaller.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "e89730e77a3f7045ca7e61f9ed64e9b01f98cbc8e64d07f137c2b426ba7be178",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "7037eb2d0f7b47503bcd11ce513bacb63d3f8291081f2337cbec01920359cf2c",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/Provision/Provision.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "0b26e868bb483e8cc3b7a201a8dc92523e6d8ddd5166b3294acf05649a092c5b",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "bac540aef86e686927a6fdc7a4ba8bb8394b4caa1a11bd3c75d63745c63447e6",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/ProxyHandler/ProxyHandler.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "3b7ee1fc7b7cfa1f766702a5deea3d8bfec45fc3305d95ea710359b11173925d",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "97ab5ac34d65cbd98fa9de6e608fc6b2c706a90e8af585f27f69edc8b883ef14",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/Settings/Settings.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "a772b60500f0bb67a59af53a45efba7f41f6cc1814fd5ad1eb77b35ac0954d8d",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "5e3ae7a6aba4b8d4e0537f712128b677b4b660d8f1cd7007fcfd33da7d774878",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/SettingsProvider/SettingsProvider.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "b7d7e6981ddd14a403d13b7a5880af7a6f9f18e38982541fb7f6bdf5e561ae40",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "f84093a4d038d769d56927bab6bc87474e9be3df42b61ff6baea43675f0a609d",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/Shell/Shell.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "5d4acf97f512312c66483ef5e112612fc48174448f6fdd269f6a9342949db8e4",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "2b2cb83db033623e3418197c61f99694e1272275a017c5819d737e951d8ec208",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/priv-app/SystemUI/SystemUI.apk",
+        "originalSignerSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+        "originalApkSha256": "09f93007c1236916183c131a93af329c54063ef522376ffa2be77e2c0d41ef26",
+        "keyRole": "platform",
+        "action": "re-signed",
+        "signerSha256": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+        "apkSha256": "a4de77be94b8aee459a954dbbdba7c2b0ace43a209203bbc4e4c367f6caee98b",
+        "payloadUnchanged": true
+      },
+      {
+        "path": "system/app/PocketHostPhone/PocketHostPhone.apk",
+        "originalSignerSha256": "b04ea6cd081f4b5afb30b25f5492ccd044c821fd1e17d18c72067f1b9fcf6916",
+        "originalApkSha256": "256de0d898d044b59fea1103dae0d1d50d5ec3160374158fc4f12decae8bb54d",
+        "keyRole": "pocket",
+        "action": "re-signed",
+        "signerSha256": "9fcd8cb76b8c6db29982cc4bb5c63582838850fd84756155980337054da0d8c4",
+        "apkSha256": "52d57e05552a0ae8834f4a215869ef869335ca7a03f2fbc1c0d94afab59afdc3",
+        "payloadUnchanged": true
+      }
+    ],
+    "format": 1,
+    "mode": "private-key guest re-signing",
+    "frameworkRecompiled": false,
+    "historicalTestKeysTrusted": false,
+    "certificates": {
+      "releasekey": "92c68006114bc4d93302198d2eb9fc51603956d5433fb6693856635c011a0428",
+      "platform": "19597b1574bfd64ebb0cbfd5afce986ffc4d695abb722b2063a2a114a3d62f5d",
+      "shared": "fc62c0f17d6ad572e254fc5ea33475927d209f195f1fa0ef62010c4820f04bf8",
+      "media": "a31a2bcceec047e4451a9469ad12bc98616101d33b3622fe1791d78e5ab544f2",
+      "pocket": "9fcd8cb76b8c6db29982cc4bb5c63582838850fd84756155980337054da0d8c4"
+    },
+    "apks": {
+      "system/app/CertInstaller/CertInstaller.apk": "platform",
+      "system/app/DeskClock/DeskClock.apk": "releasekey",
+      "system/app/ExtShared/ExtShared.apk": "platform",
+      "system/app/KeyChain/KeyChain.apk": "platform",
+      "system/app/LatinIME/LatinIME.apk": "shared",
+      "system/etc/pocket-smoke.apk": "pocket",
+      "system/framework/framework-res.apk": "platform",
+      "system/priv-app/Contacts/Contacts.apk": "shared",
+      "system/priv-app/ContactsProvider/ContactsProvider.apk": "shared",
+      "system/priv-app/DefaultContainerService/DefaultContainerService.apk": "platform",
+      "system/priv-app/DownloadProvider/DownloadProvider.apk": "media",
+      "system/priv-app/ExtServices/ExtServices.apk": "platform",
+      "system/priv-app/ExternalStorageProvider/ExternalStorageProvider.apk": "platform",
+      "system/priv-app/FusedLocation/FusedLocation.apk": "platform",
+      "system/priv-app/InputDevices/InputDevices.apk": "platform",
+      "system/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk": "releasekey",
+      "system/priv-app/MediaProvider/MediaProvider.apk": "media",
+      "system/priv-app/PackageInstaller/PackageInstaller.apk": "platform",
+      "system/priv-app/Provision/Provision.apk": "platform",
+      "system/priv-app/ProxyHandler/ProxyHandler.apk": "platform",
+      "system/priv-app/Settings/Settings.apk": "platform",
+      "system/priv-app/SettingsProvider/SettingsProvider.apk": "platform",
+      "system/priv-app/Shell/Shell.apk": "platform",
+      "system/priv-app/SystemUI/SystemUI.apk": "platform",
+      "system/app/PocketHostPhone/PocketHostPhone.apk": "pocket"
+    }
+  },
+  "validation": [
+    {
+      "command": "python3 tools/resign_guest.py --base-apk out/camera-0.69/aosp-pocket-manager-0.69.apk --out out/resign-0.70 --version 0.70 --key-dir /home/kreijstal/.config/pocket-guest-release-keys --test-certificates /home/kreijstal/git/s20fe-hardware-lab/artifacts/lineage/source/build/target/product/security",
+      "result": "PASS: 25 APKs have new private current signers; API-28 v3 verification; APK payloads unchanged; host DEX/native payloads unchanged; signing XML and OTA public certificate updated"
+    },
+    {
+      "command": "python3 tools/build_guest_signing_probe.py --key-dir /home/kreijstal/.config/pocket-guest-release-keys --test-keys /home/kreijstal/git/s20fe-hardware-lab/artifacts/lineage/source/build/target/product/security",
+      "result": "PASS: Java/D8 owner probe, old/public and new/private platform shared-UID test APKs, signatures verified"
+    },
+    {
+      "command": "python3 -m py_compile tools/resign_guest.py tools/build_guest_signing_probe.py tools/test_guest_resigning_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 ~/microg-test/test_guest_resigning_on_pi.py --base-apk ~/aosp-pocket-manager-0.69.apk --base-sha256 789727fe6b590e19bcd2df4b1c6d8ec60089fd7de790fccd42100edc54599ddb --base-version 0.69 --candidate-apk ~/pocket-resign-0.70.apk --candidate-sha256 49a7af0fa6ba36e58746db706791578b0fd27ec7173377135e11220a0843a5ff --candidate-version 0.70 --rollback-apk ~/pocket-resign-rollback-0.71.apk --rollback-sha256 8f455e1d95d0ea7e513e7523306fcb7eee5f965f7740fda55e85a4328c17cf4d --rollback-version 0.71 --probe ~/microg-test/guest-signing-probe.jar --owner ~/microg-test/microg-owner.jar --old-key-apk ~/microg-test/oldkey.apk --new-key-apk ~/microg-test/newkey.apk --resume",
+      "result": "PASS: resumed after Manager package-replacement reconnect; 24 current system certificates; Settings/Contacts records and system UIDs retained; old public platform key rejected for system UID, new private key accepted; original data restored and 0.70 booted"
+    },
+    {
+      "command": "python3 ~/test_guest_encryption_on_pi.py locked",
+      "result": "PASS: encrypted canary unavailable before unlock, wrong password rejected"
+    },
+    {
+      "command": "python3 ~/test_guest_lock_on_pi.py unlock --probe ~/microg-test/guest-lock-probe.jar",
+      "result": "PASS: existing password entered through the real secure lock-screen UI"
+    },
+    {
+      "command": "python3 ~/test_guest_encryption_on_pi.py verify",
+      "result": "PASS: encrypted-data canary preserved"
+    },
+    {
+      "command": "python3 ~/microg-test/test_installed_attest_on_pi.py --expect-version 0.70 --report ~/guest-resigned-attest-report.json --require-no-failures",
+      "result": "PASS: 48 PASS / 0 FAIL / 3 SKIP / 8 INFO; test-keys, Contacts, root paths and codecs PASS"
+    },
+    {
+      "command": "GuestSigningProbe inspect /data/local/tmp/signing-original-data.json (owner console), compared with the private pre-change package XML",
+      "result": "PASS: all 33 original installed packages present with unchanged UIDs; 24 system signing certificates match the private release key inventory"
+    }
+  ],
+  "sourceSha256": {
+    "tools/resign_guest.py": "0300b104901586a6b38754eff91787004fffa04f69ef5d5ad4345ff811b587d5",
+    "runtime/tests/GuestSigningProbe.java": "40d58dadf415aa29dc21415ce1699f9cd805434cd9aa63a0547d34cd684fee58",
+    "runtime/tests/SigningFixtureManifest.java": "257d25c55ed63be048dadb22522f60279f5b03df3475a590b2e0d96e8e584296",
+    "tools/build_guest_signing_probe.py": "5c0ff1334f3e041cd87d163a18d08ac264c847e78f18613d3b291174f3b7f83f",
+    "tools/test_guest_resigning_on_pi.py": "898cc24cc7939c787324286199adb93528a7a3fe3e7bb25ca3c2e90cd115d04b",
+    "tools/test_installed_attest_on_pi.py": "67a432f419d4fb52ad2beb099abeff636a2dc164ce25a026e63df19483ddea6b"
+  },
+  "limits": [
+    "Re-signing retains the development framework and its security patch level; it does not make a production user build or confer hardware attestation.",
+    "The Manager APK signing identity remains unchanged to preserve its UID, host keystore access and data.",
+    "No trust in old public keys is added via signing lineage; Android system-image upgrade compatibility is exercised in a disposable data set."
+  ],
+  "livePi": {
+    "installedVersion": "0.70",
+    "properties": {
+      "ro.build.tags": "release-keys",
+      "ro.build.type": "userdebug",
+      "ro.debuggable": "1"
+    },
+    "disposableUpgrade": {
+      "scope": "dedicated Pi VM; disposable guest data; original directories preserved",
+      "validation": "PASS",
+      "baseVersion": "0.69",
+      "candidateVersion": "0.70",
+      "rollbackVersion": "0.71",
+      "backup": "/home/pi/pocket-backups/guest-data-before-resigning-1792835096870503864.tar.gz",
+      "preservedDirectory": "/data/user/0/dev.kreijstal.aosppocket.runtime/files/resign-preserved-1792836722787742211",
+      "fixtureArchive": "/data/user/0/dev.kreijstal.aosppocket.runtime/files/resign-fixture-1792836722787742211",
+      "originalNames": [
+        ".pocket-ce-device",
+        ".pocket-ce-dirs",
+        ".pocket-ce-enabled",
+        ".pocket-ce-locks",
+        ".pocket-ce-root-xattrs",
+        ".pocket-ce-v1",
+        ".pocket-owner",
+        "system-data"
+      ],
+      "originalDataRestored": true,
+      "phase": "disposable baseline",
+      "publicTestPlatformKeyRejected": true,
+      "privatePlatformKeyAcceptedForSystemUid": true,
+      "installedVersion": "0.70"
+    },
+    "upgradeChecks": {
+      "installedCertificatesChecked": 24,
+      "settingsDataPreserved": true,
+      "contactsDataPreserved": true,
+      "systemUidsPreserved": true,
+      "validation": "PASS"
+    },
+    "originalPackageIdentities": {
+      "validation": "PASS",
+      "installedCertificatesChecked": 24,
+      "originalPackagesChecked": 33,
+      "uidChanges": [],
+      "missingPackages": []
+    },
+    "originalEncryptedStorage": {
+      "locked": {
+        "mode": "locked",
+        "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+        "beforeUnlockCatExitCode": 1,
+        "beforeUnlockStdoutBytes": 0,
+        "beforeUnlockCanaryReadable": false,
+        "wrongPasswordRejected": true,
+        "wrongPasswordOutput": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\nGUEST_CE_KEY_FAILED java.lang.SecurityException: Guest credential rejected\n",
+        "privateStorageUnavailableBeforeUnlock": true,
+        "validation": "PASS"
+      },
+      "normalPasswordUnlock": {
+        "scope": "Pocket Android 9 guest on dedicated Pi VM",
+        "mode": "unlock",
+        "exitCode": 0,
+        "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"unlock\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"interactive\":true,\"lockScreenEnabled\":true,\"uiPasswordUnlockVerified\":true,\"previouslyLocked\":true}\n",
+        "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\n",
+        "validation": "PASS",
+        "uid": 1000,
+        "previouslySecure": true,
+        "deviceSecure": true,
+        "keyguardSecure": true,
+        "keyguardLocked": false,
+        "correctPasswordVerified": true,
+        "interactive": true,
+        "lockScreenEnabled": true,
+        "uiPasswordUnlockVerified": true,
+        "previouslyLocked": true
+      },
+      "encryptedDataRecovered": {
+        "mode": "verify",
+        "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+        "unlockWaitMilliseconds": 1175,
+        "correctPasswordVerified": true,
+        "encryptedCanaryPreserved": true,
+        "validation": "PASS"
+      }
+    },
+    "attest": {
+      "summary": {
+        "pass": 48,
+        "fail": 0,
+        "skip": 3,
+        "info": 8,
+        "checks": 59,
+        "scope": "device_checks_excluding_optional_biometrics",
+        "deviceChecks": 59
+      },
+      "checks": [
+        {
+          "id": "root_su_paths",
+          "category": "ATTEST",
+          "description": "No su binary in the usual locations",
+          "status": "PASS",
+          "detail": "no su binaries found"
+        },
+        {
+          "id": "magisk_paths",
+          "category": "ATTEST",
+          "description": "No Magisk artifacts",
+          "status": "PASS",
+          "detail": "no Magisk artifacts"
+        },
+        {
+          "id": "build_tags_test_keys",
+          "category": "ATTEST",
+          "description": "Build is not signed with test-keys",
+          "status": "PASS",
+          "detail": "tags=release-keys"
+        },
+        {
+          "id": "section_codec",
+          "category": "RIDGE",
+          "description": "Ridge section 'codec'",
+          "status": "PASS",
+          "detail": "collected",
+          "data": {
+            "total": 6,
+            "encoders": 1,
+            "sample": [
+              "OMX.google.g711.alaw.decoder",
+              "OMX.google.g711.mlaw.decoder",
+              "OMX.google.mp3.decoder",
+              "OMX.google.raw.decoder",
+              "OMX.google.h264.decoder",
+              "OMX.google.h264.encoder"
+            ]
+          }
+        },
+        {
+          "id": "contacts_readable",
+          "category": "ACCESS",
+          "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+          "status": "PASS",
+          "detail": "contacts rows=0"
+        }
+      ]
+    },
+    "attestScope": "Installed, unchanged Attest Probe 1.10; provider already running after opening the real Contacts UI; no APK reinstall and no changed deadlines.",
+    "backupTransportFixture": {
+      "validation": "PASS",
+      "tests": [
+        {
+          "socketExcluded": false,
+          "adbExit": 0,
+          "remoteExit": 1,
+          "gzipIntegrity": "PASS",
+          "fileBytesPreserved": true,
+          "backupDecision": "reject"
+        },
+        {
+          "socketExcluded": true,
+          "adbExit": 0,
+          "remoteExit": 0,
+          "gzipIntegrity": "PASS",
+          "fileBytesPreserved": true,
+          "backupDecision": "accept"
+        }
+      ]
+    },
+    "backupNote": "Completed snapshot uses gzip with tar diagnostics separated inside the VM; CRC and vault/package hashes verified. Its diagnostics contained only the known Unix-socket warning. The published helper explicitly excludes sockets and checks the remote exit status. An earlier raw stream is marked incomplete and must not be restored."
+  },
+  "delivery": {
+    "piHostDownload": "~/Downloads/aosp-pocket-manager-0.70.apk",
+    "sha256": "49a7af0fa6ba36e58746db706791578b0fd27ec7173377135e11220a0843a5ff",
+    "physicalPhoneModified": true,
+    "samsungFileDelivery": {
+      "validation": "PASS",
+      "model": "SM-G780G",
+      "lanHost": "192.168.188.157",
+      "port": 8022,
+      "destination": "/sdcard/Download/aosp-pocket-manager-0.70.apk",
+      "version": "0.70",
+      "bytes": 578653189,
+      "sha256": "49a7af0fa6ba36e58746db706791578b0fd27ec7173377135e11220a0843a5ff",
+      "trustedPhoneHostKeyMatched": true,
+      "operation": "File delivery only"
+    }
+  },
+  "rollback": {
+    "built": true,
+    "installed": false,
+    "path": "out/resign-rollback-0.71/aosp-pocket-manager-0.71.apk",
+    "purpose": "Unused rollback build of camera 0.69 guest, with higher Manager version; carries the original test-signed guest and is not the release-signed update"
+  }
+}

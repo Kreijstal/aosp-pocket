@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Rootless guest property-service bring-up, not the complete AOSP init daemon.
-// Uses the real Android 9 bionic property area and property-service wire ABI.
-#if POCKET_GUEST_API != 28
+// Built against the matching Android 9/10 Bionic property area and wire ABI.
+#if POCKET_GUEST_API != 28 && POCKET_GUEST_API != 29
 #error Review the property protocol and platform ABI for this guest version
 #endif
+#define POCKET_PROPERTY_STRING_INNER(value) #value
+#define POCKET_PROPERTY_STRING(value) POCKET_PROPERTY_STRING_INNER(value)
 #define _REALLY_INCLUDE_SYS__SYSTEM_PROPERTIES_H_
 #include <sys/_system_properties.h>
 #include <sys/socket.h>
@@ -20,6 +22,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <string>
+#if POCKET_GUEST_API == 29
+#include <android-base/properties.h>
+#include <android-base/strings.h>
+#endif
 #include "pocket_properties.h"
 
 bool pocketCreatePropertyInfo();
@@ -106,6 +112,39 @@ bool defaults() {
     return success;
 }
 
+void derivedDefaults() {
+#if POCKET_GUEST_API == 29
+    // Android 10 moved product identities into partition properties. Match
+    // AOSP init's source-order and fingerprint derivation before Java starts.
+    using android::base::GetProperty;
+    using android::base::Split;
+    std::string order=GetProperty("ro.product.property_source_order","");
+    bool valid=!order.empty();
+    for(const auto& source:Split(order,",")) {
+        if(source!="product" && source!="product_services" && source!="odm" && source!="vendor" && source!="system")valid=false;
+    }
+    if(!valid)order="product,product_services,odm,vendor,system";
+    for(const char* key:{"brand","device","manufacturer","model","name"}) {
+        std::string name=std::string("ro.product.")+key;
+        if(!GetProperty(name,"").empty())continue;
+        for(const auto& source:Split(order,",")) {
+            std::string value=GetProperty("ro.product."+source+"."+key,"");
+            if(value.empty())continue;
+            if(put(name,value)!=PROP_SUCCESS)printf("PROPERTY_PRODUCT_DERIVE_FAILED name=%s\n",name.c_str());
+            break;
+        }
+    }
+    if(GetProperty("ro.build.fingerprint","").empty()) {
+        std::string value;
+        const char* keys[]={"ro.product.brand","ro.product.name","ro.product.device","ro.build.version.release",
+            "ro.build.id","ro.build.version.incremental","ro.build.type","ro.build.tags"};
+        const char separators[]={'/','/',':','/','/',':','/'};
+        for(size_t i=0;i<8;i++){if(i)value+=separators[i-1];value+=GetProperty(keys[i],"unknown");}
+        if(put("ro.build.fingerprint",value)!=PROP_SUCCESS)puts("PROPERTY_FINGERPRINT_DERIVE_FAILED");
+    }
+#endif
+}
+
 uid_t kernelUid() {
     FILE* status = fopen("/proc/self/status", "re");
     if (!status) return static_cast<uid_t>(-1);
@@ -162,9 +201,10 @@ int pocketPropertiesStart(PropertyChanged onChange, PropertyControl onControl) {
     }
     if (!defaults() || put("ro.property_service.version", "2") != PROP_SUCCESS ||
         put("pocket.test.sequence", "seed") != PROP_SUCCESS) return 3;
+    derivedDefaults();
     char sdk[PROP_VALUE_MAX];
     __system_property_get("ro.build.version.sdk", sdk);
-    if (strcmp(sdk, "28")) return 4;
+    if (strcmp(sdk, POCKET_PROPERTY_STRING(POCKET_GUEST_API))) return 4;
     int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     sockaddr_un address{};
     address.sun_family = AF_UNIX;
@@ -176,7 +216,7 @@ int pocketPropertiesStart(PropertyChanged onChange, PropertyControl onControl) {
         return 5;
     }
     chmod(socketPath, 0600);
-    printf("API28_PROPERTIES_READY pid=%d uid=%d kernel_uid=%u sdk=%s area_init=%d\n", getpid(), getuid(), owner, sdk, initialized);
+    printf("API%d_PROPERTIES_READY pid=%d uid=%d kernel_uid=%u sdk=%s area_init=%d\n", POCKET_GUEST_API, getpid(), getuid(), owner, sdk, initialized);
     serverFd = fd;
     serverOwner = owner;
     return 0;
@@ -200,7 +240,7 @@ void pocketPropertiesClose() {
     if (serverFd >= 0) close(serverFd);
     serverFd = -1;
     unlink(socketPath);
-    puts("API28_PROPERTIES_STOPPED");
+    puts("API" POCKET_PROPERTY_STRING(POCKET_GUEST_API) "_PROPERTIES_STOPPED");
 }
 
 #ifndef POCKET_INIT_INTEGRATION

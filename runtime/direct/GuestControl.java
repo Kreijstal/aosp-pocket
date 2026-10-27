@@ -49,7 +49,10 @@ public final class GuestControl {
         return "Installed "+info.packageName;
     }
     private static boolean inject(InputEvent event) throws Exception {
-        return (Boolean)inject.invoke(input,event,2);
+        // ASYNC acknowledges enqueueing, preserving InputDispatcher's ordering.
+        // WAIT_FOR_FINISH stalls the shared input socket behind every guest
+        // callback, accumulating keyboard taps and even navigation for seconds.
+        return (Boolean)inject.invoke(input,event,0);
     }
     private static void serve(LocalSocket socket) {
         try(LocalSocket peer=socket) {
@@ -131,10 +134,21 @@ public final class GuestControl {
         catch(Throwable error) {System.err.println("POCKET_CONTROL_CLIENT_CLOSED "+error);}
         finally {clients.release();}
     }
+    private static void configureWebView() throws Exception {
+        // Pocket's rootless zygote cannot specialize Android's WebView child
+        // zygote yet. Use the framework's supported in-process mode rather
+        // than allowing renderer startup to terminate the requesting app.
+        Object webview=FrameworkProbe.service("webviewupdate","android.webkit.IWebViewUpdateService$Stub");
+        Class<?> api=Class.forName("android.webkit.IWebViewUpdateService");
+        if((Boolean)api.getMethod("isMultiProcessEnabled").invoke(webview))
+            api.getMethod("enableMultiProcess",boolean.class).invoke(webview,false);
+        System.out.println("POCKET_WEBVIEW_MODE multiprocess=false child_zygote=unsupported");
+    }
     public static void main(String[] args) {
         try {
             if(android.os.Process.myUid()!=1000)throw new IOException("Expected guest system role");
             context=FrameworkProbe.context();
+            configureWebView();
             DisplayMetrics metrics=new DisplayMetrics();
             ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRealMetrics(metrics);
             display=new DisplayGeometry(metrics.widthPixels,metrics.heightPixels,metrics.densityDpi);
@@ -145,7 +159,7 @@ public final class GuestControl {
             Field number=FileDescriptor.class.getDeclaredField("descriptor");number.setAccessible(true);
             number.setInt(fd,Integer.parseInt(System.getenv("ANDROID_SOCKET_pocket_control")));
             try(LocalServerSocket server=new LocalServerSocket(fd)) {
-                System.out.println("POCKET_CONTROL_READY sdk=28 width="+display.width+" height="+display.height+" density="+display.densityDpi);
+                System.out.println("POCKET_CONTROL_READY sdk="+Build.VERSION.SDK_INT+" width="+display.width+" height="+display.height+" density="+display.densityDpi);
                 while(true) {
                     LocalSocket socket=server.accept();
                     if(!clients.tryAcquire()){socket.close();continue;}

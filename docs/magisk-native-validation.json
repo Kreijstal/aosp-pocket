@@ -1,0 +1,154 @@
+{
+  "steps": [
+    {
+      "install_manager": "Performing Streamed Install\nSuccess"
+    },
+    {
+      "boot_with_core": {
+        "boot_completed": [
+          0,
+          "1",
+          ""
+        ],
+        "magisk_status": [
+          0,
+          "ready",
+          ""
+        ],
+        "zygisk": [
+          0,
+          "0",
+          ""
+        ],
+        "launcher": [
+          1,
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "su": [
+        0,
+        "0",
+        ""
+      ]
+    },
+    {
+      "install_module": [
+        0,
+        "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\n****************************\n Pocket native overlay test \n by AOSP Pocket \n****************************\n*******************\n Powered by Magisk \n*******************\n- Extracting module files\n- Done\npocket_overlay_test",
+        ""
+      ]
+    },
+    {
+      "boot_with_module": {
+        "boot_completed": [
+          0,
+          "1",
+          ""
+        ],
+        "magisk_status": [
+          0,
+          "ready",
+          ""
+        ],
+        "zygisk": [
+          0,
+          "0",
+          ""
+        ],
+        "launcher": [
+          1,
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "overlay": {
+        "file": [
+          0,
+          "pocket native module view",
+          ""
+        ],
+        "listed": [
+          0,
+          "pocket-overlay.txt",
+          ""
+        ],
+        "realpath": [
+          0,
+          "/system/etc/pocket-overlay.txt",
+          ""
+        ],
+        "readlink_proc": [
+          1,
+          "",
+          ""
+        ],
+        "base_hosts_same_inode_or_copy": [
+          0,
+          "same",
+          ""
+        ],
+        "fixture": [
+          0,
+          "post-fs-data uid=0 version=30700\nservice uid=0 property=post-fs-data\npost-fs-data",
+          ""
+        ],
+        "modules": [
+          0,
+          "pocket_overlay_test",
+          ""
+        ],
+        "host_base": "ls: /data/user/0/dev.kreijstal.aosppocket.runtime/files/api28-native-rootfs/system/etc/pocket-overlay.txt: No such file or directory",
+        "host_view": "/data/user/0/dev.kreijstal.aosppocket.runtime/files/api28-native-rootfs/.pocket-module-view/system/etc/pocket-overlay.txt",
+        "app_runs": [
+          0,
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "boot_module_disabled": {
+        "boot_completed": [
+          0,
+          "1",
+          ""
+        ],
+        "magisk_status": [
+          0,
+          "ready",
+          ""
+        ],
+        "zygisk": [
+          0,
+          "0",
+          ""
+        ],
+        "launcher": [
+          1,
+          "",
+          ""
+        ]
+      }
+    },
+    {
+      "disabled": {
+        "file": [
+          1,
+          "",
+          "cat: /system/etc/pocket-overlay.txt: No such file or directory"
+        ],
+        "view": [
+          1,
+          "",
+          "ls: /.pocket-module-view: No such file or directory"
+        ]
+      }
+    }
+  ],
+  "result": "COMPLETED"
+}

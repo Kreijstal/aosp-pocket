@@ -1,0 +1,50 @@
+{
+  "project": "out/revolut-pocket-0.39/rizin/revolut-10.135-pocket-0.39.rzdb",
+  "open": "rizin -p out/revolut-pocket-0.39/rizin/revolut-10.135-pocket-0.39.rzdb",
+  "rizin_version": "0.8.2",
+  "decompiler": "rz-ghidra native plugin (pdg / pdgo)",
+  "source": "Fresh loaded native code plus adjacent read-only and writable data from Pi Pocket 0.39, Revolut 10.135",
+  "capture": {
+    "pid": "11913",
+    "base": "0x75e4c20000",
+    "end": "0x75e4cb4000",
+    "code_end": "0x75e4ca4000",
+    "entry": "0x75e4c3303c",
+    "entry_offset": "0x1303c",
+    "registration_lr": "0x75e4c328a4",
+    "result": "0"
+  },
+  "addressing": "Project addresses are offsets from the captured native mapping base; add metadata.base for runtime virtual addresses",
+  "annotations": {
+    "kk_entry": "0x1303c",
+    "jni_throw_call": "0x13620",
+    "jni_throw_saved_return": "0x13624",
+    "guard_flag_byte": "0x8dfa1"
+  },
+  "observations": [
+    "Captured flag byte at 0x8dfa1 equals 1 during native registration",
+    "kk checks that flag at 0x1308c and branches at 0x13094 before constructing and throwing MessageGuardException",
+    "The writer of this flag and original rejected condition remain unidentified"
+  ],
+  "validation": [
+    "Native capture helper rebuilt with clang -std=c11 -Wall -Wextra -Werror -O2 and completed capture with result=0",
+    "Capture script passes python3 -m py_compile",
+    "Reopened the saved project from /tmp without aaa and verified pocket_kk name, 1636-byte function, annotations and Ghidra decompilation",
+    "Analysis project includes code and data, flags, function analysis, and comments"
+  ],
+  "limitations": [
+    "Decompiled output has stack-variable and type-inference warnings; verify against disassembly",
+    "Capture briefly uses SIGSTOP/SIGCONT, but never attaches ptrace or patches app instructions",
+    "This project does not claim a specific missing Android API or security check has been identified"
+  ],
+  "artifacts": [
+    "out/revolut-pocket-0.39/rizin/kk-decompiled.c",
+    "out/revolut-pocket-0.39/rizin/kk-decompiled-offsets.txt",
+    "out/revolut-pocket-0.39/rizin/kk-disassembly.txt",
+    "out/revolut-pocket-0.39/rizin/guard-flag-xrefs.txt"
+  ],
+  "follow_up": {
+    "finding": "Revolut rejects a mismatch between guest Java package UID and host package UID returned through raw Binder",
+    "evidence": "docs/revolut-pocket-0.39-uid-mismatch.json"
+  }
+}

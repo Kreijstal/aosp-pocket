@@ -92,8 +92,9 @@ worth of storage and boot-time copying.
 
 These are userspace compatibility mechanisms. They do not create kernel mounts
 or namespaces, implement kernel modules, load host SELinux policy, support Riru,
-or provide device-node whiteouts. Modules requiring `sepolicy.rule` or Riru
-are skipped. Arbitrary module-issued mount syscalls remain subject to host
+or provide device-node whiteouts. Riru modules are skipped. Modules shipping
+`sepolicy.rule` load; their rules are stored but not applied (guest SELinux is
+disabled). Arbitrary module-issued mount syscalls remain subject to host
 permissions. Full third-party module and Specter compatibility is unverified.
 
 ## Physical-device validation
@@ -141,3 +142,170 @@ The direct runtime fixes keep host `/proc` magic-link traversal in the host
 tree and translate dynamically called FIFO-creation functions into the guest
 filesystem. FIFO creation still uses the real kernel operation; character and
 block devices retain the host's actual permission checks.
+
+## Native-loader backend
+
+The Manager's native backend runs unchanged Bionic through `pocket-loader`, so
+the resolver above no longer exists. Version 0.45 restores the adapter there:
+
+- The loader maps guest `/system` and `/vendor` into `/.pocket-module-view`
+  once Magisk writes its `ready` marker, and hides that prefix from `getcwd`,
+  `readlink` and socket names. Each process checks the marker at start and on
+  exec, so init's later services see a view published after it started.
+- The native image imports `init.magisk.rc` again. Without an installed core,
+  `setup.sh` reports `absent` and releases zygote unchanged.
+- The Magisk fork detects the loader through its `getpid` probe rather than
+  `POCKET_DIRECT_ROOT`. Daemon peers are checked against the kernel UID from
+  `/proc/self/status`; logical credentials come from the loader's
+  `/.pocket-identity/<pid>` record, matched against the process start time.
+- The loader execs only ELF files with a reserved interpreter slot.
+  `build_magisk_pocket.py` reserves one in `magisk` and `busybox`; the Manager
+  binds `/data/adb/magisk/{magisk,busybox}` to the instance loader on each
+  prepare. The Termux libraries carry their own RUNPATH, because Bionic does
+  not inherit it and this backend has no global library path.
+- Two loader fixes were required: a zero-length `sendmsg`/`sendto` address is
+  now treated as none, as the kernel does (Rust's std passes one when sending
+  descriptors), and `/dev/tmp`, the installer's scratch directory, is
+  guest-private rather than the host `/dev`.
+
+On the Pi-hosted Cuttlefish VM (`docs/magisk-native-validation.json`):
+
+- PASS: boot without a core, `pocket.magisk.status=absent`; with the core,
+  `ready`, and post-fs-data, late-start and boot-complete stages run.
+- PASS: `magisk su -c 'toybox id -u'` returns 0.
+- PASS: the actual `magisk --install-module` installs a module; after restart its
+  `system/etc` file is readable and listed, `realpath` shows `/system/...`, both
+  module scripts ran as logical root, and the base image is unchanged.
+- PASS: disabling the module removes the view and the file on the next boot.
+- PASS (0.52): Zygisk with Pocket's NeoZygisk provider. The native-loader
+  zygote previously lacked the `pocketInstallZygisk` call
+  (`tools/build_init_loader.py` now builds it with `-DPOCKET_ZYGISK`, as
+  `build_boot_zygote.py` does). The provider gate also accepts the loader's
+  getpid probe, not only `POCKET_DIRECT_ROOT`. Logged:
+  `NEO_POCKET_READY methods=6`, `POCKET_ZYGISK_INSTALL result=0`. A Zygisk
+  fixture module that ships a `sepolicy.rule` got `onLoad`, `preServer
+  target=1000` and `postServer uid=1000` in system_server, and `onLoad` in
+  each forked app, including the Magisk app.
+- UNVERIFIED: physical phone.
+
+### Magisk app (0.50)
+
+magiskd trusts the Magisk app only if its certificate matches `stub.apk` in
+`MAGISKTMP`; without it, a release daemon treats every app as mismatched.
+The optional runtime now carries the `assets/stub.apk` of the official v30.7 app
+(digest pinned in `build_magisk_pocket.py`), and `setup.sh` copies it to
+`/sbin` before post-fs-data. The guest has no `pm`, so the app was imported
+from the outer VM through the Manager's Install APK picker.
+
+Getting the official app past its splash screen needed these runtime fixes:
+
+- Zygote unsets `LD_PRELOAD` after mapping the Binder/HIDL shims, so apps no
+  longer pass them on to `su` and shells. Each exec previously loaded 86
+  platform libraries first (about 430 ms), and libsu's 2 s timeout killed `su`.
+- A boot with CE storage locked no longer destroys user 0's data. `CeStorage`
+  mirrors the xattrs of the CE roots and answers `getxattr` from the mirror
+  while locked. Previously `UserDataPreparer` got `EACCES` and PackageManager
+  removed `/data/user_de/0`, so magiskd could not resolve the app's UID.
+- The image now links the toybox applets (`id`, `ls`, …) that libsu runs.
+- `/system/bin/app_process64` restores the shims and starts the guest
+  app_process for the app's root service.
+- The loader runs unprepared ELFs, such as the app's static
+  `libbusybox.so`, in which libsu execs its root shell (see `exec-loader.md`).
+
+On the Pi VM (Manager 0.50), Home shows Magisk installed 30.7 (30700) with
+Ramdisk Yes, and the Superuser and Modules tabs work.
+
+The optional runtime also installs the boot image tools a release install keeps
+in `/data/adb/magisk`: `magiskboot`, `magiskinit`, `magiskpolicy`, `init-ld` and
+`boot_patch.sh`, taken from the pinned official app. `util_functions.sh` now
+quotes `MAGISK_VER` as upstream does. In the guest, `magiskboot` and
+`magiskpolicy` run, and the app's `env_check 30.7 30700` passes the file and
+version checks.
+
+Its last check wants the `preinit` block device, where a phone keeps module
+`sepolicy.rule` files. Pocket emulates that partition: `setup.sh` links
+`/sbin/.magisk/preinit` to the persistent `/data/adb/pocket-preinit` and creates
+the node `/sbin/.magisk/device/preinit` as a regular file, which the loader's
+`stat` reports as a block device of the backing filesystem. The installer's
+`copy_preinit_files` writes there. The guest runs with SELinux disabled, so
+stored rules restrict nothing, and magiskd loads modules that ship a
+`sepolicy.rule`, logging that the rules are ignored. Only modules with a `riru`
+directory are skipped (`collect_modules` in the Pocket patch). Pocket's
+NeoZygisk adapter module ships no rules.
+
+The native loader's DenyList view (0.54) resolves inherited directory descriptors
+and relative/proc aliases before applying its per-process policy.
+Starting guest programs through the owner console while the Manager prepares
+the image can fail with `ETXTBSY`, because prepare rewrites `system/bin` in place.
+
+### Per-process DenyList (0.54, NeoZygisk Pocket provider 0.2)
+
+Pocket has no kernel module mounts to undo. The provider reads Magisk's existing
+`denylist` table and `/data/system/packages.list` before app specialization,
+reports `PROCESS_ON_DENYLIST` to modules and selects the loader's base view in
+the forked child after pre-specialization callbacks. Selection follows Neo's
+normal behavior: Magisk's separate **Enforce DenyList** switch may remain off.
+Enable guest Zygisk and restart Pocket after installing/upgrading the provider;
+restart affected apps after changing their DenyList selection.
+
+Selected processes resolve system/vendor files from the base image. The loader
+returns ENOENT for the Magisk/su entry points, `/sbin/.magisk`, `/data/adb` and
+direct access to `/.pocket-module-view`. Normalized paths, inherited directory
+fds, proc aliases and symlink targets use the same policy; directory reads filter
+the hidden names. A private monotonic loader control is accepted only before
+guest UID 0 is dropped. Its state survives fork and exec without changing the
+zygote parent's view. The Zygisk `FORCE_DENYLIST_UNMOUNT` option selects this
+userspace view as well.
+
+Maps/smaps use the same guest system/vendor path names as readlink, removing the
+module-view backing prefix without removing mappings or altering kernel fields.
+Already-loaded module/provider code can remain visible. This supplies a guest
+path view, not kernel namespaces, host UID isolation or hardware attestation.
+Companions and kernel namespace operations remain unsupported.
+
+Pi 0.54/provider 0.2 validation selected the real Attest Probe main process
+with Magisk enforcement disabled. Public flags changed from 0 to
+`PROCESS_ON_DENYLIST` (2); `root_su_paths` and `magisk_paths` changed from FAIL
+to PASS. The selected run reported 46 PASS and 2 FAIL (test keys and absent
+GMS), with no module-view prefix in proc maps. The first run's contacts timeout
+did not recur in the warm selected run; contacts code/timeouts were unchanged.
+The harness restored the app's original selection and enforcement setting,
+removed its temporary fixture module, and verified owner Magisk access. Guest
+Zygisk, initially disabled, was enabled to activate the provider. Encrypted
+storage, codec regression and password UI unlock also passed. See
+[denylist-validation.json](denylist-validation.json).
+
+
+### Persistent Attest configuration and slow module-view startup
+
+Attest Probe is now persistently selected in the Pi guest's DenyList:
+
+```sh
+/sbin/magisk --denylist add dev.kreijstal.attestprobe dev.kreijstal.attestprobe
+```
+
+NeoZygisk provider 0.2 is active with guest Zygisk enabled; Magisk's separate
+mount enforcement remains off. Selection applies to the next Attest Probe
+process; this validation also restarted the guest for the startup fix below.
+Unlike the original comparison harness, this configuration keeps its selection.
+
+A later cold boot revealed why selection alone could still fail: Magisk's
+post-fs-data client timed out after 120 seconds while the private module tree was
+still being copied. Boot continued, and zygote logged `POCKET_ZYGISK_LOAD_FAILED`
+because the provider library was not yet available. `runtime/magisk/stage.sh`
+now waits up to 300 seconds. The guest reboot then logged
+`POCKET_ZYGISK_INSTALL result=0`, and Magisk status became `ready`.
+
+The live patch preserves the installed script's exact length, including its
+final newline, because image preparation checks the cached asset stamp and file
+size. Normal packaged updates carry the new script directly.
+
+On the running audio 0.62 build with that startup fix, the unchanged real probe
+reported `root_su_paths=PASS` and `magisk_paths=PASS`. Total: 46 PASS, 2 FAIL,
+3 SKIP, 8 INFO. The remaining failures are test-keys and the Contacts timeout.
+Owner-console Magisk access and the existing password UI unlock still pass.
+
+A source-packaged candidate, 0.62.1 (versionCode 62), preserves audio 0.62's host
+DEX and all native payloads. Only the stage script and version manifest differ.
+See [neozygisk-config-validation.json](neozygisk-config-validation.json) for
+commands, checksums and the distinction between the live fix and packaged APK.

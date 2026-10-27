@@ -13,7 +13,7 @@ import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 import dev.kreijstal.aosppocket.bridge.AnonymousFrames;
 import android.view.Surface;
 
-/** Persistent Android 9 session owned by GuestService, independent of windows. */
+/** Persistent direct Android session owned by GuestService, independent of windows. */
 final class DirectSession implements AutoCloseable {
     interface Listener {
         void status(String message);
@@ -34,6 +34,8 @@ final class DirectSession implements AutoCloseable {
     private volatile java.lang.Process init;
     private BootBattery battery;
     private HostBroker hostBroker;
+    private GuestPower power;
+    private CeStorage ceStorage;
     private RuntimeLog runtimeLog;
     private File root;
     private Connection input;
@@ -53,41 +55,55 @@ final class DirectSession implements AutoCloseable {
         }
     }
     private final int refreshHz;
+    private final int sdk;
+    private final String androidName;
     DirectSession(Context context,DisplayGeometry geometry,int refreshHz,Listener listener) {
-        this.context=context;this.geometry=geometry;this.refreshHz=refreshHz;this.listener=listener;worker=new Thread(this::run,"PocketAndroid9");
+        this(context,geometry,refreshHz,28,listener);
+    }
+    DirectSession(Context context,DisplayGeometry geometry,int refreshHz,int sdk,Listener listener) {
+        this.context=context;this.geometry=geometry;this.refreshHz=refreshHz;this.sdk=sdk;this.androidName="Android "+(sdk==29?"10":"9");
+        this.listener=listener;worker=new Thread(this::run,"PocketAndroid"+sdk);
     }
     void start(){worker.start();}
     boolean running(){return init!=null && init.isAlive() && !closed;}
     void visible(boolean value){visible=value;wakeDisplay();}
     private void status(String text){main.post(()->{if(!closed)listener.status(text);});}
     private void run() {
-        String ended="Android 9 stopped. Tap Start to boot again.";
+        String ended=androidName+" stopped. Tap Start to boot again.";
         try {
             // A previous app process may have been killed while Android 9 was up.
-            int leftover=DirectImage.stopLeftovers(DirectImage.root(context));
+            root=DirectImage.root(context,sdk);
+            int leftover=DirectImage.stopLeftovers(root);
             if(leftover>0) {
-                android.util.Log.w("PocketRuntime","Stopped "+leftover+" Android 9 process(es) left by an earlier app process");
-                status("Stopped Android 9 left running by an earlier app process.");
+                android.util.Log.w("PocketRuntime","Stopped "+leftover+" "+androidName+" process(es) left by an earlier app process");
+                status("Stopped "+androidName+" left running by an earlier app process.");
             }
+            CeMigration.finishVerified(root);
             final int[] percent={-1};
-            root=DirectImage.prepare(context,geometry,refreshHz,(done,total)->{
-                int value=total==0?0:(int)(100*done/total);
-                if(value!=percent[0]){percent[0]=value;status("Setting up Android 9: "+value+"%");}
+            root=DirectImage.prepare(context,geometry,refreshHz,sdk,new GuestImage.Progress(){
+                private String phase="Setting up "+androidName;
+                @Override public void phase(String value){phase=value;percent[0]=-1;status(value+"…");}
+                @Override public void update(long done,long total){
+                    int value=total==0?0:(int)(100*done/total);
+                    if(value!=percent[0]){percent[0]=value;status(phase+": "+value+"%");}
+                }
             });
             synchronized(this) {
                 if(closed)return;
                 java.nio.file.Files.deleteIfExists(new File(root,"logs/display-performance.json").toPath());
-                battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);init=DirectImage.start(root);
+                battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);ceStorage=new CeStorage(root);
+                if(sdk==29)power=new GuestPower(context,root);
+                init=DirectImage.start(root);
                 runtimeLog=new RuntimeLog(new File(root,"logs/manager-init.log"));
             }
-            status("Android 9 starting…");
+            status(androidName+" starting…");
             long deadline=SystemClock.elapsedRealtime()+240000;
             Connection frames=null;
             while(!closed && init.isAlive() && SystemClock.elapsedRealtime()<deadline) {
                 try {frames=new Connection();break;}
                 catch(IOException notReady){Thread.sleep(300);}
             }
-            if(frames==null)throw new IOException("Android 9 did not open its display/input endpoint; see api28-rootfs/logs/manager-init.log");
+            if(frames==null)throw new IOException(androidName+" did not open its display/input endpoint; see api"+sdk+"-native-rootfs/logs/manager-init.log");
             AnonymousFrames shared=AnonymousFrames.create(geometry);
             long presenter=Native.createFramePresenter();
             try(Connection control=frames;ComposerConnection channel=new ComposerConnection(shared)) {
@@ -136,10 +152,11 @@ final class DirectSession implements AutoCloseable {
                 Native.destroyFramePresenter(presenter);
             }
 
-            if(!closed)ended="Android 9 exited with code "+init.exitValue()+". See api28-rootfs/logs/manager-init.log.";
+            if(!closed)ended=androidName+" exited with code "+init.exitValue()+". See api"+sdk+"-native-rootfs/logs/manager-init.log.";
         } catch(InterruptedException cancelled){Thread.currentThread().interrupt();}
-        catch(Exception error){if(!closed)ended="Android 9 failed: "+error.getMessage();}
+        catch(Exception error){if(!closed)ended=androidName+" failed: "+error.getMessage();}
         finally {
+            boolean cleanupInterrupted=Thread.interrupted();
             closed=true;ready=false;commands.shutdownNow();operations.shutdownNow();
             for(LocalSocket socket:sockets)try{socket.close();}catch(IOException ignored){}
             java.lang.Process current=init;
@@ -150,8 +167,23 @@ final class DirectSession implements AutoCloseable {
             }
             if(battery!=null)battery.close();
             if(hostBroker!=null)hostBroker.close();
+            if(power!=null)power.close();
+            if(ceStorage!=null) {
+                byte[] migration=ceStorage.takePreparedSecret();
+                try {
+                    DirectImage.stopLeftovers(root);
+                    ceStorage.close();
+                    if(migration!=null) {
+                        main.post(()->listener.status("Encrypting "+androidName+" private storage…"));
+                        CeMigration.perform(root,migration);
+                        ended=androidName+" storage encrypted. Start the guest and unlock with its existing password.";
+                    }
+                }catch(Exception error){ended=androidName+" storage operation failed: "+error.getMessage();}
+                finally{if(migration!=null)java.util.Arrays.fill(migration,(byte)0);}
+            }
             if(runtimeLog!=null)runtimeLog.close();
             final String message=ended;main.post(()->listener.stopped(message));
+            if(cleanupInterrupted)Thread.currentThread().interrupt();
         }
     }
     private final class Connection implements AutoCloseable {
@@ -227,11 +259,14 @@ final class DirectSession implements AutoCloseable {
     }
     private interface Command {void run(Connection connection)throws Exception;}
     private void submit(Command command) {
+        submit(command,false);
+    }
+    private void submit(Command command,boolean motion) {
         if(!ready || closed)return;
-        try {commands.execute(()->{
+        try {InputCommandQueue.execute(commands,()->{
             try {if(input==null)input=new Connection();command.run(input);}
-            catch(Exception error){if(input!=null)input.close();input=null;status("Android 9 control failed: "+error.getMessage());}
-        });}catch(RejectedExecutionException full){status("Guest input queue is busy; try again.");}
+            catch(Exception error){if(input!=null)input.close();input=null;status(androidName+" control failed: "+error.getMessage());}
+        },motion);}catch(RejectedExecutionException full){status("Guest input queue is busy; try again.");}
     }
     private void submitOperation(Command command) {
         if(!ready || closed)return;
@@ -244,7 +279,7 @@ final class DirectSession implements AutoCloseable {
                 if(detail==null || detail.isEmpty())detail=error instanceof EOFException
                     ? "Guest closed the connection without returning a result."
                     : error.getClass().getSimpleName();
-                String message="Android 9 operation failed: "+detail;
+                String message=androidName+" operation failed: "+detail;
                 android.util.Log.e("PocketOperations",message,error);
                 status(message);
                 main.post(()->android.widget.Toast.makeText(context,message,android.widget.Toast.LENGTH_LONG).show());
@@ -257,9 +292,12 @@ final class DirectSession implements AutoCloseable {
         final long down=event.getDownTime(),time=event.getEventTime();
         final int[] ids=new int[count];final float[] x=new float[count],y=new float[count];
         for(int i=0;i<count;i++){ids[i]=event.getPointerId(i);x[i]=event.getX(i)*scaleX;y[i]=event.getY(i)*scaleY;}
+        // Replace only consecutive, unsent MOVE samples. Pointer changes,
+        // release/cancel and navigation remain ordered queue boundaries.
         submit(c->{c.out.writeInt(2);c.out.writeLong(down);c.out.writeLong(time);c.out.writeInt(action);c.out.writeInt(count);
             for(int i=0;i<count;i++){c.out.writeInt(ids[i]);c.out.writeFloat(x[i]);c.out.writeFloat(y[i]);}
-            c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected touch input");});
+            c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected touch input");},
+            event.getActionMasked()==MotionEvent.ACTION_MOVE);
     }
     void key(int code){submit(c->{c.out.writeInt(3);c.out.writeInt(code);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected navigation");});}
     void importHostContacts(){submitOperation(c->{c.socket.setSoTimeout(90000);c.out.writeInt(5);c.out.flush();status(c.in.readUTF());});}
@@ -307,7 +345,7 @@ final class DirectSession implements AutoCloseable {
                         GuestImage.copy(in,out,2L*1024*1024*1024);
                     }
                 }
-                status("Installing APKs in Android 9…");
+                status("Installing APKs in "+androidName+"…");
                 c.socket.setSoTimeout(90000);c.out.writeInt(4);c.out.flush();
                 String result=c.in.readUTF();
                 if(!result.startsWith("Installed "))throw new IOException(result);

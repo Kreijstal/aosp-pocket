@@ -12,7 +12,10 @@ import org.json.*;
 final class GuestImage {
     private static final long LIMIT = 2L * 1024 * 1024 * 1024;
     private static final String BUNDLED = "assets/default-guest/";
-    interface Progress { void update(long completed, long total); }
+    interface Progress {
+        void update(long completed, long total);
+        default void phase(String name) { }
+    }
     static boolean hasBundled(Context context) {
         try (InputStream in = context.getAssets().open("default-guest/pocket-layout.json")) { return in.read() != -1; }
         catch (IOException error) { return false; }

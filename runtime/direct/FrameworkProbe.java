@@ -35,6 +35,8 @@ public final class FrameworkProbe {
         return (Context)thread.getMethod("getSystemContext").invoke(main);
     }
     private static void capture(String filename) throws Exception {
+        long deadline=SystemClock.uptimeMillis()+10000;
+        do {
         ProcessBuilder command=new ProcessBuilder("/system/bin/screencap","-p",filename);
         command.redirectErrorStream(true);command.redirectOutput(new File(filename+".log"));
         java.lang.Process process=command.start();
@@ -43,9 +45,18 @@ public final class FrameworkProbe {
         check(bitmap!=null && bitmap.getWidth()>0 && bitmap.getHeight()>0,"Invalid compositor image");
         Set<Integer> colors=new HashSet<>();
         for(int y=0;y<bitmap.getHeight();y+=11)for(int x=0;x<bitmap.getWidth();x+=11)colors.add(bitmap.getPixel(x,y));
-        check(colors.size()>8,"Compositor image lacks visible UI detail");
         System.out.println("DIRECT_FRAMEWORK_FRAME path="+filename+" width="+bitmap.getWidth()+" height="+bitmap.getHeight()+" sampled_colors="+colors.size());
         bitmap.recycle();
+        if(colors.size()>8)return;
+        Thread.sleep(250);
+        }while(SystemClock.uptimeMillis()<deadline);
+        for(String name:new String[]{"SurfaceFlinger","display","window","power"}){
+            try(FileOutputStream output=new FileOutputStream("/data/pocket-"+name+"-dump.txt")){
+                IBinder binder=(IBinder)Class.forName("android.os.ServiceManager").getMethod("getService",String.class).invoke(null,name);
+                if(binder!=null)binder.dump(output.getFD(),new String[0]);
+            }catch(Exception error){System.err.println("DIRECT_FRAMEWORK_DUMP_FAIL service="+name+" error="+error);}
+        }
+        throw new IOException("Compositor image lacks visible UI detail after 10 seconds");
     }
     private static void launcher(Context context) throws Exception {
         ActivityManager manager=(ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -97,17 +108,20 @@ public final class FrameworkProbe {
         System.out.println("DIRECT_FRAMEWORK_INSTALL_PASS package="+packageName+" session="+sessionId);
     }
     static void launch(Intent intent) throws Exception {
-        Object manager=Class.forName("android.app.ActivityManager").getMethod("getService").invoke(null);
+        boolean taskService=Build.VERSION.SDK_INT==29;
+        Object manager=Class.forName(taskService?"android.app.ActivityTaskManager":"android.app.ActivityManager")
+            .getMethod("getService").invoke(null);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         Method start=null;
-        for(Method candidate:Class.forName("android.app.IActivityManager").getMethods())
+        for(Method candidate:Class.forName(taskService?"android.app.IActivityTaskManager":"android.app.IActivityManager").getMethods())
             if(candidate.getName().equals("startActivityAsUser") && candidate.getParameterCount()==11)start=candidate;
         check(start!=null,"Unsupported activity service ABI");
         int status=(Integer)start.invoke(manager,null,"android",intent,null,null,null,0,0,null,null,0);
         check(status>=0,"Activity start failed: "+status);
     }
     private static String log() throws IOException {
-        return new String(Files.readAllBytes(Paths.get("/pocket-console")),"UTF-8");
+        String path=System.getenv("POCKET_GUEST_LOG");
+        return new String(Files.readAllBytes(Paths.get(path==null?"/pocket-console":path)),"UTF-8");
     }
     private static void tap() throws Exception {
         Matcher bounds=null;

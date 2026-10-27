@@ -1,17 +1,45 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include <jni.h>
-#include <jvmti.h>
 #include <stdio.h>
 #include <dlfcn.h>
 #include <sys/system_properties.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <cutils/sched_policy.h>
 #ifdef POCKET_ZYGISK
 #include "pocket_art_bridge.h"
 #endif
 #include "fd_utils.h"
 namespace android { int pocketRegisterZygote(JNIEnv*); }
+
+extern "C" void pocketSystemServerCompatibility(JNIEnv* env) {
+    jclass type=env->FindClass("dev/kreijstal/aosppocket/guest/MicrogSupport");
+    jmethodID install=type?env->GetStaticMethodID(type,"install","()V"):nullptr;
+    if(install)env->CallStaticVoidMethod(type,install);
+    if(!install || env->ExceptionCheck())env->FatalError("Guest package compatibility bootstrap failed");
+    env->DeleteLocalRef(type);
+}
+
+// A guest cannot move host threads between privileged cgroups. Treat the
+// framework's cpuset request as a scheduling hint, retaining host assignment.
+// Keep invalid policy/thread errors instead of hiding unrelated API misuse.
+static void guestThreadGroupAndCpuset(JNIEnv* env, jclass, jint tid, jint group) {
+    if (!tid) tid = static_cast<jint>(syscall(SYS_gettid));
+    char path[64];snprintf(path,sizeof(path),"/proc/%d/status",tid);
+    struct stat status{};
+    if (tid < 0 || group < SP_DEFAULT || group > SP_MAX || stat(path,&status)) {
+        jclass error=env->FindClass("java/lang/IllegalArgumentException");
+        if (error) env->ThrowNew(error,"Invalid guest thread or scheduling group");
+        return;
+    }
+    static bool reported=false;
+    if (!__atomic_exchange_n(&reported,true,__ATOMIC_RELAXED))
+        fputs("DIRECT_THREAD_GROUP_HINT host_cpuset=unchanged\n",stderr);
+}
 extern "C" int pocketInstallZygisk(JNIEnv* env, const JNINativeMethod* methods, size_t count) {
 #ifdef POCKET_ZYGISK
     char enabled[PROP_VALUE_MAX] = {};
@@ -58,19 +86,14 @@ Java_dev_kreijstal_aosppocket_guest_ZygoteBootstrap_install(JNIEnv* env, jclass)
        !strchr(console+6,'/') && !strstr(console+6,".."))
         FileDescriptorWhitelist::Get()->Allow(console);
     if (android::pocketRegisterZygote(env) != 0) env->FatalError("Rootless zygote registration failed");
-    fputs("POCKET_ZYGOTE_NATIVE_REGISTERED source=android-9.0.0_r61\n", stderr);
-}
-
-// Android 9's image loader uses the boot-image dex list even when BOOTCLASSPATH
-// includes another JAR. Use ART's supported JVMTI append operation at VM startup.
-extern "C" JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM* vm, char*, void*) {
-    jvmtiEnv* tools = nullptr;
-    jint result = vm->GetEnv(reinterpret_cast<void**>(&tools), JVMTI_VERSION_1_2);
-    if (result != JNI_OK || !tools) {
-        fprintf(stderr, "POCKET_BOOTCLASSPATH_FAILED GetEnv=%d\n", result);
-        return JNI_ERR;
+    const char* backend=getenv("POCKET_SYSCALL_BACKEND");
+    if (backend && !strcmp(backend,"native")) {
+        jclass process=env->FindClass("android/os/Process");
+        JNINativeMethod method={const_cast<char*>("setThreadGroupAndCpuset"),
+            const_cast<char*>("(II)V"),reinterpret_cast<void*>(guestThreadGroupAndCpuset)};
+        if (!process || env->RegisterNatives(process,&method,1))
+            env->FatalError("Guest scheduling adapter registration failed");
+        env->DeleteLocalRef(process);
     }
-    jvmtiError error = tools->AddToBootstrapClassLoaderSearch("/system/framework/pocket-zygote.jar");
-    fprintf(stderr, "POCKET_BOOTCLASSPATH_APPEND jvmti_error=%d\n", error);
-    return error == JVMTI_ERROR_NONE ? JNI_OK : JNI_ERR;
+    fputs("POCKET_ZYGOTE_NATIVE_REGISTERED source=android-9.0.0_r61\n", stderr);
 }

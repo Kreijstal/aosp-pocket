@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketinputqueuetest">
+    <application android:label="Pocket input queue test" android:allowBackup="false">
+        <activity android:name="dev.kreijstal.aosppocket.runtime.InputQueueTest" android:exported="true" />
+    </application>
+</manifest>

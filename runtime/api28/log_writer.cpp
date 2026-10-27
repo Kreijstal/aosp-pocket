@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifndef POCKET_GUEST_API
+#define POCKET_GUEST_API 28
+#endif
 
 int main() {
     setbuf(stdout, nullptr);
@@ -17,7 +20,7 @@ int main() {
     if (*end || value < 0 || value > 1048576) return 64;
     int fd = static_cast<int>(value), on = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &on, sizeof(on))) return 1;
-    puts("API28_LOG_WRITER_READY protocol=android9-logdw");
+    printf("API%d_LOG_WRITER_READY protocol=android%d-logdw\n",POCKET_GUEST_API,POCKET_GUEST_API-19);
     for (;;) {
         char packet[16384], control[CMSG_SPACE(sizeof(ucred))];
         iovec iov{packet, sizeof(packet)};

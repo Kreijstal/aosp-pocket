@@ -22,12 +22,21 @@
 
 // This header is ours, not AOSP's same-named header.
 #include "pocket_properties.h"
+#ifndef POCKET_GUEST_API
+#define POCKET_GUEST_API 28
+#endif
+#define POCKET_INIT_STRING_INNER(value) #value
+#define POCKET_INIT_STRING(value) POCKET_INIT_STRING_INNER(value)
 
 namespace android { namespace init {
 const std::string kInitContext = ""; // No guest SELinux domains are manufactured.
 const std::string kVendorContext = "";
 std::string default_console;
 uint32_t (*property_set)(const std::string&, const std::string&) = pocketPropertySet;
+#if POCKET_GUEST_API == 29
+// This profile never constructs a vendor subcontext or forwards its policy.
+bool CanReadProperty(const std::string&, const std::string&) { return false; }
+#endif
 // No subcontext is constructed: fail explicitly if that invariant ever changes.
 Result<Success> Subcontext::Execute(const std::vector<std::string>&) {
     return Error() << "SELinux subcontexts unsupported in rootless mode";
@@ -140,9 +149,16 @@ int main(int argc, char** argv) {
     parser.AddSectionParser("on", std::make_unique<ActionParser>(&actions, nullptr));
     parser.AddSectionParser("import", std::make_unique<ImportParser>(&parser));
     size_t errors = 0;
+#if POCKET_GUEST_API == 29
+    bool parsed = parser.ParseConfig(argv[1]);
+    errors = parser.parse_error_count();
+    if (!parsed || errors) {
+        printf("INIT_CONFIG_REJECTED errors=%zu parsed=%d\n", errors, parsed);
+#else
     bool parsed = parser.ParseConfig(argv[1], &errors);
     if (!parsed || errors || parser.errors()) {
         printf("INIT_CONFIG_REJECTED errors=%zu parsed=%d\n", parser.errors(), parsed);
+#endif
         pocketPropertiesClose();
         return 66; // No service is launched from a partly accepted configuration.
     }
@@ -151,7 +167,7 @@ int main(int argc, char** argv) {
     actions.QueueEventTrigger("init");
     actions.QueueEventTrigger("boot");
     actions.QueueAllPropertyActions();
-    printf("API28_INIT_READY pid=%d sdk=%s pid1=0\n", getpid(), GetProperty("ro.build.version.sdk", "").c_str());
+    printf("API" POCKET_INIT_STRING(POCKET_GUEST_API) "_INIT_READY pid=%d sdk=%s pid1=0\n", getpid(), GetProperty("ro.build.version.sdk", "").c_str());
     while (!stopping && !pocketPropertiesStopped() && !failed) {
         if (actions.HasMoreCommands()) actions.ExecuteOneCommand();
         rememberChildren();
@@ -177,7 +193,7 @@ int main(int argc, char** argv) {
     for (auto* service : shutdown) if (service->pid()) service->Stop();
     deadline = boot_clock::now() + std::chrono::seconds(2);
     while (!children.empty() && boot_clock::now() < deadline) { reap(); usleep(10000); }
-    printf("API28_INIT_STOPPED reaped=%u remaining=%zu failed=%d\n", reaped, children.size(), failed);
+    printf("API" POCKET_INIT_STRING(POCKET_GUEST_API) "_INIT_STOPPED reaped=%u remaining=%zu failed=%d\n", reaped, children.size(), failed);
     pocketPropertiesClose();
     return failed || !children.empty() ? 67 : 0;
 }

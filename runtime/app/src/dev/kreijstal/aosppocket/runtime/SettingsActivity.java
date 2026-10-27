@@ -38,7 +38,7 @@ public final class SettingsActivity extends RuntimeActivity {
         disableAttestation.setText("Disable experimental attestation backend");
         disableAttestation.setOnClickListener(v->{
             try {
-                boolean disabled=DirectImage.disableAttestation(this);
+                boolean disabled=DirectImage.disableAttestation(this,runtime!=null && runtime.directBackend()?runtime.selectedSdk():28);
                 if(disabled && runtime!=null)runtime.stopGuest();
                 Toast.makeText(this,disabled ? "Backend disabled; configuration preserved. Start Android again."
                     : "Experimental attestation backend is already disabled.",Toast.LENGTH_LONG).show();
@@ -50,10 +50,11 @@ public final class SettingsActivity extends RuntimeActivity {
         layout.addView(status);
         version = new Spinner(this);
         version.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
-            new String[]{"Android 7.1.1 · PRoot", "Android 9 · direct backend"}));
+            DirectImage.bundled(this,29)?new String[]{"Android 7.1.1 · PRoot", "Android 9 · direct backend", "Android 10"}
+                :new String[]{"Android 7.1.1 · PRoot", "Android 9 · direct backend"}));
         version.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
-                if (!updating && runtime != null) runtime.selectSdk(position == 1 ? 28 : 25);
+                if (!updating && runtime != null) runtime.selectSdk(position == 2 ? 29 : position == 1 ? 28 : 25);
             }
             @Override public void onNothingSelected(AdapterView<?> parent) { }
         });
@@ -118,7 +119,7 @@ public final class SettingsActivity extends RuntimeActivity {
     private void readPerformance() {
         if(performance==null)return;
         try {
-            performanceReport=new String(java.nio.file.Files.readAllBytes(new java.io.File(getFilesDir(),"api28-rootfs/logs/display-performance.json").toPath()),"UTF-8");
+            performanceReport=new String(java.nio.file.Files.readAllBytes(new java.io.File(DirectImage.root(this,runtime!=null && runtime.directBackend()?runtime.selectedSdk():28),"logs/display-performance.json").toPath()),"UTF-8");
             org.json.JSONObject report=new org.json.JSONObject(performanceReport);
             performance.setText(String.format(java.util.Locale.ROOT,
                 "Last visible display sample: %.1f FPS · %d × %d\nCompositor copy: %.1f ms · Present: %.1f ms\nPresenter: %s\nHost renderer: %s\nGuest rendering: SwiftShader",
@@ -155,7 +156,7 @@ public final class SettingsActivity extends RuntimeActivity {
             adminCopy.setEnabled(enabled);adminRevoke.setEnabled(ready);
         }
         updating = true;
-        if (ready) version.setSelection(runtime.selectedSdk() == 28 ? 1 : 0, false);
+        if (ready) version.setSelection(runtime.selectedSdk() == 29 && version.getCount()>2 ? 2 : runtime.selectedSdk() == 28 ? 1 : 0, false);
         version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());
         updating = false;
         apk.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping());

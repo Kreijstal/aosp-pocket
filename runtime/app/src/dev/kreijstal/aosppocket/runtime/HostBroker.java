@@ -56,7 +56,7 @@ final class HostBroker implements AutoCloseable {
             .put("reason","Carrier/privileged IMS APIs are not available to an ordinary host app"));
         result.put("standard_guest_apis",new JSONObject().put("battery","relayed")
             .put("dns","host resolver via guest dnsproxyd").put("camera","HAL adapter pending")
-            .put("audio","AudioFlinger/HAL adapter pending").put("sensors","HAL adapter pending")
+            .put("audio","output via guest audio HAL; input pending").put("sensors","HAL adapter pending")
             .put("contacts","explicit import").put("phone","radio adapter pending"));
         return result;
     }
@@ -94,6 +94,24 @@ final class HostBroker implements AutoCloseable {
             DataOutputStream out=new DataOutputStream(peer.getOutputStream());
             if(in.readInt()!=HostWire.MAGIC)throw new IOException("Unsupported host bridge protocol");
             int op=in.readInt();byte[] request=HostWire.read(in,op==HostWire.PLAYBACK?HostWire.MAX:16384);
+            if(op==HostWire.AUDIO_OUT && !closed) {
+                try {HostMedia.stream(peer,new JSONObject(new String(request,StandardCharsets.UTF_8)),in,out);return;}
+                catch(IOException ended){if(ended instanceof java.net.SocketTimeoutException || closed)return;throw ended;}
+                catch(Exception error){out.writeInt(503);HostWire.write(out,("Guest audio output unavailable: "+error.getClass().getSimpleName()).getBytes(StandardCharsets.UTF_8));out.flush();return;}
+            }
+            if(op==HostWire.CAMERA_STREAM && !closed) {
+                try {require(Manifest.permission.CAMERA);HostMedia.cameraStream(context,new JSONObject(new String(request,StandardCharsets.UTF_8)),out);return;}
+                catch(SecurityException denied){out.writeInt(403);HostWire.write(out,denied.getMessage().getBytes(StandardCharsets.UTF_8));out.flush();return;}
+                catch(IllegalArgumentException invalid){out.writeInt(400);HostWire.write(out,"Invalid camera stream request".getBytes(StandardCharsets.UTF_8));out.flush();return;}
+                catch(IOException ended){if(ended instanceof java.net.SocketTimeoutException || closed)return;throw ended;}
+                catch(Exception error){out.writeInt(503);HostWire.write(out,("Guest camera stream unavailable: "+error.getClass().getSimpleName()).getBytes(StandardCharsets.UTF_8));out.flush();return;}
+            }
+            if(op==HostWire.AUDIO_IN && !closed) {
+                try {require(Manifest.permission.RECORD_AUDIO);HostMedia.capture(peer,new JSONObject(new String(request,StandardCharsets.UTF_8)),out);return;}
+                catch(SecurityException denied){out.writeInt(403);HostWire.write(out,denied.getMessage().getBytes(StandardCharsets.UTF_8));out.flush();return;}
+                catch(IOException ended){if(ended instanceof java.net.SocketTimeoutException || closed)return;throw ended;}
+                catch(Exception error){out.writeInt(503);HostWire.write(out,("Guest audio input unavailable: "+error.getClass().getSimpleName()).getBytes(StandardCharsets.UTF_8));out.flush();return;}
+            }
             int status=0;byte[] response;
             try {response=handle(op,request);}
             catch(SecurityException denied){status=403;response=denied.getMessage().getBytes(StandardCharsets.UTF_8);}
@@ -126,18 +144,48 @@ final class HostBroker implements AutoCloseable {
         case HostWire.PHONE:require(Manifest.permission.READ_PHONE_STATE);return json(phone());
         case HostWire.PHONE_UI:return json(phoneUi(args));
         case HostWire.SENSORS:return json(sensors(args));
-        case HostWire.CAMERAS:require(Manifest.permission.CAMERA);return json(HostMedia.cameras(context));
+        case HostWire.CAMERAS:require(Manifest.permission.CAMERA);
+            return "lines".equals(args.optString("format"))?HostMedia.cameraLines(context):json(HostMedia.cameras(context));
         case HostWire.CAMERA:require(Manifest.permission.CAMERA);return HostMedia.camera(context,args);
         case HostWire.MICROPHONE:require(Manifest.permission.RECORD_AUDIO);return HostMedia.record(context,args);
         case HostWire.VIBRATE:
-            long duration=args.optLong("milliseconds",30);
-            if(duration<1 || duration>1000)throw new IllegalArgumentException("Invalid vibration duration");
+            // The guest Vibrator HAL forwards on()/off()/setAmplitude() and predefined effects here. Zero cancels.
             Vibrator vibrator=(Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
             if(!vibrator.hasVibrator())throw new UnsupportedOperationException("Host has no vibrator");
-            vibrator.vibrate(VibrationEffect.createOneShot(duration,VibrationEffect.DEFAULT_AMPLITUDE));
-            return json(new JSONObject().put("accepted",true));
+            JSONObject accepted=new JSONObject().put("accepted",true).put("amplitude_control",vibrator.hasAmplitudeControl());
+            if(args.has("effect"))return json(accepted.put("length_ms",effect(vibrator,args.getInt("effect"),args.optInt("strength",1))));
+            long duration=args.optLong("milliseconds",30);int amplitude=args.optInt("amplitude",VibrationEffect.DEFAULT_AMPLITUDE);
+            if(duration<0 || duration>30000)throw new IllegalArgumentException("Invalid vibration duration");
+            if(amplitude!=VibrationEffect.DEFAULT_AMPLITUDE && (amplitude<1 || amplitude>255))throw new IllegalArgumentException("Invalid vibration amplitude");
+            if(duration==0)vibrator.cancel();
+            else vibrator.vibrate(VibrationEffect.createOneShot(duration,vibrator.hasAmplitudeControl()?amplitude:VibrationEffect.DEFAULT_AMPLITUDE));
+            return json(accepted);
         default:throw new UnsupportedOperationException("Host operation is not implemented");
         }
+    }
+    // Guest Vibrator 1.2 effect ids (CLICK, DOUBLE_CLICK, TICK, THUD, POP, HEAVY_CLICK) equal the host's VibrationEffect ids.
+    // Host primitives carry the guest's strength; predefined host effects play at the host's own strength.
+    // Returns the expected length in milliseconds.
+    private static long effect(Vibrator vibrator,int id,int strength) {
+        if(id<0 || id>5 || strength<0 || strength>2)throw new IllegalArgumentException("Invalid vibration effect");
+        if(Build.VERSION.SDK_INT>=31) {
+            int primitive=id==2?VibrationEffect.Composition.PRIMITIVE_TICK:id==3?VibrationEffect.Composition.PRIMITIVE_THUD:
+                id==4?-1:VibrationEffect.Composition.PRIMITIVE_CLICK;
+            if(primitive>=0 && vibrator.areAllPrimitivesSupported(primitive)) {
+                float scale=(id==5?new float[]{0.8f,1f,1f}:new float[]{0.5f,0.75f,1f})[strength];
+                VibrationEffect.Composition composition=VibrationEffect.startComposition().addPrimitive(primitive,scale);
+                long length=vibrator.getPrimitiveDurations(primitive)[0];
+                if(id==1){composition.addPrimitive(primitive,scale,100);length=2*length+100;}
+                vibrator.vibrate(composition.compose());
+                return Math.max(1,length);
+            }
+        }
+        if(Build.VERSION.SDK_INT>=29 && (id<=2 || id==5)) {
+            vibrator.vibrate(VibrationEffect.createPredefined(id));
+            // The host does not report predefined durations; these are estimates for the guest's bookkeeping.
+            return new long[]{20,120,10,0,0,30}[id];
+        }
+        throw new UnsupportedOperationException("Host has no matching haptic effect");
     }
     private JSONObject phoneUi(JSONObject args) throws Exception {
         String action=args.getString("action"),address=args.optString("address"),body=args.optString("body");

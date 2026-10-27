@@ -87,7 +87,7 @@ def build(ndk):
                        "-I" + str(out / "libnativehelper/include"),
                        "-I" + str(out / "libnativehelper/include_jni"),
                        "-I" + str(out / "libnativehelper/header_only_include"),
-                       "-I" + str(out / "art/openjdkjvmti/include")]
+                       "-I" + str(ROOT / "runtime/api28")]
     zygote_flags = common + ['-DPOCKET_GUEST_ISA="' + info(arch)["framework"] + '"',
                             "-std=c++17", "-Wno-unused-parameter", "-Wno-unused-function",
                             "-Wno-writable-strings"] + zygote_includes
@@ -98,7 +98,7 @@ def build(ndk):
                    str(libs / "libc.so"), "-landroid_runtime", "-lnativehelper", "-lcutils", "-lbase"] + link +
                    ["-o", str(zygote)], check=True)
     subprocess.run(zygote_flags + ["-fPIE", "-pie", str(zygote_source / "cmds/app_process/app_main.cpp"),
-                   str(out / "art/sigchainlib/sigchain.cc"), "-DART_TARGET_ANDROID",
+                   str(out / "art/sigchainlib/sigchain.cc"), str(ROOT / "runtime/api28/boot_classes.cpp"), "-DART_TARGET_ANDROID",
                    "-Wl,--export-dynamic", "-Wl,--version-script=" + str(out / "art/sigchainlib/version-script64.txt"),
                    "-landroid_runtime", "-lcutils", "-lwilhelm", "-ldl"] + link + ["-o", str(app_process)], check=True)
     zygote_client = native / "pocket-zygote-client-api28"
@@ -124,7 +124,7 @@ def build(ndk):
     queue.append((zygote_client, "system/bin/" + zygote_client.name))
     queue.append((log_writer, "system/bin/" + log_writer.name))
     # ART and core JNI libraries are loaded dynamically, beyond DT_NEEDED.
-    for name in ("libart.so", "libjavacore.so", "libopenjdk.so", "libopenjdkjvm.so", "libopenjdkjvmti.so"):
+    for name in ("libart.so", "libjavacore.so", "libopenjdk.so", "libopenjdkjvm.so"):
         queue.append((libs / name, "system/lib64/" + name))
     # Android 9 NativeLoader preloads its public namespace before the Java
     # entry point. Keep its actual list and supply the corresponding libraries.

@@ -10,6 +10,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <string>
+#ifndef POCKET_GUEST_API
+#define POCKET_GUEST_API 28
+#endif
+#define POCKET_INIT_STRING_INNER(value) #value
+#define POCKET_INIT_STRING(value) POCKET_INIT_STRING_INNER(value)
 
 namespace {
 std::string get(const char* name) {
@@ -26,7 +31,13 @@ bool await(const char* name, const char* value) {
 }
 int main(int argc, char** argv) {
     setbuf(stdout, nullptr);
-    if (argc < 2 || get("ro.build.version.sdk") != "28") return 64;
+    if (argc < 2 || get("ro.build.version.sdk") != POCKET_INIT_STRING(POCKET_GUEST_API)) return 64;
+#if POCKET_GUEST_API == 29
+    if (!strcmp(argv[1], "client-native")) {
+        if (setgid(39999) || setuid(39999)) return 20;
+        argv[1]=const_cast<char*>("client");
+    }
+#endif
     if (!strcmp(argv[1], "once")) {
         const char* fdText = getenv("ANDROID_SOCKET_pocket_init_test");
         if (getuid() != 39999 || getgid() != 39999 || argc != 3 || strcmp(argv[2], "boot-ok") ||
@@ -66,7 +77,7 @@ int main(int argc, char** argv) {
         if (child <= 1) return 16;
         for (int n = 0; n < 100; ++n) {
             if (kill(child, 0) == -1 && errno == ESRCH) {
-                puts("API28_INIT_SHUTDOWN_PASS states=stopped sockets=removed grandchild=gone");
+                puts("API" POCKET_INIT_STRING(POCKET_GUEST_API) "_INIT_SHUTDOWN_PASS states=stopped sockets=removed grandchild=gone");
                 return 0;
             }
             usleep(50000);
@@ -87,7 +98,7 @@ int main(int argc, char** argv) {
         if (set("ctl.start", "zygote") || set("ctl.interface_start", "anything") ||
             set("sys.powerctl", "reboot")) return 12;
         if (get("ro.boottime.pocket-daemon").empty()) return 13;
-        puts("API28_INIT_CLIENT_PASS uid=39999 actions=1 imported=1 property_trigger=1 oneshot=1 socket=1 crash_restart=1 disabled=1 ctl_start_stop_restart=1");
+        puts("API" POCKET_INIT_STRING(POCKET_GUEST_API) "_INIT_CLIENT_PASS uid=39999 actions=1 imported=1 property_trigger=1 oneshot=1 socket=1 crash_restart=1 disabled=1 ctl_start_stop_restart=1");
         return 0;
     }
     return 64;

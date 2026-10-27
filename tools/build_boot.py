@@ -100,13 +100,19 @@ def main():
     # Matching framework resources, stripped-JAR OAT/VDEX and core UI packages.
     for directory in ("system/etc", "system/fonts", "system/framework"):
         shutil.copytree(platform/directory,stage/directory,dirs_exist_ok=True)
+    # Virtual key events from IMEs need a real character map. Without Virtual.kcm
+    # numeric sendKeyEvent() cannot be translated into editable characters.
+    for directory in ("system/usr/keychars", "system/usr/keylayout", "system/usr/idc"):
+        if (platform/directory).is_dir():
+            shutil.copytree(platform/directory,stage/directory,dirs_exist_ok=True)
+    assert (stage/'system/usr/keychars/Virtual.kcm').is_file(), 'Missing virtual keyboard character map'
     # The matching SystemUI requires the Wi-Fi framework service even when the
     # controller is unavailable. Restore its reference-image feature metadata;
     # do not import unrelated hardware/Vulkan capability declarations.
     permissions=stage/'vendor/etc/permissions';permissions.mkdir(parents=True,exist_ok=True)
     shutil.copy2(platform/'vendor/etc/permissions/android.hardware.wifi.xml',permissions/'android.hardware.wifi.xml')
     applications={
-        "app":("ExtShared","KeyChain","LatinIME","CertInstaller","DeskClock"),
+        "app":("ExtShared","KeyChain","LatinIME","CertInstaller","DeskClock","webview"),
         "priv-app":("SystemUI","Launcher3QuickStep","SettingsProvider","Settings","PackageInstaller",
                     "DefaultContainerService","ExtServices","InputDevices","ExternalStorageProvider",
                     "MediaProvider","DownloadProvider","Shell","ProxyHandler","FusedLocation","Provision","ContactsProvider","Contacts"),
@@ -150,15 +156,16 @@ def main():
     values={"ro.product.cpu.abilist":info(arch)["abi"], "ro.product.cpu.abilist64":info(arch)["abi"],
             "ro.product.cpu.abilist32":"", "ro.zygote":"zygote64", "ro.hardware.gralloc":"redroid",
             "ro.hardware.hwcomposer":"redroid", "ro.hardware.egl":"swiftshader",
-            "dalvik.vm.usejit":"false", "dalvik.vm.usejitprofiles":"false", "dalvik.vm.dexopt.secondary":"false",
+            "dalvik.vm.usejit":"true", "dalvik.vm.jitthreshold":"1000",
+            "dalvik.vm.usejitprofiles":"false", "dalvik.vm.dexopt.secondary":"false",
             "ro.zygote.disable_gl_preload":"true", "ro.sf.lcd_density":"320", "ro.boot.redroid_width":"480", "ro.boot.redroid_height":"800", "ro.boot.redroid_fps":"30"}
     merged={}
     for source in (platform/"system/etc/prop.default",props):
         for line in source.read_text().splitlines():
             if line.strip().startswith("#") or "=" not in line: continue
             key,value=line.split("=",1);merged[key.strip()]=value.strip()
-    # This initial ARM64 profile runs interpreted code and reuses matching OAT.
-    # No 32-bit dex2oat process is silently substituted or reported as working.
+    # Compile hot Java methods in-process and reuse matching OAT. Profile saving
+    # stays off; runtime JIT does not need a guest dex2oat subprocess.
     values.update({"pm.dexopt."+reason:"verify" for reason in
                   ("first-boot","boot","install","bg-dexopt","ab-ota","inactive","shared")})
     merged.update(values)
@@ -180,7 +187,7 @@ def main():
     rc+="\nservice pocket-gatekeeper /system/bin/gatekeeperd /data/misc/gatekeeper\n    class pocket-zygote\n    user 1000\n    group 1000\n"
     bootclasspath=(ROOT/'out/api28/bootclasspath.txt').read_text().strip()
     rc+="\non property:sys.boot_completed=1\n    start pocket-framework-probe\n"
-    rc+="\nservice pocket-framework-probe /system/bin/pocket-app-process-api28 -Xint -Xnorelocate -Xnoimage-dex2oat -Ximage:/system/framework/boot.art -Xplugin:libopenjdkjvmti.so -agentpath:/system/lib64/libpocket_zygote_api28.so -Xms16m -Xmx96m /system/bin dev.kreijstal.aosppocket.guest.FrameworkProbe /system/etc/pocket-smoke.apk\n    class pocket-bootstrap\n    user 1000\n    group 1000\n    oneshot\n    setenv BOOTCLASSPATH "+bootclasspath+"\n"
+    rc+="\nservice pocket-framework-probe /system/bin/pocket-app-process-api28 -Xnorelocate -Xnoimage-dex2oat -Ximage:/system/framework/boot.art -Xms16m -Xmx96m /system/bin dev.kreijstal.aosppocket.guest.FrameworkProbe /system/etc/pocket-smoke.apk\n    class pocket-bootstrap\n    user 1000\n    group 1000\n    oneshot\n    setenv BOOTCLASSPATH "+bootclasspath+"\n"
     rc+="\non property:pocket.storage.ready=1\n    start pocket-storage-verify\n\nservice pocket-storage-verify /system/bin/pocket-storage-services verify\n    class pocket-bootstrap\n    user 0\n    group 0\n    oneshot\n"
     rc+="\nservice pocket-installd /system/bin/installd\n    class pocket-zygote\n    user 0\n    group 0\n\nservice pocket-surfaceflinger /system/bin/surfaceflinger\n    class pocket-zygote\n    user 1000\n    group 1000\n"
     (stage/"system/etc/init/init.system-server.rc").write_text(rc)

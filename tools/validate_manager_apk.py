@@ -26,6 +26,10 @@ with zipfile.ZipFile(args.apk) as apk:
                     back_flags.append(struct.unpack_from('<I',host_manifest,attribute+16)[0]!=0)
         offset+=size
     assert back_flags==[True],'Guest viewer platform Back callback opt-in missing'
+    if 'assets/pocket-images.json' in names:
+        from validate_download_manager import validate
+        validate(args.apk,args.ndk)
+        raise SystemExit(0)
     assert 'lib/arm64-v8a/libproot.so' in names,'API 25 PRoot missing'
     assert 'lib/arm64-v8a/libpocket_frames.so' in names,'Host anonymous display mapper missing'
     assert 'assets/api28-rootfs/vendor/lib64/hw/hwcomposer.pocket.so.payload' in names,'Guest direct composer missing'

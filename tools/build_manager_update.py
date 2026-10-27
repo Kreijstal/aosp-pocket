@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import struct
 import zipfile
+from boot_class_manifest import manifest as boot_manifest, GUEST_PATH as BOOT_MANIFEST
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -16,6 +17,8 @@ def main():
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--version-code', type=int, required=True)
     parser.add_argument('--version-name', required=True)
+    parser.add_argument('--host-dex',type=Path,help='Narrowly rebuilt Manager DEX; avoids unrelated native Makefile targets')
+    parser.add_argument('--host-library',action='append',default=[],metavar='NAME=LOCAL_FILE',help='Explicit ARM64 host shared library replacement/addition')
     parser.add_argument('--guest-control-jar', type=Path,
                         help='Explicit rebuilt guest bootstrap/control JAR; native image stays pinned')
     parser.add_argument('--guest-file', action='append', default=[], metavar='GUEST_PATH=LOCAL_FILE',
@@ -23,6 +26,14 @@ def main():
     parser.add_argument('--remove-guest-file', action='append', default=[], metavar='GUEST_PATH',
                         help='Omit a retired system/ or vendor/ payload from the new APK')
     args = parser.parse_args()
+    host_libraries={}
+    for spec in args.host_library:
+        name,separator,local=spec.partition('=')
+        if not separator or '/' in name or not name.startswith('lib') or not name.endswith('.so') or not Path(local).is_file():
+            parser.error('Invalid host library: '+spec)
+        entry='lib/arm64-v8a/'+name
+        if entry in host_libraries:parser.error('Duplicate host library: '+name)
+        host_libraries[entry]=Path(local)
     if not args.version_name.replace('.', '').isdigit():
         parser.error('Version name must contain only numbers and dots')
     guest_asset = 'assets/api28-rootfs/system/framework/pocket-zygote.jar.payload'
@@ -51,10 +62,24 @@ def main():
             if 'classes.dex' not in guest.namelist():
                 parser.error('Guest control JAR must contain classes.dex')
     args.out.mkdir(parents=True, exist_ok=True)
+    if args.guest_control_jar:
+        asset='assets/api28-rootfs/'+BOOT_MANIFEST+'.payload'
+        contents=boot_manifest(args.guest_control_jar)
+        if asset in removed:parser.error('The bootstrap definition manifest cannot be removed with a new bootstrap JAR')
+        if asset in guest_files:
+            if guest_files[asset].read_bytes()!=contents:parser.error('Bootstrap class manifest differs from rebuilt JAR')
+        else:
+            path=args.out/'pocket-zygote.classes';path.write_bytes(contents);guest_files[asset]=path
     toolchain = ROOT.parent/'helloworldandroid'
     toolcp = str(toolchain/'build/tools')+':'+str(ROOT/'out/runtime/tools')
-    subprocess.run(['make', '-f', 'runtime/Makefile', 'out/runtime/classes.dex',
-                    'out/runtime/tools/PocketManifest.class'], cwd=ROOT, check=True)
+    if args.host_dex:
+        manifest_tools=args.out/'manifest-tools';manifest_tools.mkdir(exist_ok=True)
+        subprocess.run(['javac','--release','8','-cp',str(toolchain/'build/tools'),'-d',str(manifest_tools),
+            str(ROOT/'runtime/tools/PocketManifest.java')],check=True)
+        toolcp=str(toolchain/'build/tools')+':'+str(manifest_tools)
+    else:
+        subprocess.run(['make', '-f', 'runtime/Makefile', 'out/runtime/classes.dex',
+                        'out/runtime/tools/PocketManifest.class'], cwd=ROOT, check=True)
     manifest = args.out/'manifest-source.xml'
     manifest.write_text((ROOT/'runtime/app/AndroidManifest.xml').read_text())
     subprocess.run(['java', '-cp', toolcp, 'PocketManifest', str(manifest),
@@ -66,6 +91,9 @@ def main():
         assert 'assets/api28-rootfs/system/bin/sh.payload' in names, 'Expected complete Android 9 image'
         assert 'assets/direct-boot-hooks.json' in names, 'Expected pinned direct runtime'
         base_machine = struct.unpack_from('<H', base.read('assets/api28-rootfs/system/lib64/libc.so.payload'), 18)[0]
+        for name,path in host_libraries.items():
+            data=path.read_bytes()
+            assert data[:4]==b'\x7fELF' and struct.unpack_from('<H',data,18)[0]==base_machine,'Host library ABI mismatch: '+name
         for name, path in guest_files.items():
             if name.endswith('.so.payload'):
                 data = path.read_bytes()
@@ -81,14 +109,16 @@ def main():
                 continue
             if entry.filename in guest_files:
                 continue
+            if entry.filename in host_libraries:continue
             out.writestr(entry, base.read(entry), compress_type=entry.compress_type, compresslevel=1)
         out.write(args.out/'AndroidManifest.xml', 'AndroidManifest.xml')
-        out.write(ROOT/'out/runtime/classes.dex', 'classes.dex')
+        out.write(args.host_dex or ROOT/'out/runtime/classes.dex', 'classes.dex')
         out.write(ROOT/'tools/pocketctl.py', 'assets/pocketctl.py')
         if args.guest_control_jar:
             out.write(args.guest_control_jar, guest_asset)
         for name, path in guest_files.items():
             out.write(path, name)
+        for name,path in host_libraries.items():out.write(path,name)
     target = args.out/('aosp-pocket-manager-'+args.version_name+'.apk')
     signer = ['java', '-cp', str(toolchain/'build/apksigner.jar'), 'com.android.apksigner.ApkSignerTool']
     subprocess.run(signer+['sign', '--ks', str(ROOT/'out/debug.keystore'), '--ks-pass', 'pass:android',

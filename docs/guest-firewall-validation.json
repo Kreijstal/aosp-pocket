@@ -1,0 +1,107 @@
+{
+  "exitCode": 0,
+  "log": "NATIVE_FIREWALL_PASS kernelUid=10175 guestUid=0 tracerPid=0 directSvc=blocked connectedWrite=blocked unixIpc=working uidMatch=working ipv6=blocked\n",
+  "hostUid": 10175,
+  "hostTrafficUnaffected": true,
+  "passed": true,
+  "command": "python3 /home/pi/test_exec_loader_on_pi.py --firewall",
+  "scope": "Real TCP/UDP syscalls under the native loader in an untrusted_app fixture; host traffic remains allowed",
+  "implementation": "Guest OUTPUT socket policy enforced by the native ARM64 interpreter; no host iptables/netfilter updates",
+  "policy_file": "/data/misc/pocket-firewall.rules",
+  "supported": [
+    "iptables and ip6tables frontends",
+    "filter table OUTPUT chain",
+    "-A, -I (head), -D (rule number), -F, -P, -S, -L",
+    "first matching rule wins",
+    "guest effective UID owner match",
+    "numeric destination IP/CIDR",
+    "TCP/UDP and destination port",
+    "ACCEPT and synchronous deny via DROP/REJECT",
+    "atomic persistent updates, 64 rules across both IP families",
+    "corrupt/unreadable configured policy fails closed for checked IP traffic",
+    "policy rechecked on outbound writes to existing connected sockets"
+  ],
+  "intercepted_syscalls": [
+    "connect",
+    "sendto",
+    "sendmsg",
+    "sendmmsg",
+    "write",
+    "writev",
+    "sendfile",
+    "splice",
+    "copy_file_range"
+  ],
+  "limits": [
+    "A compatibility policy for cooperative guest applications, not a hostile-code security boundary: all guest apps still share the Manager kernel UID and the loader has a trusted raw-syscall window",
+    "DROP/REJECT return EACCES before sending; kernel packet-drop timeout/conntrack semantics are not emulated",
+    "No INPUT/FORWARD/NAT/conntrack/counters/custom chains/iptables-restore",
+    "Android netd-managed UID chains and data saver return ENOTSUP; they do not silently acknowledge unapplied policy",
+    "UNIX IPC is permitted; host-delegated DNS and other host/peripheral relays are not attributed to the initiating guest UID by this firewall",
+    "No network namespace, separate kernel UID, inbound packet filter or independent routing stack",
+    "Not enforced in the legacy PRoot backend; does not claim coverage of asynchronous I/O or host-side relay traffic",
+    "Existing connections are not forcibly closed and incoming data is not filtered"
+  ],
+  "usage": [
+    "iptables -A OUTPUT -m owner --uid-owner 10017 -j DROP",
+    "iptables -I OUTPUT -p tcp -d 192.168.188.0/24 --dport 443 -j ACCEPT",
+    "iptables -S OUTPUT",
+    "iptables -D OUTPUT 1",
+    "ip6tables -P OUTPUT DROP",
+    "iptables -F OUTPUT",
+    "iptables -P OUTPUT ACCEPT"
+  ],
+  "validation": {
+    "host_command": "python3 tools/test_guest_firewall.py",
+    "host_result": "PASS: 28 real-socket assertions using actual firewall_runtime.h, including Manager /data backing alias",
+    "arm64_build_command": "python3 tools/build_guest_firewall.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+    "arm64_build_result": "PASS with -Wall -Wextra -Werror",
+    "arm64_fixture_command": "python3 /home/pi/test_exec_loader_on_pi.py --firewall",
+    "arm64_fixture_evidence": "Observed in the Pi Android VM under untrusted_app, not Samsung hardware validation",
+    "environment_note": "The old fixture UID initially had stale network permissions after INTERNET was added. A fresh install of only the isolated fixture restored host socket creation. No host firewall rules were changed.",
+    "loader_regression": {
+      "exitCode": 0,
+      "log": "LOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nloader-fixture\nSHELL_EXEC_PASS\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_ALTSTACK_PASS bytes=16384 nested_filesystem_trap=1\nLOADER_CHAIN_PASS execs=16 filters=2 libcBytes=858956 differentBytes=0 tracerPid=0 kernelUid=10175\nLOADER_TEST_PASS fork=1 threads=1 exec=16 empty_env=1 argv=1 mask=1 unchanged_bionic=1 no_tracer=1\n",
+      "hostUid": 10175,
+      "passed": true,
+      "native": {
+        "execs": 16,
+        "filtersPerProcess": 2,
+        "bionicExecutableBytesCompared": 858956,
+        "differentBytes": 0,
+        "tracerPid": 0,
+        "kernelUid": 10175
+      },
+      "command": "python3 /home/pi/test_exec_loader_on_pi.py",
+      "scope": "Separate non-debuggable Android APK under its normal untrusted_app domain; not a full Android guest boot"
+    },
+    "package": "out/manager-0.38/aosp-pocket-manager-0.38.apk",
+    "package_result": "Signature verified; stock Bionic and linker payloads unchanged from 0.37",
+    "full_manager": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": true,
+      "ready": true,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 running \u00b7 720 \u00d7 1280",
+      "shellUid": 0,
+      "native_firewall_probe": "NATIVE_FIREWALL_PASS kernelUid=10177 guestUid=0 tracerPid=0 directSvc=blocked connectedWrite=blocked unixIpc=working uidMatch=working ipv6=blocked\n",
+      "policy_restored": "No configured policy file; default allow",
+      "ipv4_list": "-P OUTPUT ACCEPT\n",
+      "ipv6_list": "-P OUTPUT ACCEPT\n"
+    },
+    "full_manager_command": "pocketctl exec /data/local/tmp/firewall-native-probe (runtime/tests/firewall_native.c; prepared for the Manager loader)",
+    "pi_manager_version": "0.38",
+    "backup": "/home/pi/pocket-backups/before-firewall-0.38-userdata.tar (guest data and preferences; reproducible installed APK copies and dalvik cache excluded)",
+    "storage_cleanup": "Removed only the system directory of the unused syscall-rootfs test image to make space for the update; its data and the active api28-native-rootfs remain intact"
+  },
+  "delivery": {
+    "version": "0.38",
+    "samsung_path": "/sdcard/Download/aosp-pocket-manager-0.38.apk",
+    "transport": "rsync over LAN",
+    "size_bytes": 577437276,
+    "installed_on_samsung": false
+  }
+}

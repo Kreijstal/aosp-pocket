@@ -8,7 +8,7 @@ public final class HostWire {
     private HostWire() { }
     public static final int MAGIC=0x504b4831, MAX=16*1024*1024;
     public static final int INFO=1, DNS=2, CONTACTS=3, LOCATION=4, PHONE=5,
-        SENSORS=6, CAMERAS=7, CAMERA=8, MICROPHONE=9, PLAYBACK=10, VIBRATE=11, PHONE_UI=12;
+        SENSORS=6, CAMERAS=7, CAMERA=8, MICROPHONE=9, PLAYBACK=10, VIBRATE=11, PHONE_UI=12, AUDIO_OUT=13, AUDIO_IN=14, CAMERA_STREAM=15;
     public static byte[] read(DataInputStream in,int limit) throws IOException {
         int length=in.readInt();
         if(length<0 || length>limit)throw new IOException("Host bridge packet exceeds limit");

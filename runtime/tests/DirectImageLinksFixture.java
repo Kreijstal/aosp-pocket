@@ -19,6 +19,9 @@ public final class DirectImageLinksFixture {
                     throw new AssertionError("Generated Magisk link retained: "+name);
             if(Files.exists(getprop,LinkOption.NOFOLLOW_LINKS) || Files.exists(setprop,LinkOption.NOFOLLOW_LINKS))
                 throw new AssertionError("Generated links were retained");
+            Files.createSymbolicLink(getprop,Paths.get("toybox"));
+            DirectImage.clearGeneratedLinks(root.toFile());
+            if(Files.exists(getprop,LinkOption.NOFOLLOW_LINKS))throw new AssertionError("Android 10 generated getprop link retained");
             Files.createSymbolicLink(getprop,Paths.get("/unexpected-target"));
             Files.write(setprop,new byte[]{42});
             DirectImage.clearGeneratedLinks(root.toFile());

@@ -1,0 +1,79 @@
+{
+  "scope": "Pi VM Pocket Android 9 real input socket",
+  "validation": "PASS",
+  "baseline": {
+    "validation": "PASS",
+    "mode": "baseline",
+    "acknowledgementMs": [
+      1218.784462,
+      22.73413
+    ],
+    "app": {
+      "orderedDownUp": true,
+      "handlerDelayMs": 1200
+    }
+  },
+  "activeModuleViewUpdated": true,
+  "bridgePids": {
+    "before": 18724,
+    "after": 8644
+  },
+  "backup": "/data/local/tmp/pocket-zygote-before-async-input.jar",
+  "patched": {
+    "validation": "PASS",
+    "mode": "async",
+    "acknowledgementMs": [
+      16.498278,
+      14.197574
+    ],
+    "app": {
+      "orderedDownUp": true,
+      "handlerDelayMs": 1200
+    }
+  },
+  "guestJarSha256": "427570550f0f9cd80d4bc7bcf5fbb29625bec356d4aa909b5ace875a806b698a",
+  "measurement": "Production control-socket acknowledgement; intentionally slow ordinary app. This does not measure visible keyboard drawing latency.",
+  "sourceChange": "runtime/direct/GuestControl.java: interactive InputManager injection mode 2 (WAIT_FOR_FINISH) -> 0 (ASYNC)",
+  "validationCommand": "python3 ~/.config/pocketctl/input-latency/test_input_latency_on_termux.py --pi",
+  "build": {
+    "version": "0.72",
+    "packageValidation": "PASS",
+    "changedEntries": [
+      "AndroidManifest.xml",
+      "assets/api28-rootfs/system/framework/pocket-zygote.jar.payload"
+    ],
+    "sha256": "3be2e38089faff01f142ef8f35085ab53e1bc3b6b2d3a2df8c8b7775c9812bd6",
+    "bytes": 578653189,
+    "guestChange": "GuestControl.inject mode WAIT_FOR_FINISH(2) -> ASYNC(0); no other guest classes changed",
+    "sourceBuild": "javac --release 8 for runtime/direct/GuestControl.java, D8 min-api 28: PASS",
+    "apkBuild": "python3 tools/build_manager_update.py --base-apk out/resign-0.70/aosp-pocket-manager-0.70.apk --out out/input-0.72 --version-code 72 --version-name 0.72 --host-dex out/input-0.72/base-host.dex --guest-control-jar out/input-latency/pocket-zygote.jar: PASS",
+    "deviceValidation": "PASS: Pi VM installed 0.72, normal guest restart, existing-password UI unlock, real ordered-input latency test, and navigation"
+  },
+  "samsung": {
+    "testStoppedBeforeLivePatch": true,
+    "download": "/sdcard/Download/aosp-pocket-manager-0.72.apk",
+    "sha256CopyVerified": true,
+    "installedByThisSession": false
+  },
+  "installedUpdate": {
+    "scope": "Pi VM Pocket Android 9 real input socket",
+    "validation": "PASS",
+    "existingPasswordUiUnlock": "PASS",
+    "patched": {
+      "validation": "PASS",
+      "mode": "async",
+      "acknowledgementMs": [
+        70.115612,
+        7.027667
+      ],
+      "app": {
+        "orderedDownUp": true,
+        "handlerDelayMs": 1200
+      }
+    },
+    "guestJarSha256": "427570550f0f9cd80d4bc7bcf5fbb29625bec356d4aa909b5ace875a806b698a",
+    "installedManagerVersion": "0.72",
+    "persistenceAfterGuestRestart": "PASS",
+    "navigationAfterUpdate": "PASS"
+  }
+}

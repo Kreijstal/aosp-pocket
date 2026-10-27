@@ -1,0 +1,29 @@
+{
+  "device": "Samsung SM-G780G",
+  "hostAndroidSdk": 33,
+  "kernel": "4.19.113-27223811",
+  "managerVersionInstalled": "0.36",
+  "validation": "Live atomic replacement of source-built guest zygote JNI; packaged persistently in 0.37",
+  "failureBefore": "system_server repeatedly terminated: IllegalArgumentException from android.os.Process.setThreadGroupAndCpuset during DisplayManagerService.setupSchedulerPolicies",
+  "change": "Native-backend JNI scheduling adapter validates thread and group, retaining host cpuset assignment",
+  "actualStatus": {
+    "running": true,
+    "ready": true,
+    "starting": false,
+    "status": "Android 9 running \u00b7 1080 \u00d7 2400"
+  },
+  "evidence": [
+    "DIRECT_THREAD_GROUP_HINT host_cpuset=unchanged",
+    "PROPERTY_WRITE name=sys.boot_completed result=0 peer_uid=10430",
+    "POCKET_CONTROL_READY sdk=28 width=1080 height=2400 density=480",
+    "ActivityManager Displayed com.android.launcher3/.Launcher: +916ms (total +2s399ms)"
+  ],
+  "commands": [
+    "python tools/pocketctl.py status",
+    "python tools/pocketctl.py exec /system/bin/toybox cat /logs/manager-init.log"
+  ],
+  "limitations": [
+    "Full 0.37 APK installation/restart still needs user installation tap",
+    "This verifies boot and launcher startup; not every guest peripheral"
+  ]
+}

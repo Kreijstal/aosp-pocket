@@ -1,0 +1,248 @@
+{
+  "result": "PASS",
+  "checkedAtUtc": "2026-10-22T12:33:31Z",
+  "command": "python3 /home/pi/validate_proc_view_on_pi.py --guest-apk /data/local/tmp/attest-probe-1.9.apk",
+  "outerVm": {
+    "checks": {
+      "runtime_binder_uid": {
+        "status": "PASS",
+        "detail": "Java and raw Binder package UID=10167",
+        "data": {
+          "package": "dev.kreijstal.attestprobe",
+          "applicationUid": 10167,
+          "processUid": 10167,
+          "userId": 0,
+          "source": "Direct /dev/binder driver IOCTLs; no libbinder or Java Parcel",
+          "nativeStatus": 0,
+          "rawBinderUid": 10167,
+          "parcelFormat": 2,
+          "transactionCode": 5,
+          "elapsedMs": 3
+        }
+      },
+      "runtime_jvmti": {
+        "status": "PASS",
+        "detail": "No mapped path contains jvmti.so",
+        "data": {
+          "source": "/proc/self/maps",
+          "marker": "jvmti.so",
+          "mappings": []
+        }
+      },
+      "runtime_jdwp": {
+        "status": "PASS",
+        "detail": "No mapped path contains jdwp.so",
+        "data": {
+          "source": "/proc/self/maps",
+          "marker": "jdwp.so",
+          "mappings": []
+        }
+      },
+      "runtime_bionic_mappings": {
+        "status": "INFO",
+        "detail": "Observed paths: [/apex/com.android.runtime/lib64/bionic/libc.so, /apex/com.android.runtime/bin/linker64] (8 segments)",
+        "data": {
+          "source": "/proc/self/maps",
+          "paths": [
+            "/apex/com.android.runtime/lib64/bionic/libc.so",
+            "/apex/com.android.runtime/bin/linker64"
+          ],
+          "segments": [
+            "78ac283000-78ac2da000 r--p 00000000 07:70 41                             /apex/com.android.runtime/lib64/bionic/libc.so",
+            "78ac2db000-78ac378000 r-xp 00058000 07:70 41                             /apex/com.android.runtime/lib64/bionic/libc.so",
+            "78ac37b000-78ac37f000 r--p 000f8000 07:70 41                             /apex/com.android.runtime/lib64/bionic/libc.so",
+            "78ac37f000-78ac380000 rw-p 000fc000 07:70 41                             /apex/com.android.runtime/lib64/bionic/libc.so",
+            "78e25ef000-78e263d000 r--p 00000000 07:70 16                             /apex/com.android.runtime/bin/linker64",
+            "78e263f000-78e27a7000 r-xp 00050000 07:70 16                             /apex/com.android.runtime/bin/linker64",
+            "78e27a7000-78e27b2000 r--p 001b8000 07:70 16                             /apex/com.android.runtime/bin/linker64",
+            "78e27b3000-78e27b6000 rw-p 001c4000 07:70 16                             /apex/com.android.runtime/bin/linker64"
+          ],
+          "fileChecks": [
+            {
+              "path": "/apex/com.android.runtime/lib64/bionic/libc.so",
+              "device": 1904,
+              "inode": 41,
+              "mappedSegments": 4,
+              "matchingSegments": 4,
+              "status": "MATCH"
+            },
+            {
+              "path": "/apex/com.android.runtime/bin/linker64",
+              "device": 1904,
+              "inode": 16,
+              "mappedSegments": 4,
+              "matchingSegments": 4,
+              "status": "MATCH"
+            }
+          ],
+          "matchingFiles": 2,
+          "mismatchingFiles": 0,
+          "unavailableFiles": 0,
+          "allMappedFilesMatch": true,
+          "fileIdentityScope": "Current stat device/inode versus maps; replacement or deletion can cause differences"
+        }
+      },
+      "native_tracer": {
+        "status": "PASS",
+        "detail": "TracerPid=0",
+        "data": {
+          "source": "/proc/self/status",
+          "tracerPid": 0
+        }
+      },
+      "runtime_agent_arguments": {
+        "status": "INFO",
+        "detail": "No agent flags visible; zygote/app process naming can replace argv. Use the mapped-library checks to detect inherited instrumentation.",
+        "data": {
+          "source": "/proc/self/cmdline",
+          "arguments": []
+        }
+      }
+    },
+    "scope": "Read-only runtime evidence from this app process; no capture or debugger attachment"
+  },
+  "pocketGuest": {
+    "checks": {
+      "runtime_binder_uid": {
+        "status": "PASS",
+        "detail": "Java and raw Binder package UID=10018",
+        "data": {
+          "package": "dev.kreijstal.attestprobe",
+          "applicationUid": 10018,
+          "processUid": 10018,
+          "userId": 0,
+          "source": "Direct /dev/binder driver IOCTLs; no libbinder or Java Parcel",
+          "nativeStatus": 0,
+          "rawBinderUid": 10018,
+          "parcelFormat": 2,
+          "transactionCode": 5,
+          "elapsedMs": 17
+        }
+      },
+      "runtime_jvmti": {
+        "status": "PASS",
+        "detail": "No mapped path contains jvmti.so",
+        "data": {
+          "source": "/proc/self/maps",
+          "marker": "jvmti.so",
+          "mappings": []
+        }
+      },
+      "runtime_jdwp": {
+        "status": "PASS",
+        "detail": "No mapped path contains jdwp.so",
+        "data": {
+          "source": "/proc/self/maps",
+          "marker": "jdwp.so",
+          "mappings": []
+        }
+      },
+      "runtime_bionic_mappings": {
+        "status": "INFO",
+        "detail": "Observed paths: [/system/bin/pocket-loader, /system/lib64/libc.so, /system/bin/linker64] (10 segments)",
+        "data": {
+          "source": "/proc/self/maps",
+          "paths": [
+            "/system/bin/pocket-loader",
+            "/system/lib64/libc.so",
+            "/system/bin/linker64"
+          ],
+          "segments": [
+            "5000000000-500000a000 r-xp 00000000 fe:69 44078                          /system/bin/pocket-loader",
+            "500000c000-500000d000 r--p 0000c000 fe:69 44078                          /system/bin/pocket-loader",
+            "5000010000-5000011000 rw-p 00010000 fe:69 44078                          /system/bin/pocket-loader",
+            "5000300000-5000304000 r-xp 00014000 fe:69 44078                          /system/bin/pocket-loader",
+            "7cb5a01000-7cb5ad3000 r-xp 00000000 fe:69 41595                          /system/lib64/libc.so",
+            "7cb5aeb000-7cb5af1000 r--p 000da000 fe:69 41595                          /system/lib64/libc.so",
+            "7cb5af1000-7cb5af3000 rw-p 000e0000 fe:69 41595                          /system/lib64/libc.so",
+            "7cb83c6000-7cb84ed000 r-xp 00000000 fe:69 39579                          /system/bin/linker64",
+            "7cb850b000-7cb8516000 r--p 00135000 fe:69 39579                          /system/bin/linker64",
+            "7cb8516000-7cb8517000 rw-p 00140000 fe:69 39579                          /system/bin/linker64"
+          ],
+          "fileChecks": [
+            {
+              "path": "/system/bin/pocket-loader",
+              "device": 65129,
+              "inode": 44078,
+              "mappedSegments": 4,
+              "matchingSegments": 4,
+              "status": "MATCH"
+            },
+            {
+              "path": "/system/lib64/libc.so",
+              "device": 65129,
+              "inode": 41595,
+              "mappedSegments": 3,
+              "matchingSegments": 3,
+              "status": "MATCH"
+            },
+            {
+              "path": "/system/bin/linker64",
+              "device": 65129,
+              "inode": 39579,
+              "mappedSegments": 3,
+              "matchingSegments": 3,
+              "status": "MATCH"
+            }
+          ],
+          "matchingFiles": 3,
+          "mismatchingFiles": 0,
+          "unavailableFiles": 0,
+          "allMappedFilesMatch": true,
+          "fileIdentityScope": "Current stat device/inode versus maps; replacement or deletion can cause differences"
+        }
+      },
+      "native_tracer": {
+        "status": "PASS",
+        "detail": "TracerPid=0",
+        "data": {
+          "source": "/proc/self/status",
+          "tracerPid": 0
+        }
+      },
+      "runtime_agent_arguments": {
+        "status": "INFO",
+        "detail": "No agent flags visible; zygote/app process naming can replace argv. Use the mapped-library checks to detect inherited instrumentation.",
+        "data": {
+          "source": "/proc/self/cmdline",
+          "arguments": []
+        }
+      }
+    },
+    "scope": "Read-only runtime evidence from this app process; no capture or debugger attachment"
+  },
+  "kernel": {
+    "outer": {
+      "pid": 30877,
+      "tracerPid": 0
+    },
+    "guest": {
+      "pid": 32139,
+      "tracerPid": 0
+    }
+  },
+  "dataAliasFiles": [
+    {
+      "path": "/data/app/dev.kreijstal.attestprobe-RaXCHM5Q5hLm50qB5dQYcg==/lib/arm64/libattest_binder.so",
+      "device": 65129,
+      "inode": 41453
+    },
+    {
+      "path": "/data/app/dev.kreijstal.attestprobe-RaXCHM5Q5hLm50qB5dQYcg==/base.apk",
+      "device": 65129,
+      "inode": 33867
+    }
+  ],
+  "mappingSegmentsVerifiedAgainstKernel": 10,
+  "guestStatus": {
+    "enabled": true,
+    "port": 2228,
+    "sdk": 28,
+    "running": true,
+    "ready": true,
+    "starting": false,
+    "stopping": false,
+    "status": "Android 9 running \u00b7 720 \u00d7 1280",
+    "shellUid": 0
+  }
+}

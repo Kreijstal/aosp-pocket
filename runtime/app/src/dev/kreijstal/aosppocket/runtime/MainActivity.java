@@ -49,7 +49,8 @@ public final class MainActivity extends RuntimeActivity {
         card.setVisibility(ready ? View.VISIBLE : View.GONE);
         idle.setVisibility(ready ? View.GONE : View.VISIBLE);
         boolean busy=runtime!=null && (runtime.starting() || runtime.preparing() || runtime.stopping());
-        status.setText(runtime==null ? "Connecting to Android…" : busy ? "Starting Android…" : "Your Android is ready");
+        status.setText(runtime==null ? "Connecting to Android…" : runtime.status());
+        start.setText(runtime!=null && runtime.directBackend() && !runtime.hasImage() ? "Download Android "+runtime.androidVersion() : "Start Android");
         start.setVisibility(busy || ready ? View.GONE : View.VISIBLE);
         start.setEnabled(runtime!=null && runtime.canStart() && !runtime.running() && !busy);
     }

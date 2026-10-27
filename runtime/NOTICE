@@ -87,3 +87,12 @@ Android 9 ARM64 reference image, with the original Android NOTICE.xml.gz in
 assets/licenses/android9-NOTICE.xml.gz. Its binary provenance and matching
 source revisions are recorded in sources.lock.json. Gatekeeper uses the AOSP
 software fallback; no hardware credential or attestation device is included.
+
+The native Android 9 media profile compiles the AOSP android-9.0.0_r61
+software PCM, G.711, MP3 and AVC codec implementations, libavc ARM64 kernels,
+ashmem mapper/allocator and media resource manager. Original Apache-2.0 and
+PacketVideo/Ittiam copyright notices remain in the pinned sources. The bundled
+Android 9 NOTICE asset and system/etc/pocket-media-NOTICE.txt retain the
+corresponding notices and licenses. Exact source revisions are in
+sources.lock.json. The private OMX registration, port-layout conversion and
+empty-fence compatibility adapter are project code under GPL-3.0-only.

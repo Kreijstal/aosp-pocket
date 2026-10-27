@@ -1,0 +1,361 @@
+{
+  "microgCompatibilityValidation": "PASS",
+  "scope": "Pi dedicated Android 16 VM -> Pocket Android 9 API 28; physical phone not tested",
+  "version": "0.55",
+  "apkAudit": {
+    "version": "0.55",
+    "sha256": "e500256e08b7e28e9e606c03929c1225779110c04d4f054a7cf4313d8079dd21",
+    "changed": [
+      "AndroidManifest.xml",
+      "assets/api28-rootfs/system/framework/pocket-zygote.classes.payload",
+      "assets/api28-rootfs/system/framework/pocket-zygote.jar.payload",
+      "assets/api28-rootfs/system/lib64/libpocket_zygote_api28.so.payload"
+    ],
+    "added": [
+      "assets/api28-rootfs/system/etc/permissions/privapp-permissions-pocket-microg.xml.payload",
+      "assets/api28-rootfs/system/etc/pocket-microg/google-cert.hex.payload",
+      "assets/api28-rootfs/system/etc/sysconfig/pocket-microg.xml.payload"
+    ],
+    "removed": [],
+    "hostDexAndOtherAssetsUnchanged": true
+  },
+  "commands": [
+    {
+      "command": "python3 tools/build_microg_runtime.py --java-only",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_microg_probe.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 ~/microg-test/test_microg_on_pi.py --probe ~/microg-test/microg-api-probe.apk --owner ~/microg-test/microg-owner.jar --require-zygisk-disabled",
+      "result": "41 ordinary-app API assertions PASS; required Self-Check items confirmed separately"
+    },
+    {
+      "command": "python3 ~/microg-test/test_microg_on_pi.py --probe ~/microg-test/microg-api-probe.apk --owner ~/microg-test/microg-owner.jar",
+      "result": "PASS: 41 ordinary-app API assertions and seven required original microG Self-Check items"
+    },
+    {
+      "command": "python3 ~/test_guest_media_on_pi.py --probe ~/media-codec-probe.jar",
+      "result": "PASS: six codecs, PCM, G711, MP3 and H264 round-trip"
+    },
+    {
+      "command": "python3 ~/test_guest_encryption_on_pi.py locked",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 ~/test_guest_encryption_on_pi.py verify",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 ~/test_guest_lock_on_pi.py unlock --probe ~/microg-test/guest-lock-probe.jar",
+      "result": "PASS"
+    }
+  ],
+  "apiWithZygiskDisabled": {
+    "uid": 10023,
+    "sdk": 28,
+    "ordinary_app": true,
+    "com.google.android.gms.legacy_digest": "38918a453d07199354f8b19af05ec6562ced5788",
+    "com.google.android.gms.legacy": true,
+    "com.google.android.gms.modern": true,
+    "com.google.android.gms.history": true,
+    "com.google.android.gms.versioned": true,
+    "com.google.android.gms.raw_cert": true,
+    "com.google.android.gms.sha256_cert": true,
+    "com.google.android.gms.uid_cert": true,
+    "com.google.android.gms.wrong_cert_rejected": true,
+    "com.google.android.gms.list": true,
+    "com.google.android.gms.permission_list": true,
+    "com.android.vending.legacy_digest": "38918a453d07199354f8b19af05ec6562ced5788",
+    "com.android.vending.legacy": true,
+    "com.android.vending.modern": true,
+    "com.android.vending.history": true,
+    "com.android.vending.versioned": true,
+    "com.android.vending.raw_cert": true,
+    "com.android.vending.sha256_cert": true,
+    "com.android.vending.uid_cert": true,
+    "com.android.vending.wrong_cert_rejected": true,
+    "com.android.vending.list": true,
+    "com.android.vending.permission_list": true,
+    "self_not_projected": true,
+    "self_certificate_rejected": true,
+    "self_uid_certificate_rejected": true,
+    "system_signature_not_granted": true,
+    "direct_service_lookup": true,
+    "cross_user_flag_denied": true,
+    "cross_user_list_denied": true,
+    "permission_grant_denied": true,
+    "permission_remains_denied": true,
+    "bootstrap_not_callable_by_app": true,
+    "google_account_authenticator": true,
+    "gms_service_resolved": true,
+    "gms_service_connected": true,
+    "gms_service_broker": true,
+    "gms_binder_alive": true,
+    "gms_get_service_transacted": true,
+    "gms_get_service_success": true,
+    "gms_common_service": true,
+    "gms_common_rpc_transacted": true,
+    "gms_common_rpc_success": true,
+    "validation": "PASS",
+    "zygiskEnabled": "0",
+    "scope": "Pi dedicated VM -> Pocket Android 9 -> ordinary client app"
+  },
+  "apiWithZygiskEnabled": {
+    "uid": 10023,
+    "sdk": 28,
+    "ordinary_app": true,
+    "com.google.android.gms.legacy_digest": "38918a453d07199354f8b19af05ec6562ced5788",
+    "com.google.android.gms.legacy": true,
+    "com.google.android.gms.modern": true,
+    "com.google.android.gms.history": true,
+    "com.google.android.gms.versioned": true,
+    "com.google.android.gms.raw_cert": true,
+    "com.google.android.gms.sha256_cert": true,
+    "com.google.android.gms.uid_cert": true,
+    "com.google.android.gms.wrong_cert_rejected": true,
+    "com.google.android.gms.list": true,
+    "com.google.android.gms.permission_list": true,
+    "com.android.vending.legacy_digest": "38918a453d07199354f8b19af05ec6562ced5788",
+    "com.android.vending.legacy": true,
+    "com.android.vending.modern": true,
+    "com.android.vending.history": true,
+    "com.android.vending.versioned": true,
+    "com.android.vending.raw_cert": true,
+    "com.android.vending.sha256_cert": true,
+    "com.android.vending.uid_cert": true,
+    "com.android.vending.wrong_cert_rejected": true,
+    "com.android.vending.list": true,
+    "com.android.vending.permission_list": true,
+    "self_not_projected": true,
+    "self_certificate_rejected": true,
+    "self_uid_certificate_rejected": true,
+    "system_signature_not_granted": true,
+    "direct_service_lookup": true,
+    "cross_user_flag_denied": true,
+    "cross_user_list_denied": true,
+    "permission_grant_denied": true,
+    "permission_remains_denied": true,
+    "bootstrap_not_callable_by_app": true,
+    "google_account_authenticator": true,
+    "gms_service_resolved": true,
+    "gms_service_connected": true,
+    "gms_service_broker": true,
+    "gms_binder_alive": true,
+    "gms_get_service_transacted": true,
+    "gms_get_service_success": true,
+    "gms_common_service": true,
+    "gms_common_rpc_transacted": true,
+    "gms_common_rpc_success": true,
+    "validation": "PASS",
+    "zygiskEnabled": "1",
+    "scope": "Pi dedicated VM -> Pocket Android 9 -> ordinary client app"
+  },
+  "originalMicrogSelfCheck": {
+    "validation": "PASS",
+    "source": "original microG Self-Check UI",
+    "required": {
+      "System spoofs signature:": true,
+      "microG Services installed:": true,
+      "microG Services has correct signature:": true,
+      "microG Companion / Play Store installed:": true,
+      "microG Companion / Play Store has correct signature:": true,
+      "microG Services Framework installed:": true,
+      "Battery optimizations ignored:": true
+    },
+    "optionalPermissionChecks": {
+      "Permission to access approximate location (network-based):": false,
+      "Permission to access precise location (GPS and network-based):": false,
+      "Permission to read the contents of your SD card:": false,
+      "Permission to modify or delete the contents of your SD card:": false,
+      "Permission to find accounts on the device:": false,
+      "Permission to read phone status and identity:": false,
+      "Permission to receive text messages (SMS):": false,
+      "Permission to This app can appear on top of other apps:": true
+    }
+  },
+  "encryptionLocked": {
+    "mode": "locked",
+    "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+    "beforeUnlockCatExitCode": 1,
+    "beforeUnlockStdoutBytes": 0,
+    "beforeUnlockCanaryReadable": false,
+    "wrongPasswordRejected": true,
+    "wrongPasswordOutput": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\nGUEST_CE_KEY_FAILED java.lang.SecurityException: Guest credential rejected\n",
+    "privateStorageUnavailableBeforeUnlock": true,
+    "validation": "PASS"
+  },
+  "encryptionUnlock": {
+    "mode": "verify",
+    "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+    "unlockWaitMilliseconds": 1546,
+    "correctPasswordVerified": true,
+    "encryptedCanaryPreserved": true,
+    "validation": "PASS"
+  },
+  "lockUi": {
+    "scope": "Pocket Android 9 guest on dedicated Pi VM",
+    "mode": "unlock",
+    "exitCode": 0,
+    "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"unlock\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"interactive\":true,\"lockScreenEnabled\":true,\"uiPasswordUnlockVerified\":true,\"previouslyLocked\":true}\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\n",
+    "validation": "PASS",
+    "uid": 1000,
+    "previouslySecure": true,
+    "deviceSecure": true,
+    "keyguardSecure": true,
+    "keyguardLocked": false,
+    "correctPasswordVerified": true,
+    "interactive": true,
+    "lockScreenEnabled": true,
+    "uiPasswordUnlockVerified": true,
+    "previouslyLocked": true
+  },
+  "codecs": {
+    "validation": "PASS",
+    "scope": "Pocket Android 9 on dedicated Pi Android VM; logical app UID 19990",
+    "status": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": true,
+      "ready": true,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 running \u00b7 720 \u00d7 1280",
+      "shellUid": 0
+    },
+    "exitCode": 0,
+    "stdout": "MEDIA_CODEC OMX.google.g711.alaw.decoder encoder=false\nMEDIA_CODEC OMX.google.g711.mlaw.decoder encoder=false\nMEDIA_CODEC OMX.google.mp3.decoder encoder=false\nMEDIA_CODEC OMX.google.raw.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.encoder encoder=true\nMEDIA_ENUMERATION_PASS count=6 elapsedMs=298\nMEDIA_RAW_PASS bytes=128\nMEDIA_G711_PASS variants=2 samples=64\nMEDIA_MP3_PASS pcmBytes=4608\nMEDIA_AVC_ROUNDTRIP_PASS frames=4 packets=4\nMEDIA_CODEC_PROBE_PASS uid=19990\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmxStore remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=29830\n",
+    "guestDataPreserved": "not updated"
+  },
+  "attestCold": {
+    "summary": {
+      "pass": 43,
+      "fail": 5,
+      "skip": 3,
+      "info": 8,
+      "checks": 59,
+      "scope": "device_checks_excluding_optional_biometrics",
+      "deviceChecks": 59
+    },
+    "gms_present": {
+      "id": "gms_present",
+      "category": "ATTEST",
+      "description": "Google Play services present",
+      "status": "PASS",
+      "detail": "version 0.3.17.252432"
+    },
+    "failures": [
+      {
+        "id": "root_su_paths",
+        "detail": "found: [\"\\/system\\/bin\\/su\"]"
+      },
+      {
+        "id": "magisk_paths",
+        "detail": "found: [\"\\/sbin\\/.magisk\",\"\\/data\\/adb\\/magisk\",\"\\/data\\/adb\\/modules\"]"
+      },
+      {
+        "id": "build_tags_test_keys",
+        "detail": "tags=test-keys type=userdebug"
+      },
+      {
+        "id": "section_codec",
+        "detail": "timeout after 1000ms"
+      },
+      {
+        "id": "contacts_readable",
+        "detail": "timeout after 2000ms"
+      }
+    ]
+  },
+  "attestWarm": {
+    "summary": {
+      "pass": 44,
+      "fail": 4,
+      "skip": 3,
+      "info": 8,
+      "checks": 59,
+      "scope": "device_checks_excluding_optional_biometrics",
+      "deviceChecks": 59
+    },
+    "gms_present": {
+      "id": "gms_present",
+      "category": "ATTEST",
+      "description": "Google Play services present",
+      "status": "PASS",
+      "detail": "version 0.3.17.252432"
+    },
+    "codec": {
+      "id": "section_codec",
+      "category": "RIDGE",
+      "description": "Ridge section 'codec'",
+      "status": "PASS",
+      "detail": "collected",
+      "data": {
+        "total": 6,
+        "encoders": 1,
+        "sample": [
+          "OMX.google.g711.alaw.decoder",
+          "OMX.google.g711.mlaw.decoder",
+          "OMX.google.mp3.decoder",
+          "OMX.google.raw.decoder",
+          "OMX.google.h264.decoder",
+          "OMX.google.h264.encoder"
+        ]
+      }
+    },
+    "contacts": {
+      "id": "contacts_readable",
+      "category": "ACCESS",
+      "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+      "status": "FAIL",
+      "detail": "timeout after 2000ms"
+    },
+    "failures": [
+      {
+        "id": "root_su_paths",
+        "detail": "found: [\"\\/system\\/bin\\/su\"]"
+      },
+      {
+        "id": "magisk_paths",
+        "detail": "found: [\"\\/sbin\\/.magisk\",\"\\/data\\/adb\\/magisk\",\"\\/data\\/adb\\/modules\"]"
+      },
+      {
+        "id": "build_tags_test_keys",
+        "detail": "tags=test-keys type=userdebug"
+      },
+      {
+        "id": "contacts_readable",
+        "detail": "timeout after 2000ms"
+      }
+    ]
+  },
+  "finalState": {
+    "state": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": true,
+      "ready": true,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 running \u00b7 720 \u00d7 1280",
+      "shellUid": 0
+    },
+    "zygiskEnabled": "1",
+    "zygiskOriginalSettingRestored": true,
+    "packageQueryFallbacks": 0,
+    "markers": "POCKET_ZYGISK_INSTALL result=0\nGUEST_LOG pid=30697 kernel_uid=10177 tid=30697 id=0 priority=5 tag=System.err POCKET_MICROG_PACKAGE_READY scope=official-certificate read_queries=1\nGUEST_LOG pid=30697 kernel_uid=10177 tid=30697 id=0 priority=5 tag=System.err POCKET_MICROG_APP_CACHE_READY",
+    "physicalPhoneTested": false
+  },
+  "untested": [
+    "Google account login",
+    "Push delivery",
+    "Online location",
+    "Play Integrity verdicts"
+  ]
+}

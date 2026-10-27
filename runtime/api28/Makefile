@@ -37,7 +37,7 @@ $(API28_OUT)/pocket-zygote.jar: runtime/api28/ZygoteBootstrap.java runtime/api28
 	java -cp $(R8) com.android.tools.r8.D8 --lib $(ANDROID_JAR) --min-api 28 --output $(API28_OUT)/zygote-dex $(API28_OUT)/zygote-classes.jar
 	jar cf $@ -C $(API28_OUT)/zygote-dex classes.dex
 
-$(API28_OUT)/packed.apk: $(API28_OUT)/base.apk $(API28_OUT)/build.json $(API28_OUT)/art-probe.dex $(API28_OUT)/pocket-zygote.jar out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so tools/pack_api28_probe.py runtime/NOTICE $(wildcard runtime/licenses/*) LICENSE vendor/proot/COPYING
+$(API28_OUT)/packed.apk: $(API28_OUT)/base.apk $(API28_OUT)/build.json $(API28_OUT)/art-probe.dex $(API28_OUT)/pocket-zygote.jar out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so tools/pack_api28_probe.py tools/boot_class_manifest.py runtime/NOTICE $(wildcard runtime/licenses/*) LICENSE vendor/proot/COPYING
 	python3 tools/pack_api28_probe.py
 
 $(API28_OUT)/aosp-pocket-api28-probe.apk: $(API28_OUT)/packed.apk out/debug.keystore

@@ -1,8 +1,14 @@
+#include "../api28/binder_token.h"
+#include "../api28/binder_host_scope.h"
+#ifndef POCKET_GUEST_API
+#define POCKET_GUEST_API 28
+#endif
 // SPDX-License-Identifier: GPL-3.0-only
 // Private combined native/HIDL registry on the ordinary app Binder driver.
 // Host-generated templates bootstrap only this app's opaque Binder endpoint.
 #include "boot_hardware.h"
 #include "boot_health.h"
+#include "boot_media.h"
 #include "kernel_identity.h"
 #include <hwbinder/Binder.h>
 #include <hwbinder/IPCThreadState.h>
@@ -15,6 +21,11 @@
 #include <android/hardware/configstore/1.1/BnHwSurfaceFlingerConfigs.h>
 #include "SurfaceFlingerConfigs.h"
 #include <android/hidl/manager/1.1/BnHwServiceManager.h>
+#if POCKET_GUEST_API == 29
+#include <android/hidl/manager/1.2/BnHwServiceManager.h>
+#include <android/system/suspend/1.0/BnHwSystemSuspend.h>
+#include "../api29/power.h"
+#endif
 #include <utils/String8.h>
 #include <map>
 #include <errno.h>
@@ -83,6 +94,7 @@ int readNumber(const char* path) {
 }
 
 sp<IBinder> hostActivity() {
+    PocketHostBinderScope hostScope;
     Parcel request, reply;
     status_t loaded=loadTemplate("/activityServiceRequest", request, nullptr);
     if (loaded != NO_ERROR) {fprintf(stderr,"DIRECT_HWB_BOOTSTRAP_FAILED stage=template status=%d\n",loaded);return nullptr;}
@@ -99,6 +111,7 @@ sp<IBinder> hostActivity() {
 }
 
 status_t broadcast(const sp<IBinder>& activity, const char* path, const sp<IBinder>& object) {
+    PocketHostBinderScope hostScope;
     int transaction = readNumber("/trans_code");
     if (!activity || transaction <= 0) return BAD_VALUE;
     Parcel request, reply;
@@ -150,16 +163,25 @@ namespace {
 constexpr uint32_t kLookupHardware=0x10001;
 constexpr uint32_t kNativePing=0x5f504e47;
 constexpr const char* kHardwareToken="dev.kreijstal.pocket.HardwareRegistry";
+#if POCKET_GUEST_API == 29
+using HardwareManager=::android::hidl::manager::V1_2::IServiceManager;
+#else
 using HardwareManager=::android::hidl::manager::V1_1::IServiceManager;
+#endif
 using HardwareNotification=::android::hidl::manager::V1_0::IServiceNotification;
+constexpr const char* kCameraProvider="android.hardware.camera.provider@2.4::ICameraProvider";
 class HardwareServices final : public HardwareManager {
     bool known(const hidl_string& descriptor,const hidl_string& name) {
-        return descriptor=="android.hardware.health@2.0::IHealth" && (name=="default" || name=="backup");
+        return (descriptor=="android.hardware.health@2.0::IHealth" && (name=="default" || name=="backup")) ||
+            (POCKET_GUEST_API==29 && descriptor=="android.system.suspend@1.0::ISystemSuspend" && name=="default");
     }
 public:
     Return<sp<hidl::base::V1_0::IBase>> get(const hidl_string& descriptor,const hidl_string& name) override {
         sp<hidl::base::V1_0::IBase> service;
-        if(known(descriptor,name)) service=pocketHealthRelay();
+        if(descriptor=="android.hardware.health@2.0::IHealth" && known(descriptor,name)) service=pocketHealthRelay();
+#if POCKET_GUEST_API == 29
+        if(descriptor=="android.system.suspend@1.0::ISystemSuspend" && known(descriptor,name))service=pocketSystemSuspend();
+#endif
         return service;
     }
     // This profile has a fixed set of explicitly implemented services.
@@ -167,12 +189,24 @@ public:
     Return<Transport> getTransport(const hidl_string& descriptor,const hidl_string& name) override {
         return known(descriptor,name)?Transport::HWBINDER:Transport::EMPTY;
     }
-    Return<void> list(list_cb cb) override {cb({"android.hardware.health@2.0::IHealth/default","android.hardware.health@2.0::IHealth/backup"});return Void();}
+    Return<void> list(list_cb cb) override {
+#if POCKET_GUEST_API == 29
+        cb({"android.hardware.health@2.0::IHealth/backup","android.hardware.health@2.0::IHealth/default","android.system.suspend@1.0::ISystemSuspend/default"});
+#else
+        cb({"android.hardware.health@2.0::IHealth/default","android.hardware.health@2.0::IHealth/backup"});
+#endif
+        return Void();
+    }
     Return<void> listByInterface(const hidl_string& descriptor,listByInterface_cb cb) override {
-        if(descriptor=="android.hardware.health@2.0::IHealth") cb({"default","backup"});else cb({});
+        if(descriptor=="android.hardware.health@2.0::IHealth") cb({"default","backup"});
+        else if(POCKET_GUEST_API==29 && descriptor=="android.system.suspend@1.0::ISystemSuspend")cb({"default"});else cb({});
         return Void();
     }
     Return<bool> registerForNotifications(const hidl_string& descriptor,const hidl_string& name,const sp<HardwareNotification>& callback) override {
+        // cameraserver fetches its in-process provider directly; there are no registrations to report.
+        if(callback && descriptor==kCameraProvider) return true;
+        if(POCKET_GUEST_API==29 && callback && descriptor=="android.system.suspend@1.0::ISystemSuspend" &&
+            (name.empty() || name=="default"))return callback->onRegistration(descriptor,"default",true).isOk();
         if(!callback || descriptor!="android.hardware.health@2.0::IHealth") return false;
         bool ok=true;
         for(const char* instance:{"default","backup"}) if(name.empty() || name==instance) {
@@ -185,8 +219,26 @@ public:
     Return<void> debugDump(debugDump_cb cb) override {cb({});return Void();}
     Return<void> registerPassthroughClient(const hidl_string&,const hidl_string&) override {return Void();}
     Return<bool> unregisterForNotifications(const hidl_string& descriptor,const hidl_string&,const sp<HardwareNotification>& callback) override {
-        return callback!=nullptr && descriptor=="android.hardware.health@2.0::IHealth";
+        return callback!=nullptr && (descriptor=="android.hardware.health@2.0::IHealth" || descriptor==kCameraProvider ||
+            (POCKET_GUEST_API==29 && descriptor=="android.system.suspend@1.0::ISystemSuspend"));
     }
+#if POCKET_GUEST_API == 29
+    // Fixed in-process services never register as lazy daemons. Client-lifetime
+    // callbacks and dynamic registration remain explicitly unavailable.
+    Return<bool> registerClientCallback(const hidl_string&,const hidl_string&,
+        const sp<hidl::base::V1_0::IBase>&,const sp<hidl::manager::V1_2::IClientCallback>&) override {return false;}
+    Return<bool> unregisterClientCallback(const sp<hidl::base::V1_0::IBase>&,
+        const sp<hidl::manager::V1_2::IClientCallback>&) override {return false;}
+    Return<bool> addWithChain(const hidl_string&,const sp<hidl::base::V1_0::IBase>&,
+        const hidl_vec<hidl_string>&) override {return false;}
+    Return<void> listManifestByInterface(const hidl_string& descriptor,listManifestByInterface_cb cb) override {
+        if(descriptor=="android.hardware.health@2.0::IHealth")cb({"backup","default"});
+        else if(descriptor=="android.system.suspend@1.0::ISystemSuspend")cb({"default"});else cb({});
+        return Void();
+    }
+    Return<bool> tryUnregister(const hidl_string&,const hidl_string&,
+        const sp<hidl::base::V1_0::IBase>&) override {return false;}
+#endif
 };
 class Registry final : public BHwBinder {
     struct Entry { sp<IBinder> binder; sp<IBinder::DeathRecipient> death; };
@@ -195,6 +247,9 @@ class Registry final : public BHwBinder {
     sp<IBinder> health;
     sp<IBinder> hardwareManager;
     sp<IBinder> configstore;
+#if POCKET_GUEST_API == 29
+    sp<IBinder> suspend;
+#endif
     class Death final : public IBinder::DeathRecipient {
         wp<Registry> owner;String16 name;
     public:
@@ -213,19 +268,29 @@ class Registry final : public BHwBinder {
             if(!data.enforceInterface(kHardwareToken)) return PERMISSION_DENIED;
             String16 descriptor=data.readString16(),instance=data.readString16();
             sp<IBinder> service;
+#ifdef POCKET_MEDIA_CODECS
+            if(instance==String16("default")) service=pocketSoftwareMediaService(String8(descriptor).c_str());
+#endif
             if((descriptor==String16("android.hardware.configstore@1.0::ISurfaceFlingerConfigs") || descriptor==String16("android.hardware.configstore@1.1::ISurfaceFlingerConfigs")) && instance==String16("default")) service=configstore;
             if(descriptor==String16("android.hardware.health@2.0::IHealth") && (instance==String16("default") || instance==String16("backup"))) service=health;
-            if((descriptor==String16("android.hidl.manager@1.0::IServiceManager") || descriptor==String16("android.hidl.manager@1.1::IServiceManager")) && instance==String16("default")) service=hardwareManager;
+#if POCKET_GUEST_API == 29
+            if(descriptor==String16("android.system.suspend@1.0::ISystemSuspend") && instance==String16("default"))service=suspend;
+#endif
+            if((descriptor==String16("android.hidl.manager@1.0::IServiceManager") || descriptor==String16("android.hidl.manager@1.1::IServiceManager") ||
+                (POCKET_GUEST_API==29 && descriptor==String16("android.hidl.manager@1.2::IServiceManager"))) && instance==String16("default")) service=hardwareManager;
             reply->writeStrongBinder(service);if(cb) cb(*reply);return NO_ERROR;
         }
         if(code<1 || code>4 || data.dataSize()<16) return UNKNOWN_TRANSACTION;
-        // Native API 28 guest interface token: UID/PID, strict policy, UTF-16.
-        data.readInt64();data.readInt32();
+        PocketBinderToken header={};
+        if(!pocket_binder_token(data.data(),data.dataSize(),&header))return PERMISSION_DENIED;
+        data.setDataPosition(header.string_offset);
         if(data.readString16()!=String16("android.os.IServiceManager")) return PERMISSION_DENIED;
         {
         Mutex::Autolock lock(mutex);
         if(code==1 || code==2) {
-            auto i=services.find(data.readString16());reply->writeStrongBinder(i==services.end()?nullptr:i->second.binder);
+            auto i=services.find(data.readString16());
+            if(header.format==2)reply->writeInt32(0);
+            reply->writeStrongBinder(i==services.end()?nullptr:i->second.binder);
         } else if(code==3) {
             String16 name=data.readString16();auto service=data.readStrongBinder();
             if(!service || !name.size()) return BAD_VALUE;
@@ -244,7 +309,12 @@ public:
     Registry() {
         configstore=new configstore::V1_1::BnHwSurfaceFlingerConfigs(new configstore::V1_1::implementation::SurfaceFlingerConfigs);
         health=new health::V2_0::BnHwHealth(pocketHealthRelay());
+#if POCKET_GUEST_API == 29
+        hardwareManager=new ::android::hidl::manager::V1_2::BnHwServiceManager(new HardwareServices);
+        suspend=new ::android::system::suspend::V1_0::BnHwSystemSuspend(pocketSystemSuspend());
+#else
         hardwareManager=new ::android::hidl::manager::V1_1::BnHwServiceManager(new HardwareServices);
+#endif
     }
 };
 sp<IBinder> findRegistry() {
@@ -276,6 +346,14 @@ sp<hidl::manager::V1_0::IServiceManager> defaultServiceManager() {
     if(!base)return nullptr;
     return HardwareManager::castFrom(base).withDefault(nullptr);
 }
+#if POCKET_GUEST_API == 29
+sp<hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1() {
+    return hidl::manager::V1_1::IServiceManager::castFrom(defaultServiceManager()).withDefault(nullptr);
+}
+sp<hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2() {
+    return hidl::manager::V1_2::IServiceManager::castFrom(defaultServiceManager()).withDefault(nullptr);
+}
+#endif
 // No request may fall back to a host hardware/global context manager.
 sp<IBinder> ProcessState::getContextObject(const sp<IBinder>&) {return nullptr;}
 sp<IBinder> ProcessState::getContextObject(const String16&,const sp<IBinder>&) {return nullptr;}
@@ -286,7 +364,7 @@ extern "C" int pocketStartHardwareServices() {
     setbuf(stdout,nullptr);if(getuid()!=0)return 64;
     ProcessState::self()->startThreadPool();sp<Registry> registry=new Registry;
     status_t result=broadcast(hostActivity(),"/binderBroadcastIntent",registry);
-    fprintf(stderr,"DIRECT_HWB_REGISTRY_READY status=%d pid=%d kernel_uid=%ld\n",result,getpid(),syscall(SYS_getuid));
+    fprintf(stderr,"DIRECT_HWB_REGISTRY_READY status=%d pid=%d kernel_uid=%u\n",result,getpid(),pocket_kernel_uid_from_proc());
     if(result!=NO_ERROR)return 1;
     IPCThreadState::self()->joinThreadPool();return 0;
 }

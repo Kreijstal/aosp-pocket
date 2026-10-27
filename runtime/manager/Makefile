@@ -3,8 +3,8 @@
 # Parallel development install: add MANAGER_PACKAGE=dev.kreijstal.aosppocket.managerdev MANAGER_OUT=out/manager-dev
 MANAGER_OUT ?= out/manager
 MANAGER_PACKAGE ?= dev.kreijstal.aosppocket.runtime
-MANAGER_VERSION_CODE ?= 34
-MANAGER_VERSION_NAME ?= 0.34
+MANAGER_VERSION_CODE ?= 76
+MANAGER_VERSION_NAME ?= 0.76
 MANAGER_GUEST_JAVA := $(BOOT_GUEST_JAVA) runtime/direct/GuestControl.java runtime/direct/HostDevices.java runtime/direct/HostNetwork.java runtime/app/src/dev/kreijstal/aosppocket/bridge/HostWire.java runtime/app/src/dev/kreijstal/aosppocket/bridge/DisplayGeometry.java
 .PHONY: manager-verify
 .PHONY: check-admin
@@ -116,7 +116,7 @@ out/manager-native/getprop: runtime/magisk/getprop.c
 	mkdir -p out/manager-native
 	$(LLVM)/$(TRIPLE)28-clang -O2 -Wall -Wextra -Werror $< -Wl,-z,max-page-size=16384 -o $@
 
-$(MANAGER_OUT)/packed.apk: $(MANAGER_OUT)/base.apk $(OUT)/packed.apk $(BOOT_OUT)/build.stamp out/manager-guest/pocket-control.jar out/manager-guest/host-phone.apk out/runtime-native/libpocket_frames.so out/runtime-native/libproot.so out/manager-native/getprop out/composer/hwcomposer.pocket.so tools/pack_manager.py tools/syscall_image.py tools/pocketctl.py
+$(MANAGER_OUT)/packed.apk: $(MANAGER_OUT)/base.apk $(OUT)/packed.apk $(BOOT_OUT)/build.stamp out/manager-guest/pocket-control.jar out/manager-guest/host-phone.apk out/runtime-native/libpocket_frames.so out/runtime-native/libproot.so out/manager-native/getprop out/composer/hwcomposer.pocket.so tools/pack_manager.py tools/boot_class_manifest.py tools/syscall_image.py tools/pocketctl.py runtime/images/api28-arm64.json
 	python3 tools/pack_manager.py --out $(MANAGER_OUT)
 
 $(MANAGER_OUT)/aosp-pocket-manager.apk: $(MANAGER_OUT)/packed.apk out/debug.keystore

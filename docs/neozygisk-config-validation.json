@@ -1,0 +1,91 @@
+{
+  "validation": "PASS",
+  "scope": "persistent NeoZygisk configuration for real Attest Probe in Pi Pocket guest",
+  "managerVersion": "versionName=0.62",
+  "package": "dev.kreijstal.attestprobe",
+  "selection": "package_name=dev.kreijstal.attestprobe|process=dev.kreijstal.attestprobe",
+  "enforcement": "",
+  "zygiskEnabled": "1",
+  "magiskStatus": "ready",
+  "ownerMagisk": "30.7:MAGISK:R",
+  "startupEvidence": "POCKET_ZYGISK_INSTALL result=0",
+  "summary": {
+    "pass": 46,
+    "fail": 2,
+    "skip": 3,
+    "info": 8,
+    "checks": 59,
+    "scope": "device_checks_excluding_optional_biometrics",
+    "deviceChecks": 59
+  },
+  "rootSu": {
+    "id": "root_su_paths",
+    "category": "ATTEST",
+    "description": "No su binary in the usual locations",
+    "status": "PASS",
+    "detail": "no su binaries found"
+  },
+  "magiskPaths": {
+    "id": "magisk_paths",
+    "category": "ATTEST",
+    "description": "No Magisk artifacts",
+    "status": "PASS",
+    "detail": "no Magisk artifacts"
+  },
+  "remainingFailures": [
+    {
+      "id": "build_tags_test_keys",
+      "category": "ATTEST",
+      "description": "Build is not signed with test-keys",
+      "status": "FAIL",
+      "detail": "tags=test-keys type=userdebug"
+    },
+    {
+      "id": "contacts_readable",
+      "category": "ACCESS",
+      "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+      "status": "FAIL",
+      "detail": "timeout after 2000ms"
+    }
+  ],
+  "selectedEntryKept": true,
+  "stageTimeoutSeconds": 300,
+  "encryptedGuestPasswordUiUnlock": "PASS",
+  "rootCause": "120-second Magisk post-fs-data timeout let zygote start before the private module view/provider library was published; zygote logged LOAD_FAILED and skipped module hooks",
+  "fix": "Post-fs-data wait raised to 300 seconds; persist Attest Probe main-process DenyList membership; Magisk mount enforcement remains unchanged/off",
+  "commands": [
+    {
+      "command": "/sbin/magisk --denylist add dev.kreijstal.attestprobe dev.kreijstal.attestprobe",
+      "result": "PASS: persisted row verified again after guest reboot and probe reinstall"
+    },
+    {
+      "command": "sh -n runtime/magisk/stage.sh",
+      "result": "PASS"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 ~/test_guest_lock_on_pi.py unlock --probe ~/microg-test/guest-lock-probe.jar && python3 ~/validate_attest_on_pi.py'",
+      "result": "PASS for password UI, root_su_paths and magisk_paths; Attest overall 46 PASS / 2 FAIL / 3 SKIP / 8 INFO"
+    },
+    {
+      "command": "python3 tools/build_manager_update.py --base-apk out/audio-0.62/aosp-pocket-manager-0.62.apk --out out/denylist-0.62.1 --host-dex out/denylist-0.62.1/base-classes.dex --guest-file system/etc/pocket-magisk/stage.sh=runtime/magisk/stage.sh --version-code 62 --version-name 0.62.1",
+      "result": "PASS: packaged source startup fix; signature verified; payload audit permits only stage.sh and version manifest changes"
+    }
+  ],
+  "stageSourceSha256": "a68446b3ce1056cb187221a20b360edba30fec20c7b4ffe01a0a2c7849da4378",
+  "packagedCandidate": {
+    "baseVersion": "audio 0.62",
+    "candidateVersion": "0.62.1",
+    "versionCode": 62,
+    "sha256": "abb215a128c69aa7d4df34587aa1271c61fa1577378f133c9158e07f9b1cbc0c",
+    "bytes": 578300280,
+    "changedEntries": [
+      "assets/api28-rootfs/system/etc/pocket-magisk/stage.sh.payload",
+      "AndroidManifest.xml"
+    ],
+    "hostDexUnchanged": true,
+    "validation": "PASS",
+    "path": "out/denylist-0.62.1/aosp-pocket-manager-0.62.1.apk",
+    "installedForTest": false
+  },
+  "liveTestDetails": "Audio session installed version 0.62; byte-preserving live stage.sh edit survived image preparation and that upgrade. NeoZygisk install result 0 and Magisk ready verified before probing."
+}

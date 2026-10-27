@@ -1,0 +1,24 @@
+{
+  "guestSdk": 29,
+  "hostUid": 10185,
+  "apkSha256": "2b662aa3d142aec7005ce4d5b09fc554f8874c87136749461878c50981cbaa74",
+  "apkBytes": 360160877,
+  "command": "python3 /home/pi/test_api29_on_pi.py --apk /home/pi/api29-system-server-probe.apk --system-server",
+  "fullGuestBootVerified": false,
+  "validation": "PARTIAL",
+  "apexInventory": "PASS",
+  "storageProtocol": "PASS",
+  "networkProtocol": "PASS",
+  "hostDnsRelayVerified": false,
+  "framework": {
+    "passed": false,
+    "failure": "AudioService started without a running audio server"
+  },
+  "log": [
+    "API29_APEX_PASS active=6 factory=6 manifests_verified=1 staged_updates=rejected",
+    "API29_STORAGE_CHECKPOINT_PASS supported=0 pending=0",
+    "DIRECT_STORAGE_CALLBACK_PASS maintenance=unsupported nested_binder_delivery=1 bundle=decoded",
+    "DIRECT_STORAGE_PROTOCOL_PASS encrypted_profile=0 ordinary_role_denied=1",
+    "API29_NETWORK_PROTOCOL_PASS binder_version=2 resolver_customization=unsupported lmk_hint_kills=0 vpn_bypass=rejected"
+  ]
+}

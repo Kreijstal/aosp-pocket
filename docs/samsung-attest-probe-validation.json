@@ -1,0 +1,61 @@
+{
+  "device": "Samsung SM-G780G",
+  "hostAndroidSdk": 33,
+  "guestAndroidSdk": 28,
+  "managerVersion": "0.42",
+  "probeVersionBefore": "pre-1.9 (no raw Binder UID or mapping identity checks)",
+  "probeVersionAfter": "1.10",
+  "before": {
+    "pass": 42,
+    "fail": 10,
+    "skip": 1,
+    "info": 5,
+    "checks": 58,
+    "scope": "device_checks_excluding_optional_biometrics",
+    "deviceChecks": 58
+  },
+  "after": {
+    "pass": 43,
+    "fail": 5,
+    "skip": 3,
+    "info": 8,
+    "checks": 59,
+    "scope": "device_checks_excluding_optional_biometrics",
+    "deviceChecks": 59
+  },
+  "remainingFailures": [
+    "build_tags_test_keys",
+    "device_secure",
+    "gms_present",
+    "section_codec",
+    "storage_encryption"
+  ],
+  "nativeTracerPid": 0,
+  "binderUid": 10017,
+  "mappedFileIdentitiesMatch": true,
+  "knownLimits": [
+    "Interface enumeration remains denied; VPN absence is unverified.",
+    "Verified boot properties remain unavailable; guest hardware trust is unverified.",
+    "The pocket-loader mapping is visible.",
+    "Codec HAL service remains unavailable."
+  ],
+  "commands": {
+    "build": "make -j2",
+    "policyCompile": "javac --release 8 -cp ../helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/policy-tests app/src/dev/kreijstal/attestprobe/Check.java app/src/dev/kreijstal/attestprobe/DiagnosticPolicy.java tests/DiagnosticPolicyTest.java",
+    "policyTest": "java -cp out/policy-tests:../helloworldandroid/vendor/android-platforms/android-36/android.jar dev.kreijstal.attestprobe.DiagnosticPolicyTest",
+    "guestInstallAndLaunch": "export CLASSPATH=/system/framework/pocket-zygote.jar:/data/local/tmp/device-attest-runner.jar; exec /system/bin/pocket-app-process-api28 /system/bin RuntimeProbeRunner --device /data/local/tmp/attest-probe-1.10.apk",
+    "reportRead": "python3 ~/storage/downloads/pocketctl.py exec -- /system/bin/toybox cat /data/user/0/dev.kreijstal.attestprobe/files/report.json"
+  },
+  "policyTestCases": 21,
+  "apkSha256": "a71d71ecd0502b16bfb8f63d679955ebc32d40e7d6100c6f382d01e9b994fecc",
+  "validation": "PASS",
+  "managerBootStatus": {
+    "running": true,
+    "ready": true,
+    "starting": false,
+    "stopping": false,
+    "sdk": 28,
+    "status": "Android 9 running \u00b7 1080 \u00d7 2400"
+  },
+  "installedManagerManifestSha256": "89e77a04695d940bc0cfefc72f391d02d63e4d662fafff71a15a324274651a0d"
+}

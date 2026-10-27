@@ -1,0 +1,168 @@
+{
+  "validation": "PASS",
+  "managerVersion": "0.76",
+  "release": "https://github.com/Kreijstal/lineage-ur/releases/tag/pocket-api28-0.75.0",
+  "recipeCommit": "03e553217ecfe0a5376eaf830ccfa91608593af4",
+  "recipeBranch": "pocket-images-on-demand",
+  "package": {
+    "validation": "PASS",
+    "apk": "/home/kreijstal/git/aosp-pocket/out/download-0.76/aosp-pocket-manager-0.76.apk",
+    "bytes": 1336883,
+    "sha256": "28c05dd27de93ed871833f1c169bbf6959e865981402a09d74201e3f95e67922",
+    "removedImageEntries": 2700,
+    "bundledImageEntries": 0,
+    "nativeLibrariesUnchanged": true,
+    "unrelatedHostClassesUnchanged": true,
+    "probe": false
+  },
+  "image": {
+    "abi": "arm64-v8a",
+    "bytes": 298531700,
+    "manifest_sha256": "61814bc4e30a8a8900ef857fd35767f66cde81120cf9ea4ca08a5c257e1383e1",
+    "profile": "api28-direct",
+    "runtime": 1,
+    "sdk": 28,
+    "sha256": "0d6850b170a5cb86d7fbdb85fce39dc38b21a733cd68975d1a8106e2738af239",
+    "unpacked_bytes": 690432491,
+    "url": "https://github.com/Kreijstal/lineage-ur/releases/download/pocket-api28-0.75.0/pocket-api28-arm64-0.75.0.zip",
+    "version": "0.75.0"
+  },
+  "reproducibility": {
+    "scope": "Deterministic packaging from pinned prebuilt file inputs; not an independent Android platform source build.",
+    "unpackedBytes": 690432491,
+    "fileCount": 1462,
+    "independentArchiveComparison": "PASS: exported APK image and locked materialized-root rebuild are byte-identical",
+    "command": "python3 lineage/pocket-images/package.py --rootfs artifacts/pocket-api28-materialized --inputs-lock artifacts/pocket-api28-0.75.0/image-inputs.lock.json --output artifacts/pocket-api28-reproduced --base-url https://github.com/Kreijstal/lineage-ur/releases/download/pocket-api28-0.75.0",
+    "cleanRecipeCheckoutCommand": "make -C artifacts/pocket-image-release-src check-pocket-images",
+    "cleanRecipeCheckoutResult": "PASS: 3 tests"
+  },
+  "tests": [
+    {
+      "command": "python3 -m unittest discover -s tools/tests -p test_download_packaging.py -v",
+      "result": "PASS: 2 tests"
+    },
+    {
+      "command": "java -cp out/download-image/core-check dev.kreijstal.aosppocket.runtime.ImageDownloadTest",
+      "result": "PASS: 25 assertions"
+    },
+    {
+      "command": "python3 tools/validate_manager_apk.py out/download-0.76/aosp-pocket-manager-0.76.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/test_image_download_on_pi.py",
+      "result": "PASS after resuming probe verification; initial runtime download/install completed before the background probe process exited."
+    },
+    {
+      "command": "python3 ~/.config/pocketctl/input-latency/test_numeric_typing_on_pi.py --label image076-warm",
+      "result": "PASS: all ten digits entered correctly"
+    }
+  ],
+  "piFreshImage": {
+    "validation": "PASS",
+    "scope": "Pi Android; isolated probe package; actual HTTP download and install",
+    "downloadCount": 0,
+    "resumedProbeVerification": true,
+    "verifiedFiles": 1462,
+    "filePermissionsVerified": true,
+    "bundledImageEntries": 0,
+    "offlineReuse": true,
+    "legacyMigrationWithoutDownload": true,
+    "guestDataPreserved": true,
+    "imageSha256": "0d6850b170a5cb86d7fbdb85fce39dc38b21a733cd68975d1a8106e2738af239",
+    "phases": []
+  },
+  "piExistingImageMigration": {
+    "validation": "PASS",
+    "installedManagerVersion": "0.76",
+    "bootCompleted": "1",
+    "legacyImageAdoptedOffline": true,
+    "imageSha256": "0d6850b170a5cb86d7fbdb85fce39dc38b21a733cd68975d1a8106e2738af239",
+    "preservedGuestData": true
+  },
+  "piExistingPasswordUiUnlock": "PASS",
+  "piNumericEntry": {
+    "validation": "PASS",
+    "samples": [
+      {
+        "digit": "1",
+        "editMs": 248.153148,
+        "drawSubmissionMs": 281.033444
+      },
+      {
+        "digit": "2",
+        "editMs": 241.494759,
+        "drawSubmissionMs": 303.03661
+      },
+      {
+        "digit": "3",
+        "editMs": 210.116445,
+        "drawSubmissionMs": 255.993537
+      },
+      {
+        "digit": "4",
+        "editMs": 174.678166,
+        "drawSubmissionMs": 181.135259
+      },
+      {
+        "digit": "5",
+        "editMs": 121.765852,
+        "drawSubmissionMs": 149.74987
+      },
+      {
+        "digit": "6",
+        "editMs": 100.4605,
+        "drawSubmissionMs": 169.89474
+      },
+      {
+        "digit": "7",
+        "editMs": 112.927055,
+        "drawSubmissionMs": 132.831759
+      },
+      {
+        "digit": "8",
+        "editMs": 116.3415,
+        "drawSubmissionMs": 138.929203
+      },
+      {
+        "digit": "9",
+        "editMs": 185.140703,
+        "drawSubmissionMs": 205.851759
+      },
+      {
+        "digit": "0",
+        "editMs": 270.375722,
+        "drawSubmissionMs": 306.532593
+      }
+    ],
+    "text": "1234567890",
+    "measurement": "real numeric IME tap to app text mutation and draw submission; excludes final presentation",
+    "label": "image076-warm",
+    "scope": "Pi VM -> Pocket Android 9 -> real LatinIME numeric keyboard"
+  },
+  "publicAnonymousHttps": {
+    "validation": "PASS",
+    "anonymousHttpsDownload": true,
+    "status": 200,
+    "bytes": 298531700,
+    "sha256": "0d6850b170a5cb86d7fbdb85fce39dc38b21a733cd68975d1a8106e2738af239",
+    "url": "https://github.com/Kreijstal/lineage-ur/releases/download/pocket-api28-0.75.0/pocket-api28-arm64-0.75.0.zip"
+  },
+  "samsungDelivery": {
+    "validation": "APK_VERIFIED_INSTALLER_OPENED",
+    "version": "0.76",
+    "model": "SM-G780G",
+    "destination": "/sdcard/Download/aosp-pocket-manager-0.76.apk",
+    "bytes": 1336883,
+    "sha256": "28c05dd27de93ed871833f1c169bbf6959e865981402a09d74201e3f95e67922",
+    "packageBefore": "package:dev.kreijstal.aosppocket.runtime versionCode:74",
+    "requires": "Android package installer confirmation"
+  },
+  "limitations": [
+    "The upstream Android platform remains a pinned Redroid prebuilt; only image packaging reproducibility is established.",
+    "The on-demand catalog currently provides Android 9/ARM64; existing Android 7 installations/manual import remain supported.",
+    "The first full-image test used an 8-minute deadline during concurrent guest boot. The runtime completed installation, then the background probe exited before its report. Foreground verification resumed without downloading again and verified every installed file and mode.",
+    "The first cold numeric probe missed its initial digit during concurrent image setup; a subsequent fresh app run entered all ten digits. These checks do not establish a typing speed improvement.",
+    "Guest private signing keys are not distributed. The source snapshot records uncommitted Pocket runtime/build sources; the Lineage UR recipe is separately committed on its release branch."
+  ]
+}

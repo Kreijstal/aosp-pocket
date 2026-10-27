@@ -1,0 +1,13 @@
+{
+  "validation": "PASS",
+  "guestSdk": 29,
+  "package": "dev.kreijstal.aosppocket.api29test",
+  "test": "same-size corruption of an omitted image file",
+  "corruptionRejected": true,
+  "nativeBootStarted": false,
+  "fixtureResult": {
+    "extractedFiles": 0,
+    "passed": false,
+    "error": "java.io.IOException: Fixture image checksum differs: probe-environment"
+  }
+}

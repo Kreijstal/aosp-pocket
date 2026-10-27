@@ -1,0 +1,48 @@
+{
+  "guestSdk": 29,
+  "hostUid": 10185,
+  "apkSha256": "a14371a94bea82d63ecd55b1e71bb1da68ff42dd192693d02fa0334664e05de7",
+  "apkBytes": 220763468,
+  "command": "python3 /home/pi/test_api29_on_pi.py --apk /home/pi/api29-system-server-probe.apk --system-server",
+  "fullGuestBootVerified": false,
+  "validation": "PARTIAL",
+  "graphics": {
+    "allocation": "PASS",
+    "rgbaReadback": "PASS",
+    "egl": "1.4",
+    "renderer": "Google SwiftShader",
+    "openGL": "ES 3.0",
+    "display": {
+      "width": 480,
+      "height": 800,
+      "refreshHz": 30
+    }
+  },
+  "framework": {
+    "passed": false,
+    "exitCode": 3,
+    "failure": "Required service apexservice not available"
+  },
+  "log": [
+    "API29_GRALLOC_HANDLE fd_count=1 int_count=8 magic=3141592 bytes=4096 stride=4",
+    "API29_GRALLOC_PASS allocate=1 lock=1 rgba_verified=1 free=1",
+    "DIRECT_EGL_START",
+    "DIRECT_EGL_INITIALIZED version=1.4",
+    "DIRECT_EGL_CONTEXT_CREATED",
+    "DIRECT_EGL_CURRENT renderer=Google SwiftShader version=OpenGL ES 3.0 SwiftShader 4.1.0.5",
+    "DIRECT_EGL_PASS rgba=51,102,153,255",
+    "GUEST_LOG pid=27063 kernel_uid=10185 tid=27063 id=0 priority=4 tag=PocketComposer DIRECT_COMPOSER_READY width=480 height=800 fps=30",
+    "DIRECT_HAL_PASSTHROUGH android.hardware.graphics.composer@2.1::IComposer/default available=1",
+    "DIRECT_HAL_PASSTHROUGH android.hardware.graphics.mapper@2.0::IMapper/default available=1",
+    "GUEST_LOG pid=27108 kernel_uid=10185 tid=27139 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "java.lang.IllegalStateException: Required service apexservice not available",
+    "GUEST_LOG pid=27173 kernel_uid=10185 tid=27198 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27240 kernel_uid=10185 tid=27261 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27320 kernel_uid=10185 tid=27345 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27372 kernel_uid=10185 tid=27397 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27438 kernel_uid=10185 tid=27459 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27522 kernel_uid=10185 tid=27555 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27596 kernel_uid=10185 tid=27621 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}",
+    "GUEST_LOG pid=27662 kernel_uid=10185 tid=27683 id=3 priority=4 tag=DisplayManagerService Display device added: DisplayDeviceInfo{\"Built-in Screen\": uniqueId=\"local:0\", 480 x 800, modeId 1, defaultModeId 1, supportedModes [{id=1, width=480, height=800, fps=30.0}], colorMode -1, supportedColorModes [-1], HdrCapabilities android.view.Display$HdrCapabilities@40f16308, density 160, 160.0 x 160.0 dpi, appVsyncOff 1000000, presDeadline 33333333, touch INTERNAL, rotation 0, type BUILT_IN, address {port=0}, state UNKNOWN, FLAG_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS}"
+  ]
+}

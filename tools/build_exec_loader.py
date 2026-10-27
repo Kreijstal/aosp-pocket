@@ -10,6 +10,7 @@ import zipfile
 import re
 from target import ROOT,reference_dir
 from build_boot import reserve_interpreter
+from validate_native_loader import validate as validate_loader
 
 PACKAGE='dev.kreijstal.aosppocket.loadertest'
 def main():
@@ -18,13 +19,16 @@ def main():
     parser.add_argument('--out',type=Path,default=ROOT/'out/exec-loader')
     parser.add_argument('--diagnostics',action='store_true')
     parser.add_argument('--init-zygote',action='store_true',help='Include source-built Android 9 init and zygote bring-up')
+    parser.add_argument('--firewall',action='store_true',help='Include real-socket guest OUTPUT firewall regression')
+    parser.add_argument('--denylist',action='store_true',help='Include per-process base-view and hidden-path regression')
     args=parser.parse_args();out=args.out.resolve();out.mkdir(parents=True,exist_ok=True)
     root='/data/user/0/'+PACKAGE+'/files/root'
     cc=args.ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang'
     def run(*argv):subprocess.run(list(map(str,argv)),cwd=ROOT,check=True)
-    run(cc,*(['-DPOCKET_LOADER_DIAGNOSTICS'] if args.diagnostics else []),'-O2','-g','-Wall','-Wextra','-Werror','-ffreestanding','-fno-builtin','-fno-stack-protector','-fno-pic',
+    run(cc,*(['-DPOCKET_LOADER_DIAGNOSTICS'] if args.diagnostics else []),'-O2','-g','-Wall','-Wextra','-Werror','-mno-outline-atomics','-ffreestanding','-fno-builtin','-fno-stack-protector','-fno-pic',
         '-nostdlib','-static','-Wl,-T,runtime/loader/loader.ld,-z,max-page-size=16384',
         ROOT/'runtime/loader/loader.c',ROOT/'runtime/loader/entry.S','-o',out/'pocket-loader')
+    validate_loader(out/'pocket-loader')
     data=bytearray((out/'pocket-loader').read_bytes());marker=b'PCKELF01'+bytes(3072)
     assert data.count(marker)==1,'Missing or ambiguous loader instance config'
     offset=data.index(marker)+8
@@ -50,9 +54,18 @@ def main():
     (out/'probe').write_bytes(data)
     binaries={name:(out/name) for name in ('probe','pocket-loader','unprepared')}
     extra_binaries={};extra_libraries={};extra_data={}
+    if args.firewall:
+        for name,source in [('iptables','runtime/loader/iptables.c'),('firewall-probe','runtime/tests/firewall_native.c')]:
+            target=out/('raw-'+name)
+            run(cc,'-O2','-Wall','-Wextra','-Werror',ROOT/source,'-Wl,-z,max-page-size=16384','-o',target)
+            extra_binaries[name]=target
     if args.init_zygote:
         from build_init_loader import build
         extra_binaries,extra_libraries,extra_data=build(args.ndk.resolve(),out,run)
+    if args.denylist:
+        target=out/'raw-denylist-probe'
+        run(cc,'-O2','-Wall','-Wextra','-Werror',ROOT/'runtime/tests/exec-loader/denylist_probe.c','-Wl,-z,max-page-size=16384','-o',target)
+        extra_binaries['denylist-probe']=target
     platform_binaries={name:ROOT/'out/boot/platform/system/bin'/name for name in ('sh','toybox')}
     for name,source in {**platform_binaries,**extra_binaries}.items():
         binary=out/name;shutil.copy2(source,binary)

@@ -1,0 +1,566 @@
+{
+  "status": "PASS for the user-requested already-running Contacts provider; cold-provider stress test remains above the two-second target",
+  "version": "0.68",
+  "baseVersion": "camera 0.67 (camera/audio/vibrator and NeoZygisk configuration preserved)",
+  "scope": "Pi Cuttlefish VM -> Pocket API 28; ordinary client and unchanged Attest Probe 1.10, with Contacts provider already running; physical phone unchanged",
+  "physicalPhoneModified": false,
+  "artifact": {
+    "path": "out/contacts-0.68/aosp-pocket-manager-0.68.apk",
+    "sha256": "99b571d070cc357308eb50479661e3ad5ac5679c64e3f49be2e562b5319c8256",
+    "bytes": 578595733
+  },
+  "payloadAudit": {
+    "validation": "PASS",
+    "baseApk": "/home/kreijstal/git/aosp-pocket/out/camera-0.67/aosp-pocket-manager-0.67.apk",
+    "version": "0.68",
+    "changedClasses": [],
+    "changedApkEntries": [
+      "AndroidManifest.xml",
+      "classes.dex",
+      "lib/arm64-v8a/libpocket_ce.so"
+    ],
+    "sha256": "99b571d070cc357308eb50479661e3ad5ac5679c64e3f49be2e562b5319c8256",
+    "dexSha256": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+    "bytes": 578595733,
+    "namespaceSourceSha256": "830306e343342cc2ba2fd8323f44cd5b8ac60bf05d7e167025e131a65e8fba0a"
+  },
+  "validation": [
+    {
+      "command": "python3 tools/test_encrypted_store.py",
+      "result": "PASS: randomized operations, authenticated chunks, bounded cache eviction, snapshot concurrency and collection, failed commit retry, exclusive owner, and 8 SIGKILL recovery cycles"
+    },
+    {
+      "command": "javac --release 8 -d out/contacts-fix/namespace-classes runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java runtime/storage/src/dev/kreijstal/aosppocket/storage/CeNamespace.java runtime/tests/CeNamespaceTest.java && java -cp out/contacts-fix/namespace-classes dev.kreijstal.aosppocket.storage.CeNamespaceTest",
+      "result": "PASS: persistence, buffering, concurrent writers/commits, permissions, links and namespace invariants"
+    },
+    {
+      "command": "python3 tools/build_storage_update.py --base-apk out/vibrator-0.57/aosp-pocket-manager-0.57.apk --base-classes out/vibrator-0.57/host-classes --version 0.58",
+      "result": "PASS: baseline cached classes reproduce 0.57 DEX exactly; Java/D8, APK signing and verification; only storage class families and version manifest changed"
+    },
+    {
+      "command": "python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/manager-0.55/aosp-pocket-manager-0.55.apk",
+      "result": "PASS: isolated test APK using final snapshot storage code"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 ~/microg-test/test_ce_fixture_on_pi.py --apk ~/microg-test/ce-fixture.apk'",
+      "result": "PASS: SQLite WAL/FULL and cross-process writer exclusion; FUSE shared/executable mappings, metadata and shutdown persistence; credential removal/restoration"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_storage_update.py tools/test_contacts_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/test_ce_fuse_concurrency.py",
+      "result": "PASS: production JNI and FUSE packets; reads/writes during blocked fsync, delayed durability acknowledgement, sync EIO, shutdown and bounded queue wakeup. Old serial implementation fails the read-progress regression."
+    },
+    {
+      "command": "python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/camera-0.66/aosp-pocket-manager-0.66.apk",
+      "result": "PASS: focused native ARM64 -Wall -Wextra -Werror build, Java/D8, signing"
+    },
+    {
+      "command": "python3 tools/build_contacts_update.py --base-apk out/camera-0.67/aosp-pocket-manager-0.67.apk --version 0.68 --host-library libpocket_ce.so=out/ce-fixture/libpocket_ce.so",
+      "result": "PASS: signed APK audit; all Java classes semantically identical to base, native storage library updated"
+    }
+  ],
+  "deferred": [],
+  "limits": [
+    "Validation covers the already-running provider requested by the user. Forced provider restart measured 7235 ms total (1701 ms acquisition, 5526 ms query), above the two-second stress target.",
+    "Ordinary writes are buffered; completed checkpoints, explicit fsync and shutdown are the durability boundaries. Native async fsync replies only after durable completion.",
+    "Process kill recovery tested; physical power failure and this update on a physical phone not tested."
+  ],
+  "sourceSha256": {
+    "runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java": "6334eed4b2ef9d1418e479d9eebc236df7479cd1046eec5b878c1c1429cc76c2",
+    "runtime/storage/src/dev/kreijstal/aosppocket/storage/CeNamespace.java": "830306e343342cc2ba2fd8323f44cd5b8ac60bf05d7e167025e131a65e8fba0a",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeStorage.java": "6c144d9b9d28282cef003e6d88034a671875d465a4cf58f2e9655beeab3ff67a",
+    "runtime/tests/EncryptedStoreTest.java": "7b8729e729c77e6bc167ff4b1aeca83d7c6f88d265c5d2f2eabf23c53f59d087",
+    "runtime/tests/CeNamespaceTest.java": "32b6609f9c4c35cf42720343ba86d1864fc9b424bb5b3bf735b2f3054f02e60f",
+    "runtime/tests/storage-integration/probe.c": "e4c7f00ca98483ff989d7d9a9d3845f3ee5aa9391eb79bc9aeda02dcfd3112d5",
+    "tools/build_storage_update.py": "2dfd4cb4eaa9e0649787db200c26cb8cab3fbba760529e32d6188db6ab0b6322",
+    "tools/test_contacts_on_pi.py": "39e593cef9e270bbfac79fc47bd95787938b6c4c2f0b479f08b184e0d2251eca",
+    "runtime/storage/native/ce_fuse.c": "dfae484f6b4f4efecb9a04f05b7ee70879575f9406171151322d9be427d63646",
+    "runtime/tests/storage-integration/CeFuseConcurrencyTest.java": "52bca19c6edb37f5a996c33d02c5b33001cbcf13cbede6e03aedd624f224f08b",
+    "runtime/tests/storage-integration/CeFixtureActivity.java": "fab74a15976237b1e52f5182a1b28c1e91c12f777caa5824ba36267297a8756f",
+    "runtime/tests/storage-integration/fuse_socket_test.c": "74505e7607c258365c5a1a60f57c7c8c584ed6a7fc6daf5f383784aa3557deae",
+    "tools/build_contacts_update.py": "2d89e529c23633dead305e93477d33a8c69a09dd756085be705853bd656b2439",
+    "tools/install_contacts_on_pi.py": "fe4b7de1268dea39293f0d0cbfafb672682123f80c230a4364dbe6b75934714d",
+    "tools/test_ce_fuse_concurrency.py": "9b32eb6ecd803c2736b0e9b82b73f9a7549ce5ddf547d360786d44cda630e319"
+  },
+  "isolatedPiSnapshotFixture": {
+    "migration": "verified ciphertext; plaintext source removed",
+    "locked": "CE_LOCKED_PASS additional_users_fail_closed=1\n",
+    "native": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_FILESYSTEM_PASS mmap=1 truncation=1 locks=1 directories=1 links=1 executable_memory=1\n",
+    "reopened": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_REOPEN_PASS buffered_shutdown_flush=1\n",
+    "credentialRemovalAndRestoration": "PASS: host-keystore-wrapped default slot removed after restoring credential",
+    "uid": 10179,
+    "validation": "PASS"
+  },
+  "before": {
+    "uid": 10023,
+    "validation": "PASS",
+    "runs": [
+      {
+        "acquireMs": 38,
+        "queryMs": 14824,
+        "rows": 0,
+        "countMs": 0,
+        "totalMs": 14876
+      },
+      {
+        "acquireMs": 43,
+        "queryMs": 966,
+        "rows": 0,
+        "countMs": 0,
+        "totalMs": 1024
+      },
+      {
+        "acquireMs": 73,
+        "queryMs": 798,
+        "rows": 0,
+        "countMs": 0,
+        "totalMs": 882
+      }
+    ],
+    "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged"
+  },
+  "intermediateBatchingOnly": {
+    "uid": 10023,
+    "validation": "FAIL",
+    "runs": [
+      {
+        "acquireMs": 165,
+        "queryMs": 3941,
+        "rows": 0,
+        "countMs": 0,
+        "totalMs": 4117
+      },
+      {
+        "acquireMs": 42,
+        "queryMs": 716,
+        "rows": 0,
+        "countMs": 0,
+        "totalMs": 767
+      },
+      {
+        "acquireMs": 0,
+        "queryMs": 39,
+        "rows": 0,
+        "countMs": 0,
+        "totalMs": 53
+      }
+    ],
+    "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+    "stackSampling": false,
+    "latencyBudgetMs": 2000,
+    "latencyBudgetMet": false
+  },
+  "lastLiveVersion": "0.68",
+  "livePi058": {
+    "warm": {
+      "uid": 10023,
+      "validation": "PASS",
+      "runs": [
+        {
+          "acquireMs": 102,
+          "queryMs": 73,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 184
+        },
+        {
+          "acquireMs": 0,
+          "queryMs": 51,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 62
+        },
+        {
+          "acquireMs": 0,
+          "queryMs": 40,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 51
+        }
+      ],
+      "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+      "stackSampling": false,
+      "managerVersion": "0.58",
+      "managerVersionAfter": "0.58",
+      "latencyBudgetMs": 2000,
+      "latencyBudgetMet": true
+    },
+    "providerRestart": {
+      "uid": 10023,
+      "validation": "FAIL",
+      "runs": [
+        {
+          "acquireMs": 2155,
+          "queryMs": 16937,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 19101
+        },
+        {
+          "acquireMs": 40,
+          "queryMs": 34,
+          "rows": 0,
+          "countMs": 1,
+          "totalMs": 82
+        },
+        {
+          "acquireMs": 34,
+          "queryMs": 36,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 78
+        }
+      ],
+      "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+      "stackSampling": false,
+      "managerVersion": "0.58",
+      "managerVersionAfter": "0.58",
+      "latencyBudgetMs": 2000,
+      "latencyBudgetMet": false
+    },
+    "attest": {
+      "summary": {
+        "pass": 44,
+        "fail": 4,
+        "skip": 3,
+        "info": 8,
+        "checks": 59,
+        "scope": "device_checks_excluding_optional_biometrics",
+        "deviceChecks": 59
+      },
+      "contacts": {
+        "id": "contacts_readable",
+        "category": "ACCESS",
+        "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+        "status": "FAIL",
+        "detail": "timeout after 2000ms"
+      },
+      "remainingFailures": [
+        "root_su_paths",
+        "magisk_paths",
+        "build_tags_test_keys",
+        "contacts_readable"
+      ]
+    },
+    "commands": [
+      {
+        "command": "ssh pi@juanraspberry 'python3 ~/microg-test/test_contacts_on_pi.py --probe ~/microg-test/microg-api-probe.apk --owner ~/microg-test/microg-owner.jar --report ~/microg-test/contacts-058.json --expect-version 0.58 --max-ms 2000'",
+        "result": "PASS: 184, 62, 51 ms"
+      },
+      {
+        "command": "ssh pi@juanraspberry 'python3 ~/microg-test/test_contacts_on_pi.py --probe ~/microg-test/microg-api-probe.apk --owner ~/microg-test/microg-owner.jar --report ~/microg-test/contacts-058-provider-restart.json --expect-version 0.58 --restart-provider --max-ms 2000'",
+        "result": "FAIL: 19101, 82, 78 ms; first acquisition 2155 ms and query 16937 ms"
+      },
+      {
+        "command": "ssh pi@juanraspberry 'python3 ~/validate_attest_on_pi.py'",
+        "result": "Contacts FAIL: timeout after 2000ms; summary 44 PASS / 4 FAIL / 3 SKIP / 8 INFO; codec PASS"
+      }
+    ]
+  },
+  "metadataChunkUpdate060": {
+    "implementation": "Cache per-chunk hashes of the in-memory namespace index, including pending writes; call backend write only for changed chunks; invalidate comparison cache if preparing the index fails",
+    "unitResult": "PASS: concurrency, 3 MiB cache pressure and metadata reopen, failed commit followed by restoration of previously committed metadata",
+    "baselineRegression": "The failed-commit restoration test fails against 0.58 and passes against the new implementation",
+    "buildCommand": "python3 out/contacts-fix/build060.py",
+    "buildResult": "PASS: APK signing/verification; exactly CeNamespace.smali and version manifest changed from audio 0.59; all audio/vibrator code and native payloads preserved",
+    "liveResult": "NOT RUN: another session installed audio 0.59 while Contacts work was in progress; avoid concurrent shared-guest installs/restarts"
+  },
+  "livePi065": {
+    "providerRestart": {
+      "uid": 10023,
+      "validation": "FAIL",
+      "runs": [
+        {
+          "acquireMs": 2041,
+          "queryMs": 4429,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 6478
+        },
+        {
+          "acquireMs": 48,
+          "queryMs": 41,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 96
+        },
+        {
+          "acquireMs": 40,
+          "queryMs": 33,
+          "rows": 0,
+          "countMs": 1,
+          "totalMs": 82
+        }
+      ],
+      "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+      "stackSampling": false,
+      "managerVersion": "0.65",
+      "managerVersionAfter": "0.65",
+      "providerRestartRequested": true,
+      "providerPidBeforeRestart": "30366",
+      "providerPidAfter": "30627",
+      "managerDexSha256": "e6c6dc71491267dc7015ce1c57a2c9518a5e360dcd7f640463b17b5f95cfec11",
+      "managerDexSha256After": "e6c6dc71491267dc7015ce1c57a2c9518a5e360dcd7f640463b17b5f95cfec11",
+      "latencyBudgetMs": 2000,
+      "latencyBudgetMet": false
+    },
+    "note": "The metadata chunk patch was present in this installed build; remaining cold-provider latency motivated asynchronous native FUSE sync scheduling."
+  },
+  "isolatedPiConcurrentSyncFixture": {
+    "readDuringBlockedSync": "PASS: real AppFuse bridge permits reads before fsync finishes",
+    "migration": "verified ciphertext; plaintext source removed",
+    "locked": "CE_LOCKED_PASS additional_users_fail_closed=1\n",
+    "native": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_FILESYSTEM_PASS mmap=1 truncation=1 locks=1 directories=1 links=1 executable_memory=1\n",
+    "reopened": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_REOPEN_PASS buffered_shutdown_flush=1\n",
+    "credentialRemovalAndRestoration": "PASS: host-keystore-wrapped default slot removed after restoring credential",
+    "uid": 10179,
+    "validation": "PASS"
+  },
+  "livePi068": {
+    "existingProvider": {
+      "uid": 10023,
+      "validation": "PASS",
+      "runs": [
+        {
+          "acquireMs": 315,
+          "queryMs": 1219,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 1621
+        },
+        {
+          "acquireMs": 0,
+          "queryMs": 294,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 376
+        },
+        {
+          "acquireMs": 0,
+          "queryMs": 189,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 205
+        }
+      ],
+      "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+      "stackSampling": false,
+      "managerVersion": "0.68",
+      "managerVersionAfter": "0.68",
+      "providerRestartRequested": false,
+      "providerPidBeforeRestart": null,
+      "providerPidAfter": "6915",
+      "managerDexSha256": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+      "managerDexSha256After": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+      "ceLibrarySha256": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647",
+      "ceLibrarySha256After": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647",
+      "latencyBudgetMs": 2000,
+      "latencyBudgetMet": true
+    },
+    "providerRestartStressTest": {
+      "uid": 10023,
+      "validation": "FAIL",
+      "runs": [
+        {
+          "acquireMs": 1701,
+          "queryMs": 5526,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 7235
+        },
+        {
+          "acquireMs": 40,
+          "queryMs": 35,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 82
+        },
+        {
+          "acquireMs": 34,
+          "queryMs": 30,
+          "rows": 0,
+          "countMs": 1,
+          "totalMs": 72
+        }
+      ],
+      "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+      "stackSampling": false,
+      "managerVersion": "0.68",
+      "managerVersionAfter": "0.68",
+      "providerRestartRequested": true,
+      "providerPidBeforeRestart": "5976",
+      "providerPidAfter": "6638",
+      "managerDexSha256": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+      "managerDexSha256After": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+      "ceLibrarySha256": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647",
+      "ceLibrarySha256After": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647",
+      "latencyBudgetMs": 2000,
+      "latencyBudgetMet": false
+    },
+    "diagnosticOnly": {
+      "uid": 10023,
+      "validation": "PASS",
+      "runs": [
+        {
+          "acquireMs": 2292,
+          "queryMs": 30218,
+          "rows": 0,
+          "countMs": 1,
+          "totalMs": 32519
+        },
+        {
+          "acquireMs": 37,
+          "queryMs": 39,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 85
+        },
+        {
+          "acquireMs": 32,
+          "queryMs": 31,
+          "rows": 0,
+          "countMs": 0,
+          "totalMs": 70
+        }
+      ],
+      "scope": "Pi VM -> Pocket API 28 -> ordinary client; no contact values logged",
+      "stackSampling": true,
+      "managerVersion": "0.68",
+      "managerVersionAfter": "0.68",
+      "providerRestartRequested": true,
+      "providerPidBeforeRestart": "6638",
+      "providerPidAfter": "6915",
+      "managerDexSha256": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+      "managerDexSha256After": "1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265",
+      "ceLibrarySha256": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647",
+      "ceLibrarySha256After": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647"
+    },
+    "attest": {
+      "summary": {
+        "pass": 47,
+        "fail": 1,
+        "skip": 3,
+        "info": 8,
+        "checks": 59,
+        "scope": "device_checks_excluding_optional_biometrics",
+        "deviceChecks": 59
+      },
+      "checks": [
+        {
+          "id": "root_su_paths",
+          "category": "ATTEST",
+          "description": "No su binary in the usual locations",
+          "status": "PASS",
+          "detail": "no su binaries found"
+        },
+        {
+          "id": "magisk_paths",
+          "category": "ATTEST",
+          "description": "No Magisk artifacts",
+          "status": "PASS",
+          "detail": "no Magisk artifacts"
+        },
+        {
+          "id": "build_tags_test_keys",
+          "category": "ATTEST",
+          "description": "Build is not signed with test-keys",
+          "status": "FAIL",
+          "detail": "tags=test-keys type=userdebug"
+        },
+        {
+          "id": "section_codec",
+          "category": "RIDGE",
+          "description": "Ridge section 'codec'",
+          "status": "PASS",
+          "detail": "collected",
+          "data": {
+            "total": 6,
+            "encoders": 1,
+            "sample": [
+              "OMX.google.g711.alaw.decoder",
+              "OMX.google.g711.mlaw.decoder",
+              "OMX.google.mp3.decoder",
+              "OMX.google.raw.decoder",
+              "OMX.google.h264.decoder",
+              "OMX.google.h264.encoder"
+            ]
+          }
+        },
+        {
+          "id": "contacts_readable",
+          "category": "ACCESS",
+          "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+          "status": "PASS",
+          "detail": "contacts rows=0"
+        }
+      ]
+    },
+    "encryptedStorage": {
+      "locked": {
+        "mode": "locked",
+        "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+        "beforeUnlockCatExitCode": 1,
+        "beforeUnlockStdoutBytes": 0,
+        "beforeUnlockCanaryReadable": false,
+        "wrongPasswordRejected": true,
+        "wrongPasswordOutput": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\nGUEST_CE_KEY_FAILED java.lang.SecurityException: Guest credential rejected\n",
+        "privateStorageUnavailableBeforeUnlock": true,
+        "validation": "PASS"
+      },
+      "unlock": {
+        "scope": "Pocket Android 9 guest on dedicated Pi VM",
+        "mode": "unlock",
+        "exitCode": 0,
+        "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"unlock\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"interactive\":true,\"lockScreenEnabled\":true,\"uiPasswordUnlockVerified\":true,\"previouslyLocked\":true}\n",
+        "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=29 loader=boot jvmti=unused\n",
+        "validation": "PASS",
+        "uid": 1000,
+        "previouslySecure": true,
+        "deviceSecure": true,
+        "keyguardSecure": true,
+        "keyguardLocked": false,
+        "correctPasswordVerified": true,
+        "interactive": true,
+        "lockScreenEnabled": true,
+        "uiPasswordUnlockVerified": true,
+        "previouslyLocked": true
+      },
+      "verify": {
+        "mode": "verify",
+        "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+        "unlockWaitMilliseconds": 1850,
+        "correctPasswordVerified": true,
+        "encryptedCanaryPreserved": true,
+        "validation": "PASS"
+      }
+    },
+    "commands": [
+      {
+        "command": "python3 ~/microg-test/test_contacts_on_pi.py --probe ~/microg-test/microg-api-probe.apk --owner ~/microg-test/microg-owner.jar --report ~/microg-test/contacts-068-running-provider.json --expect-version 0.68 --expect-dex-sha256 1e90e1670c27e51f383b7b11018fde5b2bdfb9ce82acb4f8f31ac2321acf6265 --expect-ce-sha256 0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647 --max-ms 2000",
+        "result": "PASS: total 1621, 376, 205 ms; query 1219, 294, 189 ms; no provider restart; version, DEX and native library unchanged before/after"
+      },
+      {
+        "command": "export CLASSPATH=/system/framework/pocket-zygote.jar:/data/local/tmp/device-attest-runner.jar; exec /system/bin/pocket-app-process-api28 /system/bin RuntimeProbeRunner --device",
+        "context": "Guest owner console; installed unmodified Attest Probe 1.10. No APK argument, so no concurrent package-replacement callback can kill the new activity. Fresh report removed before launch, then polled to all 59 checks.",
+        "result": "PASS: contacts_readable; 47 PASS / 1 FAIL / 3 SKIP / 8 INFO; remaining failure build_tags_test_keys"
+      },
+      {
+        "command": "python3 ~/test_guest_encryption_on_pi.py locked",
+        "result": "PASS: private canary unreadable, wrong password rejected"
+      },
+      {
+        "command": "python3 ~/test_guest_lock_on_pi.py unlock --probe ~/microg-test/guest-lock-probe.jar",
+        "result": "PASS: normal secure lock-screen password unlock"
+      },
+      {
+        "command": "python3 ~/test_guest_encryption_on_pi.py verify",
+        "result": "PASS: existing encrypted canary preserved"
+      }
+    ],
+    "coldTraceFinding": "The sync worker waited for the commit lease while PocketCeCheckpoint was scanning collectUnreferenced. Provider startup waited in ContactsDatabaseHelper.onOpen; reads were not blocked in the native receive loop. Diagnostic stacks are excluded from latency acceptance.",
+    "userScope": "User explicitly requested assuming the Contacts provider is already running; no further provider restarts were performed after that instruction."
+  }
+}

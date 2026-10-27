@@ -8,6 +8,7 @@ import uuid
 import zipfile
 import zlib
 from prepare_api28 import ROOT
+from boot_class_manifest import write_manifest, GUEST_PATH
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--base-apk',type=Path,required=True,help='APK actually installed in the test VM')
@@ -17,6 +18,7 @@ args=parser.parse_args()
 files={p.relative_to(ROOT/'out/boot/rootfs').as_posix():p for p in (ROOT/'out/boot/rootfs').rglob('*')
        if p.is_file() and p.relative_to(ROOT/'out/boot/rootfs').parts[0] in ('system','vendor')}
 files['system/framework/pocket-zygote.jar']=ROOT/'out/boot/pocket-zygote.jar'
+files[GUEST_PATH]=write_manifest(ROOT/'out/boot/pocket-zygote.jar',ROOT/'out/boot/pocket-zygote.classes')
 changed=[]
 with zipfile.ZipFile(args.base_apk) as baseline:
     for name,path in (('classes.dex',ROOT/'out/boot/classes.dex'),

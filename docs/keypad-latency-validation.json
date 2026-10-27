@@ -1,0 +1,19 @@
+{
+  "scope": "Pi VM -> Pocket 0.72 Android 9 guest",
+  "toneProbe": "PASS",
+  "command": "export CLASSPATH=/data/local/tmp/key-tone-timing.jar; exec /system/bin/pocket-app-process-api28 /system/bin KeyToneTiming",
+  "toneConstructorMs": 217,
+  "toneStartMs": [
+    212,
+    3,
+    311
+  ],
+  "toneAccepted": [
+    true,
+    true,
+    true
+  ],
+  "observedWindowManagerFocusLockMs": 681,
+  "measurementLimits": "Standalone DTMF audio timing and an observed guest focus-lock stall; not a full tap-to-character or frame latency measurement. Keyboard sound-effects and haptics have not been isolated.",
+  "guestRuntime": "ART interpreter (-Xint/-Xusejit:false); software SwiftShader guest rendering"
+}

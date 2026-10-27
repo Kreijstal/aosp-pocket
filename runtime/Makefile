@@ -7,7 +7,7 @@ NDK ?= $(HOME)/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c
 LLVM := $(NDK)/toolchains/llvm/prebuilt/linux-x86_64/bin
 TOOLS := $(TOOLCHAIN)/build/tools
 SIGNER := $(TOOLCHAIN)/build/apksigner.jar
-JAVA := $(shell find runtime/app/src -name '*.java') runtime/direct/BootBattery.java
+JAVA := $(shell find runtime/app/src runtime/storage/src -name '*.java') runtime/direct/BootBattery.java
 OUT := out/runtime
 BUNDLED_GUEST ?= out/aosp-pocket-guest-arm64.zip
 # ARCH selects the native target: arm64 (default) or x86_64. The Python builders read POCKET_ARCH.
@@ -39,7 +39,11 @@ out/syscall-profile/syscall-profile-probe: runtime/modules/syscall-profiles/sysc
 	$(LLVM)/aarch64-linux-android28-clang -Wall -Wextra -Werror -O2 -static -fno-emulated-tls -Wl,-z,max-page-size=16384 runtime/modules/syscall-profiles/syscall_profile.c runtime/modules/syscall-profiles/syscall_gate.S runtime/tests/syscall_profile.c -o $@
 
 NATIVE_INPUTS := $(shell find runtime/native -type f) runtime/anbox-renderer.patch runtime/anbox-input.patch runtime/proot-android.patch runtime/proot-pocket-owner.patch runtime/proot-crash-diagnostics.patch runtime/proot-sysexit-errors.patch runtime/proot-exitkill.patch runtime/proot-nested-bindings.patch runtime/proot_pocket_owner.h runtime/talloc.cross tools/build_runtime_native.py sources.lock.json vendor/anbox/CMakeLists.txt vendor/proot/src/GNUmakefile
-native: out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so out/runtime-native/libpocket_frames.so
+native: out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so out/runtime-native/libpocket_frames.so out/runtime-native/libpocket_ce.so
+
+out/runtime-native/libpocket_ce.so: runtime/storage/native/ce_fuse.c
+	mkdir -p out/runtime-native
+	$(LLVM)/$(TRIPLE)28-clang -O2 -Wall -Wextra -Werror -fPIC -shared -pthread -Wl,-z,max-page-size=16384 $< -o $@
 
 out/runtime-native/libpocket_frames.so: runtime/frame_buffers.c runtime/Makefile
 	mkdir -p out/runtime-native
@@ -74,8 +78,8 @@ $(OUT)/base.apk: $(OUT)/classes.dex $(OUT)/AndroidManifest.xml
 out/aosp-pocket-guest-arm64.zip: tools/prepare_default_guest.py tools/pack_guest_image.py tools/build_guest_binder.py sources.lock.json
 	python3 tools/prepare_default_guest.py $@
 
-$(OUT)/packed.apk: $(OUT)/base.apk out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so out/runtime-native/libpocket_frames.so out/runtime-native/libpocket_binder_bootstrap.so runtime/guest.sh tools/pack_runtime.py sources.lock.json runtime/NOTICE $(wildcard runtime/licenses/*) $(BUNDLED_GUEST)
-	python3 tools/pack_runtime.py --ndk $(NDK) --guest $(BUNDLED_GUEST)
+$(OUT)/packed.apk: $(OUT)/base.apk out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so out/runtime-native/libpocket_frames.so out/runtime-native/libpocket_ce.so out/runtime-native/libpocket_binder_bootstrap.so runtime/guest.sh tools/pack_runtime.py sources.lock.json runtime/NOTICE $(wildcard runtime/licenses/*)
+	python3 tools/pack_runtime.py --ndk $(NDK)
 
 out/debug.keystore:
 	mkdir -p out
@@ -111,6 +115,7 @@ $(OUT)/guest-test.apk: $(shell find runtime/smoke -name '*.java' -o -name '*.xml
 	java -cp $(SIGNER) com.android.apksigner.ApkSignerTool verify --verbose $@
 
 include runtime/api28/Makefile
+include runtime/api29/Makefile
 include runtime/direct/Makefile
 include runtime/direct/boot.mk
 

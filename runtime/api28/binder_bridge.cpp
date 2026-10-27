@@ -1,8 +1,9 @@
+#include "binder_host_scope.h"
 // SPDX-License-Identifier: GPL-3.0-only
-// Android 9 platform ABI bridge. Deliberately separate from Ananbox's API 25
+// Android 9/10 platform ABI bridge. Deliberately separate from Ananbox's API 25
 // HostBinder class ABI. Host Parcel templates come from the running host API.
-#if POCKET_GUEST_API != 28
-#error This bridge requires the Android 9 platform Binder ABI
+#if POCKET_GUEST_API != 28 && POCKET_GUEST_API != 29
+#error Review this bridge against the matching platform Binder ABI
 #endif
 #include "binder_bridge.h"
 #include <binder/Binder.h>
@@ -76,6 +77,7 @@ int readNumber(const char* path) {
 }
 
 sp<IBinder> hostActivity() {
+    PocketHostBinderScope hostScope;
     Parcel request, reply;
     if (loadTemplate("/activityServiceRequest", request, nullptr) != NO_ERROR) return nullptr;
     // Bootstrap against host handle zero explicitly, avoiding the guest
@@ -91,6 +93,7 @@ sp<IBinder> hostActivity() {
 }
 
 status_t broadcast(const sp<IBinder>& activity, const char* path, const sp<IBinder>& object) {
+    PocketHostBinderScope hostScope;
     int transaction = readNumber("/trans_code");
     if (!activity || transaction <= 0) return BAD_VALUE;
     Parcel request, reply;

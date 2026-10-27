@@ -43,22 +43,25 @@ def main():
     with zipfile.ZipFile(args.apk) as apk, tempfile.TemporaryDirectory() as temporary:
         check_host_ui_manifest(apk.read("AndroidManifest.xml"))
         prefix = 'assets/default-guest/'
-        layout = json.loads(apk.read(prefix + 'pocket-layout.json'))
-        assert layout['format'] == 1 and layout['abi'] == 'arm64-v8a'
-        files = {name for name, spec in layout['entries'].items() if spec['type'] == 'file'}
-        stored = set()
-        for name in apk.namelist():
-            if not name.startswith(prefix): continue
-            name = name[len(prefix):]
-            if name != 'pocket-layout.json':
-                assert name.endswith('.payload'), 'Guest entry must be opaque to Android APK scans'
-                name = name[:-len('.payload')]
-            stored.add(name)
-        assert stored == files | {'pocket-layout.json'}, 'Incomplete bundled guest'
+        if prefix+'pocket-layout.json' in apk.namelist():
+            layout = json.loads(apk.read(prefix + 'pocket-layout.json'))
+            assert layout['format'] == 1 and layout['abi'] == 'arm64-v8a'
+            files = {name for name, spec in layout['entries'].items() if spec['type'] == 'file'}
+            stored = set()
+            for name in apk.namelist():
+                if not name.startswith(prefix): continue
+                name = name[len(prefix):]
+                if name != 'pocket-layout.json':
+                    assert name.endswith('.payload'), 'Guest entry must be opaque to Android APK scans'
+                    name = name[:-len('.payload')]
+                stored.add(name)
+            assert stored == files | {'pocket-layout.json'}, 'Incomplete bundled guest'
+            assert {'init', 'system/build.prop', 'system/etc/NOTICE.html.gz'} <= files
+            for name in ('ueventd', 'watchdogd'):
+                assert layout['entries']['sbin/'+name]['target'] == '../init'
+        else:
+            assert not any(name.startswith(prefix) for name in apk.namelist()),'Incomplete optional bundled guest'
         assert not any(name.endswith('.bc') for name in apk.namelist()), 'Guest RenderScript must not force a 32-bit host ABI'
-        assert {'init', 'system/build.prop', 'system/etc/NOTICE.html.gz'} <= files
-        for name in ('ueventd', 'watchdogd'):
-            assert layout['entries']['sbin/'+name]['target'] == '../init'
         manifest = apk.read('AndroidManifest.xml')
         # Optional host-device grants are now declared for the API28 broker.
         # Calls/SMS must still use the host UI, with no direct-send privileges.
@@ -88,7 +91,7 @@ def main():
         assert "killall" not in apk.read("assets/guest.sh").decode()
         for license in ("anbox-and-runtime", "proot", "talloc", "boost"):
             assert len(apk.read("assets/licenses/" + license + ".txt")) > 100
-    print("PASS: ARM64 runtime + PRoot, static C++/Boost, 16 KiB LOAD alignment, guest Binder ABI, software host UI, licenses, scoped launch, complete bundled guest")
+    print("PASS: ARM64 runtime + PRoot, static C++/Boost, 16 KiB LOAD alignment, guest Binder ABI, software host UI, licenses, scoped launch and optional guest layout")
 
 if __name__ == "__main__":
     main()

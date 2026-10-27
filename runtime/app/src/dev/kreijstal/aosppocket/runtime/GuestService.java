@@ -46,7 +46,8 @@ public final class GuestService extends Service {
     private long adminGeneration;
     private final java.util.Set<FrameListener> visibleDisplays = new java.util.LinkedHashSet<>();
     private FrameListener displayOwner;
-    boolean directBackend() { return sdk == 28; }
+    boolean directBackend() { return sdk == 28 || sdk == 29; }
+    String androidVersion() { return sdk==29?"10":sdk==28?"9":"7.1.1"; }
     boolean adminEnabled() { return admin != null; }
     String adminStatus() {
         return admin==null ? adminError==null?"Termux administration is off.":adminError
@@ -111,8 +112,8 @@ public final class GuestService extends Service {
                     return adminMain(()->{
                         requireAdmin(generation);
                         if(!directBackend() || running() || starting || stopping || preparing())
-                            throw new IOException("Stop the Android 9 guest before resetting its module view");
-                        java.nio.file.Files.deleteIfExists(new File(DirectImage.root(GuestService.this),".pocket-module-view/ready").toPath());
+                            throw new IOException("Stop the Android guest before resetting its module view");
+                        java.nio.file.Files.deleteIfExists(new File(DirectImage.root(GuestService.this,sdk),".pocket-module-view/ready").toPath());
                         return adminState();
                     });
                 }
@@ -122,9 +123,9 @@ public final class GuestService extends Service {
                         // Owner recovery/file access must also work after a guest crash.
                         // Only service-dependent commands require a booted Android system.
                         if(!directBackend() || stopping ||
-                            !new File(DirectImage.root(GuestService.this),"system/bin/sh").isFile())
-                            throw new IOException("Prepare the Android 9 image before using its root console");
-                        return DirectImage.admin(DirectImage.root(GuestService.this),cwd,argv);
+                            !new File(DirectImage.root(GuestService.this,sdk),"system/bin/sh").isFile())
+                            throw new IOException("Prepare the Android image before using its root console");
+                        return DirectImage.admin(DirectImage.root(GuestService.this,sdk),cwd,argv);
                     });
                 }
             });
@@ -132,7 +133,7 @@ public final class GuestService extends Service {
         } catch(IOException | RuntimeException error){adminError="Cannot open Termux administration: "+error.getMessage();changed();}
     }
     int selectedSdk() { return sdk; }
-    boolean directAvailable() { return DirectImage.bundled(this); }
+    boolean directAvailable() { return DirectImage.bundled(this,directBackend()?sdk:28); }
     android.graphics.Bitmap snapshot() { return direct==null ? null : direct.snapshot(); }
     void presentSurface(android.view.Surface value) {if(direct!=null)direct.surface(value);}
     void detachSurface(android.view.Surface value) {if(direct!=null)direct.detach(value);}
@@ -162,27 +163,27 @@ public final class GuestService extends Service {
     boolean hasLastApp() { return direct != null && direct.hasLastApp(); }
     void openLastApp() { if (direct != null && booted) direct.openLastApp(); }
     void selectSdk(int value) {
-        if (value == sdk || running() || starting || preparing() || stopping || value != 25 && value != 28) return;
-        if (value == 28 && !directAvailable()) return;
+        if (value == sdk || running() || starting || preparing() || stopping || value != 25 && value != 28 && value != 29) return;
+        if (value != 25 && !DirectImage.bundled(this,value)) return;
         sdk = value;
         getSharedPreferences("guest-backend", MODE_PRIVATE).edit().putInt("sdk", sdk).apply();
         geometry();
-        message("Android " + (sdk == 28 ? "9 · direct backend" : "7.1.1 · PRoot") + " selected. Tap Start.");
+        message("Android " + androidVersion() + " selected. Tap Start.");
     }
     private void geometry() {
-        width = sdk == 28 ? hostDisplay.width : legacyWidth;
-        height = sdk == 28 ? hostDisplay.height : legacyHeight;
-        dpi = sdk == 28 ? hostDisplay.densityDpi : legacyDpi;
+        width = directBackend() ? hostDisplay.width : legacyWidth;
+        height = directBackend() ? hostDisplay.height : legacyHeight;
+        dpi = directBackend() ? hostDisplay.densityDpi : legacyDpi;
     }
     private void bootDirect() {
         if (direct != null) return;
         receiver.reset();
         starting = true;
-        direct = new DirectSession(this, new DisplayGeometry(width,height,dpi), hostRefreshHz, new DirectSession.Listener() {
+        direct = new DirectSession(this, new DisplayGeometry(width,height,dpi), hostRefreshHz, sdk, new DirectSession.Listener() {
             @Override public void status(String text) { if (!destroyed) message(text); }
             @Override public void ready() {
                 starting = false; booted = true;
-                message("Android 9 running · "+width+" × "+height);
+                message("Android "+androidVersion()+" running · "+width+" × "+height);
             }
             @Override public void stopped(String text) {
                 direct = null; starting = false; booted = false; stopping = false;
@@ -223,7 +224,9 @@ public final class GuestService extends Service {
         sdk = getSharedPreferences("guest-backend", MODE_PRIVATE).getInt("sdk",
             new File(getFilesDir(), "rootfs/init").isFile() || !directAvailable() ? 25 : 28);
         geometry();
-        message = "Android " + (sdk == 28 ? "9 · direct backend" : "7.1.1 · PRoot") + " ready. Tap Start.";
+        message = directBackend() && !hasImage() && RemoteImage.available(this,sdk)
+            ? "Download Android "+androidVersion()+" to get started. The image is saved for offline use."
+            : "Android " + androidVersion() + " ready. Tap Start.";
         receiverThread = new HandlerThread("GuestBinder");
         receiverThread.start();
         IntentFilter filter = new IntentFilter(GuestBinder.ACTION);
@@ -249,7 +252,7 @@ public final class GuestService extends Service {
         }
         return START_NOT_STICKY;
     }
-    boolean hasImage() { if (directBackend()) return new File(getFilesDir(), "api28-rootfs/system/bin/pocket-init-api28").isFile(); return new File(getFilesDir(), "rootfs/init").isFile(); }
+    boolean hasImage() { if (directBackend()) return new File(DirectImage.root(this,sdk),"system/bin/pocket-init-api"+sdk).isFile(); return new File(getFilesDir(), "rootfs/init").isFile(); }
     boolean running() { return directBackend() ? direct != null && direct.running() : guest != null; }
     boolean starting() { return starting; }
     boolean preparing() { return imageWorker != null || direct != null && !booted; }
@@ -437,7 +440,7 @@ public final class GuestService extends Service {
         finally { if (query != null && query.isAlive()) query.destroyForcibly(); }
     }
     void stopGuest() {
-        if (direct != null) { stopping = true; message("Stopping Android 9…"); direct.close(); return; }
+        if (direct != null) { stopping = true; message("Stopping Android "+androidVersion()+"…"); direct.close(); return; }
         if (imageWorker != null && !stopping) {
             stopping = true;
             message("Cancelling image setup…");

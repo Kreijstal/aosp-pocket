@@ -1,0 +1,190 @@
+{
+  "validation": "PASS",
+  "scope": "Pi dedicated Android VM -> Pocket Android 9",
+  "installedManagerVersion": "0.74",
+  "changes": [
+    "Input bridge enqueues events without waiting for app callbacks; ordered socket retained.",
+    "Enable runtime ART JIT and remove forced -Xint in generated service commands.",
+    "Include matching Android 9 key character maps, key layouts and input device configuration; require Virtual.kcm in boot staging."
+  ],
+  "realNumericTyping": {
+    "command": "ssh pi@juanraspberry python3 ~/.config/pocketctl/input-latency/test_numeric_typing_on_pi.py --label optimized-keymaps-fresh",
+    "result": "PASS: ten actual LatinIME digits reached the ordinary app EditText in each of two fresh app runs",
+    "sampleCount": 20,
+    "editMs": {
+      "min": 74.947296,
+      "median": 146.269583,
+      "max": 203.833092
+    },
+    "drawSubmissionMs": {
+      "min": 94.610778,
+      "median": 168.39057400000002,
+      "max": 261.252055
+    },
+    "measurement": "Touch down through production input socket to app mutation/draw submission; includes a 40 ms finger hold and excludes final screen presentation.",
+    "runs": [
+      {
+        "validation": "PASS",
+        "samples": [
+          {
+            "digit": "1",
+            "editMs": 192.734797,
+            "drawSubmissionMs": 228.9365
+          },
+          {
+            "digit": "2",
+            "editMs": 89.400463,
+            "drawSubmissionMs": 144.451592
+          },
+          {
+            "digit": "3",
+            "editMs": 150.586852,
+            "drawSubmissionMs": 180.809222
+          },
+          {
+            "digit": "4",
+            "editMs": 126.225463,
+            "drawSubmissionMs": 148.81376
+          },
+          {
+            "digit": "5",
+            "editMs": 118.990889,
+            "drawSubmissionMs": 133.744074
+          },
+          {
+            "digit": "6",
+            "editMs": 121.32687,
+            "drawSubmissionMs": 143.787019
+          },
+          {
+            "digit": "7",
+            "editMs": 117.689389,
+            "drawSubmissionMs": 158.529723
+          },
+          {
+            "digit": "8",
+            "editMs": 139.685574,
+            "drawSubmissionMs": 177.138204
+          },
+          {
+            "digit": "9",
+            "editMs": 150.000907,
+            "drawSubmissionMs": 163.40424
+          },
+          {
+            "digit": "0",
+            "editMs": 133.897722,
+            "drawSubmissionMs": 161.150666
+          }
+        ],
+        "text": "1234567890",
+        "measurement": "real numeric IME tap to app text mutation and draw submission; excludes final presentation",
+        "label": "optimized-keymaps",
+        "scope": "Pi VM -> Pocket Android 9 -> real LatinIME numeric keyboard"
+      },
+      {
+        "validation": "PASS",
+        "samples": [
+          {
+            "digit": "1",
+            "editMs": 74.947296,
+            "drawSubmissionMs": 94.610778
+          },
+          {
+            "digit": "2",
+            "editMs": 192.22087,
+            "drawSubmissionMs": 225.954611
+          },
+          {
+            "digit": "3",
+            "editMs": 145.171166,
+            "drawSubmissionMs": 164.5795
+          },
+          {
+            "digit": "4",
+            "editMs": 193.846852,
+            "drawSubmissionMs": 261.252055
+          },
+          {
+            "digit": "5",
+            "editMs": 156.056278,
+            "drawSubmissionMs": 167.966148
+          },
+          {
+            "digit": "6",
+            "editMs": 177.491388,
+            "drawSubmissionMs": 213.989462
+          },
+          {
+            "digit": "7",
+            "editMs": 147.368,
+            "drawSubmissionMs": 168.815
+          },
+          {
+            "digit": "8",
+            "editMs": 203.833092,
+            "drawSubmissionMs": 232.78937
+          },
+          {
+            "digit": "9",
+            "editMs": 183.659629,
+            "drawSubmissionMs": 207.219574
+          },
+          {
+            "digit": "0",
+            "editMs": 124.924074,
+            "drawSubmissionMs": 174.311
+          }
+        ],
+        "text": "1234567890",
+        "measurement": "real numeric IME tap to app text mutation and draw submission; excludes final presentation",
+        "label": "optimized-keymaps-fresh",
+        "scope": "Pi VM -> Pocket Android 9 -> real LatinIME numeric keyboard"
+      }
+    ]
+  },
+  "keyboardMaps": {
+    "before": "Virtual KEYCODE_1 -> Unicode 0, getEvents(1a) -> null",
+    "after": "Virtual KEYCODE_1 -> Unicode 49, generated event round trip 1aA: PASS"
+  },
+  "jitComputeProbe": {
+    "false": "GUEST_JIT_RESULT {\"roundMs\":[309.907185,309.68787,310.282629,316.382481],\"jitCodeCache\":false,\"compilerLoaded\":false}\n",
+    "true": "GUEST_JIT_RESULT {\"roundMs\":[61.722278,17.093222,17.074537,17.143482],\"jitCodeCache\":true,\"compilerLoaded\":true}\n"
+  },
+  "jitComputeLimitation": "Arithmetic warm-loop timing is not a keyboard latency measurement.",
+  "productionJit": {
+    "scope": "Pi outer Android reading real guest LatinIME processes",
+    "processes": [
+      {
+        "pid": 4535,
+        "jitCodeCache": true,
+        "compilerLoaded": false
+      },
+      {
+        "pid": 19976,
+        "jitCodeCache": true,
+        "compilerLoaded": true
+      }
+    ]
+  },
+  "regressions": {
+    "existingPasswordUiUnlock": "PASS on installed 0.74; credential unchanged",
+    "microgAfterJit": "0.73: all 41 API assertions and seven required Self-Check items PASS; 0.74 additionally packages input metadata only.",
+    "orderedSlowHandlerInput": "0.72: ordered down/up still delivered while 1200 ms app handler no longer blocks acknowledgement."
+  },
+  "package": {
+    "path": "out/keypad-0.74/aosp-pocket-manager-0.74.apk",
+    "sha256": "f665d3b9a0612b217e484596cf0c3fac6d0abf0891f52c6340fa3040038335bb",
+    "bytes": 578703665,
+    "changedEntriesVs073": 47
+  },
+  "sourceSyntaxCheck": {
+    "command": "python3 -m py_compile tools/build_boot.py tools/prepare_boot_resources.py tools/test_numeric_typing_on_pi.py",
+    "result": "PASS"
+  },
+  "limitations": [
+    "No paired before/after numeric-typing latency measurement: the old image was missing keyboard maps.",
+    "Measurements are from Pi, not the Samsung phone.",
+    "Current phone Termux tunnel was offline; phone runtime has not been updated."
+  ]
+}

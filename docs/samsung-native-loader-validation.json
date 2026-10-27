@@ -1,0 +1,26 @@
+{
+  "device": "Samsung SM-G780G",
+  "kernel": "4.19.113-27223811",
+  "context": "Termux child process on physical Samsung; not yet full Manager boot",
+  "before": {
+    "execve": "EFAULT",
+    "termination": "SIGSEGV",
+    "loaderFinalSegmentBytes": 12
+  },
+  "after": {
+    "loaderFinalSegmentBytes": 16384,
+    "exitCode": 0,
+    "stdout": [
+      "SAMSUNG_NATIVE_SHELL_OK",
+      "SAMSUNG_NATIVE_EXEC_OK"
+    ]
+  },
+  "command": "guest sh -c 'echo SAMSUNG_NATIVE_SHELL_OK; /system/bin/sh -c \"echo SAMSUNG_NATIVE_EXEC_OK\"' (Python subprocess; POCKET_LOADER_BOOT=1, otherwise empty environment)",
+  "bionicModified": false,
+  "prootUsed": false,
+  "packageValidation": {
+    "version": "0.36",
+    "signing": "APK signature verification passed",
+    "payload": "Fixed loader included; host DEX, stock libc and stock linker identical to 0.35"
+  }
+}

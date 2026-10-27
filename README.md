@@ -5,6 +5,15 @@ to run as an ordinary app on an ARM64 phone. The long-term goal is a VMOS-like
 experience using an adapted AOSP userspace and the host CPU, with explicit
 hardware bridges.
 
+[Experimental Manager 0.77](https://github.com/Kreijstal/lineage-ur/releases/tag/pocket-api29-0.77.0)
+adds Android 10/API 29 alongside Android 9, with separate persistent profiles
+and checksum-pinned images downloaded on demand. The host APK contains no guest
+image. Android 10 passed Pi VM tests for Manager display, APK installation,
+touch, HTTPS and restart with the image server stopped. See the
+[Android 10 port and validation](docs/android10-port.md) for build instructions
+and the current hardware limitations. The bring-up notes below retain the
+history of earlier profiles and experiments.
+
 There are now two APKs: the original native capability/bootstrap probe and a
 separate **experimental Android guest runtime** adapted around Ananbox's Anbox
 and PRoot forks. The latter includes an embedded GLES display, touch forwarding,
@@ -113,6 +122,32 @@ from Android 16 sources, but that does **not** make this an Android 16 guest.
 The separate runtime below uses the adapted Android 7.1.1 framework.
 
 ## Build
+
+Pocket Manager 0.76 distributes the Android 9 image separately. Its APK contains
+the host runtime and `runtime/images/api28-arm64.json`, a pinned HTTPS download
+catalog, and contains neither the Android 9 nor the legacy Android 7 image.
+Tap **Download Android 9** for first setup; installed images boot offline.
+Downloads resume after interruption and are verified before system files are
+replaced. Existing matching installations are adopted using their extraction
+inventory, preserving guest data and avoiding another download.
+
+The image recipe lives in the sibling `lineage-ur/lineage/pocket-images` directory.
+The initial image is a pinned export of the tested 0.75 guest, with deterministic
+archive packaging. It still uses upstream platform prebuilts. Private signing
+keys and guest data are outside the image package.
+
+For a focused host update retaining tested native libraries:
+
+```sh
+python3 tools/build_download_manager.py --catalog runtime/images/api28-arm64.json --out out/download-0.76
+python3 tools/validate_manager_apk.py out/download-0.76/aosp-pocket-manager-0.76.apk --ndk "$NDK"
+```
+
+Normal Manager/runtime packaging also defaults to image-free APKs. Legacy
+offline development packages require explicit `--bundle-images` or
+`--bundle-guest` packaging flags. The Android 7 backend continues to support
+existing installations and manual import; the on-demand catalog currently
+provides Android 9 only.
 
 The current workspace reuses the existing, source-built APK tooling in
 `../helloworldandroid` ([androidworld](https://github.com/Kreijstal/androidworld)).

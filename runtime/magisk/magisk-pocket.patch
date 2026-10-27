@@ -116,6 +116,20 @@ index e1cea28..008945d 100644
              // Fork a process and run the daemon
              if fork_dont_care() == 0 {
                  daemon_entry();
+diff --git a/native/src/core/include/core.hpp b/native/src/core/include/core.hpp
+index ee42f1a..f2f40ef 100644
+--- a/native/src/core/include/core.hpp
++++ b/native/src/core/include/core.hpp
+@@ -9,6 +9,9 @@
+ 
+ #include "../core-rs.hpp"
+ 
++// Pocket guest under either its direct or native-loader backend (pocket.rs).
++extern "C" bool pocket_guest_enabled();
++
+ #define AID_ROOT   0
+ #define AID_SHELL  2000
+ #define AID_USER_OFFSET 100000
 diff --git a/native/src/core/lib.rs b/native/src/core/lib.rs
 index 4445996..a9ad30d 100644
 --- a/native/src/core/lib.rs
@@ -145,24 +159,53 @@ index 9f8142d..5bfe90e 100644
      unsafe {
          __android_log_write(level_to_prio(level), raw_cstr!("Magisk"), msg.as_ptr());
      }
+diff --git a/native/src/core/magisk.rs b/native/src/core/magisk.rs
+index dfa7a8b..e0a01ab 100644
+--- a/native/src/core/magisk.rs
++++ b/native/src/core/magisk.rs
+@@ -224,10 +224,17 @@ impl MagiskAction {
+             PostFsData(_) => {
+                 let fd = connect_daemon(RequestCode::POST_FS_DATA, true)?;
+                 let mut pfd = [PollFd::new(fd.as_fd(), PollFlags::POLLIN)];
+-                nix::poll::poll(
++                // Pocket copies its private module view instead of mounting it.
++                // Slow storage can outlast Android's normal 40-second window.
++                let wait = if crate::pocket::enabled() { 110 } else { POST_FS_DATA_WAIT_TIME };
++                let ready = nix::poll::poll(
+                     &mut pfd,
+-                    PollTimeout::try_from(POST_FS_DATA_WAIT_TIME * 1000)?,
++                    PollTimeout::try_from(wait * 1000)?,
+                 )?;
++                if crate::pocket::enabled() && ready == 0 {
++                    eprintln!("Pocket post-fs-data did not finish before the startup deadline");
++                    return Ok(1);
++                }
+             }
+             Service(_) => {
+                 let _ = connect_daemon(RequestCode::LATE_START, true)?;
 diff --git a/native/src/core/module.rs b/native/src/core/module.rs
-index 12a6228..fe32101 100644
+index 12a6228..424c682 100644
 --- a/native/src/core/module.rs
 +++ b/native/src/core/module.rs
-@@ -720,6 +720,12 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
+@@ -720,6 +720,17 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
              return Ok(());
          }
  
-+        if crate::pocket::enabled() && (
-+            dir.contains_path(cstr!("sepolicy.rule")) ||
-+            dir.contains_path(cstr!("riru"))) {
-+            info!("{name}: unsupported kernel/mount/injection features in Pocket; skipped");
-+            return Ok(());
++        if crate::pocket::enabled() {
++            if dir.contains_path(cstr!("riru")) {
++                info!("{name}: Riru injection is unsupported in Pocket; skipped");
++                return Ok(());
++            }
++            // The guest has no policy to patch: SELinux is disabled there and
++            // the host kernel's policy cannot be loaded from it.
++            if dir.contains_path(cstr!("sepolicy.rule")) {
++                info!("{name}: sepolicy.rule ignored (guest SELinux disabled)");
++            }
 +        }
          let mut z32 = -1;
          let mut z64 = -1;
  
-@@ -781,7 +787,9 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
+@@ -781,7 +792,9 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
      .log_ok();
  
      if zygisk_enabled && open_zygisk {
@@ -173,7 +216,7 @@ index 12a6228..fe32101 100644
          let mut convert_to_memfd = |fd: i32| -> i32 {
              if fd < 0 {
                  return fd;
-@@ -821,7 +829,7 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
+@@ -821,7 +834,7 @@ fn collect_modules(zygisk_enabled: bool, open_zygisk: bool) -> Vec<ModuleInfo> {
  
  impl MagiskD {
      pub fn handle_modules(&self) {
@@ -182,7 +225,7 @@ index 12a6228..fe32101 100644
          upgrade_modules().ok();
  
          let zygisk = self.zygisk_enabled.load(Ordering::Acquire);
-@@ -830,7 +838,21 @@ impl MagiskD {
+@@ -830,7 +843,21 @@ impl MagiskD {
  
          // Recollect modules (module scripts could remove itself)
          let modules = collect_modules(zygisk, true);
@@ -207,17 +250,53 @@ index 12a6228..fe32101 100644
      }
 diff --git a/native/src/core/pocket.rs b/native/src/core/pocket.rs
 new file mode 100644
-index 0000000..f787a8f
+index 0000000..b569f42
 --- /dev/null
 +++ b/native/src/core/pocket.rs
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,75 @@
 +// Pocket guest integration. Kernel credentials and host SELinux remain unchanged.
 +use std::os::unix::net::UCred;
++use std::sync::OnceLock;
 +#[path = "pocket_overlay.rs"]
 +pub mod overlay;
 +
++// Pocket's native loader answers this opt-in getpid argument; a kernel returns
++// the caller's PID, which can never equal the reply on Linux.
++const LOADER_PROBE: base::libc::c_long = 0x504c1001;
++const LOADER_REPLY: base::libc::c_long = 0x504c1002;
++const IDENTITY_MAGIC: u32 = 0x504b4944;
++
++fn loader() -> bool {
++    static ACTIVE: OnceLock<bool> = OnceLock::new();
++    *ACTIVE.get_or_init(|| unsafe { base::libc::syscall(base::libc::SYS_getpid, LOADER_PROBE) } == LOADER_REPLY)
++}
++
 +pub fn enabled() -> bool {
-+    std::env::var("POCKET_DIRECT_ROOT").is_ok_and(|root| root.starts_with('/'))
++    std::env::var("POCKET_DIRECT_ROOT").is_ok_and(|root| root.starts_with('/')) || loader()
++}
++
++// The loader reports logical credentials from getuid. Socket peers carry the
++// kernel's, so compare against the actual UID that the kernel reports.
++fn kernel_uid() -> Option<u32> {
++    let status = std::fs::read_to_string("/proc/self/status").ok()?;
++    status.lines().find_map(|line| line.strip_prefix("Uid:"))?.split_whitespace().next()?.parse().ok()
++}
++
++fn start_ticks(pid: i32) -> Option<u64> {
++    let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
++    // Field 22; the command name in field 2 may itself contain spaces.
++    stat.get(stat.rfind(')')? + 1..)?.split_whitespace().nth(19)?.parse().ok()
++}
++
++// The loader publishes each guest process's effective logical credentials,
++// keyed by PID and kernel start time so a reused PID cannot inherit them.
++fn loader_identity(pid: i32) -> Option<(u32, u32)> {
++    let record = std::fs::read(format!("/.pocket-identity/{pid}")).ok()?;
++    if record.len() != 24 { return None; }
++    let word = |at: usize| u32::from_ne_bytes(record[at..at + 4].try_into().unwrap());
++    let start = u64::from_ne_bytes(record[16..24].try_into().unwrap());
++    if word(0) != IDENTITY_MAGIC || word(4) != pid as u32 || Some(start) != start_ticks(pid) { return None; }
++    Some((word(8), word(12)))
 +}
 +
 +// All guest processes share one host app UID. Restore the logical credentials
@@ -225,9 +304,14 @@ index 0000000..f787a8f
 +// This is guest policy bookkeeping, not an additional host security boundary.
 +pub fn peer_identity(cred: &mut UCred) -> bool {
 +    if !enabled() { return true; }
-+    let host_uid = unsafe { base::libc::syscall(base::libc::SYS_getuid) as u32 };
-+    if cred.uid != host_uid { return false; }
++    let host_uid = if loader() { kernel_uid() } else { Some(unsafe { base::libc::syscall(base::libc::SYS_getuid) as u32 }) };
++    if host_uid != Some(cred.uid) { return false; }
 +    let Some(pid) = cred.pid else { return false; };
++    if loader() {
++        let Some((uid, gid)) = loader_identity(pid) else { return false; };
++        cred.uid = uid; cred.gid = gid;
++        return true;
++    }
 +    let Ok(environment) = std::fs::read(format!("/proc/{pid}/environ")) else { return false; };
 +    if environment.len() > 1024 * 1024 { return false; }
 +    for item in environment.split(|c| *c == 0) {
@@ -241,6 +325,10 @@ index 0000000..f787a8f
 +    }
 +    false
 +}
++
++// The C++ side (su, Zygisk) shares this detection.
++#[unsafe(no_mangle)]
++pub extern "C" fn pocket_guest_enabled() -> bool { enabled() }
 diff --git a/native/src/core/pocket_overlay.rs b/native/src/core/pocket_overlay.rs
 new file mode 100644
 index 0000000..672fd60
@@ -427,34 +515,33 @@ index de0c5ec..47ba8a9 100644
      if tmp == "/sbin" {
          tmp.set_secontext(ROOT_CON)?;
 diff --git a/native/src/core/su/su.cpp b/native/src/core/su/su.cpp
-index 901b743..c36e9e9 100644
+index 901b743..fc5d028 100644
 --- a/native/src/core/su/su.cpp
 +++ b/native/src/core/su/su.cpp
 @@ -383,6 +383,8 @@ void exec_root_shell(int client, int pid, SuRequest &req, MntNsMode mode) {
      close(ptsfd);
      close(client);
  
-+    if (getenv("POCKET_DIRECT_ROOT")) mode = MntNsMode::Global;
++    if (pocket_guest_enabled()) mode = MntNsMode::Global;
 +
      // Handle namespaces
      if (req.target_pid == -1)
          req.target_pid = pid;
 diff --git a/native/src/core/zygisk/hook.cpp b/native/src/core/zygisk/hook.cpp
-index 6eedfdb..63cce32 100644
+index 6eedfdb..4bdfa6c 100644
 --- a/native/src/core/zygisk/hook.cpp
 +++ b/native/src/core/zygisk/hook.cpp
-@@ -130,6 +130,10 @@ private:
+@@ -130,6 +130,9 @@ private:
  
  ZygiskContext *g_ctx;
  static HookContext *g_hook;
 +static bool pocket_runtime() {
-+    const char *root = getenv("POCKET_DIRECT_ROOT");
-+    return root && root[0] == '/';
++    return pocket_guest_enabled();
 +}
  
  static JniHookDefinitions *get_defs() {
      return g_hook;
-@@ -256,7 +260,13 @@ ZygiskContext::~ZygiskContext() {
+@@ -256,7 +259,13 @@ ZygiskContext::~ZygiskContext() {
      // Cleanup
      g_hook->should_unmap = true;
      g_hook->restore_zygote_hook(env);
@@ -469,7 +556,7 @@ index 6eedfdb..63cce32 100644
  }
  
  // -----------------------------------------------------------------
-@@ -405,7 +415,7 @@ void HookContext::hook_plt() {
+@@ -405,7 +414,7 @@ void HookContext::hook_plt() {
      dev_t native_bridge_dev = 0;
  
      for (auto &map : lsplt::MapInfo::Scan()) {
@@ -478,7 +565,7 @@ index 6eedfdb..63cce32 100644
              android_runtime_inode = map.inode;
              android_runtime_dev = map.dev;
          } else if (map.path.ends_with("/libnativebridge.so")) {
-@@ -414,6 +424,13 @@ void HookContext::hook_plt() {
+@@ -414,6 +423,13 @@ void HookContext::hook_plt() {
          }
      }
  
@@ -492,7 +579,7 @@ index 6eedfdb..63cce32 100644
      PLT_HOOK_REGISTER(native_bridge_dev, native_bridge_inode, dlclose);
      PLT_HOOK_REGISTER(android_runtime_dev, android_runtime_inode, fork);
      PLT_HOOK_REGISTER(android_runtime_dev, android_runtime_inode, unshare);
-@@ -622,6 +639,56 @@ void hook_entry() {
+@@ -622,6 +638,56 @@ void hook_entry() {
      g_hook->hook_plt();
  }
  
@@ -550,7 +637,7 @@ index 6eedfdb..63cce32 100644
      g_hook->hook_jni_methods(env, clz, { methods, static_cast<size_t>(numMethods) });
  }
 diff --git a/native/src/core/zygisk/module.cpp b/native/src/core/zygisk/module.cpp
-index 5109ee4..0391fb6 100644
+index 5109ee4..5c28b66 100644
 --- a/native/src/core/zygisk/module.cpp
 +++ b/native/src/core/zygisk/module.cpp
 @@ -361,7 +361,7 @@ void ZygiskContext::run_modules_pre(rust::Vec<int> &fds) {
@@ -558,7 +645,7 @@ index 5109ee4..0391fb6 100644
                  modules.emplace_back(i, h, e);
              }
 -        } else if (flags & SERVER_FORK_AND_SPECIALIZE) {
-+        } else if ((flags & SERVER_FORK_AND_SPECIALIZE) || getenv("POCKET_DIRECT_ROOT")) {
++        } else if ((flags & SERVER_FORK_AND_SPECIALIZE) || pocket_guest_enabled()) {
              ZLOGW("Failed to dlopen zygisk module: %s\n", dlerror());
              fds[i] = -1;
          }
@@ -568,7 +655,7 @@ index 5109ee4..0391fb6 100644
  
 +    // Pocket rejects child zygotes before forking. Preserve that behavior
 +    // instead of Zygisk's eager fork turning a rejected request into a child.
-+    if (getenv("POCKET_DIRECT_ROOT") && args.app->is_child_zygote && *args.app->is_child_zygote) {
++    if (pocket_guest_enabled() && args.app->is_child_zygote && *args.app->is_child_zygote) {
 +        pocket_rejected = true;
 +        return;
 +    }
@@ -600,10 +687,21 @@ index 56850bc..4339f4c 100644
 +    pocket_zygisk_install;
  };
 diff --git a/scripts/util_functions.sh b/scripts/util_functions.sh
-index dd91cd1..829c451 100644
+index dd91cd1..e33340d 100644
 --- a/scripts/util_functions.sh
 +++ b/scripts/util_functions.sh
-@@ -116,6 +116,7 @@ setup_flashable() {
+@@ -4,6 +4,10 @@
+ 
+ #MAGISK_VERSION_STUB
+ 
++# Pocket's native loader publishes guest identities here. Select guest mode
++# for this script only; the variable is not exported to other programs.
++[ -z "$POCKET_DIRECT_ROOT" ] && [ -d /.pocket-identity ] && POCKET_DIRECT_ROOT=/
++
+ ###################
+ # Global Variables
+ ###################
+@@ -116,6 +120,7 @@ setup_flashable() {
  }
  
  ensure_bb() {
@@ -611,7 +709,7 @@ index dd91cd1..829c451 100644
    if set -o | grep -q standalone; then
      # We are definitely in busybox ash
      set -o standalone
-@@ -272,6 +273,12 @@ mount_ro_ensure() {
+@@ -272,6 +277,12 @@ mount_ro_ensure() {
  # After calling this method, the following variables will be set:
  # SLOT, SYSTEM_AS_ROOT, LEGACYSAR
  mount_partitions() {
@@ -624,7 +722,7 @@ index dd91cd1..829c451 100644
    # Check A/B slot
    SLOT=$(grep_cmdline androidboot.slot_suffix)
    if [ -z $SLOT ]; then
-@@ -606,7 +613,7 @@ set_perm() {
+@@ -606,7 +617,7 @@ set_perm() {
    chmod $4 $1 || return 1
    local CON=$5
    [ -z $CON ] && CON=u:object_r:system_file:s0
@@ -633,7 +731,7 @@ index dd91cd1..829c451 100644
  }
  
  set_perm_recursive() {
-@@ -645,7 +652,7 @@ set_default_perm() {
+@@ -645,7 +656,7 @@ set_default_perm() {
  install_module() {
    rm -rf $TMPDIR
    mkdir -p $TMPDIR
@@ -642,7 +740,7 @@ index dd91cd1..829c451 100644
    cd $TMPDIR
  
    setup_flashable
-@@ -674,7 +681,7 @@ install_module() {
+@@ -674,7 +685,7 @@ install_module() {
    # Create mod paths
    rm -rf $MODPATH
    mkdir -p $MODPATH
@@ -651,7 +749,7 @@ index dd91cd1..829c451 100644
  
    if is_legacy_script; then
      unzip -oj "$ZIPFILE" module.prop install.sh uninstall.sh 'common/*' -d $TMPDIR >&2
-@@ -755,6 +762,7 @@ install_module() {
+@@ -755,6 +766,7 @@ install_module() {
  ##########
  
  # Detect whether in boot mode
@@ -659,27 +757,3 @@ index dd91cd1..829c451 100644
  [ -z $BOOTMODE ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
  [ -z $BOOTMODE ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
  [ -z $BOOTMODE ] && BOOTMODE=false
-diff --git a/native/src/core/magisk.rs b/native/src/core/magisk.rs
-index dfa7a8b..e0a01ab 100644
---- a/native/src/core/magisk.rs
-+++ b/native/src/core/magisk.rs
-@@ -224,10 +224,17 @@ impl MagiskAction {
-             PostFsData(_) => {
-                 let fd = connect_daemon(RequestCode::POST_FS_DATA, true)?;
-                 let mut pfd = [PollFd::new(fd.as_fd(), PollFlags::POLLIN)];
--                nix::poll::poll(
-+                // Pocket copies its private module view instead of mounting it.
-+                // Slow storage can outlast Android's normal 40-second window.
-+                let wait = if crate::pocket::enabled() { 110 } else { POST_FS_DATA_WAIT_TIME };
-+                let ready = nix::poll::poll(
-                     &mut pfd,
--                    PollTimeout::try_from(POST_FS_DATA_WAIT_TIME * 1000)?,
-+                    PollTimeout::try_from(wait * 1000)?,
-                 )?;
-+                if crate::pocket::enabled() && ready == 0 {
-+                    eprintln!("Pocket post-fs-data did not finish before the startup deadline");
-+                    return Ok(1);
-+                }
-             }
-             Service(_) => {
-                 let _ = connect_daemon(RequestCode::LATE_START, true)?;

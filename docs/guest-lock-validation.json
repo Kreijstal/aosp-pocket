@@ -1,0 +1,107 @@
+{
+  "validation": "PASS",
+  "scope": "Pocket Android 9 guest on dedicated Pi Android VM; phone unchanged",
+  "managerVersion": "0.43",
+  "credential": "Temporary test password held in mode-0600 /home/pi/.config/pocket-pi-lock-test.json; plaintext excluded from this report.",
+  "commands": [
+    "ssh pi@juanraspberry 'python3 -u ~/test_guest_lock_on_pi.py setup --probe ~/guest-lock-probe.jar'",
+    "ssh pi@juanraspberry 'python3 -u ~/test_guest_lock_on_pi.py verify --probe ~/guest-lock-probe.jar'",
+    "ssh pi@juanraspberry 'python3 -u ~/test_guest_lock_on_pi.py unlock --probe ~/guest-lock-probe.jar'",
+    "ssh pi@juanraspberry 'python3 -u ~/validate_attest_on_pi.py'"
+  ],
+  "setup": {
+    "scope": "Pocket Android 9 guest on dedicated Pi VM",
+    "mode": "setup",
+    "exitCode": 0,
+    "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"setup\",\"uid\":1000,\"previouslySecure\":false,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"lockScreenEnabled\":true,\"wrongPasswordRejected\":true}\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\n",
+    "validation": "PASS",
+    "uid": 1000,
+    "previouslySecure": false,
+    "deviceSecure": true,
+    "keyguardSecure": true,
+    "keyguardLocked": false,
+    "correctPasswordVerified": true,
+    "lockScreenEnabled": true,
+    "wrongPasswordRejected": true
+  },
+  "afterGuestRestart": {
+    "scope": "Pocket Android 9 guest on dedicated Pi VM",
+    "mode": "verify",
+    "exitCode": 0,
+    "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"verify\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":true,\"correctPasswordVerified\":true,\"interactive\":false,\"lockScreenEnabled\":true}\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\n",
+    "validation": "PASS",
+    "uid": 1000,
+    "previouslySecure": true,
+    "deviceSecure": true,
+    "keyguardSecure": true,
+    "keyguardLocked": true,
+    "correctPasswordVerified": true,
+    "interactive": false,
+    "lockScreenEnabled": true
+  },
+  "screenUnlock": {
+    "scope": "Pocket Android 9 guest on dedicated Pi VM",
+    "mode": "unlock",
+    "exitCode": 0,
+    "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"unlock\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"interactive\":true,\"lockScreenEnabled\":true,\"uiPasswordUnlockVerified\":true,\"previouslyLocked\":true}\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\n",
+    "validation": "PASS",
+    "uid": 1000,
+    "previouslySecure": true,
+    "deviceSecure": true,
+    "keyguardSecure": true,
+    "keyguardLocked": false,
+    "correctPasswordVerified": true,
+    "interactive": true,
+    "lockScreenEnabled": true,
+    "uiPasswordUnlockVerified": true,
+    "previouslyLocked": true
+  },
+  "attestProbe": {
+    "version": "1.10",
+    "summary": {
+      "pass": 45,
+      "fail": 3,
+      "skip": 3,
+      "info": 8,
+      "checks": 59,
+      "scope": "device_checks_excluding_optional_biometrics",
+      "deviceChecks": 59
+    },
+    "secureLock": {
+      "id": "device_secure",
+      "category": "ATTEST",
+      "description": "Device has a secure lock",
+      "status": "PASS",
+      "detail": "secure lock set"
+    },
+    "remainingFailures": [
+      {
+        "id": "build_tags_test_keys",
+        "category": "ATTEST",
+        "description": "Build is not signed with test-keys",
+        "status": "FAIL",
+        "detail": "tags=test-keys type=userdebug"
+      },
+      {
+        "id": "storage_encryption",
+        "category": "ATTEST",
+        "description": "Storage is encrypted",
+        "status": "FAIL",
+        "detail": "status=unsupported"
+      },
+      {
+        "id": "gms_present",
+        "category": "ATTEST",
+        "description": "Google Play services present",
+        "status": "FAIL",
+        "detail": "GMS not installed (Play Integrity unavailable)"
+      }
+    ]
+  },
+  "implementation": "Normal Android LockPatternUtils enrollment and verification as the authorized guest system role, with software Gatekeeper. Runtime/Probe checks were not changed.",
+  "uiValidation": "Wake-lock held during the test. Missing virtual key-character maps required UI automation to fill the real SystemUI password field, followed by Enter; keyguard transitioned from locked to unlocked.",
+  "limits": "Software-backed credential. Guest encryption and hardware-backed attestation remain separate work."
+}

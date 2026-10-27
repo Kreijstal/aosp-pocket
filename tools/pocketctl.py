@@ -13,6 +13,7 @@ import socket
 import struct
 import sys
 import threading
+import time
 
 MAGIC = b'PKADMIN1'
 CHUNK = 65536
@@ -115,6 +116,50 @@ def save_config(path, config):
         temporary.unlink(missing_ok=True)
 
 
+def encrypt_storage(config):
+    def invoke(operation,argv=(),source=None):
+        out,err=io.BytesIO(),io.BytesIO()
+        code=request(config,operation,argv,source=source,stdout=out,stderr=err)
+        return code,out.getvalue().decode(),err.getvalue().decode()
+    code,out,err=invoke(1)
+    if code:raise OSError(err)
+    state=json.loads(out)
+    if state.get('sdk')!=28 or not state.get('ready') or not state.get('running'):
+        raise OSError('Start the Android 9 guest before encrypting its private storage')
+    test=['/system/bin/sh','-c','if [ -f /.pocket-ce-enabled ]; then printf encrypted; else printf plaintext; fi']
+    def encrypted():
+        code,out,err=invoke(2,test)
+        if code or out not in ('encrypted','plaintext'):
+            raise OSError('Cannot read guest encryption state: '+err)
+        return out=='encrypted'
+    if encrypted():
+        print('Guest private storage is already encrypted.');return 0
+    password=getpass.getpass('Existing guest lock-screen password: ')
+    command='export CLASSPATH=/system/framework/pocket-ce-key.jar; exec /system/bin/pocket-app-process-api28 /system/bin GuestCeKey prepare'
+    try:
+        code,out,err=invoke(2,['/system/bin/sh','-c',command],io.BytesIO((password+'\n').encode()))
+        if code or '"prepared":true' not in out:
+            raise OSError(('Guest encryption preparation failed: '+out+err).replace(password,'<redacted>'))
+    finally:
+        del password
+    print('Encrypting guest private storage; the guest will restart.',flush=True)
+    code,_,err=invoke(4)
+    if code:raise OSError(err)
+    deadline=time.monotonic()+300
+    while time.monotonic()<deadline:
+        code,out,err=invoke(1)
+        if code:raise OSError(err)
+        state=json.loads(out)
+        if not state.get('running') and not state.get('stopping'):break
+        time.sleep(1)
+    else:raise OSError('Guest encryption is still running; check Pocket status')
+    if not encrypted():raise OSError('Guest encryption did not finish: '+str(state.get('status','')))
+    code,_,err=invoke(3)
+    if code:raise OSError(err)
+    print('Private storage encrypted. Unlock Android with its existing password.')
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, default=Path.home()/'.config/pocketctl/config.json')
@@ -123,6 +168,7 @@ def main():
     pair.add_argument('--port', type=int, default=2228)
     for name in ('status', 'start', 'stop', 'reset-module-view'):
         sub.add_parser(name)
+    sub.add_parser('encrypt-storage',help='Encrypt Android 9 private storage using its existing lock-screen password')
     shell = sub.add_parser('shell', help='Guest root shell (pipes; no PTY/job control)')
     shell.add_argument('-c', dest='command')
     shell.add_argument('--cwd', default='/')
@@ -149,6 +195,7 @@ def main():
         print('Paired. Run pocketctl.py shell or pocketctl.py status.')
         return 0
     config = json.loads(args.config.read_text())
+    if args.operation=='encrypt-storage':return encrypt_storage(config)
     if args.operation in ('status', 'start', 'stop', 'reset-module-view'):
         return request(config, {'status': 1, 'start': 3, 'stop': 4, 'reset-module-view': 5}[args.operation])
     if args.operation == 'shell':
@@ -188,7 +235,7 @@ if __name__ == '__main__':
         status = main()
     except KeyboardInterrupt:
         status = 130
-    except (OSError, ValueError, KeyError) as error:
+    except (OSError, ValueError, KeyError, EOFError) as error:
         print('pocketctl:', error, file=sys.stderr)
         status = 1
     sys.exit(status if 0 <= status <= 255 else 1)

@@ -259,8 +259,10 @@ are included. Only the selected image is unpacked.
 
 ## Current limits
 
-Standard guest camera, audio, sensor, location and radio adapters remain
-unimplemented in the Android 9 profile. The host device broker described below
+Standard guest sensor, location and radio adapters remain unimplemented in
+the Android 9 profile. Guest audio, the vibrator and cameras are the
+exceptions; see [Guest audio and vibrator](#guest-audio-and-vibrator) and
+[Guest cameras](#guest-cameras). The host device broker described below
 does not make those Android APIs functional automatically. ART remains
 interpreted. Keystore and Gatekeeper use software
 implementations; no host hardware attestation or credential boundary is
@@ -281,12 +283,84 @@ to a request; permission failures and unavailable host devices are reported.
 | Contacts | Stock ContactsProvider and Contacts app; explicit host-to-guest snapshot import | Names, phone numbers and email addresses only. Repeated imports update managed copies and remove copies absent from a complete new snapshot. Unrelated guest contacts and all host contacts stay untouched. |
 | Calls and SMS | Guest `tel:` DIAL/CALL/VIEW and `sms:`/`smsto:` SENDTO intents open host dialer or message composer | Host confirmation is required. CALL is deliberately delegated as DIAL. No independent guest SIM, modem, IMS registration or call audio path. Explicit intents targeting another guest dialer do not use this adapter. |
 | Battery | Existing health relay | Subject to host Android visibility. |
-| Camera | Broker Camera2 enumeration and one-shot YUV_420_888 capture | Guest CameraManager/HAL adapter and continuous video remain pending. Supported sizes come from the host; plane bytes, strides, crop and available capture metadata are preserved. YUV is not sensor RAW. |
-| Microphone and playback | Broker PCM16 capture/playback, bounded to five seconds per request | Guest AudioRecord/AudioTrack/AudioFlinger adapter remains pending. No codec, zero padding or invented microphone samples. |
+| Camera | Broker Camera2 enumeration and one-shot YUV_420_888 capture. Guest Camera2/NDK cameras through cameraserver since 0.66 | Host cameras with YUV output only, listed when cameraserver starts. EXTERNAL hardware level: no manual sensor control, RAW, reprocessing, zoom, focus, flash or torch. Preview to the screen and video recording are not validated. |
+| Microphone and playback | Broker PCM16 capture/playback, bounded to five seconds per request. Guest AudioTrack output through AudioFlinger since 0.61; guest AudioRecord/AAudio input from the host microphone since 0.62 | One 48 kHz stereo output and one 48 kHz mono input; AudioFlinger resamples for apps. No effects, offload or voice-call paths. Without host microphone access, guest recordings receive silence and the guest log says so. |
+| Vibrator | Guest Vibrator 1.2 HAL: on/off since 0.57; amplitude and predefined effects with strength since 0.62 | Amplitude needs host amplitude control. CLICK, DOUBLE_CLICK, TICK, THUD and HEAVY_CLICK use host primitives scaled by strength when supported, otherwise the host's predefined effect at its own strength. POP has no host equivalent and is reported unsupported, so VibratorService uses its fallback. |
 | Sensors | Broker request-scoped SensorManager samples with original timestamps and accuracy | Guest SensorManager/HAL streaming adapter remains pending. |
 | Location | Broker newest accessible last-known host fix, with provider and age | No invented fix; continuous guest LocationManager integration remains pending. |
 | Phone state | Broker permitted TelephonyManager readings, with per-field errors | No privileged identifiers, carrier provisioning, attestation keys or privileged IMS state. |
 | NFC, Bluetooth, USB and other devices | Unimplemented | No forwarding claim. |
+
+## Guest audio and vibrator
+
+Guest apps play and record sound through the standard Android 9 stack: a 64-bit
+audioserver (AudioFlinger and AudioPolicyService), the stock passthrough
+audio HAL, and `audio.primary.default` from `runtime/direct/audio_hal_pocket.c`.
+The HAL exposes one stereo 48 kHz PCM16 speaker output, streamed to the host
+Manager's `AudioTrack` (usage media), and one mono 48 kHz built-in microphone,
+streamed from a host `AudioRecord` (source MIC). The host needs the Manager's
+microphone permission; without it, or without a host microphone, guest
+recordings receive silence at real time, as Android does for a silenced
+recording, and the guest log records `POCKET_AUDIO_IN_HOST_UNAVAILABLE`. Guest
+mic mute is honoured. The reference image's 64-bit `libaudioflinger.so` uses ELF
+TLS, which the Android 9 linker rejects, so `tools/build_guest_audio.py`
+rebuilds it from source with emulated TLS. There are no effects libraries,
+offload or voice-call paths.
+
+The guest Vibrator 1.2 HAL forwards to the host Vibrator through the broker:
+`on(ms)`/`off()`; `setAmplitude()` when the host vibrator has amplitude
+control, including changes during a waveform; and predefined effects. Effects
+use host composition primitives scaled by the guest's effect strength (light
+0.5, medium 0.75, strong 1.0) when the host supports the primitive, and the
+host's predefined effect otherwise. Android 9 sets an effect's strength from
+the guest's haptic feedback intensity setting. Host vibration is attributed to
+the Manager's UID.
+
+[Audio evidence](api28-guest-audio-validation.json) (0.62, Pi VM): an ordinary
+guest `AudioTrack` wrote 192,000 frames (4 s at 48 kHz) and the host recorded a
+new Manager AudioTrack during the run. A guest AAudio input stream at 16 kHz
+received 48,000 frames of non-zero host microphone signal in real time (about
+0.24 s to the first frame when warm, about 1.7 s when the host recorder starts
+cold), and the host recorded a new Manager record track during the run.
+[Vibrator evidence](api28-guest-vibrator-validation.json) (0.62, Pi VM): the host
+vibrator history shows guest one-shots at amplitudes 0.24 and 1.00, a waveform
+stepping 0.24, 0.63 and 1.00, CLICK at scales 0.50, 0.75 and 1.00 for low,
+medium and high guest haptic intensity, DOUBLE_CLICK as two clicks, and THUD
+and TICK primitives; POP was reported unsupported. The VM's virtual
+microphone and vibrator stand in for hardware: neither test confirms audible,
+recorded or tactile behaviour on a physical device.
+
+## Guest cameras
+
+Guest apps reach the host cameras through the stock Android 9 camera stack: a
+64-bit `cameraserver` (the reference image's `libcameraservice`) whose
+`legacy/0` camera provider runs in process. Each host camera with YUV output
+becomes one device@3.4 backed by AOSP's external (USB) camera HAL, patched by
+`runtime/camera/external-camera-pocket.patch` to stream tightly packed I420
+frames from a host Camera2 repeating request through the broker instead of
+V4L2. That HAL crops, scales and JPEG-encodes for the guest's streams, at the
+host's YUV sizes and with the host camera's facing and sensor orientation. Frame
+rates per size come from `/vendor/etc/external_camera_config.xml` (30 fps up to
+1280x720, 15 fps up to 1920x1080, 10 fps above), bounded by the host's AE
+ranges. The Manager needs the host camera permission before the guest starts,
+because the provider lists host cameras once. The guest declares
+`android.hardware.camera` and `android.hardware.camera.any`; a front camera is
+not claimed.
+
+Camera buffers need YUV and BLOB formats, which the reference
+`gralloc.redroid.so` does not allocate. `gralloc.pocket.so`
+(`runtime/direct/gralloc_pocket.c`, selected by `ro.hardware.gralloc=pocket`)
+stores those formats in redroid RGBA buffers that begin with a header page
+describing the layout, so any guest process can lock them; all other buffers
+are redroid's unchanged.
+
+[Camera evidence](api28-guest-camera-validation.json) (0.67, Pi VM): an NDK
+Camera2 client listed both host cameras (back at 90 degrees, front at 270),
+received 24 non-uniform YUV preview frames in 3 s while a full-size JPEG
+stream was configured (8 to 16 fps at 1856x1392 across runs on the Pi), and
+a valid 72 KB JPEG at 1856x1392; the host camera service logged the Manager's
+opens, and the session reconfigured and closed without errors. The VM's
+cameras are emulated: this does not show behaviour with physical sensors.
 
 The binary `HostWire` protocol runs over an app-private filesystem socket.
 Requests and replies have bounded lengths; camera planes and PCM use binary
@@ -750,3 +824,61 @@ Passing this command checks reported claims and cryptography only; it does not
 override certificate revocation or establish a Play Integrity verdict. The
 private identity and configuration are outside the repository and APK, and the
 normal software profile was preserved separately on the phone before testing.
+
+### Guest APK release signing (0.70)
+
+Pocket 0.70 re-signs the pinned guest's 25 bundled APKs with five private key
+identities, preserving the platform/shared/media/default/Pocket signing groups.
+It updates the signing tags, MAC certificate mappings and OTA public certificate.
+Every APK's application payload is unchanged, as are the Manager DEX, native
+runtime and camera/audio/storage integrations from camera 0.69. The framework
+remains `userdebug` with `ro.debuggable=1`; this is a re-signing of the existing
+image, not a source rebuild into a production `user` configuration.
+
+Private keys are stored outside the checkout in
+`~/.config/pocket-guest-release-keys`, with directory mode 0700 and key mode 0600.
+Keep these identities for subsequent guest APK updates. The Manager signing key
+is unchanged, preserving its host UID, keystore access and data. Independently
+signed third-party packages, including the separately installed official microG
+packages, retain their certificates.
+
+The reproducible post-packaging signing step is:
+
+```sh
+python3 tools/resign_guest.py \
+  --base-apk out/camera-0.69/aosp-pocket-manager-0.69.apk \
+  --out out/resign-0.70 --version 0.70 \
+  --key-dir ~/.config/pocket-guest-release-keys \
+  --test-certificates ../s20fe-hardware-lab/artifacts/lineage/source/build/target/product/security
+```
+
+Use `--create-keys` only when initially creating the private identities. Native
+updates can use 0.70 as their base and preserve its signed APKs; updates that
+replace guest APKs need the final signing step again.
+
+The dedicated Pi VM passed an upgrade with disposable data: Settings and Contacts
+records and core UIDs survived; 24 installed system certificates matched the new
+inventory. PackageInstaller rejected an APK using the public AOSP platform key
+for the system UID, and accepted the private platform key. No signing lineage
+retaining trust in old public test keys was added.
+
+The original guest directories were preserved intact and restored with matching
+vault/package hashes. All 33 original installed packages retained their UIDs.
+Cold locked storage, wrong-password rejection, normal password UI unlock and the
+existing encrypted-data canary passed. With Contacts already running, unchanged
+Attest Probe 1.10 reported **48 PASS / 0 FAIL / 3 SKIP / 8 INFO**:
+
+```sh
+python3 ~/microg-test/test_installed_attest_on_pi.py \
+  --expect-version 0.70 --report ~/guest-resigned-attest-report.json \
+  --require-no-failures
+```
+
+The installed APK is `out/resign-0.70/aosp-pocket-manager-0.70.apk`, also saved as
+`~/Downloads/aosp-pocket-manager-0.70.apk` on the Pi host. Its SHA-256 is
+`49a7af0fa6ba36e58746db706791578b0fd27ec7173377135e11220a0843a5ff`.
+Runtime validation used the Pi VM. The same APK was subsequently copied over LAN
+to the Samsung SM-G780G's `Download/aosp-pocket-manager-0.70.apk`, with a matching
+SHA-256. Commands, public certificate fingerprints,
+payload audit and measured results are in
+[`guest-signing-validation.json`](guest-signing-validation.json).

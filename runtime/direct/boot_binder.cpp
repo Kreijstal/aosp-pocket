@@ -9,6 +9,8 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #include "kernel_identity.h"
+#include "../api28/binder_identity.h"
+#include "../api28/binder_token.h"
 namespace android {
 status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32_t flags) {
     using Original=status_t(*)(BBinder*,uint32_t,const Parcel&,Parcel*,uint32_t);
@@ -19,20 +21,29 @@ status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32
     static const uid_t kernelUid=pocket_kernel_uid_from_proc();
     if (kernelUid!=static_cast<uid_t>(-1) && code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION && data.dataSize()>=16 &&
         thread->getCallingUid()==kernelUid) {
-        uint64_t claimed;uint32_t policy;int32_t tokenLength;
-        memcpy(&claimed,data.data(),8);memcpy(&policy,data.data()+8,4);memcpy(&tokenLength,data.data()+12,4);
+        PocketBinderToken header={};
+        const bool credentialHeader=pocket_binder_token(data.data(),data.dataSize(),&header) &&
+            (header.format==3 || header.format==4);
+        const uint64_t claimed=header.identity;
         // The kernel reports PID zero for one-way calls. Their claimed PID is
         // guest metadata; only synchronous sender PIDs can be kernel-checked.
         // Host broadcasts and native Binder control messages remain excluded.
         bool senderPidMatches=static_cast<uint32_t>(claimed)==static_cast<uint32_t>(thread->getCallingPid()) ||
             ((flags&IBinder::FLAG_ONEWAY) && thread->getCallingPid()==0 && static_cast<uint32_t>(claimed)>0);
-        guest=(policy&0x00400000u)!=0 && tokenLength>0 &&
-            static_cast<uint32_t>(tokenLength)<=(data.dataSize()-16)/2 &&
+        guest=credentialHeader &&
             senderPidMatches &&
             (claimed>>32)<=0x7fffffffu;
         if (guest) {
             identity=thread->clearCallingIdentity();
             thread->restoreCallingIdentity(static_cast<int64_t>(claimed));
+        }
+    }
+    if (!guest && kernelUid!=static_cast<uid_t>(-1) && thread->getCallingUid()==kernelUid &&
+        code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION) {
+        uint64_t claimed;
+        if (pocket_binder_identity(thread->getCallingPid(),&claimed)) {
+            identity=thread->clearCallingIdentity();
+            thread->restoreCallingIdentity(static_cast<int64_t>(claimed));guest=true;
         }
     }
     status_t result=original(this,code,data,reply,flags);

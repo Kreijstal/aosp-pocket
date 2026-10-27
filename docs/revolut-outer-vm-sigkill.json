@@ -1,0 +1,92 @@
+{
+  "context": "Revolut 10.152 directly in outer LineageOS Android 16 VM on Raspberry Pi; not AOSP Pocket",
+  "appVersionCode": 1030152101,
+  "condition": {
+    "source": "/proc/self/status",
+    "field": "TracerPid:",
+    "immediateFatalWhen": "TracerPid is nonzero and newly observed, absent from the internal eight-PID allowlist, with bit 0 of policy byte +0x0e set; parser errors also reach the failure-policy branch",
+    "ordinaryNoDebuggerCase": "TracerPid 0 continues polling",
+    "parserOffset": "0x819fc",
+    "failurePolicyOffset": "0x81f20",
+    "fatalBranchOffset": "0x81f24",
+    "callerOffset": "0x81e20",
+    "killSvcOffset": "0x87054"
+  },
+  "evidence": "out/outer-vm-revolut/revolut-outer-condition-trace.txt",
+  "instrumentation": "PTRACE syscall tracing; hardware execute breakpoint at failure branch; no app instruction patches or altered app registers",
+  "otherConditionAnalyzed": {
+    "libraryScanOffset": "0x495a8",
+    "fatalWithPolicyBit0": [
+      "jvmti.so",
+      "jdwp.so"
+    ],
+    "codeEmulation": "out/outer-vm-revolut/condition-emulation.json",
+    "scope": "Eight original-native-code Unicorn cases; synthetic link_map and stubbed external strstr/nonfatal-report callback"
+  },
+  "notEstablished": [
+    "That an untraced outer VM terminates for this debugger condition",
+    "Any equivalence to server-side integrity verdicts",
+    "Every other native self-kill condition"
+  ],
+  "liveVmObservation": {
+    "processPid": 25743,
+    "killerTid": 25796,
+    "parsedTracerPid": 26277,
+    "actualDiagnosticTracerPid": 26277,
+    "previousTracerPid": 0,
+    "policyByte": "0x25",
+    "policyBit0": true,
+    "allowedTracerPids": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "syscall": "kill(25743, SIGKILL)"
+  },
+  "untracedControl": {
+    "launch": "am start --user 0 -n com.revolut.revolut/com.revolut.ui.login.pin.LoginActivity",
+    "sampleSpacingSeconds": 5,
+    "samples": [
+      [
+        {
+          "pid": 26283,
+          "tracerPid": 0
+        }
+      ],
+      [
+        {
+          "pid": 26283,
+          "tracerPid": 0
+        }
+      ],
+      [
+        {
+          "pid": 26283,
+          "tracerPid": 0
+        }
+      ],
+      [
+        {
+          "pid": 26283,
+          "tracerPid": 0
+        }
+      ]
+    ],
+    "sameProcessStayedAlive": true,
+    "tracerDetached": true
+  },
+  "validationCommands": [
+    "timeout 35 /data/local/tmp/outer-signal-trace 25743",
+    "python3 out/outer-vm-revolut/check_condition.py"
+  ],
+  "validationResults": [
+    "Captured observed TracerPid 26277 matching diagnostic tracer PID; worker called kill(25743,9)",
+    "Eight native-code emulation cases passed",
+    "Untraced relaunched process 26283 stayed alive across four samples at five-second intervals"
+  ]
+}

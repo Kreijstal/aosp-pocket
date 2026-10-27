@@ -1,0 +1,357 @@
+{
+  "requestedUnlock": "existing guest lock-screen password",
+  "physicalPhoneModified": false,
+  "limits": [
+    "No platform FBE or hardware/TEE attestation claim",
+    "No protection from a compromised host or an unlocked guest",
+    "No rollback protection or secure deletion of historical plaintext",
+    "Process kill recovery was tested; actual power failure was not",
+    "Proxy and SELinux compatibility measured only on the dedicated Android 16 Pi VM"
+  ],
+  "initialFeasibility": {
+    "stage": "staged encrypted backend and rootless mapping feasibility; not guest encryption",
+    "guestCredentialIntegrationImplemented": false,
+    "liveGuestStorageMigrated": false,
+    "managerUpdated": false,
+    "commands": [
+      {
+        "command": "python3 tools/test_encrypted_store.py",
+        "result": "PASS: backend behavior, RFC 5869 vector, cross-process exclusive owner and 8 SIGKILL recovery cycles"
+      },
+      {
+        "command": "python3 tools/build_storage_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+        "result": "PASS: native C with -Wall -Wextra -Werror, Java/dex build, APK signature verification"
+      },
+      {
+        "command": "ssh pi@juanraspberry 'python3 -u ~/test_storage_probe_on_pi.py --apk ~/storage-probe.apk'",
+        "result": "PASS: ordinary app backend tests and durable encrypted shared mmap; filesystemReady=false"
+      },
+      {
+        "command": "python3 -m py_compile tools/build_storage_probe.py tools/test_encrypted_store.py tools/test_storage_probe_on_pi.py",
+        "result": "PASS"
+      }
+    ],
+    "sourceSha256": {
+      "runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java": "1cd0c9561a92a230aabc49ac5279eb27152c44d79c9ebd2b8d2d6e0a9b3b881d",
+      "runtime/tests/EncryptedStoreTest.java": "d5df197ccdf4dae59dc487fd4ed738bb5e095320557f85b17667d889de970ecc",
+      "runtime/tests/storage-probe/MainActivity.java": "9857c0dd203fdbe176322e82133a1e07a5f4155bb2d070887e8f48ad5677837a",
+      "runtime/tests/storage-probe/probe.c": "f7697ab7c15be610b59d71be0dab782a0aae43f22caeb6968c98880dbd6c45cf",
+      "runtime/tests/storage-probe/AndroidManifest.xml": "f4ad7efca4ac45da16b9c24a92ccf1c7fd76e18e469ccd08c9b8d899e99046a8",
+      "tools/build_storage_probe.py": "848e99c600a41e1bc78f8a0c80f4cef0f7bcb08111c31568702776ff06cf523e",
+      "tools/test_encrypted_store.py": "7cafa09767acba982e34b25fbb4c42ad3fb93e344fb194213349909e5adb4bb0",
+      "tools/test_storage_probe_on_pi.py": "b56aef9be6973b0765210f31b4fbba827d6a7811cbb86f15e48c2688c8d2136a"
+    },
+    "pi": {
+      "uid": 10176,
+      "sdk": 36,
+      "selinux": "u:r:untrusted_app_27:s0:c176,c256,c512,c768",
+      "capEff": "0000000000000000",
+      "encryptedBackend": {
+        "hkdfRfc5869KnownAnswer": "PASS",
+        "randomReadWriteResizeReopen": "PASS (180 operations, 18 reopen cycles)",
+        "plaintextContentAndNamesAbsent": "PASS",
+        "exclusiveOwner": "PASS",
+        "uncommittedChangesDiscardedAndLockedAccessDenied": "PASS",
+        "committedRenameDeleteAndGarbageCollection": "PASS",
+        "wrongSecretRejectedWithoutDamagingStore": "PASS",
+        "tamperSwapMissingChunkAndTruncatedIndexRejected": "PASS",
+        "validation": "PASS"
+      },
+      "encryptedProxy": {
+        "readMmapErrno": 0,
+        "initialContentMatches": true,
+        "sharedMmapErrno": 0,
+        "msyncErrno": 0,
+        "execMmapErrno": 13,
+        "ftruncateErrno": 38,
+        "fcntlLockErrno": 13,
+        "crossProcessLockConflict": -1,
+        "mappedWriteSurvivedBackendReopen": true
+      },
+      "publicProxy": {
+        "readMmapErrno": 0,
+        "initialContentMatches": true,
+        "sharedMmapErrno": 0,
+        "msyncErrno": 0,
+        "execMmapErrno": 13,
+        "ftruncateErrno": 38,
+        "fcntlLockErrno": 13,
+        "crossProcessLockConflict": -1
+      },
+      "cachedBridge": {
+        "readMmapErrno": 0,
+        "initialContentMatches": true,
+        "sharedMmapErrno": 0,
+        "msyncErrno": 0,
+        "execMmapErrno": 13,
+        "ftruncateErrno": 38,
+        "fcntlLockErrno": 13,
+        "crossProcessLockConflict": -1
+      },
+      "validation": "PASS",
+      "filesystemReady": false,
+      "scope": "isolated backend and feasibility tests; guest encryption is not enabled",
+      "apkSha256": "8a0a8ff9cb3ab80ef983436c7c9ac14504698ede261a85bca876d733cf9ed224",
+      "managerUnchanged": true,
+      "selinuxEvidence": [
+        "[142541.266720] type=1327 audit(1792707101.405:1249508): proctitle=\"dev.kreijstal.aosppocket.storageprobe\"",
+        "[142541.277084] type=1400 audit(1792707101.405:1249509): avc:  denied  { lock } for  comm=\"StorageProbe\" path=\"/mnt/appfuse/10176_10/2\" dev=\"fuse\" ino=2 scontext=u:r:untrusted_app_27:s0:c176,c256,c512,c768 tcontext=u:object_r:app_fuse_file:s0 tclass=file permissive=0 app=dev.kreijstal.aosppocket.storageprobe",
+        "[142699.338600] type=1400 audit(1792707259.485:1249528): avc:  denied  { execute } for  comm=\"StorageProbe\" path=\"/mnt/appfuse/10176_15/2\" dev=\"fuse\" ino=2 scontext=u:r:untrusted_app_27:s0:c176,c256,c512,c768 tcontext=u:object_r:app_fuse_file:s0 tclass=file permissive=0 app=dev.kreijstal.aosppocket.storageprobe",
+        "[142699.346486] type=1300 audit(1792707259.485:1249528): arch=c00000b7 syscall=222 success=no exit=-13 a0=0 a1=1000 a2=5 a3=2 items=0 ppid=869 auid=4294967295 uid=10176 gid=10176 euid=10176 suid=10176 fsuid=10176 egid=10176 sgid=10176 fsgid=10176 tty=(none) ses=4294967295 comm=\"StorageProbe\" exe=\"/system/bin/app_process64\" subj=u:r:untrusted_app_27:s0:c176,c256,c512,c768 key=(null) app=dev.kreijstal.aosppocket.storageprobe",
+        "[142699.346702] type=1327 audit(1792707259.485:1249528): proctitle=\"dev.kreijstal.aosppocket.storageprobe\"",
+        "[142699.407044] type=1400 audit(1792707259.485:1249529): avc:  denied  { lock } for  comm=\"StorageProbe\" path=\"/mnt/appfuse/10176_15/2\" dev=\"fuse\" ino=2 scontext=u:r:untrusted_app_27:s0:c176,c256,c512,c768 tcontext=u:object_r:app_fuse_file:s0 tclass=file permissive=0 app=dev.kreijstal.aosppocket.storageprobe"
+      ]
+    },
+    "remaining": [
+      "guest namespace and syscall adapter including SQLite locks, truncation/cache coherence and CE executable loading",
+      "validate synthetic-password and keystore support; integrate guest LockSettings/vold key lifecycle",
+      "crash-safe verified migration of existing CE data and removal/accounting of plaintext copies",
+      "cold boot before unlock, wrong password, password change, user-key eviction, real multi-process SQLite validation"
+    ]
+  },
+  "stage": "integrated Android 9 user-0 credential-encrypted filesystem",
+  "guestCredentialIntegrationImplemented": true,
+  "liveGuestStorageMigrated": true,
+  "managerUpdated": true,
+  "remaining": [
+    "Contacts readable check still times out after 2000 ms in Attest Probe; ordinary encrypted SQLite WAL/FULL and competing writer tests passed",
+    "Physical phone and hosts other than the dedicated Android 16 Pi VM are unvalidated"
+  ],
+  "artifact": {
+    "bytes": 578212903,
+    "sha256": "16a9a9d4aeaa3ed64b46948c5e2ae84e61c89148556a5b2f3cb14b149c0b3662",
+    "changedEntries": [
+      "AndroidManifest.xml",
+      "classes.dex",
+      "assets/pocketctl.py",
+      "assets/api28-rootfs/system/bin/pocket-loader.payload",
+      "assets/api28-rootfs/system/framework/pocket-ce-key.jar.payload"
+    ],
+    "stockBionicAndLinkerUnchanged": true,
+    "allOther052EntriesUnchanged": true
+  },
+  "commands": [
+    {
+      "command": "python3 tools/build_guest_storage.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/manager-0.52-preserved/aosp-pocket-manager-0.52-preserved.apk --version 0.53",
+      "result": "PASS: focused native/Java/dex build, signed complete APK, only five entries differ from 0.52"
+    },
+    {
+      "command": "python3 tools/test_encrypted_store.py",
+      "result": "PASS: backend behavior, RFC5869, tamper rejection, process owner and eight SIGKILL cycles"
+    },
+    {
+      "command": "javac --release 8 -Xlint:all -d out/storage-integration/core-classes runtime/storage/src/dev/kreijstal/aosppocket/storage/*.java runtime/tests/CeNamespaceTest.java",
+      "result": "PASS"
+    },
+    {
+      "command": "java -cp out/storage-integration/core-classes dev.kreijstal.aosppocket.storage.CeNamespaceTest",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/manager-0.43/aosp-pocket-manager-0.43.apk",
+      "result": "PASS"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_ce_fixture_on_pi.py --apk ~/ce-fixture.apk'",
+      "result": "PASS: production encrypted VFS, migration, locks, SQLite WAL/FULL, mappings, proc aliases, reopen, default slot removal/restoration"
+    },
+    {
+      "command": "python3 -m py_compile tools/pocketctl.py tools/test_guest_encryption_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_guest_encryption_on_pi.py locked'",
+      "result": "PASS after controlled stop/start; private data denied and actual wrong credential rejection verified"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_guest_encryption_on_pi.py verify'",
+      "result": "PASS: existing credential accepted, encrypted canary preserved"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 ~/pocketctl.py --config ~/.config/pocket-pi-debug.json encrypt-storage'",
+      "result": "PASS: already encrypted; no credential prompt or remigration"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_guest_lock_on_pi.py unlock --probe ~/guest-lock-probe.jar'",
+      "result": "PASS on retry: actual UI password entry, device/keyguard secure, keyguard unlocked. First attempt could not discover password field within its automation deadline."
+    }
+  ],
+  "deployment": {
+    "target": "dedicated Pi VM",
+    "localBuildVersion": "0.53",
+    "installResult": "PASS: streamed APK update from 0.52 to 0.53; existing guest data preserved",
+    "hostStorageReserveRestored": true,
+    "existingGuestRestoredRunning": true,
+    "currentRestartLockedCheck": "PASS: controlled stop/start after the other session ended. Cat denied with exit 1 and zero stdout; wrong credential rejected by LockSettings; canary readable only after correct credential.",
+    "preservedBaseSha256": "4de109637d75f10f0fd280c724593257d8582375e5dbbda661cf7e0ff9c0ed0d",
+    "rebasedUpdate": "0.53",
+    "installedVersion": "0.53",
+    "previousVersion": "0.52",
+    "downloadsApk": "/home/pi/Downloads/aosp-pocket-manager-0.53.apk"
+  },
+  "piIntegrationFixture": {
+    "migration": "verified ciphertext; plaintext source removed",
+    "locked": "CE_LOCKED_PASS additional_users_fail_closed=1\n",
+    "native": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_FILESYSTEM_PASS mmap=1 truncation=1 locks=1 directories=1 links=1 executable_memory=1\n",
+    "reopened": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_REOPEN_PASS\n",
+    "credentialRemovalAndRestoration": "PASS: host-keystore-wrapped default slot removed after restoring credential",
+    "uid": 10179,
+    "validation": "PASS"
+  },
+  "piMigration": {
+    "validation": "PASS",
+    "migrationState": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": false,
+      "ready": false,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 storage encrypted. Start the guest and unlock with its existing password.",
+      "shellUid": 0
+    },
+    "plaintextCeRootsEmpty": true,
+    "ciphertextVaultPresent": true
+  },
+  "liveAttestProbe": {
+    "scope": "Pi Manager 0.53; real guest with existing Magisk/NeoZygisk enabled",
+    "summary": {
+      "pass": 43,
+      "fail": 5,
+      "skip": 3,
+      "info": 8,
+      "checks": 59,
+      "scope": "device_checks_excluding_optional_biometrics",
+      "deviceChecks": 59
+    },
+    "failedChecks": [
+      {
+        "id": "root_su_paths",
+        "category": "ATTEST",
+        "description": "No su binary in the usual locations",
+        "status": "FAIL",
+        "detail": "found: [\"\\/system\\/bin\\/su\"]"
+      },
+      {
+        "id": "magisk_paths",
+        "category": "ATTEST",
+        "description": "No Magisk artifacts",
+        "status": "FAIL",
+        "detail": "found: [\"\\/sbin\\/.magisk\",\"\\/data\\/adb\\/magisk\",\"\\/data\\/adb\\/modules\"]"
+      },
+      {
+        "id": "build_tags_test_keys",
+        "category": "ATTEST",
+        "description": "Build is not signed with test-keys",
+        "status": "FAIL",
+        "detail": "tags=test-keys type=userdebug"
+      },
+      {
+        "id": "gms_present",
+        "category": "ATTEST",
+        "description": "Google Play services present",
+        "status": "FAIL",
+        "detail": "GMS not installed (Play Integrity unavailable)"
+      },
+      {
+        "id": "contacts_readable",
+        "category": "ACCESS",
+        "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+        "status": "FAIL",
+        "detail": "timeout after 2000ms"
+      }
+    ],
+    "storageCheck": {
+      "id": "storage_encryption",
+      "category": "ATTEST",
+      "description": "Storage is encrypted",
+      "status": "PASS",
+      "detail": "activating_default"
+    },
+    "storageStatusNote": "Probe label activating_default corresponds to ENCRYPTION_STATUS_ACTIVE_PER_USER (5); its enum label is incorrect."
+  },
+  "runtimeObservation": {
+    "restartReason": "Android ApplicationExitInfo reports LOW_MEMORY for Manager PID 26217 at 2026-10-23 14:16:19.882 while scratch test app was foregrounded",
+    "scratchFixtureStopped": true,
+    "currentInstalledVersionPreserved": "0.52",
+    "concurrentSession": "User confirmed another Pi test/unlock session was active during the first lock check; user then confirmed it had ended. Controlled stop/start check is running after that confirmation."
+  },
+  "liveCredentialCheck": {
+    "installedManager": "0.52",
+    "command": "ssh pi@juanraspberry 'python3 -u ~/test_guest_lock_on_pi.py verify --probe ~/guest-lock-probe.jar'",
+    "result": "PASS: existing password verifies, device/keyguard secure, keyguard currently locked"
+  },
+  "controlledColdBoot": {
+    "locked": {
+      "mode": "locked",
+      "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+      "beforeUnlockCatExitCode": 1,
+      "beforeUnlockStdoutBytes": 0,
+      "beforeUnlockCanaryReadable": false,
+      "wrongPasswordRejected": true,
+      "wrongPasswordOutput": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\nGUEST_CE_KEY_FAILED java.lang.SecurityException: Guest credential rejected\n",
+      "privateStorageUnavailableBeforeUnlock": true,
+      "validation": "PASS"
+    },
+    "credentialUnlock": {
+      "mode": "verify",
+      "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+      "correctPasswordVerified": true,
+      "encryptedCanaryPreserved": true,
+      "validation": "PASS"
+    },
+    "uiUnlock": {
+      "scope": "Pocket Android 9 guest on dedicated Pi VM",
+      "mode": "unlock",
+      "exitCode": 0,
+      "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"unlock\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"interactive\":true,\"lockScreenEnabled\":true,\"uiPasswordUnlockVerified\":true,\"previouslyLocked\":true}\n",
+      "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\n",
+      "validation": "PASS",
+      "uid": 1000,
+      "previouslySecure": true,
+      "deviceSecure": true,
+      "keyguardSecure": true,
+      "keyguardLocked": false,
+      "correctPasswordVerified": true,
+      "interactive": true,
+      "lockScreenEnabled": true,
+      "uiPasswordUnlockVerified": true,
+      "previouslyLocked": true
+    }
+  },
+  "piMedia": {
+    "validation": "PASS",
+    "scope": "Pocket Android 9 on dedicated Pi Android VM; logical app UID 19990",
+    "status": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": true,
+      "ready": true,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 running \u00b7 720 \u00d7 1280",
+      "shellUid": 0
+    },
+    "exitCode": 0,
+    "stdout": "MEDIA_CODEC OMX.google.g711.alaw.decoder encoder=false\nMEDIA_CODEC OMX.google.g711.mlaw.decoder encoder=false\nMEDIA_CODEC OMX.google.mp3.decoder encoder=false\nMEDIA_CODEC OMX.google.raw.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.encoder encoder=true\nMEDIA_ENUMERATION_PASS count=6 elapsedMs=353\nMEDIA_RAW_PASS bytes=128\nMEDIA_G711_PASS variants=2 samples=64\nMEDIA_MP3_PASS pcmBytes=4608\nMEDIA_AVC_ROUNDTRIP_PASS frames=4 packets=4\nMEDIA_CODEC_PROBE_PASS uid=19990\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmxStore remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=6262\n",
+    "guestDataPreserved": true
+  },
+  "sourceSha256": {
+    "runtime/loader/ce_runtime.h": "0935312f746443708b578da1a5d4ed87e842bc064b7879b3d57107d07378687f",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeStorage.java": "2296dde79eeef3469d08054bf5ce0ccfb05b89bc37af25c10f06c799fc7b7788",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeMigration.java": "a5d69b4ba533e9e38ea5998067b1b871fbda2428978fd48a559eebe891aed285",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeDefaultKey.java": "4d6389fb228e90257d1916e52b5fab5fd37ca3f6fe34141e45960765cf629552",
+    "runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java": "7329a8db5872e1c4a71b2beca35c35a29713d5e63004b727bb5d81542b3903ab",
+    "runtime/storage/src/dev/kreijstal/aosppocket/storage/CeNamespace.java": "f4c5cfa41bf5ec7e0dd6839aff4ec58247307be291f11827bb56bca3837cdcda",
+    "tools/pocketctl.py": "8abc1470864fe16ffd38833c3c10f9f9fc3557ee7cb9334ca0c30411def45d6b",
+    "tools/build_guest_storage.py": "c1d7aa64fc90e00cec1475b21038489182f9a0fd52e45417a294a36114a4840d",
+    "tools/test_guest_encryption_on_pi.py": "cf0ebc3dfd1981c040e32223e83f46db8a008ba63085b01200de37d98d8e6682"
+  }
+}

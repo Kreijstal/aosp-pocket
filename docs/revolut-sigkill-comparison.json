@@ -1,0 +1,67 @@
+{
+  "finding": "Revolut worker self-terminates after matching Pocket bootstrap JVMTI library in loaded-library scan",
+  "matchedTests": [
+    {
+      "context": "Samsung Pocket",
+      "managerVersion": "0.36 with live scheduling fix",
+      "revolutVersion": "10.135",
+      "revolutVersionCode": 1013509766,
+      "guestSdk": 28,
+      "processPid": 1535,
+      "killerTid": 1757,
+      "candidate": "/system/lib64/libopenjdkjvmti.so",
+      "matchedSubstring": "jvmti.so",
+      "checkFailureOffset": "0x445e0",
+      "callerOffset": "0x443d4",
+      "killSvcOffset": "0x25234",
+      "syscall": {
+        "number": 129,
+        "name": "kill",
+        "targetPid": 1535,
+        "signal": 9
+      },
+      "trace": "out/samsung-native-debug/samsung-sigkill.txt"
+    },
+    {
+      "context": "Pi Pocket",
+      "managerVersion": "0.35",
+      "revolutVersion": "10.135",
+      "revolutVersionCode": 1013509766,
+      "guestSdk": 28,
+      "processPid": 24633,
+      "killerTid": 24676,
+      "candidate": "/system/lib64/libopenjdkjvmti.so",
+      "matchedSubstring": "jvmti.so",
+      "checkFailureOffset": "0x445e0",
+      "callerOffset": "0x443d4",
+      "killSvcOffset": "0x25234",
+      "syscall": {
+        "number": 129,
+        "name": "kill",
+        "targetPid": 24633,
+        "signal": 9
+      },
+      "trace": "out/samsung-native-debug/native-revolut-sigkill-trace.txt"
+    }
+  ],
+  "outerPiComparison": {
+    "os": "LineageOS Android 16",
+    "revolutVersion": "10.152",
+    "versionCode": 1030152101,
+    "pid": 5769,
+    "mapsBytesRead": 420734,
+    "jvmtiJdwpPocketMappingMatches": [],
+    "sameVersionAsPocket": false
+  },
+  "untracedComparison": {
+    "piPocketSame1013509766": "SIGKILL and restart also reproduced before attaching a debugger",
+    "samsungPocket": "Repeated SIGKILL and restart observed before attaching a debugger"
+  },
+  "bootstrapReason": "Pocket uses -Xplugin:libopenjdkjvmti.so and -agentpath:/system/lib64/libpocket_zygote_api28.so to append its bootstrap JAR with JVMTI",
+  "evidenceMethod": "PTRACE syscall tracing across app threads/children; hardware execute breakpoint at failure join; read candidate/match strings; no app instruction/register replacement",
+  "limitations": [
+    "Debugger attachment can affect other checks; traced failure here specifically matched the always-loaded bootstrap JVMTI library",
+    "Outer VM runs a different app version and Android release; no claim all other checks are equivalent",
+    "Removing this runtime dependency has not been tested as a fix"
+  ]
+}

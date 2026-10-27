@@ -98,7 +98,15 @@
         "commit": "76923a32ab6ea25115b65ff86ade7235ba7b3a33",
         "cache": "frameworks-native",
         "paths": [
-          "libs/binder"
+          "libs/binder",
+          "headers",
+          "libs/gui/include",
+          "libs/ui/include",
+          "include",
+          "aidl",
+          "libs/nativebase/include",
+          "libs/nativewindow/include",
+          "libs/arect/include"
         ]
       },
       {
@@ -121,7 +129,9 @@
           "libprocessgroup",
           "libcutils",
           "include",
-          "storaged"
+          "storaged",
+          "libmemunreachable/include",
+          "libsync/include"
         ]
       },
       {
@@ -195,7 +205,11 @@
           "base/include",
           "transport/include",
           "transport/base",
-          "transport/manager"
+          "transport/manager",
+          "transport/allocator",
+          "transport/memory",
+          "libhidlmemory",
+          "transport/token"
         ]
       },
       {
@@ -205,7 +219,14 @@
         "cache": "hardware-interfaces",
         "paths": [
           "configstore",
-          "health"
+          "health",
+          "media/omx",
+          "media/1.0",
+          "graphics",
+          "vibrator/1.0",
+          "vibrator/1.1",
+          "vibrator/1.2",
+          "camera"
         ]
       },
       {
@@ -236,8 +257,23 @@
           "media/libaudioclient",
           "services/audioflinger",
           "services/audiopolicy",
+          "services/medialog",
           "media/audioserver",
-          "include"
+          "include",
+          "media/libstagefright",
+          "media/libmedia",
+          "media/utils",
+          "services/mediaresourcemanager",
+          "media/libnbaio",
+          "media/libnblog",
+          "media/libmediaextractor",
+          "media/libaudiohal",
+          "media/libaudioprocessing",
+          "media/libeffects",
+          "media/libcpustats",
+          "media/libmediametrics",
+          "camera",
+          "services/camera/libcameraservice"
         ]
       },
       {
@@ -247,7 +283,66 @@
         "cache": "system-media",
         "paths": [
           "audio/include",
-          "audio_utils/include"
+          "audio_utils/include",
+          "camera/include",
+          "private/camera/include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libavc",
+        "tag": "android-9.0.0_r61",
+        "commit": "7f33b96e77cf2b17360507babd8cb8d02c635eee",
+        "cache": "libavc",
+        "paths": [
+          "common",
+          "decoder",
+          "encoder"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libyuv",
+        "tag": "android-9.0.0_r61",
+        "commit": "967c9dca1fdc66678bfd5ad93fc81c41e93c3ec8",
+        "cache": "libyuv",
+        "paths": [
+          "files/include",
+          "files/source"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libjpeg-turbo",
+        "tag": "android-9.0.0_r61",
+        "commit": "352b59d1f006549093d0b42132179b5545f9849d",
+        "cache": "libjpeg-turbo",
+        "paths": [
+          "simd/arm"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/tinyxml2",
+        "tag": "android-9.0.0_r61",
+        "commit": "ffdf8cb302b1752e1f864f2d09941574b24e68a9",
+        "cache": "tinyxml2",
+        "paths": [
+          "resources"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libexif",
+        "tag": "android-9.0.0_r61",
+        "commit": "2272fd1a98942957a99b7e71b3eff213298f9743",
+        "cache": "libexif",
+        "paths": [
+          "libexif"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/libfmq",
+        "tag": "android-9.0.0_r61",
+        "commit": "fb90fec55b70a3a9f221acaf3ccfd28debb057b9",
+        "cache": "libfmq",
+        "paths": [
+          "include"
         ]
       }
     ],
@@ -314,5 +409,342 @@
     "license": "GPL-3.0-only; dependency notices bundled",
     "build": "tools/build_magisk_pocket.py",
     "runtime_scope": "guest userspace; host kernel and SELinux unchanged"
+  },
+  "guest_api29": {
+    "status": "experimental_supported",
+    "sdk": 29,
+    "android_tag": "android-10.0.0_r47",
+    "full_guest_boot_verified": true,
+    "properties_verified_vm": true,
+    "art_java_verified_vm": true,
+    "binder_verified_vm": true,
+    "init_core_verified_vm": true,
+    "zygote_verified_vm": true,
+    "hardware_manager_1_2_verified_vm": true,
+    "suspend_hal_verified_vm": true,
+    "product_properties_verified_vm": true,
+    "software_egl_verified_vm": true,
+    "surfaceflinger_display_verified_vm": true,
+    "graphics_evidence": "docs/api29-graphics-validation.json",
+    "foundation_evidence": "docs/api29-native-validation.json",
+    "pocket_manager_api29_supported": true,
+    "reference_manifest": "https://github.com/remote-android/platform_manifests/tree/redroid-10.0.0",
+    "index_digest": "sha256:e8961d954d38eb05485077f91118f893b6ca6800b48a1005c4763d06e3b14fc9",
+    "abi_reference": {
+      "image": "redroid/redroid:10.0.0-latest",
+      "platform": "linux/arm64",
+      "manifest_digest": "sha256:f41e76f39b5e6343a1608a1c76b117e2f3469f60db068bf8db9b5b6c808724cc",
+      "layer_digest": "sha256:47a4595f19ded855ae0b0045c8926b838576de4ceb4297ca881461fd809b2a81",
+      "layer_bytes": 701673445,
+      "use": "Pinned Android 10 platform and ART reference for the rootless API 29 port; full guest boot not yet verified"
+    },
+    "abi_reference_x86_64": {
+      "image": "redroid/redroid:10.0.0-latest",
+      "platform": "linux/amd64",
+      "manifest_digest": "sha256:e03a15291e765f8381c05438001297a1f673024d87bff210245501afd65e4776",
+      "layer_digest": "sha256:e58234ab5af56e8e8e67cb69874b3fde74facaf307993e30adbb1a318900ca06",
+      "layer_bytes": 804106798,
+      "use": "Pinned Android 10 platform and ART reference for the rootless API 29 port; full guest boot not yet verified"
+    },
+    "headers": [
+      {
+        "url": "https://android.googlesource.com/platform/frameworks/native",
+        "tag": "android-10.0.0_r47",
+        "commit": "013eb744f289c70e6d3fe180500d9a414ac55539",
+        "cache": "frameworks-native",
+        "paths": [
+          "libs/binder",
+          "headers",
+          "libs/gui/include",
+          "libs/ui/include",
+          "include",
+          "aidl",
+          "libs/nativebase/include",
+          "libs/nativewindow/include",
+          "libs/arect/include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/core",
+        "tag": "android-10.0.0_r47",
+        "commit": "1dea9a052b7f214c10a77d5ed6ffd3602722a817",
+        "cache": "system-core",
+        "paths": [
+          "libutils/include",
+          "libcutils/include",
+          "liblog/include",
+          "libsystem/include",
+          "libbacktrace/include",
+          "libprocessgroup/include",
+          "base/include",
+          "libvndksupport/include",
+          "property_service",
+          "init",
+          "base",
+          "libprocessgroup",
+          "libcutils",
+          "include",
+          "storaged",
+          "libmemunreachable/include",
+          "libsync/include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/bionic",
+        "tag": "android-10.0.0_r47",
+        "commit": "290c0cb5044b643e5d6cbcb1a5b275541ca3a89e",
+        "cache": "bionic",
+        "paths": [
+          "libc/system_properties",
+          "libc/private",
+          "libc/async_safe/include",
+          "libc/include/sys"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libcxx",
+        "tag": "android-10.0.0_r47",
+        "commit": "d356ee1683aa5681564c81ad69fe19bc6abd5da5",
+        "cache": "libcxx",
+        "paths": [
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/frameworks/base",
+        "tag": "android-10.0.0_r47",
+        "commit": "dff3deab5d25f8bbfd49abfb423043c9be47b7db",
+        "cache": "frameworks-base",
+        "paths": [
+          "cmds/app_process",
+          "core/java/com/android/internal/os",
+          "core/jni",
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/libnativehelper",
+        "tag": "android-10.0.0_r47",
+        "commit": "2f4c4c1bc36811b007b926ade8a8f3d2beb75dc0",
+        "cache": "libnativehelper",
+        "paths": [
+          "include",
+          "include_jni",
+          "header_only_include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/art",
+        "tag": "android-10.0.0_r47",
+        "commit": "0f2487027ebaeb42abaa7e86a267f1d6992696be",
+        "cache": "art",
+        "paths": [
+          "sigchainlib",
+          "openjdkjvmti/include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/libhwbinder",
+        "tag": "android-10.0.0_r47",
+        "commit": "e40fe7f0e987445f23fc7b2aa7769164030b03fc",
+        "cache": "libhwbinder",
+        "paths": [
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/libhidl",
+        "tag": "android-10.0.0_r47",
+        "commit": "0a5a8e42404174e8e183957c4a51c4e611ad851d",
+        "cache": "libhidl",
+        "paths": [
+          "base/include",
+          "transport/include",
+          "transport/base",
+          "transport/manager",
+          "transport/allocator",
+          "transport/memory",
+          "libhidlmemory",
+          "transport/token"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/hardware/interfaces",
+        "tag": "android-10.0.0_r47",
+        "commit": "2083ef1548be73bb8f002a98de8e1105fae85831",
+        "cache": "hardware-interfaces",
+        "paths": [
+          "configstore",
+          "health",
+          "media/omx",
+          "media/1.0",
+          "graphics",
+          "vibrator/1.0",
+          "vibrator/1.1",
+          "vibrator/1.2",
+          "camera"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/vold",
+        "tag": "android-10.0.0_r47",
+        "commit": "e37a2acb459d9a0a1ce25c4c0abf33ba824ea978",
+        "cache": "system-vold",
+        "paths": [
+          "binder"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/netd",
+        "tag": "android-10.0.0_r47",
+        "commit": "e27bf9edf55a77172ab26b2b494cbdf19b545268",
+        "cache": "system-netd",
+        "paths": [
+          "binder",
+          "server",
+          "resolv/binder"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/frameworks/av",
+        "tag": "android-10.0.0_r47",
+        "commit": "7f6494d1ce3acf18991b7187630bfd225ad23393",
+        "cache": "frameworks-av",
+        "paths": [
+          "media/libaudioclient",
+          "services/audioflinger",
+          "services/audiopolicy",
+          "services/medialog",
+          "media/audioserver",
+          "include",
+          "media/libstagefright",
+          "media/libmedia",
+          "media/utils",
+          "services/mediaresourcemanager",
+          "media/libnbaio",
+          "media/libnblog",
+          "media/libmediaextractor",
+          "media/libaudiohal",
+          "media/libaudioprocessing",
+          "media/libeffects",
+          "media/libcpustats",
+          "media/libmediametrics",
+          "camera",
+          "services/camera/libcameraservice"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/media",
+        "tag": "android-10.0.0_r47",
+        "commit": "fdc88efc259a7f702c93ecf5afbf0d2453fc0ac1",
+        "cache": "system-media",
+        "paths": [
+          "audio/include",
+          "audio_utils/include",
+          "camera/include",
+          "private/camera/include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libavc",
+        "tag": "android-10.0.0_r47",
+        "commit": "c6db62de7efb4f245e687b19749153ff56773f69",
+        "cache": "libavc",
+        "paths": [
+          "common",
+          "decoder",
+          "encoder"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libyuv",
+        "tag": "android-10.0.0_r47",
+        "commit": "61548af20b13116d7434bfc981af21206bf4b578",
+        "cache": "libyuv",
+        "paths": [
+          "files/include",
+          "files/source"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libjpeg-turbo",
+        "tag": "android-10.0.0_r47",
+        "commit": "fcf098ff48fb5f6615ce7b8dbd993ffce00531cf",
+        "cache": "libjpeg-turbo",
+        "paths": [
+          "simd/arm"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/tinyxml2",
+        "tag": "android-10.0.0_r47",
+        "commit": "4eb67394a8dc6169d7af7546ce5880b80c544084",
+        "cache": "tinyxml2",
+        "paths": [
+          "resources"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/external/libexif",
+        "tag": "android-10.0.0_r47",
+        "commit": "cdbf3a339b0b91da28b4c42ab6972b0fb226aff2",
+        "cache": "libexif",
+        "paths": [
+          "libexif"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/libfmq",
+        "tag": "android-10.0.0_r47",
+        "commit": "922a25e2de65dd263810936d86a867574b1d8af8",
+        "cache": "libfmq",
+        "paths": [
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/hardware/interfaces",
+        "tag": "android-10.0.0_r47",
+        "commit": "2ff2792a0c5cd668d331960cdc56ddeb3e23d217",
+        "cache": "system-hardware-interfaces",
+        "paths": [
+          "suspend/1.0",
+          "suspend/aidl"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/hardware/libhardware",
+        "tag": "android-10.0.0_r47",
+        "commit": "a28e317aded593650bec3a098a3da5bf46116026",
+        "cache": "libhardware",
+        "paths": [
+          "include"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/apex",
+        "tag": "android-10.0.0_r47",
+        "commit": "42f74c6d7844894af351896e3e9669c8124c94f7",
+        "cache": "system-apex",
+        "paths": [
+          "apexd/aidl"
+        ]
+      },
+      {
+        "url": "https://android.googlesource.com/platform/system/security",
+        "tag": "android-10.0.0_r47",
+        "commit": "4ea871ac86ea4c1f0309672e73527a54b36d4f67",
+        "cache": "system-security",
+        "paths": [
+          "keystore"
+        ]
+      }
+    ],
+    "framework_boot_completed_verified_vm": true,
+    "framework_boot_evidence": "docs/api29-framework-boot-validation.json",
+    "full_guest_boot_evidence": "docs/api29-ui-validation.json",
+    "manager_boot_verified_vm": true,
+    "on_demand_image_verified_vm": true,
+    "manager_evidence": "docs/api29-manager-validation.json"
   }
 }

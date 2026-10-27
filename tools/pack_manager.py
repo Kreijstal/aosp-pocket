@@ -4,6 +4,7 @@
 import argparse
 from pathlib import Path
 import zipfile
+from boot_class_manifest import manifest, GUEST_PATH
 from syscall_image import syscall_init
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -11,7 +12,21 @@ ROOT=Path(__file__).resolve().parents[1]
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--out',type=Path,required=True)
+    parser.add_argument('--image-catalog',type=Path,default=ROOT/'runtime/images/api28-arm64.json')
+    parser.add_argument('--bundle-images',action='store_true',help='Explicit legacy offline/development distribution')
     args=parser.parse_args()
+    if not args.bundle_images:
+        with zipfile.ZipFile(ROOT/'out/runtime/packed.apk') as runtime,zipfile.ZipFile(args.out/'base.apk') as base,zipfile.ZipFile(args.out/'packed.apk','w',zipfile.ZIP_DEFLATED,compresslevel=1) as apk:
+            for item in runtime.infolist():
+                if item.filename not in ('AndroidManifest.xml','classes.dex') and not item.filename.startswith(('assets/default-guest/','assets/api28-rootfs/')):
+                    apk.writestr(item,runtime.read(item))
+            for item in base.infolist():apk.writestr(item,base.read(item))
+            apk.write(args.image_catalog,'assets/pocket-images.json')
+            apk.write(ROOT/'out/api28/reference/system/etc/NOTICE.xml.gz','assets/licenses/android9-NOTICE.xml.gz')
+            apk.write(ROOT/'out/boot/hooks.json','assets/direct-boot-hooks.json')
+            apk.write(ROOT/'tools/pocketctl.py','assets/pocketctl.py')
+        print('Packed image-free Manager:',args.out/'packed.apk')
+        return
     rc=(ROOT/'out/boot/rootfs/system/etc/init/init.system-server.rc').read_text()
     old='dev.kreijstal.aosppocket.guest.FrameworkProbe /system/etc/pocket-smoke.apk'
     if rc.count(old)!=1:raise SystemExit('Unexpected framework probe init configuration')
@@ -37,6 +52,7 @@ def main():
                     apk.writestr('assets/api28-rootfs/'+name+'.payload',props)
                 else:apk.write(path,'assets/api28-rootfs/'+name+'.payload')
         apk.write(ROOT/'out/manager-guest/pocket-control.jar','assets/api28-rootfs/system/framework/pocket-zygote.jar.payload')
+        apk.writestr('assets/api28-rootfs/'+GUEST_PATH+'.payload',manifest(ROOT/'out/manager-guest/pocket-control.jar'))
         apk.write(ROOT/'out/composer/hwcomposer.pocket.so','assets/api28-rootfs/vendor/lib64/hw/hwcomposer.pocket.so.payload')
         apk.write(ROOT/'out/manager-guest/host-phone.apk','assets/api28-rootfs/system/app/PocketHostPhone/PocketHostPhone.apk.payload')
         apk.writestr('assets/api28-rootfs/system/etc/init/init.manager.rc.payload',rc)

@@ -13,14 +13,15 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ndk", type=Path, required=True)
-    parser.add_argument("--guest", type=Path, required=True)
+    parser.add_argument("--guest", type=Path)
+    parser.add_argument("--bundle-guest", action="store_true", help="Explicit legacy offline/development distribution")
     args = parser.parse_args()
     out = ROOT / "out/runtime"
     with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(
             out / "packed.apk", "w", zipfile.ZIP_DEFLATED, compresslevel=1) as apk:
         for entry in base.infolist():
             apk.writestr(entry, base.read(entry.filename))
-        for name in ("libpocket_runtime.so", "libproot.so", "libpocket_frames.so"):
+        for name in ("libpocket_runtime.so", "libproot.so", "libpocket_frames.so", "libpocket_ce.so"):
             copied = out / name
             shutil.copy2(ROOT / "out/runtime-native" / name, copied)
             subprocess.run([str(args.ndk / "toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"), str(copied)], check=True)
@@ -37,6 +38,10 @@ def main():
             ("out/ananbox-native/boost_1_83_0/LICENSE_1_0.txt", "licenses/boost.txt"),
         ]:
             apk.write(ROOT / source, "assets/" + target)
+        if not args.bundle_guest:
+            print('Packed runtime without guest images:',out/'packed.apk')
+            return
+        if args.guest is None:parser.error('--bundle-guest requires --guest')
         # Place individual compressed guest entries inside the APK, allowing
         # Android to install directly from it without staging another 266 MiB ZIP.
         with zipfile.ZipFile(args.guest) as guest:

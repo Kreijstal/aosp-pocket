@@ -1,0 +1,41 @@
+{
+  "finding": "Revolut rejects a mismatch between guest Java package UID and host package UID returned through raw Binder",
+  "environment": "Pi Android VM -> AOSP Pocket 0.39 -> Android 9 -> Revolut 10.135",
+  "observed": {
+    "incident_buffer_hex": "1b092d0c03",
+    "incident_subreason": 9,
+    "initialization_failure_code": 780,
+    "native_uid": 10154,
+    "java_uid": 10017,
+    "pid": 14386,
+    "strings": {
+      "0x13bc": "android/os/Process",
+      "0x1123": "myUid",
+      "0x31c4": "getApplicationInfo",
+      "0x5b61": "()Landroid/content/pm/ApplicationInfo;",
+      "0x5503": "uid",
+      "0x52b2": "package",
+      "0x268a": "android.content.pm.IPackageManager"
+    }
+  },
+  "host_control": "cmd package list packages -U com.revolut.revolut -> uid:10154",
+  "guest_control": "/data/system/packages.list -> com.revolut.revolut 10017",
+  "failure_path": [
+    "Native check compares raw Binder package UID (w0) against ApplicationInfo.uid (w23) at module+0x4ce24",
+    "Mismatch branch at module+0x4ce28 appends incident bytes 1b09 and returns 780 (0x30c)",
+    "record_initialization_failure appends 2d0c03 and sets flag at module+0x8dfa1",
+    "kk observes the flag and throws MessageGuardException; error screen code 4096"
+  ],
+  "why_routing_differs": "Pocket redirects libbinder ProcessState::getContextObject to its guest registry, while this native code implements its own Binder parcels and direct driver ioctls, reaching the host context manager",
+  "evidence_method": "Hardware execution breakpoint via perf_event_open captures registers without ptrace, app instruction patches, or modified UID returns",
+  "validation_command": "python3 out/revolut-pocket-0.39/rizin/decode_failure.py",
+  "validation_result": "PASS: seven decrypted API/service strings, captured incident subtype/code, and live register comparison agree",
+  "next_fix_area": "Guest Binder context-manager routing/isolation for direct driver clients",
+  "limitations": [
+    "Finding validated in Pi Pocket; equivalent Samsung comparison not yet captured",
+    "Other checks may still reject the guest after this discrepancy is resolved"
+  ],
+  "network_policy": "No network rules changed",
+  "project": "out/revolut-pocket-0.39/rizin/revolut-10.135-pocket-0.39.rzdb",
+  "sample": "out/revolut-pocket-0.39/rizin/pocket-uid-compare.txt"
+}

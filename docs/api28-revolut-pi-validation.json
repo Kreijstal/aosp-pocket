@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-21",
+  "environment": "Raspberry Pi ARM64 KVM LineageOS VM -> AOSP Pocket 0.27 -> Android 9/API 28 -> Revolut 10.135",
+  "packageVersionCode": 1013509766,
+  "scope": "Diagnostic reproduction; no app code or decision changes",
+  "command": "python3 -u /home/pi/pi_capture.py",
+  "exitCode": 0,
+  "inputLength": 4095,
+  "requiredOutputBytes": 4148,
+  "outputCapacity": 4095,
+  "overflowBranchHardwareVerified": true,
+  "fault": {
+    "signal": "SIGSEGV",
+    "code": "SEGV_MAPERR",
+    "address": 0,
+    "moduleOffset": "0x6e6d0"
+  },
+  "matchingSamsungCodeWindows": [
+    "encoder_entry",
+    "overflow_branch",
+    "caller",
+    "null_load"
+  ],
+  "unresolved": "Which redirect or other event initially triggers the reporting path; no compatibility fix has been implemented.",
+  "retainedBackup": "/home/pi/pocket-revolut-10.152-backup",
+  "bufferProducer": {
+    "hardwareObservedCallerOffsets": [
+      "0x4eb14",
+      "0x4eb1c"
+    ],
+    "stringAppendCalls": 46,
+    "storedSymbolLibraryEntries": 31,
+    "sampleSymbols": [
+      "mkdirat",
+      "settimeofday",
+      "geteuid",
+      "fstat64",
+      "fchmodat",
+      "setregid"
+    ],
+    "reportedLibrary": "libpocket_direct_boot.so",
+    "producerCommand": "python3 -u /home/pi/pi_capture_producer.py",
+    "exitCode": 0,
+    "hostRootVerified": true,
+    "hostSELinux": "Enforcing",
+    "limits": "Only the main thread was watched; debugger attachment can affect protected software."
+  }
+}

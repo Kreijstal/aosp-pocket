@@ -1,0 +1,292 @@
+{
+  "validation": "PASS",
+  "version": "0.75",
+  "change": "Coalesce only consecutive unsent ACTION_MOVE commands at the tail of the host input queue. Preserve press/release, cancel, pointer transitions and navigation.",
+  "sourceChanges": [
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/InputCommandQueue.java",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/DirectSession.java"
+  ],
+  "build": {
+    "command": "python3 tools/build_input_queue_probe.py",
+    "result": "PASS: narrow host rebuild, unrelated host classes audited unchanged, baseline and optimized probes built and signed"
+  },
+  "packageBuild": {
+    "command": "python3 tools/build_manager_update.py --base-apk out/keypad-0.74/aosp-pocket-manager-0.74.apk --out out/input-0.75 --version-code 75 --version-name 0.75 --host-dex out/input-queue/optimized-host.dex",
+    "result": "PASS: full APK built and signature verified"
+  },
+  "hostCodeAudit": {
+    "validation": "PASS",
+    "changedClasses": [
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda11.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda6.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda9.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda4.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda5.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda7.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda10.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession$$ExternalSyntheticLambda8.smali",
+      "dev/kreijstal/aosppocket/runtime/DirectSession.smali"
+    ],
+    "addedClasses": [
+      "dev/kreijstal/aosppocket/runtime/InputCommandQueue$Pending.smali",
+      "dev/kreijstal/aosppocket/runtime/InputCommandQueue.smali"
+    ]
+  },
+  "packageAudit": {
+    "validation": "PASS",
+    "version": "0.75",
+    "baseVersion": "0.74",
+    "bytes": 578707761,
+    "sha256": "432b531d66339f174276e20d23b86b2c3ccc90788e5dcbca23f1a8ff2571013c",
+    "changedEntries": [
+      "AndroidManifest.xml",
+      "classes.dex"
+    ]
+  },
+  "queueRegression": {
+    "scope": "Real production DirectSession with a deterministic slow LocalSocket peer, not normal keyboard latency.",
+    "baselineCommand": "python3 /home/pi/test_input_queue_on_pi.py --apk /home/pi/baseline-probe.apk --baseline",
+    "optimizedCommand": "python3 /home/pi/test_input_queue_on_pi.py --apk /home/pi/optimized-probe.apk",
+    "baseline": {
+      "validation": "PASS",
+      "classification": "synthetic backpressure; production DirectSession and real LocalSocket",
+      "queuedFirstGestureMoves": 80,
+      "deliveredFirstGestureMoves": 80,
+      "latestFirstGestureX": 80,
+      "releaseDelayAfterUnblockMs": 1003.034259,
+      "boundariesPreserved": true,
+      "boundaries": [
+        0,
+        1,
+        -3,
+        0,
+        261,
+        262,
+        3,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        -4
+      ],
+      "motionBeforeBoundaries": [
+        "1:80.0",
+        "2:110.0",
+        "2:120.0",
+        "1:130.0"
+      ],
+      "errors": []
+    },
+    "optimized": {
+      "validation": "PASS",
+      "classification": "synthetic backpressure; production DirectSession and real LocalSocket",
+      "queuedFirstGestureMoves": 80,
+      "deliveredFirstGestureMoves": 1,
+      "latestFirstGestureX": 80,
+      "releaseDelayAfterUnblockMs": 24.017888,
+      "boundariesPreserved": true,
+      "boundaries": [
+        0,
+        1,
+        -3,
+        0,
+        261,
+        262,
+        3,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        -4
+      ],
+      "motionBeforeBoundaries": [
+        "1:80.0",
+        "2:110.0",
+        "2:120.0",
+        "1:130.0"
+      ],
+      "errors": []
+    },
+    "exactBoundarySequencePreserved": true,
+    "latestMotionBeforeEachBoundaryPreserved": true
+  },
+  "piInstall": {
+    "validation": "PASS",
+    "installedManagerVersion": "0.75",
+    "bootCompleted": "1",
+    "preservedGuestData": true
+  },
+  "numericEntryRegression": {
+    "command": "python3 ~/.config/pocketctl/input-latency/test_numeric_typing_on_pi.py --label input075-warm",
+    "result": "PASS: 20/20 digit edits across cold and warm runs; existing password UI unlock PASS.",
+    "scope": "Real guest LatinIME entry through the guest control socket; host queue tested separately above.",
+    "afterBoot": {
+      "validation": "PASS",
+      "samples": [
+        {
+          "digit": "1",
+          "editMs": 607.245851,
+          "drawSubmissionMs": 654.48724
+        },
+        {
+          "digit": "2",
+          "editMs": 152.948574,
+          "drawSubmissionMs": 182.235871
+        },
+        {
+          "digit": "3",
+          "editMs": 263.954537,
+          "drawSubmissionMs": 295.204852
+        },
+        {
+          "digit": "4",
+          "editMs": 131.875389,
+          "drawSubmissionMs": 176.012426
+        },
+        {
+          "digit": "5",
+          "editMs": 163.460982,
+          "drawSubmissionMs": 184.293
+        },
+        {
+          "digit": "6",
+          "editMs": 151.048444,
+          "drawSubmissionMs": 173.074388
+        },
+        {
+          "digit": "7",
+          "editMs": 154.03524,
+          "drawSubmissionMs": 173.336351
+        },
+        {
+          "digit": "8",
+          "editMs": 247.171333,
+          "drawSubmissionMs": 284.5345
+        },
+        {
+          "digit": "9",
+          "editMs": 138.687444,
+          "drawSubmissionMs": 158.368759
+        },
+        {
+          "digit": "0",
+          "editMs": 112.269685,
+          "drawSubmissionMs": 144.499963
+        }
+      ],
+      "text": "1234567890",
+      "measurement": "real numeric IME tap to app text mutation and draw submission; excludes final presentation",
+      "label": "input075",
+      "scope": "Pi VM -> Pocket Android 9 -> real LatinIME numeric keyboard"
+    },
+    "warmRun": {
+      "validation": "PASS",
+      "samples": [
+        {
+          "digit": "1",
+          "editMs": 104.990796,
+          "drawSubmissionMs": 136.134388
+        },
+        {
+          "digit": "2",
+          "editMs": 113.315629,
+          "drawSubmissionMs": 154.4775
+        },
+        {
+          "digit": "3",
+          "editMs": 155.462185,
+          "drawSubmissionMs": 181.738796
+        },
+        {
+          "digit": "4",
+          "editMs": 223.708796,
+          "drawSubmissionMs": 246.254259
+        },
+        {
+          "digit": "5",
+          "editMs": 223.846352,
+          "drawSubmissionMs": 258.393018
+        },
+        {
+          "digit": "6",
+          "editMs": 212.837333,
+          "drawSubmissionMs": 237.004222
+        },
+        {
+          "digit": "7",
+          "editMs": 127.213704,
+          "drawSubmissionMs": 151.462908
+        },
+        {
+          "digit": "8",
+          "editMs": 97.294722,
+          "drawSubmissionMs": 128.545833
+        },
+        {
+          "digit": "9",
+          "editMs": 118.459056,
+          "drawSubmissionMs": 140.091389
+        },
+        {
+          "digit": "0",
+          "editMs": 175.928203,
+          "drawSubmissionMs": 215.847555
+        }
+      ],
+      "text": "1234567890",
+      "measurement": "real numeric IME tap to app text mutation and draw submission; excludes final presentation",
+      "label": "input075-warm",
+      "scope": "Pi VM -> Pocket Android 9 -> real LatinIME numeric keyboard"
+    },
+    "warmEditMedianMs": 141.3379445
+  },
+  "samsungDelivery": {
+    "validation": "APK_VERIFIED_INSTALLER_OPENED",
+    "model": "SM-G780G",
+    "version": "0.75",
+    "sha256": "432b531d66339f174276e20d23b86b2c3ccc90788e5dcbca23f1a8ff2571013c",
+    "bytes": 578707761,
+    "destination": "/sdcard/Download/aosp-pocket-manager-0.75.apk",
+    "lanHost": "192.168.188.157",
+    "packageBefore": "package:dev.kreijstal.aosppocket.runtime versionCode:74",
+    "requires": "Android package installer confirmation",
+    "packageAfter": "package:dev.kreijstal.aosppocket.runtime versionCode:74"
+  },
+  "limitations": [
+    "Intermediate pending MOVE positions are superseded; only the newest position is sent for each pending run. Full motion history is not retained.",
+    "The stress-test improvement isolates queued motion; it does not establish an improvement in ordinary tap-to-character latency.",
+    "First numeric digit after boot took 607 ms; after warm-up it took 105 ms. Final screen presentation is excluded."
+  ]
+}

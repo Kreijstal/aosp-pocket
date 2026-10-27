@@ -42,7 +42,8 @@ The previous optional Magisk adapter depends on the removed Bionic module-view
 interception. Version 0.34 preserves its installed files but does not activate
 that adapter; `pocket.magisk.status` reports `adapter-required`. Porting its
 mount view to this tracer remains separate work. Do not interpret this build
-as validated Magisk/NeoZygisk support.
+as validated Magisk/NeoZygisk support. The native-loader backend restores the
+adapter; see [its Magisk notes](magisk-pocket.md#native-loader-backend).
 
 ## Focused validation
 

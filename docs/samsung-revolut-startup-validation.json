@@ -1,0 +1,29 @@
+{
+  "device": "SM-G780G",
+  "guest": "Android 9 native loader",
+  "observation": "Repeated process startup followed by SIGKILL, not one continuously deadlocked process",
+  "samplePid": 29456,
+  "cpuTicksUser": [
+    322,
+    432,
+    542
+  ],
+  "samplingIntervalSecondsApprox": 1,
+  "stackCollection": "Guest toybox kill -QUIT 29456; ART emitted thread dump into guest log",
+  "mainThreadStack": [
+    "art::DexFile::FindClassDef",
+    "art::DexFileVerifier::CheckInterClassDefItem",
+    "art::DexFileVerifier::Verify",
+    "dalvik.system.DexFile.openDexFileNative",
+    "dalvik.system.DexPathList.loadDexFile"
+  ],
+  "knownRuntimeLimitation": "No bundled ARM64 dex2oat; installd optimization fails and launch verifies DEX in-process",
+  "termination": "SIGKILL (9)",
+  "killerIdentified": true,
+  "notEstablished": [
+    "Infinite loop",
+    "Deadlock"
+  ],
+  "followup": "revolut-sigkill-comparison.json",
+  "terminationCause": "A Revolut worker calls kill(getpid(),9) after loaded-library scan matches libopenjdkjvmti.so"
+}

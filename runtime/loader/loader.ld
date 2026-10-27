@@ -14,10 +14,18 @@ SECTIONS {
   . = ALIGN(0x4000);
   .rodata : { *(.rodata .rodata.*) } :ro
   . = ALIGN(0x4000);
-  .data : { *(.pocket_config) *(.data .data.*) } :data
-  .bss (NOLOAD) : { *(.bss .bss.* COMMON) } :data
+  /* Older Android interpreter loaders do not allocate BSS pages in this
+     intermediate segment when a later PT_LOAD has a higher file end. Keep
+     zero-initialized runtime state file-backed as well, so Binder state that
+     grows beyond the first 4 KiB page is actually mapped on Samsung 4.19. */
+  .data : {
+    *(.pocket_config) *(.data .data.*) *(.bss .bss.* COMMON)
+    . = ALIGN(0x4000);
+  } :data
   ASSERT(. < 0x5000200000, "loader exceeds syscall bypass window")
   . = 0x5000300000;
-  .pocket_probe : { *(.pocket_probe) } :probe
+  /* Older kernels clear the final interpreter page during exec. Keep this
+     RX segment page-complete so that zeroing never writes into executable code. */
+  .pocket_probe : { *(.pocket_probe) . = ALIGN(0x4000); } :probe
   /DISCARD/ : { *(.comment .note.* .eh_frame .eh_frame_hdr) }
 }

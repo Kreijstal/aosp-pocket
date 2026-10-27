@@ -1,0 +1,223 @@
+{
+  "result": "PASS",
+  "managerVersion": "0.54",
+  "providerVersion": "0.2",
+  "managerArtifact": {
+    "sha256": "1443613436b6f32dd8fcc6cb7bf5399289cb857c6e342bf41587cdca0028fc44",
+    "bytes": 578225191,
+    "changedEntries": [
+      "AndroidManifest.xml",
+      "assets/api28-rootfs/system/bin/pocket-loader.payload"
+    ]
+  },
+  "providerSha256": "fbd9122735e6d43ff1b62f976a47aefc238eaf9b8298784ecc4968a27cc4d270",
+  "package": "dev.kreijstal.attestprobe",
+  "magiskEnforcementDuringTest": false,
+  "originalDenyListRestored": true,
+  "ownerStillHasMagisk": true,
+  "phases": {
+    "unlisted": {
+      "zygiskFlags": 0,
+      "summary": {
+        "pass": 43,
+        "fail": 5,
+        "skip": 3,
+        "info": 8,
+        "checks": 59,
+        "scope": "device_checks_excluding_optional_biometrics",
+        "deviceChecks": 59
+      },
+      "rootSuPaths": {
+        "id": "root_su_paths",
+        "category": "ATTEST",
+        "description": "No su binary in the usual locations",
+        "status": "FAIL",
+        "detail": "found: [\"\\/system\\/bin\\/su\"]"
+      },
+      "magiskPaths": {
+        "id": "magisk_paths",
+        "category": "ATTEST",
+        "description": "No Magisk artifacts",
+        "status": "FAIL",
+        "detail": "found: [\"\\/sbin\\/.magisk\",\"\\/data\\/adb\\/magisk\",\"\\/data\\/adb\\/modules\"]"
+      },
+      "moduleViewPrefixInMaps": false,
+      "failedChecks": [
+        {
+          "id": "root_su_paths",
+          "category": "ATTEST",
+          "description": "No su binary in the usual locations",
+          "status": "FAIL",
+          "detail": "found: [\"\\/system\\/bin\\/su\"]"
+        },
+        {
+          "id": "magisk_paths",
+          "category": "ATTEST",
+          "description": "No Magisk artifacts",
+          "status": "FAIL",
+          "detail": "found: [\"\\/sbin\\/.magisk\",\"\\/data\\/adb\\/magisk\",\"\\/data\\/adb\\/modules\"]"
+        },
+        {
+          "id": "build_tags_test_keys",
+          "category": "ATTEST",
+          "description": "Build is not signed with test-keys",
+          "status": "FAIL",
+          "detail": "tags=test-keys type=userdebug"
+        },
+        {
+          "id": "gms_present",
+          "category": "ATTEST",
+          "description": "Google Play services present",
+          "status": "FAIL",
+          "detail": "GMS not installed (Play Integrity unavailable)"
+        },
+        {
+          "id": "contacts_readable",
+          "category": "ACCESS",
+          "description": "Contacts readable (READ_CONTACTS granted and provider open)",
+          "status": "FAIL",
+          "detail": "timeout after 2000ms"
+        }
+      ]
+    },
+    "listed": {
+      "zygiskFlags": 2,
+      "summary": {
+        "pass": 46,
+        "fail": 2,
+        "skip": 3,
+        "info": 8,
+        "checks": 59,
+        "scope": "device_checks_excluding_optional_biometrics",
+        "deviceChecks": 59
+      },
+      "rootSuPaths": {
+        "id": "root_su_paths",
+        "category": "ATTEST",
+        "description": "No su binary in the usual locations",
+        "status": "PASS",
+        "detail": "no su binaries found"
+      },
+      "magiskPaths": {
+        "id": "magisk_paths",
+        "category": "ATTEST",
+        "description": "No Magisk artifacts",
+        "status": "PASS",
+        "detail": "no Magisk artifacts"
+      },
+      "moduleViewPrefixInMaps": false,
+      "failedChecks": [
+        {
+          "id": "build_tags_test_keys",
+          "category": "ATTEST",
+          "description": "Build is not signed with test-keys",
+          "status": "FAIL",
+          "detail": "tags=test-keys type=userdebug"
+        },
+        {
+          "id": "gms_present",
+          "category": "ATTEST",
+          "description": "Google Play services present",
+          "status": "FAIL",
+          "detail": "GMS not installed (Play Integrity unavailable)"
+        }
+      ]
+    }
+  },
+  "commands": [
+    {
+      "command": "python3 tools/build_exec_loader.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/denylist-loader --denylist",
+      "result": "PASS: freestanding loader and signed isolated APK"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_exec_loader_on_pi.py --apk ~/loader-test.apk --denylist'",
+      "result": "PASS: base image, hidden paths, relative/inherited/proc dirfds, symlinks, enumeration, fork/exec, maps, unlisted control"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_exec_loader_on_pi.py --apk ~/loader-test.apk --proc-view'",
+      "result": "PASS: proc descriptors, metadata, raw SVC, altstack, 16 execs, 858956 unchanged Bionic bytes, TracerPid 0"
+    },
+    {
+      "cwd": "neozygisk",
+      "command": "python3 tests/pocket/test_denylist_policy.py",
+      "result": "PASS: UID/shared UID, secondary users, exact names, isolated prefixes, enforcement settings, removal, corrupt/missing input"
+    },
+    {
+      "cwd": "neozygisk",
+      "command": "python3 tools/build-pocket.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS: provider, fixtures, native backend probe and 0.2 installer ZIP"
+    },
+    {
+      "command": "ssh pi@juanraspberry 'python3 -u ~/test_pocket_denylist_on_pi.py --fixture ~/libneo_pocket_denylist_fixture.so'",
+      "result": "PASS: actual ordinary app comparison; public flags, root/Magisk checks, maps and restoration"
+    }
+  ],
+  "limits": [
+    "Process-local guest path compatibility; no kernel mount or host UID isolation",
+    "Mapping records and already-loaded provider/module code remain; not complete runtime concealment",
+    "DenyList changes require restarting the app; replacing provider requires guest restart",
+    "Validated on dedicated Android 16 Pi VM with ARM64 Android 9 guest; physical phone untested"
+  ],
+  "guestZygiskEnabled": true,
+  "guestZygiskPreviousValue": 0,
+  "loaderFixture": {
+    "exitCode": 0,
+    "log": "DENYLIST_EXEC_PASS\nDENYLIST_VIEW_PASS base=1 paths=1 relative=1 inherited_dirfd=1 proc_alias=1 symlink=1 enumeration=1 fork=1 exec=1 maps=1 unlisted_unchanged=1\n",
+    "hostUid": 10175,
+    "passed": true,
+    "command": "python3 /home/pi/test_exec_loader_on_pi.py --apk /home/pi/loader-test.apk --denylist",
+    "scope": "Separate non-debuggable Android APK under its normal untrusted_app domain; not a full Android guest boot"
+  },
+  "encryptionAfterUpdate": {
+    "mode": "verify",
+    "canarySha256": "6383a721c7f7b237620411e891e3c529fd23aabac12aa99f914b75c35d5e5044",
+    "unlockWaitMilliseconds": 600,
+    "correctPasswordVerified": true,
+    "encryptedCanaryPreserved": true,
+    "validation": "PASS"
+  },
+  "codecAfterUpdate": {
+    "validation": "PASS",
+    "scope": "Pocket Android 9 on dedicated Pi Android VM; logical app UID 19990",
+    "status": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 28,
+      "running": true,
+      "ready": true,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 9 running \u00b7 720 \u00d7 1280",
+      "shellUid": 0
+    },
+    "exitCode": 0,
+    "stdout": "MEDIA_CODEC OMX.google.g711.alaw.decoder encoder=false\nMEDIA_CODEC OMX.google.g711.mlaw.decoder encoder=false\nMEDIA_CODEC OMX.google.mp3.decoder encoder=false\nMEDIA_CODEC OMX.google.raw.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.decoder encoder=false\nMEDIA_CODEC OMX.google.h264.encoder encoder=true\nMEDIA_ENUMERATION_PASS count=6 elapsedMs=276\nMEDIA_RAW_PASS bytes=128\nMEDIA_G711_PASS variants=2 samples=64\nMEDIA_MP3_PASS pcmBytes=4608\nMEDIA_AVC_ROUNDTRIP_PASS frames=4 packets=4\nMEDIA_CODEC_PROBE_PASS uid=19990\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmxStore remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\nDIRECT_HWB_SERVICE descriptor=android.hardware.media.omx@1.0::IOmx remote=1 client_pid=11524\n",
+    "guestDataPreserved": true
+  },
+  "contactsNote": "The first, unlisted run timed out at 2000 ms; the later listed run passed. This patch does not change contacts or the probe timeout.",
+  "downloads": [
+    "/home/pi/Downloads/aosp-pocket-manager-0.54.apk",
+    "/home/pi/Downloads/neozygisk-pocket-0.2.zip"
+  ],
+  "uiUnlockAfterUpdate": {
+    "scope": "Pocket Android 9 guest on dedicated Pi VM",
+    "mode": "unlock",
+    "exitCode": 0,
+    "stdout": "GUEST_LOCK_RESULT {\"validation\":\"PASS\",\"mode\":\"unlock\",\"uid\":1000,\"previouslySecure\":true,\"deviceSecure\":true,\"keyguardSecure\":true,\"keyguardLocked\":false,\"correctPasswordVerified\":true,\"interactive\":true,\"lockScreenEnabled\":true,\"uiPasswordUnlockVerified\":true,\"previouslyLocked\":true}\n",
+    "stderr": "WARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nWARNING: linker: /system/etc/ld.config.txt:1: warning: property value is empty (ignoring this line)\nPOCKET_BOOT_CLASSES_READY classes=25 loader=boot jvmti=unused\n",
+    "validation": "PASS",
+    "uid": 1000,
+    "previouslySecure": true,
+    "deviceSecure": true,
+    "keyguardSecure": true,
+    "keyguardLocked": false,
+    "correctPasswordVerified": true,
+    "interactive": true,
+    "lockScreenEnabled": true,
+    "uiPasswordUnlockVerified": true,
+    "previouslyLocked": true
+  },
+  "installedProviderHashMatchesBuild": true,
+  "hostStorageReserveRestored": true
+}

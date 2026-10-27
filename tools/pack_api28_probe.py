@@ -4,6 +4,7 @@
 from pathlib import Path
 import zipfile
 from target import ROOT, info
+from boot_class_manifest import manifest, GUEST_PATH
 
 out = ROOT / "out/api28"
 with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(
@@ -18,6 +19,7 @@ with zipfile.ZipFile(out / "base.apk") as base, zipfile.ZipFile(
     apk.write(ROOT / "sources.lock.json", "assets/sources.lock.json")
     apk.write(out / "art-probe.dex", "assets/api28-rootfs/data/pocket-art-probe.dex.payload")
     apk.write(out / "pocket-zygote.jar", "assets/api28-rootfs/system/framework/pocket-zygote.jar.payload")
+    apk.writestr('assets/api28-rootfs/'+GUEST_PATH+'.payload',manifest(out/'pocket-zygote.jar'))
     apk.write(out / "bootclasspath.txt", "assets/bootclasspath.txt")
     for source, target in (("LICENSE", "apache-2.0.txt"), ("vendor/proot/COPYING", "proot.txt"),
                            ("runtime/NOTICE", "NOTICE"), ("runtime/licenses/GPL-3.0-only.txt", "runtime.txt"),

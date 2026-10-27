@@ -1,0 +1,8 @@
+{
+  "validation": "PASS",
+  "releaseUrl": "https://github.com/Kreijstal/lineage-ur/releases/tag/pocket-api29-0.77.0",
+  "publicAnonymousApkSha256": "05be64a4fbf91e89cbf914ae23b2c1ab7dd3c70619d73c3afb2818ed125b1249",
+  "publicAnonymousImageSha256": "835ffcc36a5ff7dc147aa2f9e9529dfc4bf79b0696c3507de9f07023371ae3a3",
+  "imageBytes": 356931145,
+  "signedApkCatalogMatchesImage": true
+}
