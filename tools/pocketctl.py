@@ -124,8 +124,9 @@ def encrypt_storage(config):
     code,out,err=invoke(1)
     if code:raise OSError(err)
     state=json.loads(out)
-    if state.get('sdk')!=28 or not state.get('ready') or not state.get('running'):
-        raise OSError('Start the Android 9 guest before encrypting its private storage')
+    sdk=state.get('sdk')
+    if sdk not in (28,32) or not state.get('ready') or not state.get('running'):
+        raise OSError('Start the Android 9 or Android 12L guest before encrypting its private storage')
     test=['/system/bin/sh','-c','if [ -f /.pocket-ce-enabled ]; then printf encrypted; else printf plaintext; fi']
     def encrypted():
         code,out,err=invoke(2,test)
@@ -135,7 +136,14 @@ def encrypt_storage(config):
     if encrypted():
         print('Guest private storage is already encrypted.');return 0
     password=getpass.getpass('Existing guest lock-screen password: ')
-    command='export CLASSPATH=/system/framework/pocket-ce-key.jar; exec /system/bin/pocket-app-process-api28 /system/bin GuestCeKey prepare'
+    if sdk==32:
+        # Android 12L images from 0.78.16 carry the credential helper in the Manager tools.
+        command=('. /system/etc/pocket-runtime-env.sh; export LD_PRELOAD=/system/lib64/libpocket_binder_api32.so; '
+                 'exec /system/bin/pocket-app-process-api32 -Xnorelocate -Xnoimage-dex2oat '
+                 '-Ximage:/apex/com.android.art/javalib/boot.art:/system/framework/boot-framework.art '
+                 '-cp /system/framework/pocket-manager.jar /system/bin dev.kreijstal.aosppocket.guest.GuestCredential32 prepare')
+    else:
+        command='export CLASSPATH=/system/framework/pocket-ce-key.jar; exec /system/bin/pocket-app-process-api28 /system/bin GuestCeKey prepare'
     try:
         code,out,err=invoke(2,['/system/bin/sh','-c',command],io.BytesIO((password+'\n').encode()))
         if code or '"prepared":true' not in out:
@@ -160,6 +168,33 @@ def encrypt_storage(config):
     return 0
 
 
+ADB_KEY_SCRIPT = r'''set -e
+key=$(cat)
+dir=/data/misc/adb
+mkdir -p "$dir"
+touch "$dir/adb_keys"
+if ! grep -qxF -- "$key" "$dir/adb_keys"; then printf '%s\n' "$key" >> "$dir/adb_keys"; fi
+chown 1000:2000 "$dir" "$dir/adb_keys"
+chmod 2750 "$dir"
+chmod 0640 "$dir/adb_keys"
+test -x /system/bin/adbd || { echo "This guest image has no adbd; update Android 12L to 0.78.18 or newer" >&2; exit 3; }
+/system/bin/pocket-setprop-api32 ctl.start pocket-adbd
+echo "authorized keys: $(grep -c . "$dir/adb_keys")"
+'''
+
+
+def adb_key(config, path):
+    # adb public keys are one line: base64 RSA key, optional "user@host" comment.
+    key = path.read_text().strip()
+    body = key.split(' ', 1)[0]
+    if '\n' in key or len(key) > 4096 or len(body) < 500 or not all(c.isalnum() or c in '+/=' for c in body):
+        raise ValueError(str(path) + ' is not an adb public key (expected ~/.android/adbkey.pub)')
+    code = request(config, 2, ['/system/bin/sh', '-c', ADB_KEY_SCRIPT], source=io.BytesIO(key.encode()+b'\n'))
+    if code == 0:
+        print('adb is listening on the phone loopback only. Connect with:\n  adb connect 127.0.0.1:5555')
+    return code
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, default=Path.home()/'.config/pocketctl/config.json')
@@ -168,7 +203,7 @@ def main():
     pair.add_argument('--port', type=int, default=2228)
     for name in ('status', 'start', 'stop', 'reset-module-view'):
         sub.add_parser(name)
-    sub.add_parser('encrypt-storage',help='Encrypt Android 9 private storage using its existing lock-screen password')
+    sub.add_parser('encrypt-storage',help='Encrypt Android 9 or 12L private storage using its existing lock-screen password')
     shell = sub.add_parser('shell', help='Guest root shell (pipes; no PTY/job control)')
     shell.add_argument('-c', dest='command')
     shell.add_argument('--cwd', default='/')
@@ -183,6 +218,8 @@ def main():
     pull.add_argument('local', type=Path)
     install = sub.add_parser('install', help='Install a single APK using the guest package manager')
     install.add_argument('apk', type=Path)
+    adbkey = sub.add_parser('adb-key', help='Authorize an adb public key for the Android 12L guest and start its adbd')
+    adbkey.add_argument('pubkey', type=Path, nargs='?', default=Path.home()/'.android/adbkey.pub')
     args = parser.parse_args()
     if args.operation == 'pair':
         token = getpass.getpass('Pocket connection token: ').strip()
@@ -196,6 +233,7 @@ def main():
         return 0
     config = json.loads(args.config.read_text())
     if args.operation=='encrypt-storage':return encrypt_storage(config)
+    if args.operation=='adb-key':return adb_key(config, args.pubkey)
     if args.operation in ('status', 'start', 'stop', 'reset-module-view'):
         return request(config, {'status': 1, 'start': 3, 'stop': 4, 'reset-module-view': 5}[args.operation])
     if args.operation == 'shell':

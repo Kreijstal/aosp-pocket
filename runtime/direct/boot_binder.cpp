@@ -38,8 +38,15 @@ status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32
             thread->restoreCallingIdentity(static_cast<int64_t>(claimed));
         }
     }
-    if (!guest && kernelUid!=static_cast<uid_t>(-1) && thread->getCallingUid()==kernelUid &&
-        code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION) {
+    bool identityByPid=code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION;
+#if POCKET_GUEST_API == 32
+    // Shell commands ("cmd", pm, wm, settings, adb shell) are tokenless
+    // synchronous transactions. Attribute their kernel sender through the
+    // PID/start-time-checked guest identity record; without it they ran as the
+    // host app UID and failed shell-granted checks such as CONTROL_KEYGUARD.
+    identityByPid=identityByPid || code==SHELL_COMMAND_TRANSACTION;
+#endif
+    if (!guest && kernelUid!=static_cast<uid_t>(-1) && thread->getCallingUid()==kernelUid && identityByPid) {
         uint64_t claimed;
         if (pocket_binder_identity(thread->getCallingPid(),&claimed)) {
             identity=thread->clearCallingIdentity();
