@@ -43,7 +43,7 @@ native: out/runtime-native/libpocket_runtime.so out/runtime-native/libproot.so o
 
 out/runtime-native/libpocket_ce.so: runtime/storage/native/ce_fuse.c
 	mkdir -p out/runtime-native
-	$(LLVM)/$(TRIPLE)28-clang -O2 -Wall -Wextra -Werror -fPIC -shared -pthread -Wl,-z,max-page-size=16384 $< -o $@
+	$(LLVM)/$(TRIPLE)28-clang -O2 -Wall -Wextra -Werror -fPIC -shared -pthread -Wl,-z,max-page-size=16384 $< -llog -o $@
 
 out/runtime-native/libpocket_frames.so: runtime/frame_buffers.c runtime/Makefile
 	mkdir -p out/runtime-native

@@ -17,7 +17,8 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--ndk',type=Path,required=True)
     p.add_argument('--base-apk',type=Path,required=True)
-    args=p.parse_args();out=ROOT/'out/ce-fixture';out.mkdir(exist_ok=True)
+    p.add_argument('--out',type=Path,default=ROOT/'out/ce-fixture')
+    args=p.parse_args();out=args.out.resolve();out.mkdir(parents=True,exist_ok=True)
     cc=args.ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang'
     def run(*argv):subprocess.run(list(map(str,argv)),cwd=ROOT,check=True)
     run(cc,'-O2','-g','-Wall','-Wextra','-Werror','-mno-outline-atomics','-ffreestanding','-fno-builtin','-fno-stack-protector','-fno-pic',
@@ -25,7 +26,7 @@ def main():
         ROOT/'runtime/loader/loader.c',ROOT/'runtime/loader/entry.S','-o',out/'pocket-loader')
     validate(out/'pocket-loader')
     run(cc,'-O2','-Wall','-Wextra','-Werror','-fPIC','-shared','-pthread','-Wl,-z,max-page-size=16384',
-        ROOT/'runtime/storage/native/ce_fuse.c','-o',out/'libpocket_ce.so')
+        ROOT/'runtime/storage/native/ce_fuse.c','-llog','-o',out/'libpocket_ce.so')
     run(cc,'-O2','-Wall','-Wextra','-Werror','-Wl,-z,max-page-size=16384',ROOT/'runtime/tests/storage-integration/probe.c','-ldl','-o',out/'ce-test')
     reserve_interpreter(out/'ce-test')
     root='/data/user/0/dev.kreijstal.aosppocket.cefixture/files/fixture'

@@ -9,12 +9,23 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
+#ifdef __ANDROID__
+#include <android/log.h>
+#define CE_LOG(...) __android_log_print(ANDROID_LOG_ERROR,"PocketCEFuse",__VA_ARGS__)
+#else
+#include <stdio.h>
+#define CE_LOG(...) (fprintf(stderr,__VA_ARGS__),fputc('\n',stderr))
+#endif
 #define SYNC_QUEUE 64
+// Same budget as libappfuse's own write path: 5 seconds in 1 ms steps.
+#define SEND_RETRIES 5000
 struct Server {
     int fd,stopping;pthread_t thread,sync_thread;
     pthread_mutex_t replies,work;pthread_cond_t available,space;
     uint64_t sync_ids[SYNC_QUEUE];unsigned head,count;
+    volatile uint32_t last_opcode;volatile uint64_t last_unique,requests,retried;volatile int64_t last_request_ms;
     JavaVM* vm;jobject callback;jmethodID size,read,write,sync,opened,released;
 };
 static int attach(struct Server* s,JNIEnv** env) {
@@ -28,16 +39,37 @@ static void stopping(struct Server* s) {
     pthread_mutex_lock(&s->work);s->stopping=1;
     pthread_cond_broadcast(&s->available);pthread_cond_broadcast(&s->space);pthread_mutex_unlock(&s->work);
 }
+static int64_t now_ms(void) {
+    struct timespec t;clock_gettime(CLOCK_BOOTTIME,&t);return (int64_t)t.tv_sec*1000+t.tv_nsec/1000000;
+}
+// Every unplanned end of the transport says why. The host bridge closes the
+// socket for all of its own reasons, so "host closed" here means the reason is
+// in the host log, while anything else is a Pocket-side failure.
+static void died(struct Server* s,const char* why,long value,int error) {
+    pthread_mutex_lock(&s->work);int planned=s->stopping;pthread_mutex_unlock(&s->work);
+    if(planned)return;
+    CE_LOG("Transport ended: %s (value=%ld errno=%d %s) requests=%llu retried=%llu last_opcode=%u last_unique=%llu idle_ms=%lld",
+        why,value,error,error?strerror(error):"-",(unsigned long long)s->requests,(unsigned long long)s->retried,
+        (unsigned)s->last_opcode,(unsigned long long)s->last_unique,(long long)(now_ms()-s->last_request_ms));
+}
+static int transient_send(int error){return error==ENOBUFS || error==ENOMEM || error==EAGAIN;}
 static int respond(struct Server* s,const void* data,size_t size) {
     // FUSE replies may complete out of order, but each unique-ID frame must
     // remain intact on either the AppFuse socket or a direct FUSE descriptor.
-    pthread_mutex_lock(&s->replies);ssize_t n;
-    do {
+    // A kernel allocation failure is not a dead peer. Android's bridge retries
+    // ENOBUFS on its end, and ending this loop would close the mount for good.
+    pthread_mutex_lock(&s->replies);ssize_t n;int error=0;unsigned retries=0;
+    for(;;) {
         n=send(s->fd,data,size,MSG_NOSIGNAL);
         if(n<0 && errno==ENOTSOCK)n=write(s->fd,data,size);
-    }while(n<0 && errno==EINTR);
+        if(n>=0)break;
+        error=errno;if(error==EINTR)continue;
+        if(!transient_send(error) || retries==SEND_RETRIES)break;
+        retries++;usleep(1000);
+    }
     pthread_mutex_unlock(&s->replies);
-    if(n!=(ssize_t)size){stopping(s);shutdown(s->fd,SHUT_RDWR);return -1;}
+    if(retries){s->retried+=retries;CE_LOG("Reply of %zu bytes needed %u retries after errno=%d %s",size,retries,error,strerror(error));}
+    if(n!=(ssize_t)size){died(s,"reply send failed",(long)n,n<0?error:0);stopping(s);shutdown(s->fd,SHUT_RDWR);return -1;}
     return 0;
 }
 static int enqueue_sync(struct Server* s,uint64_t id) {
@@ -49,7 +81,7 @@ static int enqueue_sync(struct Server* s,uint64_t id) {
 }
 static void* sync_requests(void* opaque) {
     struct Server* s=opaque;JNIEnv* env=NULL;
-    if(attach(s,&env)!=JNI_OK){stopping(s);shutdown(s->fd,SHUT_RDWR);return NULL;}
+    if(attach(s,&env)!=JNI_OK){died(s,"sync thread attach failed",0,0);stopping(s);shutdown(s->fd,SHUT_RDWR);return NULL;}
     for(;;) {
         pthread_mutex_lock(&s->work);
         while(!s->count && !s->stopping)pthread_cond_wait(&s->available,&s->work);
@@ -71,13 +103,18 @@ static int attrs(JNIEnv* env,struct Server* s,struct fuse_attr* a,uint64_t inode
 }
 static void* serve(void* opaque) {
     struct Server* s=opaque;JNIEnv* env=NULL;
-    if(attach(s,&env)!=JNI_OK){stopping(s);shutdown(s->fd,SHUT_RDWR);return NULL;}
+    if(attach(s,&env)!=JNI_OK){died(s,"serve thread attach failed",0,0);stopping(s);shutdown(s->fd,SHUT_RDWR);return NULL;}
+    s->last_request_ms=now_ms();
     uint8_t* request=malloc(262144),*reply=malloc(262144);
-    if(!request || !reply)goto done;
+    if(!request || !reply){died(s,"buffer allocation failed",0,ENOMEM);goto done;}
     for(;;) {
         ssize_t n=read(s->fd,request,262144);if(n<0 && errno==EINTR)continue;
-        if(n<(ssize_t)sizeof(struct fuse_in_header))break;
-        struct fuse_in_header in;memcpy(&in,request,sizeof(in));if(in.len!=(uint32_t)n)break;
+        if(n<(ssize_t)sizeof(struct fuse_in_header)) {
+            int error=n<0?errno:0;died(s,n==0?"host closed the transport":n<0?"request read failed":"short request",(long)n,error);break;
+        }
+        struct fuse_in_header in;memcpy(&in,request,sizeof(in));
+        if(in.len!=(uint32_t)n){died(s,"request length mismatch",(long)n,0);break;}
+        s->last_opcode=in.opcode;s->last_unique=in.unique;s->requests++;s->last_request_ms=now_ms();
         if(in.opcode==FUSE_FORGET || in.opcode==FUSE_BATCH_FORGET)continue;
         struct fuse_out_header out={.len=sizeof(out),.unique=in.unique};size_t length=0;
         void* body=reply+sizeof(out);uint8_t* args=request+sizeof(in);

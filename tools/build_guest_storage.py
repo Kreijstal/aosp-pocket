@@ -21,7 +21,7 @@ def build_parts(base_apk,ndk,out):
         ROOT/'runtime/loader/loader.c',ROOT/'runtime/loader/entry.S','-o',out/'pocket-loader')
     validate(out/'pocket-loader')
     run(cc,'-O2','-Wall','-Wextra','-Werror','-fPIC','-shared','-pthread','-Wl,-z,max-page-size=16384',
-        ROOT/'runtime/storage/native/ce_fuse.c','-o',out/'libpocket_ce.so')
+        ROOT/'runtime/storage/native/ce_fuse.c','-llog','-o',out/'libpocket_ce.so')
     run(cc,'-O2','-Wall','-Wextra','-Werror','-Wl,-z,max-page-size=16384',ROOT/'runtime/direct/boot_probe.c','-ldl','-o',out/'pocket-boot-probe')
     api=ROOT/'out/api28';libs=out/'lib64';libs.mkdir(exist_ok=True);generate(out/'boot_storage_protocol.h')
     with zipfile.ZipFile(base_apk) as apk:
