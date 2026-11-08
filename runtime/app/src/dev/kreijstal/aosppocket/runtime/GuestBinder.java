@@ -83,7 +83,12 @@ final class GuestBinder extends BroadcastReceiver {
             null, 0, null, false, false, 0);
         if (code[0] <= 0) throw new IllegalStateException("Missing host broadcast transaction");
         for (String name : new String[]{"local", "binder"}) {
-            Intent intent = new Intent(ACTION).setPackage(context.getPackageName());
+            // Guest processes replay this parcel and give up after 6 seconds,
+            // and their own ActivityManager kills unattached processes soon
+            // after. The background queue can hold a broadcast for minutes
+            // after a host system_server restart, so use the foreground one.
+            Intent intent = new Intent(ACTION).setPackage(context.getPackageName())
+                .addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
             Bundle extras = new Bundle();
             extras.putBinder(name, new Binder());
             intent.putExtras(extras);
