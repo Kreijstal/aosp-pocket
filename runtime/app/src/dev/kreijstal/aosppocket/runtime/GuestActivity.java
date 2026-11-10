@@ -25,6 +25,13 @@ public final class GuestActivity extends RuntimeActivity {
     static Intent intent(Context context) {
         return new Intent(context, GuestActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     }
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        int code=event.getKeyCode();
+        if(runtime!=null && runtime.selectedSdk()==32 && code!=KeyEvent.KEYCODE_BACK
+                && code!=KeyEvent.KEYCODE_VOLUME_UP && code!=KeyEvent.KEYCODE_VOLUME_DOWN
+                && code!=KeyEvent.KEYCODE_VOLUME_MUTE && code!=KeyEvent.KEYCODE_POWER && runtime.fullKey(event))return true;
+        return super.dispatchKeyEvent(event);
+    }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         autoStart = true;

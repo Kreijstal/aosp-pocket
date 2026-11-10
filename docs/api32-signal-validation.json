@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "component": "loader_nested_application_signal",
+  "passed": true,
+  "scope": "AArch64 loader reentrancy during an intercepted blocking syscall; this is not full 12L boot/display/Manager verification",
+  "cause": "With normal signal deferral, SIGSYS is automatically blocked while its handler dispatches a syscall. An application signal arriving during a blocking raw write can invoke another intercepted syscall from its handler; the kernel then terminates the process with SIGSYS. SA_NODEFER keeps the reserved signal deliverable.",
+  "nativeBefore": {
+    "returncode": -31,
+    "stdout": "",
+    "stderr": ""
+  },
+  "nativeAfter": {
+    "returncode": 0,
+    "stdout": "LOADER_SIGNAL_DURING_TRAP_PASS interrupted=blocking_write handler=filesystem_io\n",
+    "stderr": ""
+  },
+  "artifactSha256": {
+    "old-loader": "398e16f4f7af8ee9956dd475fcf7e417ac104c7a05c282586b31121acfcc6c11",
+    "fixed-loader": "a637fda0182db051280a411f203e7599884e50d3b0341ce9f90d3eb2b8448525",
+    "probe": "c45d0f20284d53dbe1ad695df837edbbcbd8a9d66e5fb147a220958d9942ee5a"
+  },
+  "sourceSha256": {
+    "runtime/loader/loader.c": "3b53e53479b1bb2d47af3ef399c16550fe9538ec4efa6c866daa63ae023116c4",
+    "runtime/tests/loader/trap_signal.c": "3ab1d3fa4b0d6d0b015747741a22398398df347794832b5b30c976fde12fe237"
+  },
+  "androidSandbox": {
+    "runId": "caa8c0b00e454676a572d9293c7b3797",
+    "apkSha256": "a322630c8f969b67e912e7ddd4e07234f495573c19b5a6bb278d880c99f95fb9",
+    "imageManifestSha256": "85ac9ffc9f2ac0566fc0033e2f1fb7c348014797ad153a17e63da6e4d19ba2e2",
+    "hostUid": 10154,
+    "guestSdk": 32,
+    "hostSdk": 36,
+    "hostVmInstance": 73,
+    "hostSelinuxBefore": "Enforcing",
+    "hostSelinuxAfter": "Enforcing"
+  },
+  "androidProbeMarker": "LOADER_SIGNAL_DURING_TRAP_PASS interrupted=blocking_write handler=filesystem_io",
+  "combinedFixturePassed": false,
+  "combinedFixtureFailure": "An asynchronous package-removal event invalidated the test activity after launch. The provider exposed an older nonce and activity PID; the current-nonce assertion correctly rejected that state. The framework zygote was stopped with SIGTERM during cleanup; no SIGSYS exit was observed in this run.",
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "checks": [
+    {
+      "command": "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android32-clang -O2 -Wall -Wextra -Werror -static runtime/tests/loader/trap_signal.c -o out/api32/signal-trap/probe",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang -O2 -g -Wall -Wextra -Werror -mno-outline-atomics -ffreestanding -fno-builtin -fno-stack-protector -fno-pic -nostdlib -static -Wl,-T,runtime/loader/loader.ld,-z,max-page-size=16384 runtime/loader/loader.c runtime/loader/entry.S -o out/api32/signal-trap/fixed-loader",
+      "result": "PASS / exit 0; ELF layout verifier passed"
+    },
+    {
+      "command": "ssh -o BatchMode=yes pi@juanraspberry python3 -",
+      "stdinSummary": "subprocess.run each of /home/pi/pocket-api32-signal-test/system/bin/{old-loader,fixed-loader}, with POCKET_LOADER_EXEC_V1 pointing at the same static probe, capture_output=True and timeout=10; assert old returncode -31 and fixed returncode 0 plus the pass marker",
+      "result": "PASS / exit 0; exact child results recorded above"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --reuse-native --delta-from out/api32/host-display-signal-baseline-image-manifest.json",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --reuse-native --reuse-fixture --delta-from out/api32/host-display-signal-baseline-image-manifest.json",
+      "result": "PASS / exit 0; host pixel-sample diagnostics added after verifying the existing staged guest files"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display",
+      "result": "Signal regression PASS in the Android app sandbox; combined fixture FAIL / exit 1 on the subsequent package/activity race"
+    }
+  ]
+}

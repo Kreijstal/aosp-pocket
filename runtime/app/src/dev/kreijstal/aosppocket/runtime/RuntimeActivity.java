@@ -18,7 +18,7 @@ abstract class RuntimeActivity extends Activity implements GuestService.Listener
         @Override public void onServiceConnected(ComponentName name, IBinder binder) {
             runtime = ((GuestService.LocalBinder)binder).get();
             int sdk = getIntent().getIntExtra("guest_sdk", 0);
-            if (sdk == 25 || sdk == 28 || sdk == 29) runtime.selectSdk(sdk);
+            if (sdk == 25 || sdk == 28 || sdk == 29 || sdk == 32) runtime.selectSdk(sdk);
             runtime.addListener(RuntimeActivity.this);
             if (autoStart) { autoStart = false; requestStart(); }
         }

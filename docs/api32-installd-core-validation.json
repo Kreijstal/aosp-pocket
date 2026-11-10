@@ -1,0 +1,365 @@
+{
+  "schema": 1,
+  "status": "CORE48_INSTALLD_MEDIA_SIGNAL_AND_SIX_ENCRYPTED_CYCLES_PASS_OTHER_GATES_OPEN",
+  "buildEvidence": "out/api32/installd-core48/independent-build-check.json",
+  "imageEvidence": "out/api32/installd-core48-image/package-validation.json",
+  "runtimeVerified": true,
+  "processBudgetVerified": false,
+  "priorCeSampledPeak": 33,
+  "hostDefaultProcessLimit": 32,
+  "productionReleaseReady": false,
+  "runtimeCandidate": "out/api32/installd-core48-av-candidate.json",
+  "scope": "Full pinned installd same-UID/GID0 core integration; ART exec preload isolation and paired config/startup. Common Binder minimum nice0 set before threads; crypto remains separate UID1000. Full workload/permission/dexopt/cleanup validation pending.",
+  "fullTrial": {
+    "status": "PASS_INSTALLD_CORE48_TYPED_DATA_DEXOPT_AND_FULL_AV_REPEAT",
+    "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "985a62bc997a1a590ad7ad1c6ad31154074597e0723e28cf7e2078fbb05bb986",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-av-result/independent-check.json",
+    "independentCheckSha256": "8a9770591341c2887f2504ebae7ae069c8f081105a1b337e5a3dc83b15bf8fd4",
+    "validationCommand": "python3 out/api32/verify_installd_core48_av_result.py --run-id 7778cd944b35417e9d7c89d2ba0dfb81",
+    "validationResult": "PASS",
+    "sameLiveInstalldCorePid": 17388,
+    "installdLogicalUid": 0,
+    "installdLogicalGid": 0,
+    "typedAppDataAndCallerDenialVerified": true,
+    "actualBootTimeDexoptVerified": true,
+    "fullMediaRepeatedVerified": true,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 32,
+    "observerSamples": 200,
+    "sampledPeakWithinDefault32": true,
+    "distinctGuestStarts": 1,
+    "sharedCoreBinderDefaultMinNice": 0,
+    "signal48RepeatVerified": false,
+    "ce48RepeatVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-terminal-state.json"
+  },
+  "sharedInstalld48SignalTrial": {
+    "status": "PASS_INSTALLD_CORE48_SIGNAL_HOME_REOPEN_NETWORK",
+    "runId": "530366892b7b4edda5ae19d0813460ea",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "28eaa87904a47dce86da40660a13b322e129c89e16151af0b0a5cf81ce8b71f2",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json",
+    "independentCheckSha256": "8afa71e75fedf9187ec76312477025688e5c20149662a2f7f373fa930708424f",
+    "validationCommand": "python3 out/api32/verify_installd_core48_signal_result.py --run-id 530366892b7b4edda5ae19d0813460ea",
+    "validationResult": "PASS",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "guestMinSdk": 32,
+    "retainedAppUid": 10107,
+    "actualRegistrationFocusHomeReopenVerified": true,
+    "publicDnsAndNxDomainVerified": true,
+    "networkBoundHttpsStatus": 200,
+    "fwmarkErrorRecoveryVerified": true,
+    "sharedInstalldCorePid": 22641,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 29,
+    "observerSamples": 132,
+    "sampledPeakWithinDefault32": true,
+    "accountRegistrationMessagesCallsVerified": false,
+    "ce48RepeatVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-signal-terminal-state.json"
+  },
+  "sharedInstalld48SecureSixCycleTrial": {
+    "status": "PASS_CORE48_CE_ENCRYPTED_UPGRADE_NATIVE_INSTALLD_SIX_CYCLES",
+    "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "1f9e52e99d725b14d5c9b374339c169666494ab77740eb5cb352dcad59f27cdc",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json",
+    "independentCheckSha256": "3222560fbbfd378b054f77108ff265191d54f8e7bf18c0b686a38d150266ae71",
+    "validationCommand": "python3 out/api32/verify_installd_core48_ce3_result.py --run-id b0111ff7db22438ea3fb0d3e122803cf",
+    "validationResult": "PASS",
+    "cycles": [
+      {
+        "index": 0,
+        "sha256": "ae9a6c9af568663df24137153d2e737e83b70e031d936519407d2effe0b8df7a",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 28640,
+        "cryptoFrontendPid": 28717
+      },
+      {
+        "index": 1,
+        "sha256": "8331e62973b2dcfaac532771fd5a3fb1d95a4dd983223b66cdd5ff92ad1b64ba",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 31863,
+        "cryptoFrontendPid": 31919
+      },
+      {
+        "index": 2,
+        "sha256": "6e0d87e92e887de1814de95b045414274128939aa96bec9822aeb7daa0cea385",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 3304,
+        "cryptoFrontendPid": 3354
+      },
+      {
+        "index": 3,
+        "sha256": "5101dd4ef9dd81b1c933c1200b1abe461567bc53ac8e9b885ba13f8870c342b5",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 6088,
+        "cryptoFrontendPid": 6138
+      },
+      {
+        "index": 4,
+        "sha256": "536ff44cf6db10b18ffc5d6499ff56e0817ed508b17b944a04678beaffbdece5",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 9226,
+        "cryptoFrontendPid": 9280
+      },
+      {
+        "index": 5,
+        "sha256": "51d533d0f1a1201292c818e213390f43876705c14c22553ed728996940df8ed9",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 12672,
+        "cryptoFrontendPid": 12722
+      }
+    ],
+    "adoptedDescendantsReapedPerCycle": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      12
+    ],
+    "twoPhysicalKeyguardUnlocksVerified": true,
+    "sameOriginalAppKeyUidPath": true,
+    "fiveRootCanariesAndPublicMediaVerified": true,
+    "secureLockedAppOperationRejectionVerified": true,
+    "passwordSetChangeRemovalRestoreVerified": true,
+    "originalPasswordFreeStateRestored": true,
+    "thisRunRecoveryFileRemoved": true,
+    "encryptedNativeAppDataCallerDenialAndBootDexoptVerified": true,
+    "imageSourceOfflineOuterRestart": true,
+    "oldPredecessorReportUnchanged": true,
+    "completedPredecessorCheckpointArchiveSha256": "1e2d335754c0f76e6c48ced5ddf5706a2889557a1810bed5405181ce36613813",
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+      "reusedFiles": 2596,
+      "replacedFiles": 54,
+      "reusedBytes": 1286084404,
+      "writtenBytes": 18823858,
+      "durationMillis": 143131
+    },
+    "distinctGuestStarts": 6,
+    "sampledPeakChildren": 29,
+    "observerSamples": 562,
+    "sampledPeakWithinDefault32": true,
+    "freshPlaintextMigrationRepeated": false,
+    "postBootCompilerVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-ce3-terminal-state.json"
+  },
+  "systemUidPostBoot48Control": {
+    "status": "PASS_POSTBOOT48_SYSTEM_UID_DEXOPT_AND_FULL_AV_REPEAT",
+    "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "fb6b238e54504f5e2aa012a0018fb566df1a90cac5039dc018334a73123d09d9",
+    "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+    "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29",
+    "validationCommand": "python3 out/api32/verify_installd_postboot48_av_result.py --run-id b9673d0d1fd946f4acf18082c9bd3d08",
+    "validationResult": "PASS",
+    "postBootRequestFlags": 10,
+    "compilerTargetUid": 1000,
+    "ordinaryTargetUidDexoptVerified": false,
+    "actualWorkerSchedulingObserved": false,
+    "kernelCgroupApplicationVerified": false,
+    "runtimeImageChanged": false,
+    "sampledPeakChildren": 30,
+    "observerSamples": 128,
+    "terminalState": "out/api32/installd-postboot48-terminal-state.json",
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "ordinaryPostBoot48ObserverTrials": [
+    {
+      "runId": "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "failureAudit": "out/api32/installd-postboot-app48-av-result/failure-audit.json",
+      "status": "FAIL_TEST_OBSERVER_STOP_TIMEOUT_AFTER_SUCCESSFUL_ORDINARY_DEXOPT"
+    },
+    {
+      "runId": "9fbd1969baff4e238b9ea9f3378b3b59",
+      "failureAudit": "out/api32/installd-postboot-children48-av-result/failure-audit.json",
+      "status": "FAIL_OBSERVER_KERNEL_CHILDREN_INTERFACE_UNAVAILABLE"
+    }
+  ],
+  "ordinaryUidPostBoot48Trial": {
+    "status": "PASS_POSTBOOT48_ORDINARY_UID_DEXOPT_KERNEL_PRIORITY_AND_FULL_AV_REPEAT",
+    "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "a46bc5d29f0e0160e91823b4ffcaefbbba6915d17a52451b4e65304000e5824a",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+    "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7",
+    "validationCommand": "python3 out/api32/verify_installd_postboot_proc48_av_result.py --run-id 6f6983eb987148c2acacfd0f8c1eab0d",
+    "validationResult": "PASS",
+    "packageCheck": "out/api32/installd-postboot-proc48-package-check.json",
+    "terminalState": "out/api32/installd-postboot-proc48-terminal-state.json",
+    "postBootRequestFlags": 10,
+    "ordinaryTargetUid": 12347,
+    "actualHostKernelWorkerNice": 10,
+    "coreNiceBefore": 0,
+    "coreNiceAfter": 0,
+    "workerObservations": [
+      {
+        "pid": 32704,
+        "parentPid": 29913,
+        "logicalUid": 12347,
+        "executable": "/data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/api32/apex/com.android.art/bin/dex2oat64",
+        "realKernelNice": 10,
+        "observedUptimeMillis": 48067575,
+        "timerSlackReadError": "IOException",
+        "kernelCgroup": "3:cpuset:/top-app\n2:cpu:/top-app\n1:blkio:/\n0::/apps/uid_10157/pid_29430\n",
+        "livePeerVerified": true
+      }
+    ],
+    "compilerArtifactOwnershipVerified": true,
+    "fullMediaRepeatVerified": true,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 30,
+    "observerSamples": 121,
+    "runtimeImageChanged": false,
+    "kernelCgroupApplicationVerified": false,
+    "timerSlackVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndPostBootSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_CYCLES_AND_POSTBOOT_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      }
+    ],
+    "distinctStarts": 10,
+    "totalSamples": 1143,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/installd-core48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ]
+  }
+}

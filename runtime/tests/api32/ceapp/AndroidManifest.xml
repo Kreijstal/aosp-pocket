@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketce32test">
+    <uses-sdk android:minSdkVersion="32" android:targetSdkVersion="32" />
+    <application android:label="Pocket CE validation" android:allowBackup="false">
+        <provider android:name=".CeStateProvider" android:authorities="dev.kreijstal.pocketce32test.state" android:exported="true" android:permission="android.permission.DUMP" />
+    </application>
+</manifest>

@@ -1,0 +1,701 @@
+{
+  "schema": 1,
+  "status": "PASS_GUEST_DEFAULT_NETWORK_AND_NETWORK_BOUND_HTTPS_VM73",
+  "scope": "Actual 12L NetworkAgent in the existing input-control process. Standard guest default network100, INTERNET capability, and Network.openConnection HTTPS200 verified alongside unmodified Signal startup, real Home/default-launcher focus, reopen, and clean shutdown on VM73. Guest VALIDATED was false at the sampled check; later validation and asynchronous raw DNS are not established.",
+  "candidatePath": "out/api32/network-monitor-profile-candidate.json",
+  "candidateSha256": "9540da8f64dc74d09b4209c3683d439aa6cdafc0008141239a58fda317d0a324",
+  "candidate": {
+    "manager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/network-monitor-profile-manager-probe/api32-app-manager-probe.apk",
+      "sha256": "f4bfe013b8a1b9d8fed63ea974e8d24723863406e9927f0de2817db5b24e0bd9",
+      "bytes": 2631611,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false
+    },
+    "sourceHashes": {
+      "runtime/api32/AppLifecycleProbe32.java": "0c5c107acdeea1d0a493ad133b9c8d46b7ef8476eabe6c303fb2b63a79df53b5",
+      "runtime/api32/BootArtifactsProbe32.java": "9c0f9ecd226947e6073f1c82f95b0bf163abb991add8b668ca56689ac035c905",
+      "runtime/api32/FrameworkReadyProbe.java": "2b53a9c64798eded71a8fe840e9690c2114c0c2e8b6f07830b52ab452f2ec991",
+      "runtime/api32/HostNetwork32.java": "dde7ad925dce269d14e83b1c6badb7255b1371fe3f5463f8b1912bcb85d92bec",
+      "runtime/api32/InputControl32.java": "fd714ee1a95a3c8ec5a80114847b396f133e6b2632b182b2b0a71e3991507700",
+      "runtime/api32/KeystoreProbe32.java": "28a1b214a9c1227b166dcea4cd399fc0107aab084f59d6afcbf6b53b25e88149",
+      "runtime/api32/ManagerTools32.java": "48265266b625d1e60706dbd97f1551e2ec126fd6aa9ac1e21305bba304706ffd",
+      "runtime/api32/PackageEvents32.java": "6163d29b5e8bf78de7ea87287d3e7d641dc733176696bc5480f333353aac939e",
+      "runtime/api32/SystemServerDexopt32.java": "9a9751ee08e74b1bf0fe8a64fe2d7495e5cf6faa08e58401dcf98071beb84b74",
+      "runtime/api32/TombstonedProbe32.java": "2ce56b51bf5715d274962d4196e5db60b8d4c720bd880f92d54bfafd4ab86511",
+      "runtime/api32/TraceProbe32.java": "d922930f91ff3d3eb22812ee6ed7d8df5744e6578707c06702a4437961b765b7",
+      "runtime/api32/UEventProbe.java": "b5ae68ec2e355951a7db107b12d7331d46b7c7a80f442becce584e025e5760ce",
+      "runtime/api32/UiRuntimeProbe32.java": "18b2e6daefe7b14d6198ae6101dfb387d9b3550b3191d392c412da6a7b753f76",
+      "runtime/api32/apex_service.cpp": "4ee36ddd54bc0d987feeb87caf813d7be2ea557b49983bad1266f2607d46c521",
+      "runtime/api32/bridge/AndroidManifest.xml": "aadc7a0a111de5105e8609a159862303fdf5fe55487cd7126aad8e13b6be4e64",
+      "runtime/api32/bridge/PackageEventsProvider.java": "2c326135c878169d107fe382b4346dc9cda9969e5b853ebdf1a2006bf94573bc",
+      "runtime/api32/core_main.cpp": "5c5bbc575a881503b1ec474d8e85d878adf48fa59f17eb0a1f3eedff8d6189bc",
+      "runtime/api32/dns_service.cpp": "7740346261c84cba97f3395a3a90ceb4b586b71582558a45a9e1eff7d01d53c0",
+      "runtime/api32/mdns_main.cpp": "61cdebe9f3e2b04b0a2635c48c7af22e1c92bb1c011d8c55675eee4ab59ffc74",
+      "runtime/api32/memory_service.cpp": "7c01d5198b5ca647616231f25f179a4c120a80c017eda48ebbad348b590be3f3",
+      "runtime/api32/network_probe.cpp": "c687f351a1a6a6bfd025bfb873f6163f74ec881c7e7d448615a256ec1c1a4403",
+      "runtime/api32/network_service.cpp": "45e026ab27a3ff25d35648bfaa57d63b3b5b26e4bf2015b13db381111bc3e43b",
+      "runtime/api32/service_registry.cpp": "69cc5d90030f51cc0bc6bac6fe9d5439914aa97ed23bc202ab8bbdd493c163f2",
+      "runtime/api32/storage_service.cpp": "ceae2075413747608b7cbdcdb3cfe8114dae4323f2563392023c09af1564fad3",
+      "runtime/app/src/dev/kreijstal/aosppocket/bridge/AndroidVersions.java": "a1f306fbbc9f87f972a04e46144477ec684d62a7c5a8ad55df788cd8f6d0c6e3",
+      "runtime/app/src/dev/kreijstal/aosppocket/bridge/AnonymousFrames.java": "882c784b3e3d8ddedb0c13db574e191185343c0022f4c97a2dd795815a668929",
+      "runtime/app/src/dev/kreijstal/aosppocket/bridge/DisplayGeometry.java": "03edebad88f5ade1b42282393067d0fce5ff47a4630afd9e1c7e5701ad1ca62b",
+      "runtime/app/src/dev/kreijstal/aosppocket/bridge/HostWire.java": "333767dd678c1b71c51476aae31ca9ceead55514bdfa3f323b9f1dd2d14b3a1a",
+      "runtime/app/src/dev/kreijstal/aosppocket/bridge/SharedFrames.java": "6c73f5bf2dcfb66093bca7b08583363ccfb006a1c178927137aa30322cb8df39",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/AdminServer.java": "5f9471c5a7b58c362265fa72cf33f178981657ee61aa6ba1925de1c3e0720c93",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/AppImportActivity.java": "eb52e56067fd6336aa1717956316ff0870e4f41aa3a355504255c2876e9ab566",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeDefaultKey.java": "4d6389fb228e90257d1916e52b5fab5fd37ca3f6fe34141e45960765cf629552",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeFuse.java": "6bbe80a37e710d9a5bfb8e45f7c7384af8a31d75e363a7bb15d95d0d45d79334",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeMigration.java": "a5d69b4ba533e9e38ea5998067b1b871fbda2428978fd48a559eebe891aed285",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/CeStorage.java": "6c144d9b9d28282cef003e6d88034a671875d465a4cf58f2e9655beeab3ff67a",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/DirectImage.java": "610e3e3cc12280f12a758c4749ebc994828dce14d317217e9289e598a263e4ca",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/DirectSession.java": "a68f057777dafbea66f90ab3752ccddf002f4ae67e0c9ad59f50cc65d547a2b5",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestActivity.java": "5a319aca1138c4cd40b83ae7f7952bc4b61e83aa811781570200a50eeab39709",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestBinder.java": "08ebe48fc4ad6db130727724e54f6a73491189cc8cdcb6b717b88b23f3d8d196",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestDisplay.java": "3678bce5aa7d2a769d7738c24a22f62b1c1cb9874b3af83bac62dd83a63bdc63",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestImage.java": "1b6bbd448d4389ce48467b1cbb909c5827d96271475c028bcfb897bad1eed306",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestInput32.java": "0343c8d9e382c6b98b1da4509bb70829d072b131ddf043f5b2652c8915ce02e3",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestLog32.java": "b93cee2a42aef3b78a1bf9456b3abecdd7e30cc641eaf305c01c2f52af6ace17",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestPower.java": "b3e0d4e4459b71d97447fdbe4d25a3ecd9a1cba859af1c013e683192c68646e8",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestProfile.java": "98be926b4697bbaf988e8998a91bdc0de25cff43aa07a120ce1d844c19862eff",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestService.java": "c17c0206ff07a4cc7ef97a219de41c1e9bbcef72ff45ed6c8799bee3447436a6",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/HostAudio.java": "f16dbe385f4d42adbd793a0cbfa3a9976b366f319c445b9053785de1e97c9233",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/HostBroker.java": "5463ebdad3b10051a9b592036d2feb3af016918d6c45ca4d36a3b7bafae84a62",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/HostDns.java": "b04499b4a6fb0bc746edc84d5e62fc9489d1f775da15402f043d6043c6f5f628",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/HostMedia.java": "1587ef56f5a9cc04603b4a5364e039b7931a4a2e2a80883916ec4e37973f854f",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageArchive.java": "918ac5505722ec1f0ae986f9df57fb06cbaeb76e06eac3134d66b16397cd4182",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageDownload.java": "db3033f3f2219a3f7a81a4188a7f33abacdd30222de52292ad33d4dee654df7b",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/InputCommandQueue.java": "d21e79f6101e19056e58943995124dd7550c415bf3d4f86d1a310953d2523b62",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/MainActivity.java": "750644e5f90b811d36afc7b9421a70d5c7b49413ed10738de689bb105b1062d2",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/Native.java": "406311060600af53d78c2a92bfec9abe5d363514eb809c74b450abad224f6547",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/NativeLoader.java": "6db375c0b72f955506d75af1cca22ff293d4190a1f02f2fcf9be619a99e098fc",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/PeripheralsActivity.java": "854097650e57ccb884c2d405f35c1b3c1dac6b6d03ca29b40ffb0909f3ddaf66",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/RemoteImage.java": "8067d8ea53b1fa826809d35a9fae272f951916593b705983b093d461874845b2",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/RuntimeActivity.java": "5ae2024d51383b47dbbfed30b922ceab39364198ec6a17283b9a334529992b77",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/RuntimeLog.java": "4d258aadc338db4cce104e0cad7ed7dfb2bc0490e8283927e88f0621ce9796d2",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/SettingsActivity.java": "e01509178cc03dc18b454beb45786cd2566ebecf0e36d6e8082eacc723d51c3e",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/SyscallBackend.java": "a1269e678e8e84b4a4e2527a0875e06bed4cc547fa152da03c8812911586a830",
+      "runtime/direct/BootBattery.java": "1bcdb9ae4fa335f9a3e9a54107b6f8e6253911708852a92f90e3508b1cadea1f",
+      "runtime/direct/HostDevices.java": "0a9d8244a7c6465fbf015eef1f3b54acdaad17b7e29a57b3572bbc8ef1fe4804",
+      "runtime/storage/src/dev/kreijstal/aosppocket/storage/CeNamespace.java": "830306e343342cc2ba2fd8323f44cd5b8ac60bf05d7e167025e131a65e8fba0a",
+      "runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java": "6334eed4b2ef9d1418e479d9eebc236df7479cd1046eec5b878c1c1429cc76c2",
+      "runtime/tests/api32/AppInspector32.java": "c50c5b3734a6cd4098f426d618045abb3a4b3947ef076bf5fe447a67f598ada5",
+      "runtime/tests/api32/ManagerAppProbe32.java": "ef5303d678f9bf41e01c72be113c28eee39fda6196d3dc396f0b0f820e35ac20",
+      "runtime/tests/api32/ManagerSessionProbe32.java": "d279c43fb0e78624d4e7928c70b63741383b9cd709df836ff05d5c34f2e0928e",
+      "tools/build_api29_manager.py": "6620947110f5b9a560eeb590e2e955b589148d6ee4c3ec9df38d1ff813e24c47",
+      "tools/build_api32_core.py": "451c11cb1deae2be6567e958c8af77b936f6f8a32f194784a17e6c118db14a84",
+      "tools/build_api32_guest_app.py": "cfb701ea58420ff1714a7990fbe0f1eec2d8d13a53aac26a679d46af4907a09c",
+      "tools/build_api32_image.py": "3afc4f5bbbe47e59bca2c5df7d53b7a213b1af5b0ba347ec9000b03d3971006d",
+      "tools/build_api32_manager_tools.py": "011e03b65356d691317c71859b9aa8b9701e2da9955feb657dfc517d11c51d8e",
+      "tools/build_api32_network.py": "6848951cea6f87dca29c4dc3e6820c7e3d8fe788263a141f720ed68dfecee1e9",
+      "tools/build_api32_probe.py": "ee55110167fbc7df2e9a27aa18fbde7f199cbbcd6bc07d14ef31424eb1b23287",
+      "tools/build_api32_runtime_tools.py": "557dadf46f55e5e027ea60b7b293e584094fa7fc88637b89c9e456c485e43d95",
+      "tools/prepare_api32.py": "0f05ef787d40f325427d3ec4ecb6f52dc6b5958633b6684031ff2ddd88fc797d",
+      "tools/test_api32_app_on_pi.py": "6faad45c85e85f9e63d433fd9d4318a476369745b2d2f845726aba72181bf481"
+    },
+    "imageSha256": "c47d8387c4d592bb36313592d98abed933b5b2522ccaedb5153320faf17a11da",
+    "appSpec": {
+      "source": "Google Play via Aurora Store 4.8.4 on Linux Waydroid",
+      "downloadProfile": {
+        "name": "Samsung S20+",
+        "sdk": 33,
+        "abi": "arm64-v8a"
+      },
+      "version": "8.33.2",
+      "versionCode": 177201,
+      "package": "org.thoughtcrime.securesms",
+      "minSdk": 32,
+      "targetSdk": 36,
+      "signatureVerifiedForGuestSdk": 32,
+      "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+      "files": [
+        {
+          "name": "base.apk",
+          "bytes": 85982422,
+          "sha256": "d5acfe87956572030fc762f48e65175d34246ed1a3b941d1cf63ab71d7ba1540"
+        },
+        {
+          "name": "config.arm64_v8a.apk",
+          "bytes": 30184532,
+          "sha256": "e1c3e2ac2fd0d28d963db9b73936014200a21d681e376e71701935496e28a320"
+        },
+        {
+          "name": "config.xxhdpi.apk",
+          "bytes": 187458,
+          "sha256": "c1fb420e1818da0ad7f55e0644bb31fd6eed2c9402edd2f8e9c25be97ee36ef9"
+        }
+      ],
+      "archive": "Signal-8.33.2-play-arm64-api32.apks",
+      "archiveBytes": 116354752,
+      "archiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+      "apkModified": false,
+      "guestInstallValidated": false,
+      "phoneAccessUsedForDownload": false,
+      "installation": "Install all three APKs in one PackageInstaller session; base alone is incomplete.",
+      "checks": [
+        "apksigner verify --print-certs --min-sdk-version 32 --max-sdk-version 32 <each-apk>: PASS",
+        "aapt dump badging <each-apk>: package/version match and minSdk 32: PASS"
+      ],
+      "url": "http://127.0.0.1:8794/Signal-8.33.2-play-arm64-api32.apks"
+    },
+    "systemApiStubs": {
+      "repository": "https://android.googlesource.com/platform/prebuilts/sdk",
+      "commit": "9fe6723b681aa4bcf8392817376819f58a25ea2e",
+      "path": "32/system/android.jar",
+      "url": "https://android.googlesource.com/platform/prebuilts/sdk/+/9fe6723b681aa4bcf8392817376819f58a25ea2e/32/system/android.jar?format=TEXT",
+      "bytes": 61321291,
+      "sha256": "b8227de5f63d5ae1976ecdf1172b482b9d2b58ad274183db5a8d14ee531e1747",
+      "format": "gitiles-base64",
+      "gitBlobSha1": "3bd3036d81b3179bda7f90a4e1ef6cd137855fb0"
+    },
+    "requireNetwork": true,
+    "imageDeltaVs0785": [
+      "system/bin/pocket-core-api32",
+      "system/framework/pocket-tools.jar"
+    ],
+    "guestTcpStallMonitoring": false,
+    "guestDnsStallMonitoring": true,
+    "internetValidationEnabled": true
+  },
+  "primaryApiReference": {
+    "repository": "https://android.googlesource.com/platform/packages/modules/Connectivity",
+    "commit": "16216f3643609ea5b26ba2edc35a93d71aef9094",
+    "files": {
+      "IConnectivityManager.aidl": "18e980bbab79ef878a1f1eaee60279145b7890b14c8ff3f6d6b89f96ea34022b",
+      "INetworkAgent.aidl": "d1acacb32d69ebd9910efbe78ae109a229e26398f4a718e7ad9f4c5bf1df0615",
+      "NetworkAgent.java": "5e92be59188d3aa404286b8aaf94d9b748a010fa7d7f0aedec39b564d20e081a",
+      "NetworkAgentConfig.java": "0f4b08b250c7994fdb6fed5998c3c390a0c18ef0721054a0ae28a38b58678ae4",
+      "NetworkScore.java": "0a36d5a1974e47475d0d9096b7f6ea1a97692e363d685701b10b7fc3463f99cd"
+    },
+    "note": "Version-matched primary source for pending host-uplink NetworkAgent integration; no implementation change yet."
+  },
+  "serviceCountUnchanged": 15,
+  "guestValidatedCapabilityManufactured": false,
+  "hostKernelNetworkConfigurationModified": false,
+  "observerReproducibility": {
+    "scope": "Two fresh Java-only package observer builds on this toolchain; deterministic ZIP metadata before signing.",
+    "bytesIdentical": true,
+    "sha256": "25ad2405c6eaf44c9e2466c572c761d106c0d1457e4f359622071757c1157dfe",
+    "signatureVerifiedForSdk": 32
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_runtime_tools.py --out out/api32/network-runtime-tools",
+      "result": "PASS; final rebuilt jar byte-identical to packaged runtime tool jar."
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/network-agent-image --version 0.78.4 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.4.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; 2632 files, 589725993 bytes, SHA256 d5a911533a9ed2391b6f6a436bd1dcdb5383450d1c81956ceeac7c72922a9845"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/network-agent-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/network-manager-probe",
+      "result": "PASS; image-free APK, unchanged host JNI."
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/network-manager-probe/api32-app-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS."
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/api32/legacy-network-regression",
+      "result": "PASS; API28/29 production distribution still builds; host INFO topology fields are additive."
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/legacy-network-regression/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS."
+    },
+    {
+      "command": "python3 tools/build_api32_runtime_tools.py --out out/api32/network-concrete-tools",
+      "result": "PASS against pinned API32 system stubs; concrete subclass inherits actual framework NetworkAgent; no Android stub classes in the DEX."
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/network-concrete-image --version 0.78.5 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.5.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; only pocket-tools.jar changed vs0.78.4."
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/network-concrete-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/network-concrete-manager-probe",
+      "result": "PASS."
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/network-concrete-manager-probe/api32-app-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS."
+    },
+    {
+      "command": "python3 -m unittest discover -s tools/tests -p test_prepare_api32.py",
+      "result": "PASS; 5 tests."
+    },
+    {
+      "command": "python3 tools/build_api32_network.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; typed native role clients include ordinary denial, network-stack explicit fwmark unsupported, and mutation denial."
+    },
+    {
+      "command": "python3 tools/build_api32_runtime_tools.py --out out/api32/network-monitor-profile-tools",
+      "result": "PASS; external SettingsProvider profile configuration and readback compile against pinned system SDK32."
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/network-monitor-profile-image --version 0.78.6 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.6.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; rebuilt layout-2 native core and runtime tool jar; all other 0.78.5 entries unchanged."
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/network-monitor-profile-manager-probe/api32-app-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS."
+    }
+  ],
+  "runtimeVerified": true,
+  "notEstablished": [
+    "Default network selection and network-bound HTTPS inside 12L",
+    "Physical host uplink disconnect/reconnect lifecycle",
+    "Phone validation",
+    "General startup reliability",
+    "Emulated storage/CE lifecycle"
+  ],
+  "imagePackagingReproducibility": {
+    "scope": "Two complete image builds in separate output directories using the current pinned inputs/toolchain. This does not establish rebuilding the upstream SDK system image from AOSP source.",
+    "paths": [
+      "out/api32/network-agent-image/pocket-api32-arm64-0.78.4.zip",
+      "out/api32/network-agent-repro-image/pocket-api32-arm64-0.78.4.zip"
+    ],
+    "bytesIdentical": true,
+    "sha256": "d5a911533a9ed2391b6f6a436bd1dcdb5383450d1c81956ceeac7c72922a9845",
+    "imageVersion": "0.78.4"
+  },
+  "sourceSnapshotPath": "out/api32/network-monitor-profile-source-snapshot",
+  "preliminaryRuns": [
+    {
+      "runId": "5f5e42dc1a60454aad45ba09df87bc51",
+      "reportPath": "out/api32/network-manager-first-report.json",
+      "reportSha256": "28b9be482b803aed86ecf28c3be7e710300e23721b43b3a2c26a6f3fdcba8a17",
+      "candidatePath": "out/api32/network-manager-candidate.json",
+      "candidateSha256": "7800c3b907e1de526727b830131d91cb8b913264c1cab47c94e42ef275f3565b",
+      "validation": "FAIL",
+      "error": "java.io.IOException: Host-uplink NetworkAgent did not register",
+      "homeVerified": true,
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "31216"
+      ],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "stoppedSession": {
+        "sdk": 32,
+        "runId": "d94bf37fcd99407c9a5165b59bfb39c4",
+        "ready": false,
+        "running": false,
+        "closed": true,
+        "input": {
+          "touchEventsAccepted": 0,
+          "keyEventsAccepted": 2,
+          "inputEventsAccepted": 2,
+          "inputEventsRejected": 0
+        },
+        "audio": {
+          "hostPcmBytesWritten": 0,
+          "completedStreams": 0,
+          "streamErrors": 0,
+          "microphoneRequested": false
+        },
+        "ownerAlive": false,
+        "ownerExitCode": 0
+      },
+      "completedJob": {
+        "token": "4c9c3a1fe91d4a07a06fa75cdd30eec0",
+        "script": "/home/pi/pocket-api32-vm/manager-app-validation/run-4c9c3a1fe91d4a07a06fa75cdd30eec0.py",
+        "log": "/home/pi/pocket-api32-vm/manager-app-validation/run-4c9c3a1fe91d4a07a06fa75cdd30eec0.log",
+        "exit": "/home/pi/pocket-api32-vm/manager-app-validation/run-4c9c3a1fe91d4a07a06fa75cdd30eec0.exit.json",
+        "pid": 19649
+      }
+    },
+    {
+      "runId": "2043d50c9e6f41039f845927276ba39f",
+      "reportPath": "out/api32/network-concrete-first-report.json",
+      "reportSha256": "572cd7306ec7a73a4a499a3d858dc33b9fab67b92725e08af48ad1d7aca2927d",
+      "candidatePath": "out/api32/network-concrete-candidate.json",
+      "candidateSha256": "6aa04bc9784c6eba1564cc1abb9bb290fa60cda941bf20c83c6783f3fa984ff8",
+      "validation": "FAIL",
+      "error": "NetworkAgent registered, but default-network selection remained absent because NetworkMonitor construction threw SecurityException on getFwmarkForNetwork.",
+      "networkAttempts": [
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        },
+        {
+          "defaultNetwork": null,
+          "connected": false,
+          "httpStatus": 200
+        }
+      ],
+      "network": {
+        "protocol": 1,
+        "host_sdk": 36,
+        "network": {
+          "connected": true,
+          "metered": false,
+          "internet": true,
+          "validated": true,
+          "roaming": false,
+          "suspended": false,
+          "congested": false,
+          "transports": [
+            1
+          ],
+          "dns": [
+            "10.0.2.3"
+          ],
+          "addresses": [
+            "fe80::15:faff:fe00:0/64",
+            "fec0::15:faff:fe00:0/64",
+            "fec0::11fd:bc4a:8fce:cef3/64",
+            "10.0.2.15/24"
+          ],
+          "routes": [
+            {
+              "destination": "fe80::/64",
+              "gateway": "::",
+              "type": 1
+            },
+            {
+              "destination": "::/0",
+              "gateway": "fe80::2",
+              "type": 1
+            },
+            {
+              "destination": "fec0::/64",
+              "gateway": "::",
+              "type": 1
+            },
+            {
+              "destination": "10.0.2.0/24",
+              "gateway": "0.0.0.0",
+              "type": 1
+            },
+            {
+              "destination": "0.0.0.0/0",
+              "gateway": "10.0.2.2",
+              "type": 1
+            }
+          ],
+          "mtu": 0
+        },
+        "permissions": {
+          "android.permission.CAMERA": false,
+          "android.permission.RECORD_AUDIO": false,
+          "android.permission.READ_CONTACTS": false,
+          "android.permission.READ_PHONE_STATE": false,
+          "android.permission.ACCESS_FINE_LOCATION": false,
+          "android.permission.ACCESS_COARSE_LOCATION": false
+        },
+        "camera_count": 0,
+        "sensor_count": 15,
+        "ims": {
+          "owner": "host",
+          "guest_registration": "unavailable",
+          "calls": "host dialer delegation",
+          "sms": "host composer delegation",
+          "reason": "Carrier/privileged IMS APIs are not available to an ordinary host app"
+        },
+        "standard_guest_apis": {
+          "battery": "relayed",
+          "dns": "host resolver via guest dnsproxyd",
+          "camera": "HAL adapter pending",
+          "audio": "output via guest audio HAL; input pending",
+          "sensors": "HAL adapter pending",
+          "contacts": "explicit import",
+          "phone": "radio adapter pending"
+        },
+        "guest_network_connected": false,
+        "guest_default_network": null,
+        "guest_internet": false,
+        "guest_validated": false,
+        "http_via_guest_network": false,
+        "http_status": 200
+      },
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "stoppedSession": {
+        "sdk": 32,
+        "runId": "5dc76dff2294485e9b8a3ef136ba29e9",
+        "ready": false,
+        "running": false,
+        "closed": true,
+        "input": {
+          "touchEventsAccepted": 0,
+          "keyEventsAccepted": 0,
+          "inputEventsAccepted": 0,
+          "inputEventsRejected": 0
+        },
+        "audio": {
+          "hostPcmBytesWritten": 0,
+          "completedStreams": 0,
+          "streamErrors": 0,
+          "microphoneRequested": false
+        },
+        "ownerAlive": false,
+        "ownerExitCode": 0
+      },
+      "completedJob": {
+        "token": "f81386ab7db247199698a71bae1d7bd0",
+        "script": "/home/pi/pocket-api32-vm/manager-app-validation/run-f81386ab7db247199698a71bae1d7bd0.py",
+        "log": "/home/pi/pocket-api32-vm/manager-app-validation/run-f81386ab7db247199698a71bae1d7bd0.log",
+        "exit": "/home/pi/pocket-api32-vm/manager-app-validation/run-f81386ab7db247199698a71bae1d7bd0.exit.json",
+        "pid": 27183
+      }
+    }
+  ],
+  "fix": "Compile a concrete NetworkAgent subclass against pinned system API32 stubs, excluding the stubs from the runtime jar. Retire/re-register from real framework callbacks instead of polling registration presence with a fixed grace period.",
+  "concreteAdapterClassCheck": {
+    "classCount": 24,
+    "adapter": {
+      "class": "Ldev/kreijstal/aosppocket/guest/HostNetwork32$Agent;",
+      "superclass": "Landroid/net/NetworkAgent;",
+      "abstract": false
+    },
+    "androidStubClassesPackaged": false
+  },
+  "systemApiStubs": {
+    "repository": "https://android.googlesource.com/platform/prebuilts/sdk",
+    "commit": "9fe6723b681aa4bcf8392817376819f58a25ea2e",
+    "path": "32/system/android.jar",
+    "url": "https://android.googlesource.com/platform/prebuilts/sdk/+/9fe6723b681aa4bcf8392817376819f58a25ea2e/32/system/android.jar?format=TEXT",
+    "bytes": 61321291,
+    "sha256": "b8227de5f63d5ae1976ecdf1172b482b9d2b58ad274183db5a8d14ee531e1747",
+    "format": "gitiles-base64",
+    "gitBlobSha1": "3bd3036d81b3179bda7f90a4e1ef6cd137855fb0"
+  },
+  "currentFix": "Permit the network-stack read-only fwmark query, returning explicit EOPNOTSUPP; use the stock guest DNS-only stall detector because shared-host sockets have no per-guest kernel fwmarks. Internet DNS/HTTP validation remains enabled. Acquire SettingsProvider through an authenticated external-provider reference.",
+  "networkStackPrimarySource": {
+    "repository": "https://android.googlesource.com/platform/packages/modules/NetworkStack",
+    "commit": "ae471a43f6198859028f3f987c72aa17ae890ff1",
+    "files": {
+      "out/api32/network-monitor-reference/NetworkMonitor.java": "25143566d00be760bc8d30f7fbd28880f2c425e2272ccdbb830fb6145efb1a22",
+      "out/api32/network-monitor-reference/TcpSocketTracker.java": "11d350e422cd6dce9e4d1df1c3e3a5f8a4801028d103a0fbb5e0f6bc4bf52b6b",
+      "out/api32/network-monitor-reference/DataStallUtils.java": "67dd21833a4cd823bdb5c14afc9de9f578a302c4c75341d6a294023fc18ad225"
+    }
+  },
+  "completedJob": {
+    "token": "5ae34a03913e4f8ebc2c47db1cb1e780",
+    "script": "/home/pi/pocket-api32-vm/manager-app-validation/run-5ae34a03913e4f8ebc2c47db1cb1e780.py",
+    "log": "/home/pi/pocket-api32-vm/manager-app-validation/run-5ae34a03913e4f8ebc2c47db1cb1e780.log",
+    "exit": "/home/pi/pocket-api32-vm/manager-app-validation/run-5ae34a03913e4f8ebc2c47db1cb1e780.exit.json",
+    "pid": 2922
+  },
+  "runtimeCommand": "python3 /home/pi/pocket-api32-vm/manager-app-validation/test_api32_app_on_pi.py --require-network",
+  "result": {
+    "runId": "4a28a7713e59469b9734e333e0a3b3cd",
+    "reportPath": "out/api32/network-monitor-profile-first-report.json",
+    "reportSha256": "47a2abafd7e5c06edc77555697fcfc5aee8392c2b2225626ae8d8e7049fb70a1",
+    "validation": "PASS",
+    "strictPassed": true,
+    "networkAttempts": [
+      {
+        "defaultNetwork": "100",
+        "connected": true,
+        "httpStatus": 200
+      }
+    ],
+    "network": {
+      "protocol": 1,
+      "host_sdk": 36,
+      "network": {
+        "connected": true,
+        "metered": false,
+        "internet": true,
+        "validated": true,
+        "roaming": false,
+        "suspended": false,
+        "congested": false,
+        "transports": [
+          1
+        ],
+        "dns": [
+          "10.0.2.3"
+        ],
+        "addresses": [
+          "fe80::15:faff:fe00:0/64",
+          "fec0::15:faff:fe00:0/64",
+          "fec0::11fd:bc4a:8fce:cef3/64",
+          "10.0.2.15/24"
+        ],
+        "routes": [
+          {
+            "destination": "fe80::/64",
+            "gateway": "::",
+            "type": 1
+          },
+          {
+            "destination": "::/0",
+            "gateway": "fe80::2",
+            "type": 1
+          },
+          {
+            "destination": "fec0::/64",
+            "gateway": "::",
+            "type": 1
+          },
+          {
+            "destination": "10.0.2.0/24",
+            "gateway": "0.0.0.0",
+            "type": 1
+          },
+          {
+            "destination": "0.0.0.0/0",
+            "gateway": "10.0.2.2",
+            "type": 1
+          }
+        ],
+        "mtu": 0
+      },
+      "permissions": {
+        "android.permission.CAMERA": false,
+        "android.permission.RECORD_AUDIO": false,
+        "android.permission.READ_CONTACTS": false,
+        "android.permission.READ_PHONE_STATE": false,
+        "android.permission.ACCESS_FINE_LOCATION": false,
+        "android.permission.ACCESS_COARSE_LOCATION": false
+      },
+      "camera_count": 0,
+      "sensor_count": 15,
+      "ims": {
+        "owner": "host",
+        "guest_registration": "unavailable",
+        "calls": "host dialer delegation",
+        "sms": "host composer delegation",
+        "reason": "Carrier/privileged IMS APIs are not available to an ordinary host app"
+      },
+      "standard_guest_apis": {
+        "battery": "relayed",
+        "dns": "host resolver via guest dnsproxyd",
+        "camera": "HAL adapter pending",
+        "audio": "output via guest audio HAL; input pending",
+        "sensors": "HAL adapter pending",
+        "contacts": "explicit import",
+        "phone": "radio adapter pending"
+      },
+      "guest_network_connected": true,
+      "guest_default_network": "100",
+      "guest_internet": true,
+      "guest_validated": false,
+      "http_via_guest_network": true,
+      "http_status": 200
+    },
+    "netdRole_denied": "API32_NETD_ROLE_DENIED_PASS uid=39999 operation=isAlive",
+    "netdRole_stack": "API32_NETD_STACK_FWMARK_UNSUPPORTED_PASS uid=1073 host_marks=unchanged\nAPI32_NETD_STACK_ROLE_PASS uid=1073 alive=allowed mutation=denied",
+    "homeVerified": true,
+    "framesPresented": 183,
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "systemUiStarts": [
+      "9019"
+    ],
+    "initStop": [
+      [
+        "15",
+        "0",
+        "0"
+      ]
+    ],
+    "stoppedSession": {
+      "sdk": 32,
+      "runId": "7aefc802677c46ee9fbc18eeb39a0e5d",
+      "ready": false,
+      "running": false,
+      "closed": true,
+      "input": {
+        "touchEventsAccepted": 0,
+        "keyEventsAccepted": 2,
+        "inputEventsAccepted": 2,
+        "inputEventsRejected": 0
+      },
+      "audio": {
+        "hostPcmBytesWritten": 0,
+        "completedStreams": 0,
+        "streamErrors": 0,
+        "microphoneRequested": false
+      },
+      "ownerAlive": false,
+      "ownerExitCode": 0
+    },
+    "hostSettingsUnchanged": true
+  },
+  "validatedFollowup": {
+    "imageVersion": "0.78.8",
+    "runId": "5cef4bf755304c02a3ff914e66f731d3",
+    "evidence": "docs/api32-raw-dns-validation.json",
+    "reportPath": "out/api32/dns-bypass-first-report.json",
+    "reportSha256": "118008e2e5cfdce0969196da65c9ff131b7200446aa401b8bbb36cd2a0db2932",
+    "guestValidated": true,
+    "networkBoundHttpsStatus": 200
+  }
+}

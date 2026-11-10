@@ -1,0 +1,650 @@
+{
+  "schema": 1,
+  "status": "CORE48_NORMAL_SHUTDOWN_AND_ABRUPT_MANAGER_DEATH_OLD_PROCESS_EXIT_PASS_OTHER_GATES_OPEN",
+  "productionReleaseReady": false,
+  "trigger": {
+    "report": "out/api32/ce-authless-resume-result/ce-authless-report.json",
+    "reportSha256": "c68d631f72ec224f0f8432c5dfd6fed91335010027fba6f0d51c14b5e0a97937",
+    "runId": "7dad2e51a44d4f6ab8b8b10505145028",
+    "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "managerSha256": "581d42646308edbb6766d952ec65ef376512716e33e27c8c096f6f1619ee52d6",
+    "validation": "FAIL",
+    "readinessFixVerified": true,
+    "androidUnlockWaitMs": 5615,
+    "fiveRootCanariesReadable": true,
+    "originalAppTokenCipherDigestUidAndKeyPreserved": true,
+    "secureKeyguard": false,
+    "failure": "java.io.IOException: Guest owner did not exit cleanly",
+    "cleanupFailure": "Guest supervisor left processes requiring cleanup",
+    "initOwnerExitCode": 0,
+    "initReapedServices": 16,
+    "initRemainingServices": 0,
+    "initFailedServices": 0,
+    "sampledPeakChildren": 33,
+    "fullCredentialLifecycleVerified": false,
+    "realKeyguardPasswordVerified": false,
+    "outerManagerRestartVerified": false,
+    "profilePreserved": true,
+    "observation": "Subreaper ownership was absent in the tested 0.78.25 init. Its group-only stop can miss descendants that create their own process groups. This failure log does not identify the exact leftover PID, so the cause remains an inference pending the new supervisor runtime test."
+  },
+  "architecture": {
+    "scope": "Own kernel descendants of the Android12L init process only; no PID1 assumption, kernel mount, root privilege or namespace changes",
+    "ownership": "PR_SET_CHILD_SUBREAPER adopts orphaned descendants. /proc supplies candidate PIDs; waitid(P_PID, WEXITED|WNOHANG|WNOWAIT) certifies that each PID is an actual kernel child of the supervisor thread group. Guest UID labels, executable prefixes and per-process metadata do not grant signal authority.",
+    "pidLifetime": "Only the main supervisor thread waits/reaps and signals. WNOWAIT keeps exited child PIDs allocated until explicit waitpid. Known service children are excluded from adopted-child sweeps.",
+    "shutdown": "Reject new service starts, stop the zygote first, drain adopted app children while native services exist, then stop/reap services and escalate adopted children to SIGKILL within bounded deadlines.",
+    "accounting": "Declared service reaps and adopted descendant reaps are separate. Remaining kernel children or query failure causes nonzero supervisor exit."
+  },
+  "sourceFiles": [
+    "runtime/api32/owned_children.h",
+    "runtime/api32/init_main.cpp",
+    "runtime/tests/api32/owned_children.cpp"
+  ],
+  "hostValidation": [
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/api32/owned_children.cpp -o out/api32/metrics-core-host/owned-children",
+      "result": "PASS"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/metrics-core-host/owned-children",
+      "result": "PASS; actual fork/setsid orphan adoption, TERM resistance, KILL escalation, tracked service survival, worker-thread children, complete wait/reap; no mocked ownership"
+    }
+  ],
+  "androidBuild": {
+    "command": "python3 tools/build_api32_native.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --init",
+    "log": "out/api32/subreaper-init-build-v2.log",
+    "result": "PASS; API32_INIT_BUILD_PASS; kernel waitid ownership variant; ARM64 and 16KiB load alignment verified",
+    "artifacts": {
+      "pocket-init-api32": {
+        "path": "out/api32/subreaper-init-native/pocket-init-api32",
+        "bytes": 349104,
+        "sha256": "016f25ab577b119606e6ce2db0c951b7a0cf3396af0a8c40171b3d0c91f0a680"
+      }
+    }
+  },
+  "runtime": {
+    "report": "out/api32/subreaper-ce-result/ce-authless-report.json",
+    "reportSha256": "e4ec1940ea6b7d8541f63aae8b0507e4590ffae6346fc60754b50ebfeeb40e83",
+    "cycle": "out/api32/subreaper-ce-result/ce-authless-cycle.json",
+    "cycleSha256": "e9c3c654e6c5dbab11583829de3a11b5bd15de25d54901dbb4042bde297ed2cb",
+    "runId": "fde5db0b580b49fc9719bdecdea0710f",
+    "validation": "PASS",
+    "strictPassed": true,
+    "kernelChildOwnershipVerified": true,
+    "declaredServiceLifetimes": 16,
+    "descendantStop": [
+      [
+        "14",
+        "0",
+        "0",
+        "0"
+      ]
+    ],
+    "noManagerFallbackCleanup": true,
+    "initRestoration": {
+      "assetSha256": "a7e7994b972141eb5f7775b45a1e6e16490bb2c8def83d218d7b9a595a7c9faa",
+      "sourceSha256": "016f25ab577b119606e6ce2db0c951b7a0cf3396af0a8c40171b3d0c91f0a680",
+      "originalSha256": "45709609fa22c3df55e43443fa578f0ae42b657f571b0539fa13000a2b70a6ea",
+      "originalMode": 493,
+      "backup": ".pocket-ce-init-fde5db0b580b49fc9719bdecdea0710f",
+      "guestDataReset": false,
+      "runtimeCodeReplaced": true,
+      "originalCodeRestored": true,
+      "executedSha256": "ece1f217e4942e141660394e935b063995c0562869a8050f47abda59218936a4",
+      "restoredSha256": "45709609fa22c3df55e43443fa578f0ae42b657f571b0539fa13000a2b70a6ea"
+    },
+    "appDataAndKeystorePersisted": true,
+    "androidUnlockWaitMs": 4,
+    "sampledPeakChildren": 33,
+    "samples": 55,
+    "pollErrors": 0,
+    "observerErrors": [],
+    "hardProcessBoundProven": false,
+    "scope": "Init-only reversible trial on0.78.25 encrypted profile; not a complete packaged-image, secure-keyguard or full credential-lifecycle claim"
+  },
+  "remaining": [
+    "Complete remaining general namespace, distinct fresh migration, legacy, phone and delivery gates. Ordinary-profile abrupt Manager death is verified separately from normal shutdown; no live orphan path was observed in this crash trial."
+  ],
+  "sourceSha256": {
+    "runtime/api32/owned_children.h": "3f8390e2170b9827d440d30252266482d0fa2ce1a27ec54943080bb01e2d347f",
+    "runtime/api32/init_main.cpp": "c57ce555c8e554044037ec40b6cf661cf43d66c97566e65f68d496199bd167df",
+    "runtime/tests/api32/owned_children.cpp": "c69a0cac7749b05e6d62e9cf9a66f11f92e0b41da0d659d54011c6dcde050b17"
+  },
+  "hostTestUid": 1001,
+  "nextRuntimeTrial": {
+    "state": "PASS_RESTORED",
+    "exactPriorJob": "out/api32/ce-authless-resume-job.json",
+    "priorJobTerminalReturncode": 1,
+    "priorRunId": "7dad2e51a44d4f6ab8b8b10505145028",
+    "preservedPackage": "dev.kreijstal.aosppocket.api32ceimage3",
+    "expectedInstalledManagerSha256": "581d42646308edbb6766d952ec65ef376512716e33e27c8c096f6f1619ee52d6",
+    "profileImageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "guidance": "Validate the new init on Android and require descendant stop accounting. Preserve this stopped encrypted profile and its original app token/key. The old resume driver intentionally accepts only the first original APK; a deliberate follow-up must validate this terminal failed attempt before updating it. Do not reset the profile or retry the same old APK. A reversible init-only trial must back up and restore the original executable, prepare its interpreter, keep code replacement explicit, and prove zero fallback cleanup. Then integrate into the complete image and revalidate.",
+    "postTestHostState": {
+      "selinux": "Enforcing",
+      "phantomLimit": "null",
+      "phantomMonitoring": "null",
+      "guestOwners": "NONE"
+    },
+    "fullGoalRemainsOpen": true
+  },
+  "runtimeTrial": {
+    "job": {
+      "pid": 20387,
+      "token": "86ffa9d7decd470799c3cc42c1fba1dd",
+      "script": "/home/pi/pocket-api32-vm/subreaper-ce-validation/run-86ffa9d7decd470799c3cc42c1fba1dd.py",
+      "log": "/home/pi/pocket-api32-vm/subreaper-ce-validation/run-86ffa9d7decd470799c3cc42c1fba1dd.log",
+      "exit": "/home/pi/pocket-api32-vm/subreaper-ce-validation/run-86ffa9d7decd470799c3cc42c1fba1dd.exit.json"
+    },
+    "observer": {
+      "pid": 20511,
+      "script": "/home/pi/pocket-api32-vm/subreaper-ce-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/subreaper-ce-validation/process-budget-observer.log",
+      "sourceSha256": "4e9e5e9162cd6b80c07ddab61a8e5580814fe13dc929fceefc6c1320c43c12f9"
+    },
+    "candidate": "out/api32/subreaper-ce-candidate.json",
+    "sourceSnapshot": "out/api32/subreaper-ce-source-snapshot",
+    "manager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/subreaper-ce-manager-probe/api32-ce-manager-probe.apk",
+      "sha256": "41232049b6b1a8f031c306daec8dc2d4d14ec0d242e529384600a838de6148a0",
+      "bytes": 8534223,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      },
+      "ceInitTrial": {
+        "sourceSha256": "016f25ab577b119606e6ce2db0c951b7a0cf3396af0a8c40171b3d0c91f0a680",
+        "assetSha256": "a7e7994b972141eb5f7775b45a1e6e16490bb2c8def83d218d7b9a595a7c9faa",
+        "kernelChildOwnership": true
+      }
+    },
+    "scope": "Reversible init-only replacement on preserved encrypted CE3/0.78.25 profile; verify app/key persistence, kernel child ownership and no fallback cleanup, then restore original init bytes; no reset or password operation",
+    "buildCommand": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --host-native-dir out/api32/host-native-metrics-built --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/warm-player-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --ce-init-probe32 out/api32/subreaper-init-native/pocket-init-api32 --out out/api32/subreaper-ce-manager-probe",
+    "buildResult": "PASS",
+    "apkValidatorCommand": "python3 tools/validate_download_manager.py out/api32/subreaper-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+    "apkValidatorResult": "PASS",
+    "result": {
+      "report": "out/api32/subreaper-ce-result/ce-authless-report.json",
+      "reportSha256": "e4ec1940ea6b7d8541f63aae8b0507e4590ffae6346fc60754b50ebfeeb40e83",
+      "cycle": "out/api32/subreaper-ce-result/ce-authless-cycle.json",
+      "cycleSha256": "e9c3c654e6c5dbab11583829de3a11b5bd15de25d54901dbb4042bde297ed2cb",
+      "runId": "fde5db0b580b49fc9719bdecdea0710f",
+      "validation": "PASS",
+      "strictPassed": true,
+      "kernelChildOwnershipVerified": true,
+      "declaredServiceLifetimes": 16,
+      "descendantStop": [
+        [
+          "14",
+          "0",
+          "0",
+          "0"
+        ]
+      ],
+      "noManagerFallbackCleanup": true,
+      "initRestoration": {
+        "assetSha256": "a7e7994b972141eb5f7775b45a1e6e16490bb2c8def83d218d7b9a595a7c9faa",
+        "sourceSha256": "016f25ab577b119606e6ce2db0c951b7a0cf3396af0a8c40171b3d0c91f0a680",
+        "originalSha256": "45709609fa22c3df55e43443fa578f0ae42b657f571b0539fa13000a2b70a6ea",
+        "originalMode": 493,
+        "backup": ".pocket-ce-init-fde5db0b580b49fc9719bdecdea0710f",
+        "guestDataReset": false,
+        "runtimeCodeReplaced": true,
+        "originalCodeRestored": true,
+        "executedSha256": "ece1f217e4942e141660394e935b063995c0562869a8050f47abda59218936a4",
+        "restoredSha256": "45709609fa22c3df55e43443fa578f0ae42b657f571b0539fa13000a2b70a6ea"
+      },
+      "appDataAndKeystorePersisted": true,
+      "androidUnlockWaitMs": 4,
+      "sampledPeakChildren": 33,
+      "samples": 55,
+      "pollErrors": 0,
+      "observerErrors": [],
+      "hardProcessBoundProven": false,
+      "scope": "Init-only reversible trial on0.78.25 encrypted profile; not a complete packaged-image, secure-keyguard or full credential-lifecycle claim"
+    }
+  },
+  "normalImageIntegration": {
+    "version": "0.78.27",
+    "fixture": "out/api32/subreaper-fixture",
+    "status": "IMAGE_AND_MANAGER_STATIC_PASS_STAGING",
+    "image": {
+      "version": "0.78.27",
+      "sha256": "dd75b62160d0d9d685a490f1bf3839a1ae6ff8a187459533991f7cfe1ea8674c",
+      "bytes": 590690787,
+      "verifiedEntries": 2649,
+      "allPriorEntriesRetained": true,
+      "changedFrom07826": [
+        "system/bin/pocket-init-api32"
+      ],
+      "childSupervision": "kernel-subreaper",
+      "initMarkersPresent": true,
+      "runtimeVerified": false
+    },
+    "manifestField": {
+      "child_supervision": "kernel-subreaper"
+    },
+    "staleInitRejected": true,
+    "strictValidatorsUpdated": [
+      "app",
+      "media",
+      "persistence",
+      "credential lifecycle"
+    ],
+    "appManager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/subreaper-app-manager-probe/api32-app-manager-probe.apk",
+      "sha256": "bfc3804fabfe60a861c6644956d4a932cbcbe2d995ad402f218e6dc5f86ba2d4",
+      "bytes": 8386560,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      }
+    },
+    "mediaManager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/subreaper-media-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "b2fea249bff6f96ec8bfb87a281e332ffe3bb49eaf0e06a98546e6c99df7a867",
+      "bytes": 8653406,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      },
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "packagedImageTrial": true,
+      "guestCodePatchSha256": {},
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6",
+      "metricsProbeSha256": "61cbaffbdcc1bb661a9d1463a2a2ce05647ba5ff82b9333105ca4fb1a8034dda"
+    },
+    "nativeReuseRequested": true,
+    "cleanRoomSourceReproducibilityProven": false
+  },
+  "packagedImageRuntimeJob": {
+    "pid": 25180,
+    "token": "2e19b84f243b480ea8cdf484ae5c34c4",
+    "script": "/home/pi/pocket-api32-vm/subreaper-app-validation/run-2e19b84f243b480ea8cdf484ae5c34c4.py",
+    "log": "/home/pi/pocket-api32-vm/subreaper-app-validation/run-2e19b84f243b480ea8cdf484ae5c34c4.log",
+    "exit": "/home/pi/pocket-api32-vm/subreaper-app-validation/run-2e19b84f243b480ea8cdf484ae5c34c4.exit.json"
+  },
+  "packagedImageCandidate": "out/api32/subreaper-app-candidate.json",
+  "packagedImageSourceSnapshot": "out/api32/subreaper-app-source-snapshot",
+  "packagedImageRuntimeStatus": "COMPLETE_IMAGE_SIGNAL_NETWORK_AND_COMBINED_RUNTIME_PASS_FULL_CE_AND_OTHER_GATES_OPEN",
+  "packagedImageAppRuntime": {
+    "runId": "1e027ce3054347aaaf77a9cfe2b61991",
+    "validation": "PASS",
+    "strictPassed": true,
+    "kernelChildOwnershipVerified": true,
+    "descendantStop": [
+      [
+        "12",
+        "8",
+        "0",
+        "0"
+      ]
+    ],
+    "imageReuseVerified": true,
+    "initStop": [
+      [
+        "16",
+        "0",
+        "0"
+      ]
+    ],
+    "systemUiStarts": [
+      "16840"
+    ],
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "pollErrors": 0,
+    "report": "out/api32/subreaper-app-manager-app-report.json",
+    "reportSha256": "83a84d425e9b60842307f00b76187cd0dd179536f847664e4373078b5a40857e",
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "dd75b62160d0d9d685a490f1bf3839a1ae6ff8a187459533991f7cfe1ea8674c",
+      "reusedFiles": 2597,
+      "replacedFiles": 52,
+      "reusedBytes": 1285494296,
+      "writtenBytes": 18064398,
+      "durationMillis": 146900
+    },
+    "sampledPeakChildren": 32,
+    "censusSamples": 160,
+    "censusErrors": [],
+    "hardProcessBoundProven": false
+  },
+  "packagedImageMediaRuntime": {
+    "runId": "199e135fdafb4d97b60266386a689103",
+    "validation": "PASS",
+    "strictPassed": true,
+    "initStop": [
+      [
+        "16",
+        "0",
+        "0"
+      ]
+    ],
+    "descendantStop": [
+      [
+        "14",
+        "1",
+        "0",
+        "0"
+      ]
+    ],
+    "systemUiStarts": [
+      "20853"
+    ],
+    "anrs": [],
+    "javaFatals": [],
+    "nativeFatals": [],
+    "pollErrors": 0,
+    "supervisedLifetimeCount": 16,
+    "report": "out/api32/subreaper-media-media-session-report.json",
+    "reportSha256": "368f783b26bd6fe4f32f4e13b85d2fb81f069ab258ecdf5c1871157920f02cbc",
+    "gates": {
+      "packagedImageVerified": true,
+      "playerBootStartVerified": true,
+      "externalFilesVerified": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "extractorFirstDemandVerified": true,
+      "extractorBootStartVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "systemServerBridgeVerified": true,
+      "coreMediaMetricsVerified": true,
+      "reapAccounting": true,
+      "kernelChildOwnershipVerified": true
+    },
+    "runtimeCodeHashesPreserved": 13,
+    "observedPeakChildren": 31,
+    "samples": 8,
+    "censusScope": "Partial: observer started after guest boot, during the combined workload; startup peak is not established by this census",
+    "censusErrors": [],
+    "hardProcessBoundProven": false
+  },
+  "previousStatusBeforeCore48Reconciliation": "ANDROID_ENCRYPTED_PROFILE_KERNEL_DESCENDANT_OWNERSHIP_PASS_PACKAGED_IMAGE_PENDING",
+  "historicalRemainingBeforeCore48Reconciliation": [
+    "Verify native subreaper setup under the unmodified Android app sandbox",
+    "Verify real guest descendants are stopped/reaped with no Manager fallback cleanup",
+    "Require child-ownership stop accounting in full runtime validators",
+    "Rebuild and validate complete downloadable image with the new init",
+    "Complete credential/keyguard/outer restart and other remaining12L gates"
+  ],
+  "currentImage48Evidence": [
+    "out/api32/installd-core48-av-result/independent-check.json",
+    "out/api32/installd-core48-signal-result/independent-check.json",
+    "out/api32/installd-core48-ce3-result/independent-check.json"
+  ],
+  "ordinaryManagerCrash48Trial": {
+    "status": "PASS_MANAGER_CRASH48_STALE_ENDPOINT_FILES_KEYSTORE_NETWORK_RECOVERY",
+    "runId": "160b1ac256b84225894020ebe4ebecc3",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "3769afe44a9996f7cff653bfa5936862109d618c132efb9efbce58395dad7d7f",
+    "sourcePinsVerified": 763,
+    "sourceSnapshot": "out/api32/manager-crash-ack48-app-source-snapshot",
+    "independentCheck": "out/api32/manager-crash-ack48-app-result/independent-check.json",
+    "independentCheckSha256": "e6a5ddc9499096ec4e9cf816d9a8816fa2011ddda0124437e504bb2bb5ac8807",
+    "validationCommand": "python3 out/api32/verify_manager_crash_ack48_app_result.py --run-id 160b1ac256b84225894020ebe4ebecc3",
+    "validationResult": "PASS",
+    "terminalState": "out/api32/manager-crash-ack48-terminal-state.json",
+    "packageCheck": "out/api32/manager-crash-ack48-package-check.json",
+    "crashedHostPid": 3374,
+    "resumedHostPid": 7741,
+    "guestStarts": 2,
+    "oldKernelProcessIdentitiesGone": 26,
+    "preStartLiveOldProcesses": 0,
+    "oldEpoch": -1109557664130948602,
+    "newEpoch": 3966043662980268260,
+    "originalCanaryInodesAndContentsPreserved": true,
+    "originalNonExportableKeyAndCiphertextPreserved": true,
+    "ownTestKeyRemovedAfterSuccess": true,
+    "noInstallOrForceStopAfterCrash": true,
+    "fixtureServerOfflineBeforeCrash": true,
+    "activityAcknowledgmentVerified": true,
+    "supplementalLauncherUsed": false,
+    "freshProviderPrivate40PerBootVerified": true,
+    "networkDnsFwmarkHomeReopenPerBootVerified": true,
+    "serviceLifetimesReapedAfterRecovery": 15,
+    "adoptedDescendantsReapedAfterRecovery": 13,
+    "sampledPeakChildren": 31,
+    "observerSamples": 241,
+    "amsSamples": 16,
+    "productionJavaChanged": false,
+    "runtimeImageChanged": false,
+    "liveOrphanCleanupPathObserved": false,
+    "freshPlaintextMigrationVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndNormalCrashSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_POSTBOOT_RESET_AND_NORMAL_CRASH_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      },
+      {
+        "workload": "actual_framework_reset_mounted_provider_private40_network_home_reopen",
+        "runId": "53ef421a11b24f10960c6848b6595e16",
+        "starts": 1,
+        "samples": 138,
+        "peak": 30,
+        "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+        "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90"
+      },
+      {
+        "workload": "actual_manager_sigkill_stale_endpoint_file_keystore_offline_recovery",
+        "runId": "160b1ac256b84225894020ebe4ebecc3",
+        "starts": 2,
+        "samples": 241,
+        "peak": 31,
+        "independentCheck": "out/api32/manager-crash-ack48-app-result/independent-check.json",
+        "independentCheckSha256": "e6a5ddc9499096ec4e9cf816d9a8816fa2011ddda0124437e504bb2bb5ac8807"
+      }
+    ],
+    "distinctStarts": 13,
+    "totalSamples": 1522,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/framework-reset48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ],
+    "frameworkStorageResetVerified": true,
+    "scope": "Same unchanged production image48/five JNI/production Java, across separately pinned test APKs. Full CE six-cycle trial remains its original frozen test/source scope; later test helper changes do not imply that exact latest test APK has repeated those cycles.",
+    "failedCallbackTrialExcludedFromFullWorkloadAggregate": "bad1cd36c8ad43ab9148493212b41db5",
+    "normalProfileManagerSigkillAndStaleEndpointRecoveryVerified": true,
+    "standaloneActivityAcknowledgmentDriverVerified": true,
+    "notStandaloneCrashTrialsExcludedFromPassingAggregate": [
+      "d13c1008247840948eae45ef92204199",
+      "12a75d2eb1d9422e8078f0699a5b90b7"
+    ],
+    "additionalPreservedScopedTrials": [
+      {
+        "scope": "observer_stop_timeout",
+        "runId": "44cbd06f8e54447bb1dc9b3c18064ff3",
+        "starts": 1,
+        "samples": 89,
+        "peak": 30,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/installd-postboot-app48-av-result/manager-app-report.json"
+      },
+      {
+        "scope": "observer_missing_proc_children",
+        "runId": "9fbd1969baff4e238b9ea9f3378b3b59",
+        "starts": 1,
+        "samples": 86,
+        "peak": 29,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/installd-postboot-children48-av-result/manager-app-report.json"
+      },
+      {
+        "scope": "old_callback_expectation",
+        "runId": "bad1cd36c8ad43ab9148493212b41db5",
+        "starts": 1,
+        "samples": 145,
+        "peak": 29,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/framework-reset48-app-result/manager-app-report.json"
+      },
+      {
+        "scope": "failed_driver_acceptance_and_manual_resume",
+        "runId": "d13c1008247840948eae45ef92204199",
+        "starts": 2,
+        "samples": 322,
+        "peak": 31,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/manager-crash48-app-result/manager-app-report.json"
+      },
+      {
+        "scope": "assisted_launcher_scope",
+        "runId": "12a75d2eb1d9422e8078f0699a5b90b7",
+        "starts": 2,
+        "samples": 392,
+        "peak": 30,
+        "rawStatus": "PASS",
+        "rawReport": "out/api32/manager-crash-owner48-app-result/manager-app-report.json"
+      }
+    ],
+    "listedAllScopeSamples": 2556,
+    "listedAllScopeSampledPeak": 32,
+    "listedAllScopeStarts": 20
+  },
+  "statusBeforeOrdinaryManagerCrash48": "CORE48_FULL_MEDIA_SIGNAL_SIX_ENCRYPTED_CYCLES_KERNEL_DESCENDANT_OWNERSHIP_PASS_ABRUPT_DEATH_OPEN",
+  "liveOrphanCleanupPathObservedInCrashTrial": false
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "profile": "software",
+  "backends": {
+    "bluetoothHci": false,
+    "cameraProvider": true
+  },
+  "features": {
+    "android.hardware.bluetooth": false,
+    "android.hardware.bluetooth_le": false,
+    "android.hardware.camera": true,
+    "android.hardware.camera.any": true,
+    "android.hardware.camera.level.full": false,
+    "android.hardware.camera.capability.manual_sensor": false,
+    "android.hardware.camera.capability.manual_post_processing": false,
+    "android.hardware.camera.ar": false,
+    "android.hardware.camera.autofocus": false,
+    "android.hardware.camera.flash": false,
+    "android.hardware.camera.front": false,
+    "android.hardware.camera.concurrent": false,
+    "android.hardware.camera.capability.raw": false
+  }
+}

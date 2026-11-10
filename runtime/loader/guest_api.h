@@ -18,3 +18,8 @@ static inline void pocket_native_binder_host(int enabled) {
 static inline int pocket_native_denylist_view(void) {
     return (int)syscall(__NR_getpid,0x504c2001UL,3UL);
 }
+// Preserve the framework's external-storage view without kernel namespaces.
+// Only a logical UID0 caller (zygote before specialization) can select it.
+static inline int pocket_native_storage_mode(unsigned mode) {
+    return (int)syscall(__NR_getpid,0x504c2001UL,6UL,(unsigned long)mode);
+}

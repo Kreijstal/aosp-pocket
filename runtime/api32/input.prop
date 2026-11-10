@@ -1,0 +1,3 @@
+# Pocket Android 12L input profile: host input is forwarded into the guest.
+# EventHub must not grab host V4L devices for optional video-input association.
+ro.input.video_enabled=false

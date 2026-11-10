@@ -1,0 +1,236 @@
+{
+  "schema": 1,
+  "status": "SOFTWARE_HARDWARE_PROFILE_AND_STOCK_CAMERA_SERVICE_PASS_SYSTEMUI_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Truthful Bluetooth/camera absence declarations for the software profile and a live, initialized stock CameraService with no camera providers. No host camera capture, radio, stable startup or production Manager claim.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "hostVmMemoryMb": 1536,
+  "runId": "7e8436f809d64a27917557ccf93d0d17",
+  "apkSha256": "8481229c3b15935f7f60fbf21284d4ffecf9288d6fb5c7a728257836e2e82c7f",
+  "apkBytes": 7801410,
+  "imageManifestSha256": "2f1c2132e886b7c58fd64d5cabee80bc1179f8e50399d9fc25d6e8d8170a88aa",
+  "imageVerifiedFiles": 2653,
+  "reportPath": "out/api32/software-hardware-report.json",
+  "reportSha256": "2597b132ec243f3e3bae787b4e3b3e0a561167ffa3736740f6acc9117b5216d9",
+  "sourceSha256": {
+    "runtime/api32/software-hardware.json": "0912ce40fc4c95f8d7e9660314a17ee8623fa3148650890add1f0a0f03d8c120",
+    "runtime/api32/hardware_registry.h": "c2b01fc85137937f529b2b7eb25e01428fee62f98347ba0732d6c2d849b77d8b",
+    "runtime/api32/hardware_probe.cpp": "1f2e5f0e32296224a99095a4061abc4fa1ce54597d5a392502651b1090e1c466",
+    "runtime/api32/FrameworkReadyProbe.java": "f34176349828a62aa6a3aadf210fcd83a6ae8b15310f9bba06eeb8a6371c761e",
+    "tools/api32_hardware_profile.py": "b8227d67aa4e1fa49d246953fb503ac38e9fb424222aaf332c699ad927171d78",
+    "tools/build_api32_probe.py": "8f9e2f9127b146c1d3940b2d053de17835094c881cc07e04c32dd02e9644fd09",
+    "tools/test_api32_on_pi.py": "a32060b9efe898a8e450719a3478895eb7277608d25c99f630ffabc699ab75b6"
+  },
+  "componentMarkers": [
+    "API32_CAMERA_HIDL_PASS stock_service=2.2 aliases=2.1,2.0 chain=verified remote=1 ping=1",
+    "API32_CAMERA_HIDL_ROLE_DENIED_PASS uid=1047 unrelated_service=rejected before_interface_query=1",
+    "API32_HARDWARE_FEATURES_PASS verified_absent=13 profile=software source=PackageManager",
+    "API32_BLUETOOTH_ABSENT_PASS features=absent manager=absent default_adapter=null backend=unavailable",
+    "API32_CAMERA_SERVICE_PASS stock_daemon=12L initialized=1 binder=live api1_count=0 api2_count=0 missing_id=illegal_argument providers=absent"
+  ],
+  "hardwareProfile": {
+    "schema": 1,
+    "sdk": 32,
+    "profile": "software",
+    "backends": {
+      "bluetoothHci": false,
+      "cameraProvider": false
+    },
+    "features": {
+      "android.hardware.bluetooth": false,
+      "android.hardware.bluetooth_le": false,
+      "android.hardware.camera": false,
+      "android.hardware.camera.any": false,
+      "android.hardware.camera.level.full": false,
+      "android.hardware.camera.capability.manual_sensor": false,
+      "android.hardware.camera.capability.manual_post_processing": false,
+      "android.hardware.camera.ar": false,
+      "android.hardware.camera.autofocus": false,
+      "android.hardware.camera.flash": false,
+      "android.hardware.camera.front": false,
+      "android.hardware.camera.concurrent": false,
+      "android.hardware.camera.capability.raw": false
+    }
+  },
+  "permissionTransform": {
+    "changed": {
+      "vendor/etc/permissions/android.hardware.bluetooth.xml": [
+        "android.hardware.bluetooth"
+      ],
+      "vendor/etc/permissions/android.hardware.bluetooth_le.xml": [
+        "android.hardware.bluetooth_le"
+      ],
+      "vendor/etc/permissions/android.hardware.camera.ar.xml": [
+        "android.hardware.camera.any",
+        "android.hardware.camera.ar"
+      ],
+      "vendor/etc/permissions/android.hardware.camera.concurrent.xml": [
+        "android.hardware.camera.front",
+        "android.hardware.camera.concurrent"
+      ],
+      "vendor/etc/permissions/android.hardware.camera.flash-autofocus.xml": [
+        "android.hardware.camera.any",
+        "android.hardware.camera",
+        "android.hardware.camera.autofocus",
+        "android.hardware.camera.flash"
+      ],
+      "vendor/etc/permissions/android.hardware.camera.front.xml": [
+        "android.hardware.camera.any",
+        "android.hardware.camera.front"
+      ],
+      "vendor/etc/permissions/android.hardware.camera.full.xml": [
+        "android.hardware.camera.any",
+        "android.hardware.camera.level.full",
+        "android.hardware.camera.capability.manual_sensor",
+        "android.hardware.camera.capability.manual_post_processing"
+      ],
+      "vendor/etc/permissions/android.hardware.camera.raw.xml": [
+        "android.hardware.camera.any",
+        "android.hardware.camera.capability.raw"
+      ],
+      "vendor/etc/permissions/handheld_core_hardware.xml": [
+        "android.hardware.bluetooth",
+        "android.hardware.camera"
+      ]
+    },
+    "featuresAbsent": [
+      "android.hardware.bluetooth",
+      "android.hardware.bluetooth_le",
+      "android.hardware.camera",
+      "android.hardware.camera.any",
+      "android.hardware.camera.ar",
+      "android.hardware.camera.autofocus",
+      "android.hardware.camera.capability.manual_post_processing",
+      "android.hardware.camera.capability.manual_sensor",
+      "android.hardware.camera.capability.raw",
+      "android.hardware.camera.concurrent",
+      "android.hardware.camera.flash",
+      "android.hardware.camera.front",
+      "android.hardware.camera.level.full"
+    ],
+    "unrelatedNodesUnchanged": true,
+    "copyrightCommentsPreserved": true,
+    "referenceUnchanged": true,
+    "idempotent": true
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_framework.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS / exit 0; API32 hardware DSO and probes rebuilt with the camera-service interface chain and restricted native role."
+    },
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/hardware-profile-java-classes runtime/api32/FrameworkReadyProbe.java",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/software-hardware-baseline/image-manifest.json",
+      "result": "PASS / exit 0; signed 7801410-byte APK, 18-input delta, all 2653 guest inputs verified locally and on device. Bootstrap JAR unchanged."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "New hardware/camera and all required component markers PASS; strict startup FAIL / driver exit 1, guest exit 0, due to SystemUI ANR. Later UI/input passed. Gallery receiver ran without the previous ANR. All 31 services reaped, host setting restored, SELinux Enforcing."
+    },
+    {
+      "command": "python3 out/api32/replay_software_hardware_gates.py",
+      "result": "PASS / exit 0; all markers present, strict startup still rejects the original report, removing the new camera marker rejected. Report unchanged."
+    },
+    {
+      "command": "python3 -m py_compile tools/api32_hardware_profile.py tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0."
+    }
+  ],
+  "cameraService": {
+    "nativeRoleUid": 1047,
+    "binary": "stock SDK32 cameraserver/libcameraservice",
+    "stockIntegrity": {
+      "cameraserverStockTextUnchanged": true,
+      "cameraserverTextSha256": "ede58ed801c3bcebcbab56bbb85c3b9a047c3155d801e9a5710d3b35d5463996",
+      "libcameraserviceUnchanged": true,
+      "libcameraserviceSha256": "a62e91b9940dd627353d831dd07bd84eca7de4b4ab257aa7d4b4df758acd5e3c"
+    },
+    "interface": "android.hardware.ICameraService",
+    "hidlInterface": "android.frameworks.cameraservice.service@2.2::ICameraService",
+    "hidlAliases": [
+      "2.1",
+      "2.0"
+    ],
+    "hidlInterfaceChainLength": 4,
+    "hidlRemotePingVerified": true,
+    "roleEnforcement": "Native UID1047 may register only the 2.2 camera service, with the verified 2.2/2.1/2.0/IBase chain. An attempt to register an unrelated sensor service was rejected before interfaceChain dispatch. Existing UID39999 denial also passed.",
+    "clientRoleUid": 1000,
+    "api1Count": 0,
+    "api2IdCount": 0,
+    "invalidCameraIdErrorCode": 3,
+    "initializationProof": "Typed ICameraService calls, live Binder before/after, actual API1/API2 enumeration and raw invalid-ID ILLEGAL_ARGUMENT(3). Uninitialized stock service would return DISCONNECTED(4); missing-service API1 zero fallback is not accepted.",
+    "cameraProvidersPresent": false,
+    "dynamicCameraProviderRegistrationVerified": false,
+    "hostCameraCaptureSupported": false,
+    "galleryReceiverObserved": [
+      "ActivityManager:Start proc 30096:com.android.gallery3d/u0a44 for broadcast {com.android.gallery3d/com.android.camera.DisableCameraReceiver}",
+      "G:DisableCameraReceiver:no back camera",
+      "G:DisableCameraReceiver:disable all camera activities"
+    ],
+    "galleryAnrInThisRun": false
+  },
+  "bluetooth": {
+    "featureDeclared": false,
+    "managerRegistered": false,
+    "defaultAdapter": null,
+    "actualBluetoothProcessesStarted": 0,
+    "radioBackendSupported": false,
+    "evidence": "Stock SystemServer reports No Bluetooth Service (Bluetooth Hardware Not Present). PackageManager and BluetoothAdapter checked through actual framework APIs; no package disabling, fake adapter or success response."
+  },
+  "startupAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 28761,
+      "reason": "executing service com.android.systemui/.SystemUIService"
+    }
+  ],
+  "uiStartupCrashes": [],
+  "laterUiSystemUiPid": 29450,
+  "laterUiStableSeconds": 40,
+  "hostInput": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "rejected": 0,
+    "text": "a129"
+  },
+  "nativeLogChars": 1376409,
+  "nativeLogWithinCaptureLimit": true,
+  "traceurFailureStillPresent": true,
+  "cleanup": {
+    "reaped": 31,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "remaining": [
+    "Fix SystemUI startup ANR; its captured main-thread snapshot is in resource-string loading and ART synchronization, not proof of a persistent resource/Binder deadlock.",
+    "Implement and validate actual host camera/radio backends before advertising those capabilities; dynamic camera provider discovery is not established by the empty-profile test.",
+    "Traceur still fails because Perfetto is unavailable.",
+    "Complete normal API32 supervisor/Manager and on-demand image/catalog integration, credentials/storage lifecycle and end-to-end real application/restart validation. Phone remains offline."
+  ],
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "usableLauncherVerified": false,
+  "managerApi32Supported": false
+}

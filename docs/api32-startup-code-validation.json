@@ -1,0 +1,247 @@
+{
+  "schema": 1,
+  "status": "EARLY_EXECUTABLE_SPEED_MAPPING_VERIFIED_STARTUP_ANRS_REMAIN_30HZ_REVERTED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Bounded opt-in early SystemUI mapping and main scheduling observations; diagnostic runs do not prove AOT execution of every instruction, ANR causality or stable startup.",
+  "hostVmInstance": 73,
+  "guestSdk": 32,
+  "runs": [
+    {
+      "runId": "640e6f3d750c4a13b2b70a15d5a93c3b",
+      "reportPath": "out/api32/startup-code-report.json",
+      "reportSha256": "90d2c5cfb96e0b59028b4936ee008584d789bd032ed1dd8c2492fc63cc1bdd58",
+      "apkSha256": "d4ff0bedb6ddbc40b38f37779882c95bf4c8527a90591e8163bea7d930ccfdbf",
+      "imageVerifiedFiles": 2653,
+      "passed": false,
+      "guestExitCode": 0,
+      "startupCodeSnapshots": [
+        {
+          "pid": 914,
+          "sample": 0,
+          "elapsed_ms": 2003,
+          "maps_readable": 1,
+          "systemui_rows": 8,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 258031937,
+          "runnable_wait_ns": 446113871,
+          "slices": 132
+        },
+        {
+          "pid": 914,
+          "sample": 1,
+          "elapsed_ms": 8180,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 835492370,
+          "runnable_wait_ns": 1911690732,
+          "slices": 542
+        },
+        {
+          "pid": 914,
+          "sample": 2,
+          "elapsed_ms": 16264,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 1732915136,
+          "runnable_wait_ns": 4831072948,
+          "slices": 1179
+        },
+        {
+          "pid": 2181,
+          "sample": 0,
+          "elapsed_ms": 2000,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 454689520,
+          "runnable_wait_ns": 933389527,
+          "slices": 276
+        },
+        {
+          "pid": 2181,
+          "sample": 1,
+          "elapsed_ms": 8067,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 1368614875,
+          "runnable_wait_ns": 3072430890,
+          "slices": 907
+        },
+        {
+          "pid": 2181,
+          "sample": 2,
+          "elapsed_ms": 16199,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 3047701757,
+          "runnable_wait_ns": 6574574974,
+          "slices": 1799
+        }
+      ],
+      "uiStartupCrashes": [],
+      "anrs": [
+        [
+          "com.android.systemui",
+          "914",
+          "executing service com.android.systemui/.SystemUIService"
+        ]
+      ],
+      "displayMarkers": [],
+      "streamRefreshHz": null,
+      "uiRuntimeMarkers": [
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=2181 stable_seconds=40"
+      ],
+      "nativeLogWithinCaptureLimit": true,
+      "hostSelinuxAfter": "Enforcing",
+      "startupTraceRequested": false,
+      "startupCodeObserveRequested": true
+    },
+    {
+      "runId": "2da943bf5c744e4b9525a2855a0010d2",
+      "reportPath": "out/api32/startup-code-30hz-report.json",
+      "reportSha256": "5a8dfed1b6291d62d757150ba5a2ef410147db53f1b67edf9da9b6ed7985f95c",
+      "apkSha256": "c3581e90085fcf728e54b8e99f1e741299f26a2cc9a1dfa34a49af3f0846cc31",
+      "imageVerifiedFiles": 2653,
+      "passed": false,
+      "guestExitCode": 0,
+      "startupCodeSnapshots": [
+        {
+          "pid": 5922,
+          "sample": 0,
+          "elapsed_ms": 2000,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 310922512,
+          "runnable_wait_ns": 281601535,
+          "slices": 176
+        },
+        {
+          "pid": 5922,
+          "sample": 1,
+          "elapsed_ms": 8038,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 973117442,
+          "runnable_wait_ns": 1778778942,
+          "slices": 633
+        },
+        {
+          "pid": 5922,
+          "sample": 2,
+          "elapsed_ms": 16198,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 2118072495,
+          "runnable_wait_ns": 4610028064,
+          "slices": 1373
+        },
+        {
+          "pid": 6680,
+          "sample": 0,
+          "elapsed_ms": 2008,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 246585780,
+          "runnable_wait_ns": 1034954549,
+          "slices": 146
+        },
+        {
+          "pid": 6680,
+          "sample": 1,
+          "elapsed_ms": 8040,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 1269316249,
+          "runnable_wait_ns": 3658312590,
+          "slices": 808
+        },
+        {
+          "pid": 6680,
+          "sample": 2,
+          "elapsed_ms": 16066,
+          "maps_readable": 1,
+          "systemui_rows": 10,
+          "executable": 1,
+          "verified_speed": 1,
+          "main_schedstat": 1,
+          "cpu_ns": 3467046914,
+          "runnable_wait_ns": 6037866759,
+          "slices": 1931
+        }
+      ],
+      "uiStartupCrashes": [],
+      "anrs": [
+        [
+          "com.android.systemui",
+          "5922",
+          "executing service com.android.systemui/.keyguard.KeyguardService"
+        ],
+        [
+          "com.android.settings (com.android.settings/.FallbackHome)",
+          "6072",
+          "Input dispatching timed out (78c7632 com.android.settings/com.android.settings.FallbackHome (server) is not responding. Waited 5001ms for FocusEvent(hasFocus=false))"
+        ]
+      ],
+      "displayMarkers": [
+        "API32_SOFTWARE_DISPLAY_PASS expected_hz=30 actual_hz=30.000002 source=DisplayManager"
+      ],
+      "streamRefreshHz": 30,
+      "uiRuntimeMarkers": [
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=6680 stable_seconds=40"
+      ],
+      "nativeLogWithinCaptureLimit": true,
+      "hostSelinuxAfter": "Enforcing",
+      "startupTraceRequested": false,
+      "startupCodeObserveRequested": true
+    }
+  ],
+  "displayExperiment": {
+    "requestedHz": 30,
+    "displayManagerAndStreamAgreementVerified": true,
+    "startupFixed": false,
+    "reducedRateRetained": false,
+    "defaultRate": 60,
+    "baseline60HzMeasuredByNewCheck": false,
+    "controlledPerformanceBenchmark": false
+  },
+  "normalDefaults": {
+    "startupCodeObserver": false,
+    "periodicSigquitSampler": false
+  },
+  "fullGuestBootVerified": false,
+  "systemuiStartupVerified": false,
+  "usableLauncherVerified": false,
+  "pocketManagerApi32Supported": false
+}

@@ -38,5 +38,12 @@ final class CeFuse implements AutoCloseable {
         try{if(reply.readInt()==0)throw new IOException("Cannot open encrypted inode");return ParcelFileDescriptor.CREATOR.createFromParcel(reply);}
         finally{reply.recycle();}
     }
-    @Override public void close(){try{if(keeper!=null)keeper.close();}catch(IOException ignored){}stop(server);}
+    /** Whether the mount still serves its root inode, which needs no CE callback. */
+    boolean alive() {
+        try(ParcelFileDescriptor probe=open(2,ParcelFileDescriptor.MODE_READ_ONLY)){return true;}
+        catch(Exception dead){return false;}
+    }
+    private boolean closed;
+    // Idempotent: a deliberately stopped transport is closed again on rebuild.
+    @Override public synchronized void close(){if(closed)return;closed=true;try{if(keeper!=null)keeper.close();}catch(IOException ignored){}stop(server);}
 }

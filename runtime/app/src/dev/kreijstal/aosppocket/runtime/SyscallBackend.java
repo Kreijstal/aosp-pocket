@@ -38,11 +38,22 @@ final class SyscallBackend {
         return environment(root,parentPid,28);
     }
     static Map<String,String> environment(File root,int parentPid,int sdk) {
-        if(sdk!=28 && sdk!=29)throw new IllegalArgumentException("Unsupported direct guest SDK");
+        if(sdk!=28 && sdk!=29 && sdk!=32)throw new IllegalArgumentException("Unsupported direct guest SDK");
         Map<String,String> env=new LinkedHashMap<>();
         env.put("POCKET_LOADER_BOOT","1");
         env.put("POCKET_SYSCALL_BACKEND","native");
-        env.put("LD_PRELOAD","/system/lib64/libpocket_binder_api"+sdk+".so:/system/lib64/libpocket_hidl_api"+sdk+".so");
+        if(sdk!=32)env.put("LD_PRELOAD","/system/lib64/libpocket_binder_api"+sdk+".so:/system/lib64/libpocket_hidl_api"+sdk+".so");
+        if(sdk==32) {
+            env.put("ANDROID_RUNTIME_ROOT","/apex/com.android.runtime");
+            env.put("ANDROID_TZDATA_ROOT","/apex/com.android.tzdata");
+            env.put("POCKET_API32_HOST_PID",Integer.toString(parentPid));
+            try {
+                String stat=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("/proc/"+parentPid+"/stat")),java.nio.charset.StandardCharsets.UTF_8);
+                String start=stat.substring(stat.lastIndexOf(')')+2).trim().split(" +")[19];
+                if(!start.matches("[0-9]+"))throw new java.io.IOException("Invalid host process start time");
+                env.put("POCKET_API32_HOST_START",start);
+            }catch(java.io.IOException | RuntimeException error){throw new IllegalStateException("Cannot identify Android 12L host process",error);}
+        }
         if(sdk==29){
             env.put("ANDROID_RUNTIME_ROOT","/apex/com.android.runtime");
             env.put("ANDROID_TZDATA_ROOT","/apex/com.android.tzdata");
@@ -58,7 +69,7 @@ final class SyscallBackend {
         }
         env.put("POCKET_PARENT_PID",Integer.toString(parentPid));
         env.put("POCKET_GUEST_CONSOLE","/logs/manager-init.log");
-        env.put("PATH","/system/bin:/system/xbin:/vendor/bin");
+        env.put("PATH",sdk==32?"/system/bin:/apex/com.android.runtime/bin:/vendor/bin":"/system/bin:/system/xbin:/vendor/bin");
         env.put("ANDROID_ROOT","/system");env.put("ANDROID_DATA","/data");
         env.put("ANDROID_ASSETS","/system/app");env.put("ANDROID_STORAGE","/storage");
         env.put("ASEC_MOUNTPOINT","/mnt/asec");env.put("EXTERNAL_STORAGE","/sdcard");

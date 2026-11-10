@@ -1,0 +1,275 @@
+{
+  "schema": 1,
+  "status": "COMPONENT_PASS_STARTUP_FAILED",
+  "component": "trusted_system_server_preopt_selection",
+  "guestSdk": 32,
+  "hostVmInstance": 73,
+  "previousGoalTurnClassification": "progress",
+  "scope": "Select the pinned immutable system preopts and retain stock verify handling for APEX service JARs; invalidate only disposable service caches from older fixtures. ART trust checks remain enabled. Verify selected artifacts and executable services.odex mapping.",
+  "apkSha256": "31f3768a8ee20c5f902df220f1d27c13b52de8ebb23f36307858ac9d79516fea",
+  "apkBytes": 7677065,
+  "profile": {
+    "dalvik.vm.systemservercompilerfilter": "verify",
+    "dalvik.vm.dex2oat-threads": 2,
+    "dalvik.vm.boot-dex2oat-threads": 2
+  },
+  "preparationTimeoutSeconds": 240,
+  "existingFrameworkAndUiTimeoutsUnchanged": true,
+  "preparationVerified": true,
+  "loadedSystemServerSpeedCodeVerified": true,
+  "systemUiStartupVerified": false,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "sourceSha256": {
+    "runtime/api32/SystemServerDexopt32.java": "9a9751ee08e74b1bf0fe8a64fe2d7495e5cf6faa08e58401dcf98071beb84b74",
+    "runtime/api32/BootArtifactsProbe32.java": "9c0f9ecd226947e6073f1c82f95b0bf163abb991add8b668ca56689ac035c905",
+    "runtime/api32/UiRuntimeProbe32.java": "799e17e23f581445d4fee4799982f5d40c3f6c4549f272fc6af626d56790928d",
+    "runtime/api32/memory.prop": "7e9293cc9221ba3812d1c91541cd4fb3f698ad66f629de45619bf92bf12d81ee",
+    "tools/build_api32_probe.py": "5584b64f98d8930c7c91acce9dcddc6823462083e93044371ed459ffeef1ce22",
+    "tools/test_api32_on_pi.py": "48aef07014946d7bf0eb71a000193d3f8700ecdac0eb88db877d8581f2378a1b"
+  },
+  "checks": [
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/systemserver-dexopt-classes runtime/api32/BootArtifactsProbe32.java runtime/api32/SystemServerDexopt32.java runtime/api32/UiRuntimeProbe32.java",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/systemserver-speed-baseline-image-manifest.json",
+      "result": "PASS / exit 0; five changed assets match deployed manifest diff and embedded hashes; bootstrap JAR and stock compiled framework artifacts unchanged"
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component PASS: three immutable stock system preopts select speed, three APEX service JARs select stock verify, all six need zero further dexopt, original artifact hashes unchanged. Actual system_server PID 30165 maps trusted services.odex executable with speed. Full UI startup FAIL / driver exit 1, guest exit 0: three earlier SystemUI KeyguardService ANRs. Home/Settings, touch/keys passed; 28 services reaped, no remaining/failed; host SELinux Enforcing and temporary phantom limit restored."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/systemserver-speed-first-image-manifest.json",
+      "result": "PASS / exit 0; four changed assets match delta manifest/hashes; original platform preopts and bootstrap JAR unchanged"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "firstAttempt": {
+    "runId": "4d09f43feea94560973f7e90dc17a8b9",
+    "apkSha256": "9c72ade38efd5f8bfefa7f94afeeef4603b5d17e50e5b503d6b1fff1ee37bd19",
+    "guestExitCode": 25,
+    "driverExitCode": 1,
+    "preparationMarker": "API32_SYSTEMSERVER_DEXOPT_PASS stock_zygote_dexopt=1 filter=speed paths=6 compiled=5 reused=1 elapsed_ms=53075",
+    "compilerThreads": 2,
+    "servicesDex2oatWallSeconds": 43.693,
+    "compiledOrdinaryDataArtifactsRejected": true,
+    "abortReason": "Executing untrusted code from /data/dalvik-cache/arm64/system@framework@ethernet-service.jar@classes.dex (also services.jar on later retries)",
+    "cleanup": {
+      "reaped": 41,
+      "remaining": 0,
+      "failed": 0
+    },
+    "hostPhantomLimitRestored": true,
+    "report": "out/api32/systemserver-speed-first-report.json"
+  },
+  "policy": "Factory /system preopts select speed; APEX service JARs use stock verify. No odsign property spoofing, ART trust bypass, or arbitrary data-code trust.",
+  "runId": "5d21c06786fb49869b165e68c2181d18",
+  "androidSandboxVerified": true,
+  "combinedFixturePassed": false,
+  "guestExitCode": 0,
+  "driverExitCode": 1,
+  "imageVerifiedFiles": 2644,
+  "preparationMarker": "API32_SYSTEMSERVER_DEXOPT_PASS stock_zygote_dexopt=1 system_prebuilt_speed=3 apex_verify=3 paths=6 compiled=3 reused=3 elapsed_ms=3397",
+  "preparationReportedElapsedMillis": 3397,
+  "artifactItems": [
+    {
+      "path": "/system/framework/com.android.location.provider.jar",
+      "before": "speed",
+      "after": "speed",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "2",
+      "artifact": "/system/framework/oat/arm64/com.android.location.provider.odex",
+      "artifact_bytes": "48592",
+      "artifact_sha256": "21d155b932f5b771ea5646ec91c39507824cd28939e249307314c575acb82758",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/system/framework/services.jar",
+      "before": "speed",
+      "after": "speed",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "2",
+      "artifact": "/system/framework/oat/arm64/services.odex",
+      "artifact_bytes": "39763952",
+      "artifact_sha256": "534815dac7cccb8203132632109aa4eae8beba63d114a90efb7ebdab3fd14962",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/system/framework/ethernet-service.jar",
+      "before": "speed",
+      "after": "speed",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "2",
+      "artifact": "/system/framework/oat/arm64/ethernet-service.odex",
+      "artifact_bytes": "87168",
+      "artifact_sha256": "5d5a5c2348cc9cd5c7635dc468a5fa4b8c9917c7f80ecb8fdaf1305ff2f5a5c1",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/apex/com.android.appsearch/javalib/service-appsearch.jar",
+      "before": "speed",
+      "after": "verify",
+      "needed_before": "1",
+      "needed_after": "0",
+      "invalidated_cache_files": "2",
+      "artifact": "/data/dalvik-cache/arm64/apex@com.android.appsearch@javalib@service-appsearch.jar@classes.dex",
+      "artifact_bytes": "21344",
+      "artifact_sha256": "f282a327a66c2a8b6a7cfa4a569ec265e8789c0c2518689c039117ff4028069f",
+      "artifact_reused": "false"
+    },
+    {
+      "path": "/apex/com.android.media/javalib/service-media-s.jar",
+      "before": "speed",
+      "after": "verify",
+      "needed_before": "1",
+      "needed_after": "0",
+      "invalidated_cache_files": "2",
+      "artifact": "/data/dalvik-cache/arm64/apex@com.android.media@javalib@service-media-s.jar@classes.dex",
+      "artifact_bytes": "17248",
+      "artifact_sha256": "54d44fe2fe5517070d317368f1d77c2dbf7c8af4d975b53d5fe12d6de580e38e",
+      "artifact_reused": "false"
+    },
+    {
+      "path": "/apex/com.android.permission/javalib/service-permission.jar",
+      "before": "speed",
+      "after": "verify",
+      "needed_before": "1",
+      "needed_after": "0",
+      "invalidated_cache_files": "2",
+      "artifact": "/data/dalvik-cache/arm64/apex@com.android.permission@javalib@service-permission.jar@classes.dex",
+      "artifact_bytes": "17248",
+      "artifact_sha256": "d5258b204e0a178ccd1375ec2502bd0e6a3ad717e0892a921ad342fcd9d4559d",
+      "artifact_reused": "false"
+    }
+  ],
+  "selectedArtifactsUnmodified": true,
+  "loadedCodeMarker": "API32_SYSTEMSERVER_CODE_LOADED_PASS pid=30165 path=/system/framework/oat/arm64/services.odex filter=speed executable_mapping=1",
+  "loadedCodeTraceEvidence": [
+    {
+      "trace": "root/tmp/art-traces/anr_30165_70388_297946119",
+      "entry": "/system/framework/oat/arm64/services.odex: speed"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_30165_70377_509445736",
+      "entry": "/system/framework/oat/arm64/services.odex: speed"
+    }
+  ],
+  "traceSnapshot": "out/api32/anr-snapshot-5d21c06786fb49869b165e68c2181d18-20261102T155631195338.json",
+  "cacheInvalidationScope": "Only the dex/vdex/art cache files derived from six verified SYSTEMSERVERCLASSPATH JARs. No app data, immutable source JARs or platform artifacts removed.",
+  "invalidatedCacheFiles": 12,
+  "sourceFrameworkPreoptsTrusted": true,
+  "artTrustChecksRetained": true,
+  "odsignSuccessNotClaimed": true,
+  "startupAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 30419,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 30960,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 31653,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 32268,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "uiRuntimePhasePassed": true,
+  "systemUiStablePhasePid": 32117,
+  "systemUiStablePhaseSeconds": 40,
+  "screenshots": {
+    "home": {
+      "path": "out/api32/systemserver-trusted-preopt-home.png",
+      "sha256": "37dbdad8f736ccd926aa26249afc2aff4e4377673f6986b83baa3b0841674667",
+      "phase": {
+        "runId": "5d21c06786fb49869b165e68c2181d18",
+        "phase": "home",
+        "package": "com.android.launcher3",
+        "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+        "systemUiPid": 32117,
+        "windowDrawn": true
+      },
+      "visuallyInspected": true
+    },
+    "settings": {
+      "path": "out/api32/systemserver-trusted-preopt-settings.png",
+      "sha256": "bdbe95214c9e447ded35631ef1de37528b05f8f2338e43cd999beeb5ad63a919",
+      "phase": {
+        "runId": "5d21c06786fb49869b165e68c2181d18",
+        "phase": "settings",
+        "package": "com.android.settings",
+        "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+        "systemUiPid": 32117,
+        "windowDrawn": true
+      },
+      "visuallyInspected": true
+    }
+  },
+  "input": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "inputEventsRejected": 0,
+    "clicks": 3,
+    "typedText": "a129",
+    "keyUps": 6
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "nativeLogChars": 1716024,
+  "nativeLogLimitChars": 2097152,
+  "missingCurrentDriverMarkers": [],
+  "missingCurrentDriverNativeMarkers": [],
+  "runtimeReport": "out/api32/systemserver-trusted-preopt-report.json",
+  "warmSixArtifactReuseAcrossFreshBootVerified": true,
+  "nextInvestigation": "The full-framework primary zygote still uses --enable-lazy-preload and this run has no full class/resource preload markers. Test normal stock primary-zygote preloading, and correlate remaining SystemUI startup traces; causality is not yet proven.",
+  "warmReuseFollowUp": {
+    "runId": "cc432835f95e4b15a8c1a33c0490860c",
+    "apkSha256": "0655927a2bc878b431200f0fe5091caf6df6a74c8cc4670456445613c9fae5d8",
+    "compiled": 0,
+    "reused": 6,
+    "allArtifactHashesUnchanged": true,
+    "invalidatedCacheFiles": 0,
+    "evidence": "docs/api32-primary-preload-validation.json"
+  },
+  "primaryPreloadFollowUp": "docs/api32-primary-preload-validation.json"
+}

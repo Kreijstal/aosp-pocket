@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 
-static long network_policy(unsigned uid,int loopback) {
+static long network_policy_check(unsigned uid,int loopback,int creating) {
     char path[1152];
     const char* suffix=data_alias?"/system-data/misc/pocket-network-policy.rules":POCKET_NP_PATH;
     size_t tail=length(suffix,100);
@@ -15,14 +15,18 @@ static long network_policy(unsigned uid,int loopback) {
     long fd=raw(__NR_openat,AT_FDCWD,(long)path,O_RDONLY|O_CLOEXEC|O_NOFOLLOW,0,0,0);
     if(fd==-ENOENT)return 0;
     if(fd<0)return -EACCES;
-    struct stat st;struct PocketNetworkPolicyHeader header;long result=-EACCES;
-    if(raw(__NR_fstat,fd,(long)&st,0,0,0,0)<0 || !S_ISREG(st.st_mode) || st.st_size!=sizeof(struct PocketNetworkPolicy))goto done;
+    struct stat st;struct PocketNetworkPolicyHeader header;long result=-EACCES;unsigned chains=0;
+    if(raw(__NR_fstat,fd,(long)&st,0,0,0,0)<0 || !S_ISREG(st.st_mode))goto done;
     long count;
     do {count=raw(__NR_pread64,fd,(long)&header,sizeof(header),0,0,0);}while(count==-EINTR);
-    if(count!=sizeof(header) || !pocket_np_valid(&header))goto done;
+    if(count!=sizeof(header))goto done;
+    if(pocket_np_valid(&header) && st.st_size==sizeof(struct PocketNetworkPolicy))chains=POCKET_NP_CHAINS;
+    else if(pocket_np_v3_valid(&header) && st.st_size==sizeof(struct PocketNetworkPolicyV3))chains=POCKET_NP_CHAINS_V3;
+    else goto done;
+    if(creating && header.version==2){result=0;goto done;}
     if(!header.enabled){result=0;goto done;}
     if(uid>=POCKET_NP_UIDS)goto done;
-    for(unsigned chain=0;chain<POCKET_NP_CHAINS;chain++){
+    for(unsigned chain=0;chain<chains;chain++){
         if(!(header.enabled&(1U<<chain)))continue;
         if(loopback && chain!=POCKET_NP_NO_INTERNET)continue;
         uint8_t byte=0;
@@ -33,6 +37,7 @@ static long network_policy(unsigned uid,int loopback) {
     result=0;
 done:raw(__NR_close,fd,0,0,0,0,0);return result;
 }
+static long network_policy(unsigned uid,int loopback) {return network_policy_check(uid,loopback,0);}
 
 static long firewall_address(int fd,uintptr_t pointer,size_t size) {
     struct sockaddr_storage address;unsigned address_size=sizeof(address);
@@ -105,7 +110,11 @@ static long firewall_message(int fd,uintptr_t pointer) {
 }
 static int firewall_dispatch(long nr,__u64* r) {
     long rc;
-    if(nr==__NR_sendto)rc=firewall_address((int)r[0],r[4],r[5]);
+    if(nr==__NR_socket && (r[0]==AF_INET || r[0]==AF_INET6)) {
+        unsigned uid=guest_identity?guest_uid[1]:(unsigned)raw(__NR_geteuid,0,0,0,0,0,0);
+        rc=network_policy_check(uid,1,1);
+    }
+    else if(nr==__NR_sendto)rc=firewall_address((int)r[0],r[4],r[5]);
     else if(nr==__NR_sendmsg)rc=firewall_message((int)r[0],r[1]);
     else if(nr==__NR_sendmmsg) {
         if(r[2]>1024) {r[0]=(uint64_t)-EINVAL;return 1;}

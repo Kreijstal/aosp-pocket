@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "component": "immutable_platform_path_view",
+  "guestSdk": 32,
+  "hostVmInstance": 73,
+  "scope": "Opt-in guest read-only filesystem semantics; host-backed files remain writable to the updater outside the loader. No claim of kernel isolation.",
+  "previousGoalTurnClassification": "progress",
+  "enableMarker": "/.pocket-readonly-system",
+  "partitions": [
+    "/system",
+    "/system_ext",
+    "/vendor",
+    "/product",
+    "/odm",
+    "/oem",
+    "/apex"
+  ],
+  "oldProfilesOptIn": false,
+  "native": {
+    "old-loader": {
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "line 16: (access(fixture,2))==-1 && errno==EROFS errno=0 (Success)\nline 51: !verify() errno=0 (Success)\n"
+    },
+    "fixed-loader": {
+      "returncode": 0,
+      "stdout": "LOADER_READONLY_VIEW_PASS uids=0,39999 reads=allowed writes=EROFS data=writable symlinks=resolved dirfds=resolved\n",
+      "stderr": ""
+    },
+    "fixed-loader-disabled": {
+      "returncode": 0,
+      "stdout": "LOADER_READONLY_DISABLED_PASS\n",
+      "stderr": ""
+    },
+    "backingFileUnchanged": true,
+    "backingFileWritableOutsideLoader": true,
+    "passed": true
+  },
+  "apkSha256": "b6cc13d390707d4952bb48bf6a74c93dbe6f13222864ec8165c9b4cf50c6ef9b",
+  "apkBytes": 7816656,
+  "androidSandboxVerified": true,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "sourceSha256": {
+    "runtime/loader/loader.c": "cb785021a4f95c76ec26a95c6579d595c4ed53f245fa246566dfcd3f79f5d598",
+    "runtime/loader/readonly_view.h": "6e8f529fa3d19d2daa058882f61bc58b0ee5415828b35dd9b68e65ae73d6a426",
+    "runtime/tests/loader/readonly_view.c": "2dc7901714342734052f4efb2965acc3cbcaa94e5a4970b676ca4c9db0cc5cde",
+    "tools/test_loader_readonly_on_pi.py": "23c533965226b303bada3d0910ed305462e284e316204779d9f7e95611967b3f"
+  },
+  "checks": [
+    {
+      "command": "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang -O2 -g -Wall -Wextra -Werror -mno-outline-atomics -ffreestanding -fno-builtin -fno-stack-protector -fno-pic -nostdlib -static -Wl,-T,runtime/loader/loader.ld,-z,max-page-size=16384 runtime/loader/loader.c runtime/loader/entry.S -o out/api32/pocket-loader-readonly",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/validate_native_loader.py out/api32/pocket-loader-readonly",
+      "result": "PASS / exit 0; four segments, zero unbacked BSS, final 16384-byte RX segment"
+    },
+    {
+      "command": "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android32-clang -O2 -Wall -Wextra -Werror -static runtime/tests/loader/readonly_view.c -Wl,-z,max-page-size=16384 -o out/api32/readonly-probe-static",
+      "result": "PASS / exit 0; API32 static Bionic CRT TLS alignment 64"
+    },
+    {
+      "command": "ssh -o BatchMode=yes pi@juanraspberry 'python3 ~/pocket-api32-readonly-test/test_loader_readonly_on_pi.py'",
+      "result": "PASS / exit 0; old loader fails writable-system assertion, fixed loader passes root/app roles, disabled policy passes original W_OK behavior, backing fixture unchanged and writable outside loader"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/readonly-baseline-image-manifest.json",
+      "result": "PASS / exit 0; eight changed guest assets exactly matched manifest diff and embedded hashes; bootstrap JAR unchanged"
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Readonly component PASS in Android sandbox; overall UI startup FAIL / driver exit 1, guest exit 0. Speed cache reused in 8671 ms, ART reports loaded data-cache speed OAT, focused/drawn Home/Settings and eight touch/twelve key events passed; three SystemUI ANRs correctly fail startup gate. All 28 services reaped, zero remaining or failed; host SELinux Enforcing and phantom limit restored."
+    }
+  ],
+  "androidRunId": "b75292eea35e4a0cbb6b68e3e691c505",
+  "androidHostUid": 10154,
+  "androidMarker": "LOADER_READONLY_VIEW_PASS uids=0,39999 reads=allowed writes=EROFS data=writable symlinks=resolved dirfds=resolved",
+  "wholeImageVerifiedFiles": 2560,
+  "systemUiSpeedCacheReuseVerified": true,
+  "cacheReuseMarker": "API32_UI_DEXOPT_PASS package=com.android.systemui source_parent_writable=false compiler=stock_dex2oat filter=speed bytes=24780632 sha256=1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422 reused=true elapsed_ms=8671",
+  "loadedOatEvidence": [
+    {
+      "trace": "root/tmp/art-traces/anr_19917_66853_345857670",
+      "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_19917_66843_383428306",
+      "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_19354_66720_446251620",
+      "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_19354_66708_907690108",
+      "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_18691_66690_504828730",
+      "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_18691_66680_533939403",
+      "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+    }
+  ],
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "combinedUiStartupPassed": false,
+  "combinedUiFailure": "Three SystemUI SystemUIService ANRs; LatinIME and Gallery also had ANRs. Actual late focused/drawn Home and Settings passed.",
+  "androidGuestExitCode": 0,
+  "androidDriverExitCode": 1,
+  "priorDriverMarkerIssue": {
+    "runId": "b75292eea35e4a0cbb6b68e3e691c505",
+    "oldExactMarkerMatched": false,
+    "correctedExactMarkerMatched": true,
+    "startupAnrsStillPresent": true,
+    "result": "Prior overall failure had both a stale exact-marker mismatch and genuine SystemUI ANRs. Driver corrected; original runtime report retained unchanged."
+  }
+}

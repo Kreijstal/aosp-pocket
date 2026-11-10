@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "runId": "1b572ad030054aeeac92bb2d94d1d7da",
+  "componentPassed": true,
+  "combinedFixturePassed": true,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "apkSha256": "fe6b2a419f32d41d09f77a9a121c7b1fc516f27da43bebbe6eab50b271309847",
+  "scope": "Native Binder DUMP sender role attribution through kernel UID/PID plus guest identity PID/start time. No arbitrary Binder control payload credential decoding or host identity change.",
+  "rootAllowed": true,
+  "systemAllowed": true,
+  "ordinaryGuestDenied": true,
+  "stockFrameworkServiceDumpVerified": true,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "markers": [
+    "API32_DUMP_IDENTITY_PASS uid=0 pid=kernel_matched allowed=1 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=1000 pid=kernel_matched allowed=1 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=39999 pid=kernel_matched allowed=0 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=39999 pid=kernel_matched allowed=0 token=absent"
+  ],
+  "previousObservation": {
+    "runId": "a86b1ae404c74b7eb8164cb5ce15f5e5",
+    "callerGuestUid": 1000,
+    "dumpObservedUid": 10154,
+    "stockServices": [
+      "input",
+      "power",
+      "window"
+    ],
+    "result": "All three denied android.permission.DUMP because control transaction retained host UID."
+  },
+  "changes": [
+    "API32-only native DUMP fallback uses existing PID/start-time-checked logical sender record; interface-token header parsing remains restricted to ordinary method transactions.",
+    "Regression sends real token-free synchronous dump requests from UID 0, 1000 and 39999 and verifies caller UID, kernel-matched PID and allow/deny result."
+  ],
+  "checks": [
+    {
+      "command": "PYTHONPATH=tools python3 - <<'PY'\nfrom pathlib import Path\nfrom build_api32_native import build_binder\nbuild_binder(Path('/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c'))\nPY",
+      "result": "PASS / exit 0; API32_BINDER_BUILD_PASS"
+    },
+    {
+      "command": "python3 out/api32/run_display_with_vm73_phantom_limit.py",
+      "result": "PASS / exit 0; all three native DUMP sender roles verified before framework boot; later host display/input fixture passed."
+    }
+  ],
+  "stockFrameworkEvidence": {
+    "runId": "9717d5ddce20445d9bd43c3eb881d6e6",
+    "service": "window",
+    "callerGuestUid": 1000,
+    "method": "IBinder.dump with windows argument",
+    "result": "No DUMP permission denial; focused/drawn Home and Settings verified from real stock WindowManager state.",
+    "uiRuntimeEvidence": "docs/api32-ui-runtime-validation.json"
+  }
+}

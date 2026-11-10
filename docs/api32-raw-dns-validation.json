@@ -1,0 +1,286 @@
+{
+  "schema": 1,
+  "status": "PASS_RAW_DNS_VALIDATED_UPLINK_AND_SIGNAL_VM73",
+  "scope": "Pinned0.78.8 normal Manager run in dedicated VM73: actual default network100 and NetworkMonitor VALIDATED; network-bound HTTPS200; public asynchronous typed/raw DNS and NXDOMAIN from ordinary installed UID10108; native raw-DNS permission grant/revoke/restore, unauthorized bypass and direct-host denial; unmodified Signal installation, focused launch, real Home/default-launcher focus and reopen; strict crash/ANR and clean shutdown gates. No hardware isolation or host-kernel network changes are claimed.",
+  "candidatePath": "out/api32/dns-bypass-candidate.json",
+  "candidateSha256": "34796d78787a130ee1f337b38b8df89404d5868dd45a8cbda793641c2ae84311",
+  "sourceSnapshotPath": "out/api32/dns-bypass-source-snapshot",
+  "imageSha256": "24456bff47052e1381cc4228908f084b49afa94fc9f09ad00ae281e89e9ac122",
+  "managerSha256": "3e3098ccc690ed61ae44505772783c16a47d0a8a00112e695a8947fd7b3feae5",
+  "primarySource": {
+    "repository": "https://android.googlesource.com/platform/packages/modules/DnsResolver",
+    "commit": "8e34bdf0ad56b97fbc511981aadd91d5618698db",
+    "path": "DnsProxyListener.cpp",
+    "localPath": "out/api32/dnsresolver/DnsProxyListener.cpp",
+    "sha256": "df4422b6122d89138b3465e00a64a7c667610e1c5b67a9566168c33cb61ca3fe",
+    "timeoutEventReference": {
+      "path": "gethnamaddr.h",
+      "localPath": "out/api32/raw-dns-gethnamaddr-reference.h",
+      "sha256": "f7a607e55111532f3a8bfbbc3576838cc5772cc1264c72a5af017ff62f2be251"
+    }
+  },
+  "runtimeVerified": true,
+  "hostKernelNetworkConfigurationModified": false,
+  "guestValidatedCapabilityManufactured": false,
+  "hostApi28RawPrivateDnsSupported": false,
+  "hostApi28Limitation": "Normal raw queries with active private DNS explicitly report unsupported; no silent plaintext fallback. Public host raw DNS is used on API29+. Explicit bypass is allowed only to guest UID0,1000,1073.",
+  "checks": [
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/dns-packet-classes runtime/app/src/dev/kreijstal/aosppocket/runtime/HostDnsPacket.java runtime/tests/HostDnsPacketFixture.java",
+      "result": "PASS"
+    },
+    {
+      "command": "java -cp out/api32/dns-packet-classes:/home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar dev.kreijstal.aosppocket.runtime.HostDnsPacketFixture",
+      "result": "PASS"
+    },
+    {
+      "command": "c++ -std=c++17 -Wall -Wextra -Werror -Wno-misleading-indentation -fsanitize=address,undefined -fno-omit-frame-pointer runtime/tests/api32/dns_packet.cpp -o out/api32/dns-packet-fixture",
+      "result": "PASS"
+    },
+    {
+      "command": "out/api32/dns-packet-fixture",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_network.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --dns",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/raw-dns-image --version 0.78.7 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.7.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/raw-dns-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/raw-dns-manager-probe",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/raw-dns-manager-probe/api32-app-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "out/api32/dns-packet-fixture",
+      "result": "PASS after adding DNS query construction and bounds cases"
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/dns-bypass-image --version 0.78.8 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.8.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/dns-bypass-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/dns-bypass-manager-probe",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/dns-bypass-manager-probe/api32-app-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/manager-app-validation/test_api32_app_on_pi.py --require-network",
+      "result": "PASS strictPassed=true runId=5cef4bf755304c02a3ff914e66f731d3"
+    }
+  ],
+  "notEstablished": [
+    "Asynchronous callback cancellation under slow/error conditions",
+    "Actual Android28 host raw private DNS",
+    "Encrypted storage and emulated external storage for12L",
+    "Signal account registration, messaging and calls",
+    "Full production12L support, phone testing and startup reliability cohort"
+  ],
+  "runtimeCommand": "python3 /home/pi/pocket-api32-vm/manager-app-validation/test_api32_app_on_pi.py --require-network",
+  "postCandidateLegacyGuard": {
+    "scope": "SDK28/29 rejects the new DNS_PACKET operation. This guard was compiled after the0.78.7 candidate and is included in the0.78.8 candidate. The0.78.7 source snapshot remains unchanged.",
+    "sourcePath": "runtime/app/src/dev/kreijstal/aosppocket/runtime/HostBroker.java",
+    "sourceSha256": "b669b2a05108136813d45bd6d0d154d70202818a5a6e75f807defbbf7f3726ef",
+    "snapshotPath": "out/api32/raw-dns-legacy-guard-HostBroker.java",
+    "legacyManager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/raw-dns-legacy-regression/aosp-pocket-manager-0.77.apk",
+      "sha256": "888c42c590b7ac9c44e887ad0e2644d22924281977d5c2ad02733504ab3927ae",
+      "bytes": 1713800,
+      "probe": false,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "guestSdks": [
+        28,
+        29
+      ],
+      "runtimeValidated": false
+    },
+    "runtimeVerified": false,
+    "checks": [
+      {
+        "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/api32/raw-dns-legacy-regression",
+        "result": "PASS"
+      },
+      {
+        "command": "python3 tools/validate_download_manager.py out/api32/raw-dns-legacy-regression/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+        "result": "PASS"
+      }
+    ]
+  },
+  "preliminaryRuns": [
+    {
+      "runId": "4f2099f80f694620a5bc5d28ad3c16f3",
+      "reportPath": "out/api32/raw-dns-first-report.json",
+      "reportSha256": "e6426ff4d4133631ef020ed8764d01e8581463568f90ae6b54172068fc62872a",
+      "candidatePath": "out/api32/raw-dns-candidate.json",
+      "candidateSha256": "94f1d8c9be05ec8430bc27f4320dea2b7a6af8e51a959a1f29981682e646032f",
+      "completedJob": {
+        "pid": 10391,
+        "token": "e1a73427e4b84050bb5c3e217bdf9c96",
+        "script": "/home/pi/pocket-api32-vm/manager-app-validation/run-e1a73427e4b84050bb5c3e217bdf9c96.py",
+        "log": "/home/pi/pocket-api32-vm/manager-app-validation/run-e1a73427e4b84050bb5c3e217bdf9c96.log",
+        "exit": "/home/pi/pocket-api32-vm/manager-app-validation/run-e1a73427e4b84050bb5c3e217bdf9c96.exit.json"
+      },
+      "validation": "FAIL",
+      "error": "android.system.ErrnoException: readlink failed: ENOENT (No such file or directory)",
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "systemUiStarts": [
+        "14080"
+      ],
+      "stoppedSession": {
+        "sdk": 32,
+        "runId": "6f17f521302f43099bcf617dcae7383c",
+        "ready": false,
+        "running": false,
+        "closed": true,
+        "input": {
+          "touchEventsAccepted": 0,
+          "keyEventsAccepted": 0,
+          "inputEventsAccepted": 0,
+          "inputEventsRejected": 0
+        },
+        "audio": {
+          "hostPcmBytesWritten": 0,
+          "completedStreams": 0,
+          "streamErrors": 0,
+          "microphoneRequested": false
+        },
+        "ownerAlive": false,
+        "ownerExitCode": 0
+      },
+      "networkStackRawDnsObserved": true,
+      "ordinaryAppAsyncDnsVerified": false,
+      "guestValidated": false,
+      "diagnosis": "Test-helper process enumeration raced with process exit while reading /proc/<pid>/exe. Guest logs independently show real raw DNS results for NetworkStack UID1073, followed by HTTP getaddrinfo failure because the private-DNS-bypass bit was not stripped by that older command."
+    }
+  ],
+  "currentFix": "Ignore only ENOENT/ESRCH for disappeared processes while locating the required owned crash daemon. Preserve stack traces in the app test result. Strip and authorize the private-DNS bypass flag for getaddrinfo/getdnsnetid, and resolve bypass getaddrinfo through real local-server raw packets.",
+  "completedJob": {
+    "pid": 14573,
+    "token": "29d2ab1be5604f3bb732d9f33be62ad1",
+    "script": "/home/pi/pocket-api32-vm/manager-app-validation/run-29d2ab1be5604f3bb732d9f33be62ad1.py",
+    "log": "/home/pi/pocket-api32-vm/manager-app-validation/run-29d2ab1be5604f3bb732d9f33be62ad1.log",
+    "exit": "/home/pi/pocket-api32-vm/manager-app-validation/run-29d2ab1be5604f3bb732d9f33be62ad1.exit.json"
+  },
+  "result": {
+    "runId": "5cef4bf755304c02a3ff914e66f731d3",
+    "reportPath": "out/api32/dns-bypass-first-report.json",
+    "reportSha256": "118008e2e5cfdce0969196da65c9ff131b7200446aa401b8bbb36cd2a0db2932",
+    "validation": "PASS",
+    "strictPassed": true,
+    "network": {
+      "guest_network_connected": true,
+      "guest_default_network": "100",
+      "guest_internet": true,
+      "guest_validated": true,
+      "http_via_guest_network": true,
+      "http_status": 200,
+      "guest_async_dns": {
+        "uid": 10108,
+        "network": "100",
+        "addresses": [
+          "172.66.147.243",
+          "104.20.23.154"
+        ],
+        "rawBytes": 61,
+        "rawRcode": 0,
+        "negativeRcode": 3,
+        "publicAsyncApi": true
+      }
+    },
+    "rawDnsPermissions": "API32_DNS_PACKET_HOST_DIRECT_DENIED_PASS uid=99998\nAPI32_DNS_PACKET_LOOKUP_PASS uid=99998 original_id=restored answers=real bypass=denied invalid=denied\nAPI32_DNS_PACKET_HOST_DIRECT_DENIED_PASS uid=99998\nAPI32_DNS_PACKET_PERMISSION_DENIED_PASS uid=99998 host_query=blocked\nAPI32_DNS_PACKET_HOST_DIRECT_DENIED_PASS uid=99998\nAPI32_DNS_PACKET_LOOKUP_PASS uid=99998 original_id=restored answers=real bypass=denied invalid=denied\nAPI32_DNS_PACKET_RESOLVE_PASS uid_permission=grant_revoke_restore private_dns_bypass=denied typed_events=2 cleanup=revoked",
+    "homeVerified": true,
+    "framesPresented": 159,
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "systemUiStarts": [
+      "17074"
+    ],
+    "nativeLogCharacters": 1472710,
+    "initStop": [
+      [
+        "15",
+        "0",
+        "0"
+      ]
+    ],
+    "stoppedSession": {
+      "sdk": 32,
+      "runId": "eb5572915d0e42c3b03914eb03ffb241",
+      "ready": false,
+      "running": false,
+      "closed": true,
+      "input": {
+        "touchEventsAccepted": 0,
+        "keyEventsAccepted": 2,
+        "inputEventsAccepted": 2,
+        "inputEventsRejected": 0
+      },
+      "audio": {
+        "hostPcmBytesWritten": 0,
+        "completedStreams": 0,
+        "streamErrors": 0,
+        "microphoneRequested": false
+      },
+      "ownerAlive": false,
+      "ownerExitCode": 0
+    },
+    "hostSettingsUnchanged": true,
+    "networkMonitorProof": [
+      "NetworkMonitor/100:PROBE_HTTP http://connectivitycheck.gstatic.com/generate_204 time=341ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Tue, 03 Nov 2026 06:15:59 GMT], X-Android-Received-Millis=[1793686559980], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793686559927]}",
+      "NetworkMonitor/100:PROBE_FALLBACK http://www.google.com/gen_204 time=342ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Connection=[close], Content-Length=[0], Content-Security-Policy=[object-src 'none';base-uri 'self';script-src 'nonce-u5DGq24hn-JCl7MCJofRmQ' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/other], Content-Type=[text/html; charset=UTF-8], Date=[Tue, 03 Nov 2026 06:15:59 GMT], Permissions-Policy=[unload=()], Server=[gws], Set-Cookie=[SEARCH_SAMESITE=CgQImKIB; expires=Sun, 02-May-2027 06:15:59 GMT; path=/; domain=.google.com; SameSite=strict], X-Android-Received-Millis=[1793686560298], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793686560258], X-Frame-Options=[SAMEORIGIN], X-XSS-Protection=[0]}",
+      "NetworkMonitor/100:PROBE_HTTPS https://www.google.com/generate_204 time=721ms ret=204 request={Connection=[close], User-Agent=[Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.32 Safari/537.36]} headers={null=[HTTP/1.1 204 No Content], Alt-Svc=[h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000], Connection=[close], Content-Length=[0], Cross-Origin-Resource-Policy=[cross-origin], Date=[Tue, 03 Nov 2026 06:16:00 GMT], X-Android-Received-Millis=[1793686561649], X-Android-Response-Source=[NETWORK 204], X-Android-Selected-Protocol=[http/1.1], X-Android-Sent-Millis=[1793686561604]}",
+      "ConnectivityService:[100 ETHERNET] validation passed"
+    ],
+    "screenshots": {
+      "app32-first": {
+        "path": "out/api32/dns-bypass-app32-first.png",
+        "sha256": "8979ec0a558bc80a13ea7715aec6b6fd6a33e3be28ecdf87fa9cc3c4efd77d48",
+        "visuallyInspected": true
+      },
+      "app32-reopened": {
+        "path": "out/api32/dns-bypass-app32-reopened.png",
+        "sha256": "9867c7166c85635c06a97df2501899fcc36958bbfb358d01649dd7c8f08abbf3",
+        "visuallyInspected": true
+      }
+    }
+  },
+  "postCandidateCancellationCleanup": {
+    "scope": "After the successful0.78.8 run, give each of the three diagnostic queries its own CancellationSignal, cancel all pending requests, and let queued callbacks drain when closing the callback executor. The0.78.8 evidence remains pinned to its preserved earlier snapshot.",
+    "sourcePath": "runtime/api32/bridge/DnsApi32.java",
+    "sourceSha256": "68103b95a3e840c4a617944567ae88415585a58b698ef1eaa531f4e468331958",
+    "snapshotPath": "out/api32/post-dns-bypass-cancellation/DnsApi32.java",
+    "bridgeApk": {
+      "package": "dev.kreijstal.aosppocket.guestbridge",
+      "minSdk": 32,
+      "targetSdk": 32,
+      "apkSha256": "c308a41343c4620fc417fccbfbf9dd052500e4bf3c14d687cf1ebccc998c6d42",
+      "apkBytes": 20817
+    },
+    "runtimeVerified": false,
+    "check": {
+      "command": "python3 -c 'import sys;sys.path.insert(0,\"tools\");from build_api32_guest_app import build_guest_bridge;build_guest_bridge()'",
+      "result": "PASS SDK32 signature verification included"
+    },
+    "nextValidation": "Include this bridge in the next image and check slow/error cancellation before release."
+  }
+}

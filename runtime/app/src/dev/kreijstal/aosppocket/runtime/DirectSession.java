@@ -19,6 +19,8 @@ final class DirectSession implements AutoCloseable {
         void status(String message);
         void ready();
         void stopped(String message);
+        /** The guest cannot continue and should be stopped and started again. */
+        default void restart(String reason){}
     }
     private final Context context;
     private final Listener listener;
@@ -37,6 +39,12 @@ final class DirectSession implements AutoCloseable {
     private GuestPower power;
     private CeStorage ceStorage;
     private RuntimeLog runtimeLog;
+    private HostAudio audio32;
+    private ExternalVolume32 external32;
+    private GuestLog32 log32;
+    private volatile GuestInput32 input32;
+    private final String runId=java.util.UUID.randomUUID().toString().replace("-","");
+    private volatile String cleanupFailure;
     private File root;
     private Connection input;
     private final Object frameLock=new Object(), visibilityLock=new Object();
@@ -61,7 +69,7 @@ final class DirectSession implements AutoCloseable {
         this(context,geometry,refreshHz,28,listener);
     }
     DirectSession(Context context,DisplayGeometry geometry,int refreshHz,int sdk,Listener listener) {
-        this.context=context;this.geometry=geometry;this.refreshHz=refreshHz;this.sdk=sdk;this.androidName="Android "+(sdk==29?"10":"9");
+        this.context=context;this.geometry=geometry;this.refreshHz=refreshHz;this.sdk=sdk;this.androidName="Android "+(sdk==32?"12L":sdk==29?"10":"9");
         this.listener=listener;worker=new Thread(this::run,"PocketAndroid"+sdk);
     }
     void start(){worker.start();}
@@ -91,19 +99,32 @@ final class DirectSession implements AutoCloseable {
             synchronized(this) {
                 if(closed)return;
                 java.nio.file.Files.deleteIfExists(new File(root,"logs/display-performance.json").toPath());
-                battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);ceStorage=new CeStorage(root);
-                if(sdk==29)power=new GuestPower(context,root);
-                init=DirectImage.start(root);
+                battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);
+                ceStorage=new CeStorage(root,()->main.post(()->{if(!closed)listener.restart("Encrypted storage stopped working; restarting Android…");}));
+                if(sdk==29 || sdk==32)power=new GuestPower(context,root);
+                if(sdk==32){audio32=new HostAudio(root,context);log32=new GuestLog32(root);if(ExternalVolume32.selected(root))external32=new ExternalVolume32(root);}
+                init=DirectImage.start(root,runId);
                 runtimeLog=new RuntimeLog(new File(root,"logs/manager-init.log"));
             }
             status(androidName+" starting…");
             long deadline=SystemClock.elapsedRealtime()+240000;
             Connection frames=null;
             while(!closed && init.isAlive() && SystemClock.elapsedRealtime()<deadline) {
-                try {frames=new Connection();break;}
+                try {
+                    if(sdk==32) {
+                        File marker=new File(root,"tmp/pocket-runtime-ready");
+                        if(!marker.isFile() || !new String(java.nio.file.Files.readAllBytes(marker.toPath()),"UTF-8").trim().equals(runId)) {
+                            Thread.sleep(300);continue;
+                        }
+                        GuestInput32 candidate=new GuestInput32(root,geometry.width,geometry.height);
+                        try{candidate.prepare();}catch(IOException error){candidate.close();throw error;}
+                        input32=candidate;
+                    }else frames=new Connection();
+                    break;
+                }
                 catch(IOException notReady){Thread.sleep(300);}
             }
-            if(frames==null)throw new IOException(androidName+" did not open its display/input endpoint; see api"+sdk+"-native-rootfs/logs/manager-init.log");
+            if(sdk==32?input32==null:frames==null)throw new IOException(androidName+" did not open its display/input endpoint; see "+root.getName()+"/logs/manager-init.log");
             AnonymousFrames shared=AnonymousFrames.create(geometry);
             long presenter=Native.createFramePresenter();
             try(Connection control=frames;ComposerConnection channel=new ComposerConnection(shared)) {
@@ -152,22 +173,36 @@ final class DirectSession implements AutoCloseable {
                 Native.destroyFramePresenter(presenter);
             }
 
-            if(!closed)ended=androidName+" exited with code "+init.exitValue()+". See api"+sdk+"-native-rootfs/logs/manager-init.log.";
+            if(!closed)ended=androidName+" exited with code "+init.exitValue()+". See "+root.getName()+"/logs/manager-init.log.";
         } catch(InterruptedException cancelled){Thread.currentThread().interrupt();}
         catch(Exception error){if(!closed)ended=androidName+" failed: "+error.getMessage();}
         finally {
             boolean cleanupInterrupted=Thread.interrupted();
             closed=true;ready=false;commands.shutdownNow();operations.shutdownNow();
             for(LocalSocket socket:sockets)try{socket.close();}catch(IOException ignored){}
+            if(external32!=null)try{external32.close();}catch(Exception error){cleanupFailure="External storage cleanup failed: "+error;}
             java.lang.Process current=init;
             if(current!=null) {
-                current.destroy();
-                try {if(!current.waitFor(8,TimeUnit.SECONDS)){current.destroyForcibly();current.waitFor(2,TimeUnit.SECONDS);}}
+                if(sdk==32 && current.isAlive())try {
+                    java.lang.Process stop=DirectImage.admin(root,"/",java.util.Arrays.asList("/system/bin/pocket-setprop-api32","pocket.control.stop","1"));
+                    try{if(!stop.waitFor(3,TimeUnit.SECONDS) || stop.exitValue()!=0)cleanupFailure="Guest supervisor rejected stop";}
+                    finally{if(stop.isAlive())stop.destroyForcibly();}
+                }catch(Exception error){cleanupFailure="Guest stop failed: "+error;}
+                if(sdk!=32)current.destroy();
+                try {if(!current.waitFor(8,TimeUnit.SECONDS)){cleanupFailure="Guest supervisor required forced termination";current.destroyForcibly();current.waitFor(2,TimeUnit.SECONDS);}}
                 catch(InterruptedException interrupted){current.destroyForcibly();}
             }
+            if(input32!=null)input32.close();
+            if(sdk==32 && root!=null)try {
+                if(DirectImage.stopLeftovers(root)>0)cleanupFailure="Guest supervisor left processes requiring cleanup";
+            }catch(Exception error){cleanupFailure="Guest process cleanup failed: "+error;}
             if(battery!=null)battery.close();
             if(hostBroker!=null)hostBroker.close();
             if(power!=null)power.close();
+            if(audio32!=null)audio32.close();
+            if(log32!=null)try {
+                log32.close();java.nio.file.Files.write(new File(root,"logs/native.log").toPath(),log32.text().getBytes("UTF-8"));
+            }catch(Exception error){cleanupFailure="Guest log cleanup failed: "+error;}
             if(ceStorage!=null) {
                 byte[] migration=ceStorage.takePreparedSecret();
                 try {
@@ -182,6 +217,8 @@ final class DirectSession implements AutoCloseable {
                 finally{if(migration!=null)java.util.Arrays.fill(migration,(byte)0);}
             }
             if(runtimeLog!=null)runtimeLog.close();
+            // Keep the reason the session ended; the cleanup failure alone hides it.
+            if(cleanupFailure!=null)ended=androidName+" cleanup failed: "+cleanupFailure+" (session end: "+ended+")";
             final String message=ended;main.post(()->listener.stopped(message));
             if(cleanupInterrupted)Thread.currentThread().interrupt();
         }
@@ -287,6 +324,7 @@ final class DirectSession implements AutoCloseable {
         });}catch(RejectedExecutionException full){status("Guest operation queue is busy; try again.");}
     }
     void touch(MotionEvent event,float scaleX,float scaleY) {
+        if(sdk==32){GuestInput32 target=input32;if(ready && !closed && target!=null)target.touch(event,scaleX,scaleY);return;}
         if(event.getPointerCount()>10)return;
         final int count=event.getPointerCount(),action=event.getAction();
         final long down=event.getDownTime(),time=event.getEventTime();
@@ -299,9 +337,21 @@ final class DirectSession implements AutoCloseable {
             c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected touch input");},
             event.getActionMasked()==MotionEvent.ACTION_MOVE);
     }
-    void key(int code){submit(c->{c.out.writeInt(3);c.out.writeInt(code);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected navigation");});}
-    void importHostContacts(){submitOperation(c->{c.socket.setSoTimeout(90000);c.out.writeInt(5);c.out.flush();status(c.in.readUTF());});}
-    void checkHostBridges(){submitOperation(c->{
+    void key(int code){
+        if(sdk==32) {
+            GuestInput32 target=input32;if(!ready || closed || target==null)return;
+            long now=SystemClock.uptimeMillis();
+            for(int action:new int[]{android.view.KeyEvent.ACTION_DOWN,android.view.KeyEvent.ACTION_UP})
+                target.key(new android.view.KeyEvent(now,SystemClock.uptimeMillis(),action,code,0));
+            return;
+        }
+        submit(c->{c.out.writeInt(3);c.out.writeInt(code);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest rejected navigation");});
+    }
+    boolean fullKey(android.view.KeyEvent event){GuestInput32 target=input32;return sdk==32 && ready && !closed && target!=null && target.key(event);}
+    void importHostContacts(){if(sdk==32){toolOperation(()->status(runTool("contacts")));return;}submitOperation(c->{c.socket.setSoTimeout(90000);c.out.writeInt(5);c.out.flush();status(c.in.readUTF());});}
+    void checkHostBridges(){
+        if(sdk==32){toolOperation(()->{String value=runTool("network");java.nio.file.Files.write(new File(root,"logs/host-bridge-check.json").toPath(),value.getBytes("UTF-8"));status(value);});return;}
+        submitOperation(c->{
         c.socket.setSoTimeout(30000);
         try {
             c.out.writeInt(6);c.out.writeUTF("https://example.com/");c.out.flush();String result=c.in.readUTF();
@@ -311,7 +361,9 @@ final class DirectSession implements AutoCloseable {
                 " · HTTPS "+(report.has("http_status")?report.optInt("http_status"):report.optString("http_error","unavailable")));
         } finally {c.socket.setSoTimeout(15000);}
     });}
-    void checkHostDevices(){submitOperation(c->{
+    void checkHostDevices(){
+        if(sdk==32){toolOperation(()->{String value=runTool("devices");java.nio.file.Files.write(new File(root,"logs/host-device-check.json").toPath(),value.getBytes("UTF-8"));status(value);});return;}
+        submitOperation(c->{
         c.socket.setSoTimeout(60000);
         try {
             c.out.writeInt(7);c.out.flush();String result=c.in.readUTF();
@@ -322,9 +374,12 @@ final class DirectSession implements AutoCloseable {
             status(summary.toString());
         } finally {c.socket.setSoTimeout(15000);}
     });}
-    void openGuestDialer(){submitOperation(c->{c.out.writeInt(8);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest dialer did not open");});}
-    boolean hasLastApp(){return !context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE).getString("package","").isEmpty();}
-    void openLastApp(){submitOperation(c->{
+    void openGuestDialer(){if(sdk==32){toolOperation(()->status(runTool("dialer")));return;}submitOperation(c->{c.out.writeInt(8);c.out.flush();if(!c.in.readBoolean())throw new IOException("Guest dialer did not open");});}
+    private String appPreferences(){return sdk==32?"guest-last-app-api32":"guest-last-app";}
+    boolean hasLastApp(){return !context.getSharedPreferences(appPreferences(),Context.MODE_PRIVATE).getString("package","").isEmpty();}
+    void openLastApp(){
+        if(sdk==32){toolOperation(()->status(runTool("open",context.getSharedPreferences(appPreferences(),Context.MODE_PRIVATE).getString("package",""))));return;}
+        submitOperation(c->{
         String name=context.getSharedPreferences("guest-last-app",Context.MODE_PRIVATE).getString("package","");
         if(name.isEmpty())throw new IOException("Install a guest APK first");
         c.out.writeInt(9);c.out.writeUTF(name);c.out.flush();
@@ -332,6 +387,7 @@ final class DirectSession implements AutoCloseable {
     });}
     /** Installs one package: {@code base.apk} plus any split APKs, keyed by their file name. */
     void install(java.util.Map<String,android.net.Uri> apks) {
+        if(sdk==32){toolOperation(()->install32(apks));return;}
         submitOperation(c->{
             File staged=new File(root,"system-data/pocket-import");
             deleteTree(staged);staged.mkdirs();
@@ -356,6 +412,7 @@ final class DirectSession implements AutoCloseable {
         });
     }
     private static void deleteTree(File file) {
+        if(java.nio.file.Files.isSymbolicLink(file.toPath())){file.delete();return;}
         File[] children=file.listFiles();
         if(children!=null)for(File child:children)deleteTree(child);
         file.delete();
@@ -363,9 +420,62 @@ final class DirectSession implements AutoCloseable {
     @Override public synchronized void close() {
         closed=true;ready=false;wakeDisplay();commands.shutdownNow();operations.shutdownNow();
         for(LocalSocket socket:sockets)try{socket.close();}catch(IOException ignored){}
-        if(init!=null)init.destroy();
+        if(init!=null && sdk!=32)init.destroy();
         // Do not interrupt waitFor during supervised cleanup: init needs time
         // to stop and reap its services before a new session can start.
         if(init==null)worker.interrupt();
+    }
+    private interface ToolOperation {void run()throws Exception;}
+    private void toolOperation(ToolOperation operation) {
+        if(!ready || closed)return;
+        try{operations.execute(()->{
+            if(closed)return;
+            try{operation.run();}
+            catch(Exception error){if(!closed){status(androidName+" operation failed: "+error.getMessage());android.util.Log.e("PocketOperations","API32 operation failed",error);}}
+        });}catch(RejectedExecutionException full){status("Guest operation queue is busy; try again.");}
+    }
+    private String runTool(String... arguments)throws Exception {
+        File log=new File(root,"logs/manager-operation.log");
+        if(GuestManager32.selected(root))return GuestManager32.execute(root,geometry.width,geometry.height,sockets,()->closed,log,arguments);
+        java.util.List<String> command=new java.util.ArrayList<>();command.add("/system/bin/pocket-manager-api32");command.addAll(java.util.Arrays.asList(arguments));
+        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",command)).directory(root);
+        builder.environment().clear();builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid(),32));
+        builder.redirectErrorStream(true).redirectOutput(log);
+        java.lang.Process process=builder.start();
+        try {
+            if(!process.waitFor(150,TimeUnit.SECONDS))throw new IOException("Guest operation timed out");
+            if(log.length()>2*1024*1024)throw new IOException("Guest operation log exceeds size limit");
+            String output=new String(java.nio.file.Files.readAllBytes(log.toPath()),"UTF-8");
+            if(process.exitValue()!=0)throw new IOException(output.length()>1000?output.substring(output.length()-1000):output);
+            for(String line:output.split("\n"))if(line.startsWith("POCKET_MANAGER32_RESULT "))return line.substring("POCKET_MANAGER32_RESULT ".length());
+            throw new IOException("Guest operation returned no result");
+        }finally{if(process.isAlive())process.destroyForcibly();}
+    }
+    private void install32(java.util.Map<String,android.net.Uri> apks)throws Exception {
+        if(apks.isEmpty() || apks.size()>128 || !apks.containsKey("base.apk"))throw new IOException("Select base.apk and its matching splits");
+        File staged=new File(root,"system-data/pocket-import");deleteTree(staged);
+        if(!staged.mkdirs())throw new IOException("Cannot create import directory");
+        try {
+            for(java.util.Map.Entry<String,android.net.Uri> apk:apks.entrySet()) {
+                if(!apk.getKey().matches("[a-zA-Z0-9_.-]+\\.apk"))throw new IOException("Invalid APK filename");
+                status("Copying "+apk.getKey()+"…");
+                try(InputStream in=context.getContentResolver().openInputStream(apk.getValue());OutputStream out=new FileOutputStream(new File(staged,apk.getKey()))) {
+                    if(in==null)throw new IOException("Cannot open selected APK");GuestImage.copy(in,out,2L*1024*1024*1024);
+                }
+            }
+            status("Installing APKs in Android 12L…");String result=runTool("install");
+            if(!result.startsWith("Installed "))throw new IOException(result);
+            context.getSharedPreferences(appPreferences(),Context.MODE_PRIVATE).edit().putString("package",result.substring(10)).apply();status(result);
+        }finally{deleteTree(staged);}
+    }
+    org.json.JSONObject report(boolean nativeLogs)throws Exception {
+        org.json.JSONObject result=new org.json.JSONObject().put("sdk",sdk).put("runId",runId).put("ready",ready)
+            .put("running",running()).put("closed",closed).put("cleanupFailure",cleanupFailure);
+        if(input32!=null)result.put("input",input32.report());
+        if(audio32!=null)result.put("audio",audio32.report());
+        if(external32!=null)result.put("externalStorage",external32.report());
+        if(init!=null){boolean alive=init.isAlive();result.put("ownerAlive",alive);if(!alive)result.put("ownerExitCode",init.exitValue());}
+        if(nativeLogs && log32!=null)result.put("nativeLog",log32.text());
+        return result;
     }
 }

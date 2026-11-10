@@ -13,6 +13,7 @@ import dev.kreijstal.aosppocket.storage.CeNamespace.Node;
 /** Offline, verified migration. Source removal starts only after durable proof. */
 final class CeMigration {
     private static final String VERIFIED=".pocket-ce-migration-verified",VAULT=".pocket-ce-v1",ENABLED=".pocket-ce-enabled";
+    static final String LAYOUT32=".pocket-ce-layout-12l";
     private final File root;
     private final CeNamespace namespace;
     private final Map<String,String> hardlinks=new HashMap<>();
@@ -20,6 +21,13 @@ final class CeMigration {
     private int files;
     private CeMigration(File root,CeNamespace namespace){this.root=root;this.namespace=namespace;namespace.autoCommit=false;}
     private static File source(File root,String guest){return new File(root,"system-data/"+guest.substring(6));}
+    static boolean api32(File root)throws IOException {
+        File properties=new File(root,"system/build.prop");
+        if(!properties.isFile())return false;
+        String text="\n"+new String(Files.readAllBytes(properties.toPath()),java.nio.charset.StandardCharsets.UTF_8)+"\n";
+        return text.contains("\nro.build.version.sdk=32\n");
+    }
+    static String[] roots(File root)throws IOException {return (api32(root)?CeNamespace.API32_ROOTS:CeNamespace.ROOTS).clone();}
     static void syncDirectory(Path path)throws IOException {try(FileChannel fd=FileChannel.open(path,StandardOpenOption.READ)){fd.force(true);}}
     private static void marker(File root,String name)throws IOException {
         marker(root,name,"1\n");
@@ -31,7 +39,10 @@ final class CeMigration {
     }
     static void finishVerified(File root)throws Exception {
         if(!new File(root,VERIFIED).isFile())return;
-        String staging=new String(Files.readAllBytes(new File(root,VERIFIED).toPath()),java.nio.charset.StandardCharsets.US_ASCII).trim();
+        String[] journal=new String(Files.readAllBytes(new File(root,VERIFIED).toPath()),java.nio.charset.StandardCharsets.US_ASCII).trim().split("\n",-1);
+        boolean layout32=journal.length==2 && journal[1].equals("api32-roots=5");
+        if((journal.length!=1 && !layout32) || api32(root)!=layout32)throw new IOException("CE migration layout does not match the guest; plaintext preserved");
+        String staging=journal[0];
         if(!staging.matches("\\.pocket-ce-stage-[0-9a-f-]{36}"))throw new IOException("Invalid CE migration journal");
         Path stage=new File(root,staging).toPath(),vault=new File(root,VAULT).toPath();
         if(!Files.exists(vault)) {
@@ -39,7 +50,8 @@ final class CeMigration {
             Files.move(stage,vault,StandardCopyOption.ATOMIC_MOVE);syncDirectory(root.toPath());
         }
         if(!new File(root,VAULT+"/state").isFile() || !new File(root,VAULT+"/key").isFile())throw new IOException("Verified CE vault is missing; refusing migration cleanup");
-        for(String guest:CeNamespace.ROOTS) {
+        if(layout32)marker(root,LAYOUT32);
+        for(String guest:roots(root)) {
             File plain=source(root,guest);
             if(Files.isSymbolicLink(plain.toPath()))throw new IOException("Unexpected CE source root link");
             if(plain.exists())Os.chmod(plain.getPath(),0700);
@@ -55,7 +67,8 @@ final class CeMigration {
     }
     static void sealPlaceholders(File root)throws Exception {
         if(!CeStorage.enabled(root))return;
-        for(String guest:CeNamespace.ROOTS) {
+        if(api32(root) && !new File(root,LAYOUT32).isFile())throw new IOException("Android12L CE storage requires the five-root layout");
+        for(String guest:roots(root)) {
             File plain=source(root,guest);if(Files.isSymbolicLink(plain.toPath()))throw new IOException("Unexpected plaintext CE root link");
             Os.chmod(plain.getPath(),0700);
             try(DirectoryStream<Path> paths=Files.newDirectoryStream(plain.toPath())) {if(paths.iterator().hasNext())throw new IOException("Unexpected plaintext CE data; refusing to bypass encrypted storage");}
@@ -65,13 +78,14 @@ final class CeMigration {
     static void perform(File root,byte[] secret)throws Exception {
         finishVerified(root);if(CeStorage.enabled(root))throw new IOException("CE migration is already complete");
         Path finalVault=new File(root,VAULT).toPath();if(Files.exists(finalVault))throw new IOException("Uncommitted CE vault needs owner recovery; plaintext has been preserved");
+        boolean layout32=api32(root);String[] roots=roots(root);
         Path stage=new File(root,".pocket-ce-stage-"+UUID.randomUUID()).toPath();boolean verified=false;
         try {
             Map<Integer,byte[]> expected;
             try(EncryptedStore store=EncryptedStore.create(stage,secret)) {
-                CeNamespace namespace=new CeNamespace(store,true);CeMigration migration=new CeMigration(root,namespace);
-                for(int i=0;i<CeNamespace.ROOTS.length;i++) {
-                    String guest=CeNamespace.ROOTS[i];File plain=source(root,guest);
+                CeNamespace namespace=new CeNamespace(store,true,layout32);CeMigration migration=new CeMigration(root,namespace);
+                for(int i=0;i<roots.length;i++) {
+                    String guest=roots[i];File plain=source(root,guest);
                     if(Files.isSymbolicLink(plain.toPath()))throw new IOException("CE source root must be a real directory");
                     if(plain.exists()) {
                         migration.attributes(namespace.node(i+3),Os.lstat(plain.getPath()),plain);
@@ -83,6 +97,7 @@ final class CeMigration {
             }
             try(EncryptedStore store=EncryptedStore.open(stage,secret)) {
                 CeNamespace ns=new CeNamespace(store,false);byte[] data=new byte[65536];
+                if(!Arrays.equals(ns.roots(),roots))throw new IOException("Migrated CE namespace has the wrong root layout");
                 try {
                     for(Map.Entry<Integer,byte[]> item:expected.entrySet()) {
                         MessageDigest digest=MessageDigest.getInstance("SHA-256");String name=CeNamespace.content(item.getKey());long size=store.size(name),offset=0;
@@ -92,7 +107,7 @@ final class CeMigration {
                     }
                 }finally{Arrays.fill(data,(byte)0);}
             }
-            marker(root,VERIFIED,stage.getFileName().toString()+"\n");verified=true;
+            marker(root,VERIFIED,stage.getFileName().toString()+"\n"+(layout32?"api32-roots=5\n":""));verified=true;
             // After this journal commit, startup can finish removal without
             // retaining the password or key. Before it, plaintext is intact.
             finishVerified(root);
@@ -133,7 +148,10 @@ final class CeMigration {
         }
         node.mode=st.st_mode;node.uid=uid;node.gid=gid;node.atime=st.st_atime*1000;node.mtime=st.st_mtime*1000;node.ctime=st.st_ctime*1000;
         node.xattrs.clear();
-        if(!node.symlink())for(String attr:Os.listxattr(file.getPath()))if(attr.startsWith("user.")) {
+        // Preserve the inherited host label as read-only filesystem metadata.
+        // installd reads it even when guest restorecon is disabled. This does
+        // not install a guest policy or relabel any host inode.
+        if(!node.symlink())for(String attr:Os.listxattr(file.getPath()))if(attr.startsWith("user.") || attr.equals("security.selinux")) {
             byte[] value=Os.getxattr(file.getPath(),attr);if(value.length>16384)throw new IOException("CE migration attribute bound");
             String child=attr.equals("user.inode_cache")?"cache":attr.equals("user.inode_code_cache")?"code_cache":null;
             if(child!=null && node.children.containsKey(child))value=ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(node.children.get(child)).array();

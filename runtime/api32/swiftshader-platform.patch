@@ -1,0 +1,64 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -31,7 +31,8 @@
+     set(LINUX TRUE)
+ elseif(CMAKE_SYSTEM_NAME MATCHES "Android")
+     set(ANDROID TRUE)
+-    set(CMAKE_CXX_FLAGS "-DANDROID_NDK_BUILD")
++    add_compile_definitions(ANDROID_PLATFORM_SDK_VERSION=32 HAVE_GRALLOC1)
++    include_directories(BEFORE ${POCKET_PLATFORM_INCLUDES})
+ elseif(WIN32)
+ elseif(APPLE)
+ elseif(FUCHSIA)
+@@ -735,6 +736,8 @@
+         list(APPEND OS_LIBS "${D2D}")
+         include_directories(${D2D_INCLUDE_DIR}/libdrm)
+     endif(SWIFTSHADER_BUILD_WSI_D2D)
++elseif(ANDROID)
++    set(OS_LIBS ${POCKET_PLATFORM_LIBRARIES})
+ elseif(FUCHSIA)
+     set(OS_LIBS zircon)
+ elseif(APPLE)
+--- a/src/Common/CMakeLists.txt
++++ b/src/Common/CMakeLists.txt
+@@ -25,9 +25,8 @@
+ set(COMMON_SRC_FILES
+     Configurator.cpp
+     CPUID.cpp
+-    Debug.cpp
+-    # DebugAndroid.cpp
+-    # GrallocAndroid.cpp
++    DebugAndroid.cpp
++    GrallocAndroid.cpp
+     Half.cpp
+     Math.cpp
+     Memory.cpp
+--- a/src/OpenGL/common/debug.cpp
++++ b/src/OpenGL/common/debug.cpp
+@@ -18,7 +18,6 @@
+ 
+ #ifdef  __ANDROID__
+ #if !defined(ANDROID_NDK_BUILD)
+-#include <utils/String8.h>
+ #if ANDROID_PLATFORM_SDK_VERSION < 27
+ #include <cutils/log.h>
+ #elif ANDROID_PLATFORM_SDK_VERSION >= 27
+@@ -37,7 +36,7 @@
+ #if defined(__ANDROID__) && !defined(ANDROID_HOST_BUILD) && !defined(ANDROID_NDK_BUILD)
+ 	static void output(const char *format, va_list vararg)
+ 	{
+-		ALOGI("%s", android::String8::formatV(format, vararg).string());
++		__android_log_vprint(ANDROID_LOG_INFO, "SwiftShader", format, vararg);
+ 	}
+ #else
+ 	static void output(const char *format, va_list vararg)
+--- a/src/OpenGL/libGLES_CM/CMakeLists.txt
++++ b/src/OpenGL/libGLES_CM/CMakeLists.txt
+@@ -103,6 +103,7 @@
+ 
+ if (ANDROID)
+     set_target_properties(libGLES_CM PROPERTIES SUFFIX "_swiftshader.so")
++    set_target_properties(libGLES_CM PROPERTIES OUTPUT_NAME "libGLESv1_CM")
+ endif ()
+ 
+ set_shared_library_export_map(libGLES_CM ${CMAKE_CURRENT_SOURCE_DIR})

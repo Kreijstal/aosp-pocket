@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Rootless guest property-service bring-up, not the complete AOSP init daemon.
 // Built against the matching Android 9/10 Bionic property area and wire ABI.
-#if POCKET_GUEST_API != 28 && POCKET_GUEST_API != 29
+#if POCKET_GUEST_API != 28 && POCKET_GUEST_API != 29 && POCKET_GUEST_API != 32
 #error Review the property protocol and platform ABI for this guest version
 #endif
 #define POCKET_PROPERTY_STRING_INNER(value) #value
@@ -22,9 +22,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <string>
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
 #include <android-base/properties.h>
 #include <android-base/strings.h>
+#endif
+#if POCKET_GUEST_API == 32
+#include <map>
 #endif
 #include "pocket_properties.h"
 
@@ -88,6 +91,31 @@ uint32_t put(const std::string& name, const std::string& value) {
 }
 
 bool defaults() {
+#if POCKET_GUEST_API == 32
+    // Android 12L accumulates partition defaults before publishing read-only
+    // properties. Publishing each file directly incorrectly rejects overrides.
+    std::map<std::string,std::string> values;
+    for(const char* path:{"/system/etc/prop.default","/system/build.prop",
+            "/system_ext/etc/build.prop","/system_ext/build.prop",
+            "/vendor/default.prop","/vendor/build.prop",
+            "/product/etc/build.prop","/product/build.prop",
+            "/system/etc/pocket-profile.prop"}) {
+        FILE* input=fopen(path,"re");if(!input)continue;
+        char* line=nullptr;size_t length=0;
+        while(getline(&line,&length,input)>0){
+            std::string text=android::base::Trim(line);
+            if(text.empty() || text[0]=='#')continue;
+            size_t equal=text.find('=');if(equal==std::string::npos)continue;
+            values[android::base::Trim(text.substr(0,equal))]=android::base::Trim(text.substr(equal+1));
+        }
+        free(line);fclose(input);
+    }
+    bool success=values.count("ro.build.version.sdk")!=0;
+    for(const auto& entry:values)if(put(entry.first,entry.second)!=PROP_SUCCESS){
+        printf("PROPERTY_DEFAULT_FAILED name=%s\n",entry.first.c_str());success=false;
+    }
+    return success;
+#else
     FILE* input = fopen("/system/build.prop", "re");
     if (!input) return false;
     char* line = nullptr;
@@ -110,10 +138,31 @@ bool defaults() {
     free(line);
     fclose(input);
     return success;
+#endif
 }
 
 void derivedDefaults() {
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API == 32
+    // Match Android 12L init's property_initialize_ro_cpu_abilist(): the
+    // image publishes partition-scoped CPU values, while app_process and
+    // Build.SUPPORTED_ABIS consume these global read-only properties.
+    if (android::base::GetProperty("ro.product.cpu.abilist", "").empty()) {
+        std::string abi32, abi64;
+        for (const char* partition : {"product", "odm", "vendor", "system"}) {
+            std::string prefix=std::string("ro.")+partition+".product.cpu.";
+            abi32=android::base::GetProperty(prefix+"abilist32", "");
+            abi64=android::base::GetProperty(prefix+"abilist64", "");
+            if (!abi32.empty() || !abi64.empty()) break;
+        }
+        std::string all=abi64;
+        if (!abi32.empty()) all+=(all.empty()?"":",")+abi32;
+        for (const auto& entry : {std::make_pair("ro.product.cpu.abilist",all),
+                std::make_pair("ro.product.cpu.abilist32",abi32),std::make_pair("ro.product.cpu.abilist64",abi64)})
+            if (put(entry.first,entry.second)!=PROP_SUCCESS)
+                printf("PROPERTY_CPU_DERIVE_FAILED name=%s\n",entry.first);
+    }
+#endif
+#if POCKET_GUEST_API >= 29
     // Android 10 moved product identities into partition properties. Match
     // AOSP init's source-order and fingerprint derivation before Java starts.
     using android::base::GetProperty;
@@ -121,9 +170,17 @@ void derivedDefaults() {
     std::string order=GetProperty("ro.product.property_source_order","");
     bool valid=!order.empty();
     for(const auto& source:Split(order,",")) {
+#if POCKET_GUEST_API == 32
+        if(source!="product" && source!="odm" && source!="vendor" && source!="system_ext" && source!="system")valid=false;
+#else
         if(source!="product" && source!="product_services" && source!="odm" && source!="vendor" && source!="system")valid=false;
+#endif
     }
+#if POCKET_GUEST_API == 32
+    if(!valid)order="product,odm,vendor,system_ext,system";
+#else
     if(!valid)order="product,product_services,odm,vendor,system";
+#endif
     for(const char* key:{"brand","device","manufacturer","model","name"}) {
         std::string name=std::string("ro.product.")+key;
         if(!GetProperty(name,"").empty())continue;

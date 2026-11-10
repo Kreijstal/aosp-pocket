@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "status": "ROOTLESS_BLUETOOTH_SCHEDULING_PASS_STARTUP_FAILED_HAL_ABSENT",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Explicit rootless callback/thread scheduling for the stock Bluetooth process. Actual backend remains SCHED_OTHER, real-time privilege and wake alarms remain unavailable. No Bluetooth radio, stable-startup or Manager claim.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "hostVmMemoryMb": 1536,
+  "runId": "31a01661813549b2a6e17ade2eab6fcb",
+  "apkSha256": "4b876c6c67b31c82cea5b9ad19267c8b2120211794d2b49ae1b2704a04cc39f2",
+  "apkBytes": 7652411,
+  "imageManifestSha256": "b858bbbae0abe305027149a9a8d5e1101c43b540b2ee1158a354df27ce2283b6",
+  "imageVerifiedFiles": 2651,
+  "sourceSha256": {
+    "runtime/api32/service_timers.c": "b7321c270634dd7e5473f771eb776fb401a4db15396de5d54b9bed494bd6d5db",
+    "runtime/api32/service_timer_probe.c": "ad694d14da68bca4c3926b120da4d9a5264b2b961b7fd687981a2f07d6e4d55f",
+    "tools/build_api32_timers.py": "4066f9dd1c3e7a50861a7e7a0828e5c3202974e387de058b230bc79e52c045a3",
+    "tools/build_api32_probe.py": "3fff27b5a704e5f8a102ed1b59cd741970325c98b80efc9f56de01e6b52c79b9",
+    "tools/test_api32_on_pi.py": "a2ee346ca66b6b986fb4bbb5abdfc630c085ec6878b0741d4738f02669731ecc"
+  },
+  "reportPath": "out/api32/service-scheduling-report.json",
+  "reportSha256": "03b6349da81a9e5dac19008056d79f7a645a340ab0967b9f841d854ffa1f3f4c",
+  "componentMarkers": [
+    "API32_SERVICE_TIMER_UID_SCOPE_PASS uid=39999 process=com.android.bluetooth realtime=denied",
+    "API32_SERVICE_TIMER_NAME_SCOPE_PASS uid=1002 process=probe realtime=denied",
+    "API32_SERVICE_SCHEDULER_PASS uid=1002 raw_realtime=denied local_thread=adapted distinct_thread=verified actual_policy=SCHED_OTHER actual_priority=0 other_process=unchanged",
+    "API32_SERVICE_TIMER_PASS uid=1002 raw_realtime_errno=1 normal_callbacks=2 adapted_callbacks=2 callback_policy=SCHED_OTHER original_attributes=unchanged kernel_wake_alarm=denied timer_backend=stock_bionic"
+  ],
+  "realBluetoothPids": [
+    23911,
+    24371,
+    24537,
+    24939,
+    25320,
+    25593
+  ],
+  "runtimeCounters": {
+    "clock7TimerFailures": 0,
+    "alarmInitializationFatals": 0,
+    "mainThreadRealtimeFatals": 0,
+    "missingHciHalFatals": 6,
+    "bluetoothAnrs": 0
+  },
+  "policy": {
+    "optIn": "POCKET_API32_ROOTLESS_BLUETOOTH_SCHEDULING=1",
+    "scopeChecks": [
+      "SDK32",
+      "Pocket loader magic",
+      "fixture marker",
+      "virtual UID1002",
+      "actual argv[0] com.android.bluetooth"
+    ],
+    "timerCallback": "Copy the caller event and Bionic attributes; map valid FIFO/RR callback scheduling to OTHER/0, preserving caller attributes and other thread attributes. Call actual stock timer_create.",
+    "threadScheduling": "Map valid FIFO/RR requests only for the current process own live threads, checked under /proc/self/task. Call actual stock sched_setscheduler with OTHER/0 and return its actual result. Nonlocal threads and other processes retain stock behavior.",
+    "policiesTested": [
+      "SCHED_FIFO"
+    ],
+    "callbackBackend": "stock bionic timer and callback threads",
+    "actualStateVerified": "Two actual callback deliveries per stock/adapted timer; callback scheduling queried. Both own calling thread and a distinct live callback thread queried via sched_getscheduler/getparam after adaptation: OTHER/0.",
+    "unchangedNegativeCases": [
+      "UID39999 with Bluetooth argv[0]",
+      "UID1002 with non-Bluetooth argv[0]",
+      "another live process even with the same kernel/virtual UID",
+      "kernel CLOCK_BOOTTIME_ALARM permission"
+    ],
+    "kernelRealtimeGranted": false,
+    "kernelWakeAlarmGranted": false,
+    "baselineIsolation": "The opt-in policy is explicitly disabled for the stock real-time timer comparison, because bionic pthread_create calls public sched_setscheduler internally. The policy is restored for positive/scope cases."
+  },
+  "stockBinariesUnchanged": {
+    "system/lib64/libbluetooth.so": "d8950314c9d07c06dc459e35ffb1e2a7f80622449813e54d6b0edaee9257f2bb",
+    "apex/com.android.runtime/lib64/bionic/libc.so": "9f6aaee0b61706b617492d9aa70254f7f63fd6dd648b095377f4061c27083a40"
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_timers.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS / exit 0; shared adapter and actual bionic probe compiled with -Wall -Wextra -Werror."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/service-scheduling-probe-baseline-manifest.json",
+      "result": "PASS / exit 0; signed 7652411-byte APK. All 2651 guest inputs verified; final delta contains only the corrected probe and two rebuilt guest APKs."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Scheduling/timer/scope and later UI/input component PASS; overall FAIL / driver exit 1, guest exit 0. Missing HCI HAL causes six Bluetooth fatal restarts; SystemUI and Gallery ANRs remain. Strict gates unchanged."
+    },
+    {
+      "command": "python3 out/api32/replay_service_scheduling_gates.py",
+      "result": "PASS / exit 0; all required markers present, strict startup still rejected, removing new scheduling marker rejected. Original report unchanged."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_timers.py tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0."
+    }
+  ],
+  "earlierRuns": [
+    {
+      "runId": "389cbe77ed8d4901aee45590a063f1f0",
+      "reportPath": "out/api32/service-timers-report.json",
+      "reportSha256": "6864c04697909e12ced91041bdb337dc02a5a9da0e9c6f5cf12bc832b5368625",
+      "observation": "Timer-only adaptation passed. Six later btu_task.cc fatal real-time scheduling failures exposed a second rootless requirement. SystemUI also ANRed; a later PID18734 crashed after ContentService returned Failed to find PID during observer registration, interrupting Dagger injection."
+    },
+    {
+      "runId": "6117fd73053a4c31be9c0c310e363130",
+      "reportPath": "out/api32/service-scheduling-first-report.json",
+      "reportSha256": "cf336cdf89916a264c5b6823d8511917ef77cc479248154df3469f44099ac844",
+      "guestExitCode": 1,
+      "observation": "Expanded adapter also intercepted bionic internal scheduler setup, so direct stock timer_create was not an isolated baseline. Probe rejected this before framework startup. Corrected by explicitly disabling the opt-in policy for baseline comparison, retaining all required negative/scope checks. All 24 started services reaped."
+    }
+  ],
+  "startupAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 23942,
+      "reason": "executing service com.android.systemui/.ImageWallpaper"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 25482,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "uiStartupCrashes": [],
+  "laterUiSystemUiPid": 25079,
+  "laterUiStableSeconds": 40,
+  "hostInput": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "rejected": 0,
+    "text": "a129"
+  },
+  "nativeLogChars": 1632907,
+  "nativeLogWithinCaptureLimit": true,
+  "cleanup": {
+    "reaped": 29,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hardwareDeclarationGap": {
+    "bluetoothFeatureStillAdvertised": true,
+    "bluetoothHciBackendRegistered": false,
+    "featureFiles": [
+      "vendor/etc/permissions/android.hardware.bluetooth.xml",
+      "vendor/etc/permissions/android.hardware.bluetooth_le.xml",
+      "vendor/etc/permissions/handheld_core_hardware.xml"
+    ],
+    "evidence": "Actual HIDL queries for IBluetoothHci1.1/1.0 returned unavailable; stock HCI initialization aborts at its nonnull check. Stock SystemServer starts Bluetooth only if FEATURE_BLUETOOTH is present.",
+    "nextImplementation": "Make the software profile feature declarations match actual registered hardware, and verify stock PackageManager/BluetoothAdapter absence behavior. Radio support requires a real backend; scheduling is not a radio backend."
+  },
+  "remaining": [
+    "Correct unsupported hardware feature declarations and provide the required camera service path; Gallery still waits in its camera boot receiver.",
+    "Fix SystemUI startup ANRs. Current ART snapshot is in native XML asset loading/ART transition; no exclusive cause is established.",
+    "Complete production API32 supervisor/Manager, on-demand image packaging/catalog, credential/storage integration and real application/restart validation. Phone validation remains unavailable."
+  ],
+  "bluetoothRadioSupported": false,
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "managerApi32Supported": false
+}

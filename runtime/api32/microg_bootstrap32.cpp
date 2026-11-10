@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Android 12L system_server hook for microG package-query compatibility.
-// tools/build_api32_microg.py appends this file to the patched
-// com_android_internal_os_Zygote.cpp and calls it in the system_server child
-// right after nativeForkSystemServer's specialization, as the API 28 zygote
-// does with MicrogSupport.install().
+// The normal zygote build links this unit and calls it only in the marked
+// system-server child, after ART post-fork hooks and native Binder init.
 //
 // MicrogSupport32 lives in its own jar, outside BOOTCLASSPATH, so the boot
 // class path checksums recorded in the image's compiled code stay unchanged.

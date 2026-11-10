@@ -1,0 +1,158 @@
+--- a/gralloc.cpp
++++ b/gralloc.cpp
+@@ -62,6 +62,11 @@
+ extern int gralloc_unlock(gralloc_module_t const* module, 
+         buffer_handle_t handle);
+ 
++extern int gralloc_lock_ycbcr(gralloc_module_t const* module,
++        buffer_handle_t handle, int usage,
++        int l, int t, int w, int h,
++        struct android_ycbcr* ycbcr);
++
+ extern int gralloc_register_buffer(gralloc_module_t const* module,
+         buffer_handle_t handle);
+ 
+@@ -89,6 +94,7 @@
+         .unregisterBuffer = gralloc_unregister_buffer,
+         .lock = gralloc_lock,
+         .unlock = gralloc_unlock,
++        .lock_ycbcr = gralloc_lock_ycbcr,
+     },
+     .framebuffer = 0,
+     .flags = 0,
+@@ -207,6 +213,30 @@
+     if (!pHandle || !pStride)
+         return -EINVAL;
+ 
++    // Pocket: camera YUV buffers (YV12, and flexible YUV 4:2:0 for video and
++    // ImageReader) use Android's YV12 layout: Y, then Cr, then Cb, with 16-byte
++    // aligned strides. SwiftShader samples both as YV12; lock_ycbcr describes it.
++    if (format == HAL_PIXEL_FORMAT_YV12 || format == HAL_PIXEL_FORMAT_YCbCr_420_888) {
++        if (width <= 0 || height <= 0 || (width & 1) || (height & 1))
++            return -EINVAL;
++        const size_t ystride = align(width, 16);
++        const size_t cstride = align(ystride / 2, 16);
++        const size_t size = ystride * height + cstride * height;
++        if (size > INT_MAX)
++            return -EINVAL;
++        int err = gralloc_alloc_buffer(dev, size,
++                usage & ~GRALLOC_USAGE_HW_FB, pHandle);
++        if (err < 0)
++            return err;
++        private_handle_t* hnd = const_cast<private_handle_t*>(
++                reinterpret_cast<const private_handle_t*>(*pHandle));
++        hnd->width = width;
++        hnd->height = height;
++        hnd->format = format;
++        *pStride = ystride;
++        return 0;
++    }
++
+     int bytesPerPixel = 0;
+     switch (format) {
+         case HAL_PIXEL_FORMAT_RGBA_FP16:
+@@ -215,8 +245,15 @@
+         case HAL_PIXEL_FORMAT_RGBA_8888:
+         case HAL_PIXEL_FORMAT_RGBX_8888:
+         case HAL_PIXEL_FORMAT_BGRA_8888:
++        // Pocket: camera preview buffers. SwiftShader samples this format as
++        // RGBX, and the camera HAL writes it as RGBX.
++        case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
+             bytesPerPixel = 4;
+             break;
++        // Pocket: camera JPEG output, a width-byte buffer one row high.
++        case HAL_PIXEL_FORMAT_BLOB:
++            bytesPerPixel = 1;
++            break;
+         case HAL_PIXEL_FORMAT_RGB_888:
+             bytesPerPixel = 3;
+             break;
+@@ -234,12 +271,10 @@
+     size_t stride = align(width, tileWidth);
+     size_t size = align(height, tileHeight) * stride * bytesPerPixel + 4;
+ 
+-    int err;
+-    if (usage & GRALLOC_USAGE_HW_FB) {
+-        err = gralloc_alloc_framebuffer(dev, size, format, usage, pHandle);
+-    } else {
+-        err = gralloc_alloc_buffer(dev, size, usage, pHandle);
+-    }
++    // Pocket's software composer owns the display; no host framebuffer is
++    // available to this app UID. Keep the stock shared-memory allocation path
++    // for client targets as well as ordinary software buffers.
++    int err = gralloc_alloc_buffer(dev, size, usage & ~GRALLOC_USAGE_HW_FB, pHandle);
+ 
+     if (err < 0) {
+         return err;
+--- a/mapper.cpp
++++ b/mapper.cpp
+@@ -175,6 +175,46 @@
+     return 0;
+ }
+ 
++// Pocket: plane offsets describe the allocation, not the access/crop region.
++// ImageReader may lock an empty or cropped region. The geometry is carried in
++// the opaque handle so imported buffers use exactly the allocator's layout.
++int gralloc_lock_ycbcr(gralloc_module_t const* module,
++        buffer_handle_t handle, int usage,
++        int l, int t, int w, int h,
++        struct android_ycbcr* ycbcr)
++{
++    if (private_handle_t::validate(handle) < 0 || !ycbcr)
++        return -EINVAL;
++    const private_handle_t* hnd = reinterpret_cast<const private_handle_t*>(handle);
++    if ((hnd->format != HAL_PIXEL_FORMAT_YV12 &&
++            hnd->format != HAL_PIXEL_FORMAT_YCbCr_420_888) ||
++            hnd->width <= 0 || hnd->height <= 0 ||
++            (hnd->width & 1) || (hnd->height & 1) || hnd->size <= 0)
++        return -EINVAL;
++    if (l < 0 || t < 0 || w < 0 || h < 0 ||
++            l > hnd->width || t > hnd->height ||
++            w > hnd->width - l || h > hnd->height - t ||
++            ((w == 0 || h == 0) && (l || t || w || h)))
++        return -EINVAL;
++    const size_t ystride = (static_cast<size_t>(hnd->width) + 15) & ~size_t(15);
++    const size_t cstride = ((ystride / 2) + 15) & ~size_t(15);
++    if (ystride * hnd->height + cstride * hnd->height > static_cast<size_t>(hnd->size))
++        return -EINVAL;
++    void* vaddr = NULL;
++    int err = gralloc_lock(module, handle, usage, l, t, w, h, &vaddr);
++    if (err)
++        return err;
++    uint8_t* y = static_cast<uint8_t*>(vaddr);
++    memset(ycbcr, 0, sizeof(*ycbcr));
++    ycbcr->y = y;
++    ycbcr->cr = y + ystride * hnd->height;
++    ycbcr->cb = y + ystride * hnd->height + cstride * (hnd->height / 2);
++    ycbcr->ystride = ystride;
++    ycbcr->cstride = cstride;
++    ycbcr->chroma_step = 1;
++    return 0;
++}
++
+ int gralloc_unlock(gralloc_module_t const* /*module*/,
+         buffer_handle_t handle)
+ {
+--- a/gralloc_priv.h
++++ b/gralloc_priv.h
+@@ -78,6 +78,11 @@
+     uint64_t base __attribute__((aligned(8)));
+     int     pid;
+ 
++    // Allocation geometry travels with the opaque handle across processes.
++    int     width;
++    int     height;
++    int     format;
++
+ #ifdef __cplusplus
+     static inline int sNumInts() {
+         return (((sizeof(private_handle_t) - sizeof(native_handle_t))/sizeof(int)) - sNumFds);
+@@ -87,7 +92,7 @@
+ 
+     private_handle_t(int fd, int size, int flags) :
+         fd(fd), magic(sMagic), flags(flags), size(size), offset(0),
+-        base(0), pid(getpid())
++        base(0), pid(getpid()), width(0), height(0), format(0)
+     {
+         version = sizeof(native_handle);
+         numInts = sNumInts();

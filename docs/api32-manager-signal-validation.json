@@ -1,0 +1,1006 @@
+{
+  "schema": 1,
+  "status": "UNMODIFIED_SIGNAL_API32_INSTALL_REPLACEMENT_AND_MANAGER_REOPEN_PASS",
+  "scope": "Unmodified Signal Play ARM64 API32 split APKs in actual Pocket Manager runtime on dedicated VM73; no phone access or account registration.",
+  "appSpec": {
+    "source": "Google Play via Aurora Store 4.8.4 on Linux Waydroid",
+    "downloadProfile": {
+      "name": "Samsung S20+",
+      "sdk": 33,
+      "abi": "arm64-v8a"
+    },
+    "version": "8.33.2",
+    "versionCode": 177201,
+    "package": "org.thoughtcrime.securesms",
+    "minSdk": 32,
+    "targetSdk": 36,
+    "signatureVerifiedForGuestSdk": 32,
+    "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+    "files": [
+      {
+        "name": "base.apk",
+        "bytes": 85982422,
+        "sha256": "d5acfe87956572030fc762f48e65175d34246ed1a3b941d1cf63ab71d7ba1540"
+      },
+      {
+        "name": "config.arm64_v8a.apk",
+        "bytes": 30184532,
+        "sha256": "e1c3e2ac2fd0d28d963db9b73936014200a21d681e376e71701935496e28a320"
+      },
+      {
+        "name": "config.xxhdpi.apk",
+        "bytes": 187458,
+        "sha256": "c1fb420e1818da0ad7f55e0644bb31fd6eed2c9402edd2f8e9c25be97ee36ef9"
+      }
+    ],
+    "archive": "Signal-8.33.2-play-arm64-api32.apks",
+    "archiveBytes": 116354752,
+    "archiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "guestInstallValidated": false,
+    "phoneAccessUsedForDownload": false,
+    "installation": "Install all three APKs in one PackageInstaller session; base alone is incomplete.",
+    "checks": [
+      "apksigner verify --print-certs --min-sdk-version 32 --max-sdk-version 32 <each-apk>: PASS",
+      "aapt dump badging <each-apk>: package/version match and minSdk 32: PASS"
+    ],
+    "url": "http://127.0.0.1:8794/Signal-8.33.2-play-arm64-api32.apks"
+  },
+  "preliminaryRuns": [
+    {
+      "runId": "11672f0389ba4070966b6acc8bffa29d",
+      "reportPath": "out/api32/signal-manager-first-report.json",
+      "reportSha256": "77938a410ce5e42280c366a96ee8beb88491a0b60bade9fb59fe67ae210a82de",
+      "candidatePath": "out/api32/signal-manager-first-candidate.json",
+      "candidateSha256": "5131ee3c0db1706cee92d7b1c986ad5ee2ca2428aa730b490e9c6347dde75bbe",
+      "validation": "FAIL",
+      "observerError": "java.io.IOException: App is not resumed",
+      "installed": true,
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "16154"
+      ],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "ownerExitCode": 0
+    },
+    {
+      "runId": "ecc4238e5fc84dbeae4d2bfe1fc29d49",
+      "reportPath": "out/api32/signal-manager-v2-report.json",
+      "reportSha256": "1ae56c352023956bd6a9d2d6def4ed91d4e0a8a09ed37db6ae26027adae224b1",
+      "candidatePath": "out/api32/signal-manager-v2-candidate.json",
+      "candidateSha256": "f9c25684270d2a0b4f7840fe9c3f0fefe1aeeab1cf6500ed683d04cf3f7407c4",
+      "validation": "FAIL",
+      "observerError": "java.io.IOException: App does not own the focused window",
+      "installed": true,
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "19051"
+      ],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "ownerExitCode": 0
+    },
+    {
+      "runId": "a6b1b0119f3d40658435202194fa7b68",
+      "reportPath": "out/api32/signal-manager-v3-report.json",
+      "reportSha256": "c9fa2e454df71f1d9f57c7aa3ec02221f0953c9495e4d048fdeff980ec20a294",
+      "candidatePath": "out/api32/signal-manager-v3-candidate.json",
+      "candidateSha256": "83fa3508b734ecce4fb8464718e28324b6a61c93ecdd0d7b726fc50931d5eb0b",
+      "validation": "FAIL",
+      "observerError": "java.io.IOException: App is not resumed",
+      "installed": true,
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "22068"
+      ],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "ownerExitCode": 0
+    }
+  ],
+  "observerCorrections": [
+    "Recognize stock 12L topResumedActivity= and ResumedActivity: fields.",
+    "Read actual mCurrentFocus from the activity-task dump; the WM windows-only dump omits display focus.",
+    "Positive and wrong-focus/paused-package negative checks passed using the captured stock dumps."
+  ],
+  "runtimeFailure": "After replacement succeeded and Manager launched RoutingActivity, delayed package-removal broadcasts force-stopped the package and removed the activity. The test correctly rejected launcher focus.",
+  "fix": "Hold an external provider reference to the ordinary AMS-registered Pocket package receiver, arm before committing the session, then verify matching ADDED/REPLACED event sequence, package, UID, version and update time before launch. The overall install/event wait is bounded. Release the provider reference on every exit.",
+  "candidatePath": "out/api32/signal-manager-v4-candidate.json",
+  "candidateSha256": "87e8deca9ee1d10d3bf07b6dfbf095d09563db40852b6d229597c34f82043a9d",
+  "candidate": {
+    "manager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/signal-manager-v4-probe/api32-app-manager-probe.apk",
+      "sha256": "a28e3945fd9ad757046ff213ec9fe827a1da694fc52748ae02994fcbce97e2c3",
+      "bytes": 2619250,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false
+    },
+    "sourceHashes": {
+      "tools/build_api29_manager.py": "58fe0564a495507e407505debb0ea1283276efc06d5fd66cdae448dd2ad0d81c",
+      "tools/test_api32_app_on_pi.py": "eb265993b90e2f2da3fbee8c7cde43d4b6403976cbeb36f8cb03959bb3e20bae",
+      "tools/build_api32_manager_tools.py": "011e03b65356d691317c71859b9aa8b9701e2da9955feb657dfc517d11c51d8e",
+      "tools/build_api32_image.py": "26ec0ff0f61bf9c40ac7edbccff8fc6f4ed9e2e189d217a41b031dee1adb9113",
+      "runtime/api32/ManagerTools32.java": "e58632785003c501a291a879dda6f4779e3d1dd30c9bb31a0b6f530072a4507b",
+      "runtime/api32/PackageEvents32.java": "6163d29b5e8bf78de7ea87287d3e7d641dc733176696bc5480f333353aac939e",
+      "runtime/api32/bridge/PackageEventsProvider.java": "2c326135c878169d107fe382b4346dc9cda9969e5b853ebdf1a2006bf94573bc",
+      "runtime/api32/bridge/AndroidManifest.xml": "aadc7a0a111de5105e8609a159862303fdf5fe55487cd7126aad8e13b6be4e64",
+      "runtime/tests/api32/ManagerAppProbe32.java": "c3422e641121f6617d492b118596b8c4d1c1b98937b1e739c8993dd3e0dcde3b",
+      "runtime/tests/api32/AppInspector32.java": "5da804ff2af5a1a2b244aaca9c642065d39ce9066dec0fc8f032472e9683c6d0",
+      "runtime/tests/api32/ManagerSessionProbe32.java": "d279c43fb0e78624d4e7928c70b63741383b9cd709df836ff05d5c34f2e0928e"
+    },
+    "appSpec": {
+      "source": "Google Play via Aurora Store 4.8.4 on Linux Waydroid",
+      "downloadProfile": {
+        "name": "Samsung S20+",
+        "sdk": 33,
+        "abi": "arm64-v8a"
+      },
+      "version": "8.33.2",
+      "versionCode": 177201,
+      "package": "org.thoughtcrime.securesms",
+      "minSdk": 32,
+      "targetSdk": 36,
+      "signatureVerifiedForGuestSdk": 32,
+      "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+      "files": [
+        {
+          "name": "base.apk",
+          "bytes": 85982422,
+          "sha256": "d5acfe87956572030fc762f48e65175d34246ed1a3b941d1cf63ab71d7ba1540"
+        },
+        {
+          "name": "config.arm64_v8a.apk",
+          "bytes": 30184532,
+          "sha256": "e1c3e2ac2fd0d28d963db9b73936014200a21d681e376e71701935496e28a320"
+        },
+        {
+          "name": "config.xxhdpi.apk",
+          "bytes": 187458,
+          "sha256": "c1fb420e1818da0ad7f55e0644bb31fd6eed2c9402edd2f8e9c25be97ee36ef9"
+        }
+      ],
+      "archive": "Signal-8.33.2-play-arm64-api32.apks",
+      "archiveBytes": 116354752,
+      "archiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+      "apkModified": false,
+      "guestInstallValidated": false,
+      "phoneAccessUsedForDownload": false,
+      "installation": "Install all three APKs in one PackageInstaller session; base alone is incomplete.",
+      "checks": [
+        "apksigner verify --print-certs --min-sdk-version 32 --max-sdk-version 32 <each-apk>: PASS",
+        "aapt dump badging <each-apk>: package/version match and minSdk 32: PASS"
+      ],
+      "url": "http://127.0.0.1:8794/Signal-8.33.2-play-arm64-api32.apks"
+    },
+    "imageSha256": "672bd57b6e3194703d1882633d534fb719789296278fdfffba0e300e6cb5db4a",
+    "imageDelta": {
+      "added": [
+        "system/app/PocketServices/PocketServices.apk"
+      ],
+      "changed": [
+        "system/framework/pocket-manager.jar"
+      ],
+      "removed": []
+    }
+  },
+  "verifiedForRuntime": true,
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_manager_tools.py --out out/api32/install-order-tools",
+      "result": "PASS; jar byte-identical to the one packaged in the image after source formatting."
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/install-order-image --version 0.78.3 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.3.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; 2632 files, 589721792 bytes, pinned SHA256. Only added package observer APK and changed Manager helper jar versus 0.78.2."
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/install-order-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/signal-manager-v4-probe",
+      "result": "PASS; image-free test APK, host JNI unchanged."
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/signal-manager-v4-probe/api32-app-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS."
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/manager-app-validation/test_api32_app_on_pi.py",
+      "result": "PASS / exit0 on VM73; exact identities and per-run gates above."
+    }
+  ],
+  "notEstablished": [
+    "Signal account registration, messaging or calling",
+    "Host-uplink NetworkAgent API32 integration",
+    "Emulated storage/FUSE and CE encryption lifecycle",
+    "Phone validation and general startup reliability"
+  ],
+  "runId": "7428ffe3516740dba5e6292bfd185e39",
+  "reportPath": "out/api32/signal-manager-v4-report.json",
+  "reportSha256": "f45fea007635edaa22551e93646c07f705e51b5cc8a8537c8bcf9596fc28fd57",
+  "completedJob": {
+    "token": "afe179c62a5b4844801cfda70e28f370",
+    "script": "/home/pi/pocket-api32-vm/manager-app-validation/run-afe179c62a5b4844801cfda70e28f370.py",
+    "log": "/home/pi/pocket-api32-vm/manager-app-validation/run-afe179c62a5b4844801cfda70e28f370.log",
+    "exit": "/home/pi/pocket-api32-vm/manager-app-validation/run-afe179c62a5b4844801cfda70e28f370.exit.json",
+    "pid": 12526
+  },
+  "runtimeCommand": "python3 /home/pi/pocket-api32-vm/manager-app-validation/test_api32_app_on_pi.py",
+  "result": {
+    "strictPassed": true,
+    "firstLaunch": {
+      "sdk": 32,
+      "package": "org.thoughtcrime.securesms",
+      "uid": 10107,
+      "minSdk": 32,
+      "targetSdk": 36,
+      "versionCode": 177201,
+      "splitCount": 2,
+      "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+      "foregroundLines": [
+        "topResumedActivity=ActivityRecord{5909d5d u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity t14}",
+        "ResumedActivity: ActivityRecord{5909d5d u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity t14}",
+        "mCurrentFocus=Window{bd1e2a u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      ]
+    },
+    "reopened": {
+      "sdk": 32,
+      "package": "org.thoughtcrime.securesms",
+      "uid": 10107,
+      "minSdk": 32,
+      "targetSdk": 36,
+      "versionCode": 177201,
+      "splitCount": 2,
+      "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+      "foregroundLines": [
+        "topResumedActivity=ActivityRecord{5909d5d u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity t14}",
+        "ResumedActivity: ActivityRecord{5909d5d u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity t14}",
+        "mCurrentFocus=Window{bd1e2a u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      ]
+    },
+    "installEventLines": [
+      "POCKET_MANAGER32_INSTALL_READY action=android.intent.action.PACKAGE_REPLACED observer_uid=10108 package_uid=10107 sequence_delta=2",
+      "POCKET_MANAGER32_RESULT Installed org.thoughtcrime.securesms"
+    ],
+    "display": {
+      "transport": "composer-rgba",
+      "backing": "anonymous",
+      "codec": "none",
+      "pixel_bytes_over_socket": 0,
+      "target_fps": 38,
+      "screenshot_calls": 0,
+      "presenter": "ahardwarebuffer-egl",
+      "host_gl_renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 16.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "host_gl_vendor": "Google Inc. (Google)",
+      "gpu_fallback_reason": "",
+      "gpu_buffers": 2,
+      "width": 480,
+      "height": 800,
+      "shared_bytes": 4608000,
+      "frames_presented": 156,
+      "frames_received": 151,
+      "composer_sequence": 198,
+      "interval_fps": 0,
+      "mean_capture_ms": 3.297949,
+      "mean_copy_ms": 3.297949,
+      "max_capture_ms": 163.893778,
+      "mean_present_ms": 118.464846
+    },
+    "stoppedSession": {
+      "sdk": 32,
+      "runId": "a285feb4a0834317a8921ab6e237dcd3",
+      "ready": false,
+      "running": false,
+      "closed": true,
+      "input": {
+        "touchEventsAccepted": 0,
+        "keyEventsAccepted": 2,
+        "inputEventsAccepted": 2,
+        "inputEventsRejected": 0
+      },
+      "audio": {
+        "hostPcmBytesWritten": 0,
+        "completedStreams": 0,
+        "streamErrors": 0,
+        "microphoneRequested": false
+      },
+      "ownerAlive": false,
+      "ownerExitCode": 0
+    },
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "additionalSystemJavaFatalAudit": true,
+    "nativeFatals": [],
+    "nativeLogUtf16Chars": 1406716,
+    "nativeLogLimitChars": 2097152,
+    "systemUiStarts": [
+      "26504"
+    ],
+    "initStop": [
+      [
+        "15",
+        "0",
+        "0"
+      ]
+    ],
+    "hostSelinux": {
+      "before": "Enforcing",
+      "after": "Enforcing"
+    },
+    "hostLimitOverridesUnchanged": true
+  },
+  "scopeLimit": "Actual resumed/focused Signal screen is verified before and after issuing Home and Manager reopen. Two Home key events were accepted; the intermediate launcher foreground was not independently asserted in this version. Guest networking API state, account registration, messaging and calls remain untested.",
+  "sourceSnapshotPath": "out/api32/signal-v4-source-snapshot",
+  "currentMountedBackend07837Trial": {
+    "status": "TERMINAL_STRICT_PASS",
+    "job": {
+      "pid": 10880,
+      "token": "ef1e05470d064a189ad4979dda79e8b2",
+      "script": "/home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/run-ef1e05470d064a189ad4979dda79e8b2.py",
+      "log": "/home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/run-ef1e05470d064a189ad4979dda79e8b2.log",
+      "exit": "/home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/run-ef1e05470d064a189ad4979dda79e8b2.exit.json"
+    },
+    "observer": {
+      "pid": 10900,
+      "script": "/home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/process-budget-observer.log",
+      "sourceSha256": "947a8cc87a9c28a4ff0f60bbc874ef73f6f4324feb9cff187ca2d49f267ae602"
+    },
+    "candidate": "out/api32/volume-live-proc-signal-app-candidate.json",
+    "managerSha256": "bc7bb492f50034a9f46fefe4f073888035425904a18b38ec05761426df208361",
+    "imageSha256": "951197adefd97368213b9e09a17a9b6ae8e7dcb127a13ac2fef13860766dcff9",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "command": "python3 /home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/test_api32_app_on_pi.py --work-dir /home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation --require-network --require-rpc-error-recovery",
+    "buildCommand": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/volume-live-proc-signal-app-manager-probe",
+    "buildResult": "PASS",
+    "validatorCommand": "python3 tools/validate_download_manager.py out/api32/volume-live-proc-signal-app-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+    "validatorResult": "PASS",
+    "payloadComparison": "Only assets/api32-app-spec.json and expected META-INF signature records differ from the strict full0.78.37 ordinary-storage test APK. Manifest/DEX/all native code/catalog/network probes identical.",
+    "scope": "Retained ordinary Manager profile, unchanged Aurora Play ARM64 Signal8.33.2 requiring API32. Current mounted backend, exact package/cert/UID/foreground/Home/reopen plus validated network/public DNS/fwmark error recovery, source-built MediaProvider and strict clean ownership/no ANR/fatal. No account linking/messages/calls, CE, fresh install or hard budget proof.",
+    "runId": "77aab9f08629488d98d5a4fb0d2bdb12",
+    "validation": "PASS",
+    "strictPassed": true,
+    "supervisorReturnCode": 0,
+    "reportPath": "out/api32/volume-live-proc-signal-app-result/manager-app-report.json",
+    "reportSha256": "3440ef351e34414bb6042eb27cdd9f1a39546e2eb7158b6568f2669eba75ae51",
+    "kernelChildOwnershipVerified": true,
+    "externalVolumeVerified": true,
+    "sourceBuiltPrivateProviderVerified": true,
+    "fwmarkErrorRecoveryVerified": true,
+    "initStop": [
+      [
+        "16",
+        "0",
+        "0"
+      ]
+    ],
+    "descendantStop": [
+      [
+        "13",
+        "12",
+        "0",
+        "0"
+      ]
+    ],
+    "observerSamples": 128,
+    "sampledPeakChildren": 32,
+    "observerErrors": [],
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "focusedActivity": "org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity",
+    "signalUid": 10107,
+    "framesPresented": 349,
+    "hostSettings": {
+      "selinux": "Enforcing",
+      "phantomLimit": "null",
+      "phantomMonitoring": "null"
+    }
+  },
+  "currentFreshNative07842Trial": {
+    "status": "TERMINAL_STRICT_PASS",
+    "job": {
+      "pid": 20680,
+      "token": "6839bffe501445c9bae29316584318e9",
+      "script": "/home/pi/pocket-api32-vm/native-clean-signal-validation/run-6839bffe501445c9bae29316584318e9.py",
+      "log": "/home/pi/pocket-api32-vm/native-clean-signal-validation/run-6839bffe501445c9bae29316584318e9.log",
+      "exit": "/home/pi/pocket-api32-vm/native-clean-signal-validation/run-6839bffe501445c9bae29316584318e9.exit.json"
+    },
+    "runId": "35126d24db604567be7c59a5bae9b6bb",
+    "validation": "PASS",
+    "strictPassed": true,
+    "supervisorReturnCode": 0,
+    "candidate": "out/api32/native-clean-signal-candidate.json",
+    "manager": "out/api32/native-clean-signal-manager-probe/build.json",
+    "managerSha256": "3dd3c5048fda766a7d67ba55786460972cca94f1a1583d1e2fe4f86ca411619f",
+    "imageVersion": "0.78.42",
+    "imageSha256": "7e6a9b9886f8ac2d88a9969c374dd99307c589d9fe210daa396c944ce297ff22",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "reportPath": "out/api32/native-clean-signal-result/manager-app-report.json",
+    "reportSha256": "43de5ba541b0f997e7185a265dbc5fb5a36f42cf8c0fe9bb2e736b85b7daf4d5",
+    "independentCheck": "out/api32/native-clean-signal-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_native_clean_signal_result.py",
+    "verificationResult": "PASS",
+    "command": "python3 /home/pi/pocket-api32-vm/native-clean-signal-validation/test_api32_app_on_pi.py --work-dir /home/pi/pocket-api32-vm/native-clean-signal-validation --require-image-reuse --require-network --require-rpc-error-recovery",
+    "sourcePinsVerified": 743,
+    "phases": [
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "firstLaunch",
+        "focus": "mCurrentFocus=Window{78709d2 u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      },
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "reopened",
+        "focus": "mCurrentFocus=Window{78709d2 u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      }
+    ],
+    "guestNetwork": {
+      "connected": true,
+      "validated": true,
+      "networkBoundHttpsStatus": 200,
+      "publicAsyncDns": {
+        "uid": 10108,
+        "network": "100",
+        "addresses": [
+          "104.20.23.154",
+          "172.66.147.243"
+        ],
+        "rawBytes": 61,
+        "rawRcode": 0,
+        "negativeRcode": 3,
+        "publicAsyncApi": true
+      },
+      "fwmarkErrorRecoveryVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "adoptedDescendantsReaped": 13,
+    "remainingChildren": 0,
+    "ownerExitCode": 0,
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostActualPhantomMaxBefore": 32,
+    "hostActualPhantomMaxAfter": 32,
+    "hostSensitivePermissionsAllDenied": true,
+    "observerSamples": 133,
+    "sampledPeakChildren": 32,
+    "amsSamples": 10,
+    "maxObservedAmsRecords": 28,
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "freshHostNativeApi32RuntimeVerified": true,
+    "legacyProotRuntimeVerified": false,
+    "hardProcessBoundVerified": false,
+    "apkModified": false,
+    "scope": "Unmodified Aurora Play ARM64 Signal8.33.2 minSDK32 on full42 image with freshly source-built host native libraries. Retained profile UID10107 and certificate, actual registration screen resumed/focused before and after verified Home, mounted source-built MediaProvider, validated default network, public async DNS/NXDOMAIN, network-bound HTTPS200 and fwmark timeout/EOF recovery. Strict clean native shutdown, SELinux Enforcing and numeric phantom max32 unchanged. No account registration/messages/calls, encrypted lifecycle, fresh profile, legacy PRoot or physical-phone claim.",
+    "initialLaunchError": "out/api32/native-clean-signal-initial-launch-error.json"
+  },
+  "currentRootlessDevice07843Trial": {
+    "status": "TERMINAL_STRICT_SIGNAL43_PASS_BUDGET33_OPEN",
+    "validation": "PASS",
+    "strictPassed": true,
+    "runId": "3a9c762dd81c4f568aba5d8732d54110",
+    "job": {
+      "pid": 17170,
+      "token": "82db3b1645394e2cab83d1e652e51480",
+      "script": "/home/pi/pocket-api32-vm/rootless-device-signal-validation/run-82db3b1645394e2cab83d1e652e51480.py",
+      "log": "/home/pi/pocket-api32-vm/rootless-device-signal-validation/run-82db3b1645394e2cab83d1e652e51480.log",
+      "exit": "/home/pi/pocket-api32-vm/rootless-device-signal-validation/run-82db3b1645394e2cab83d1e652e51480.exit.json"
+    },
+    "report": "out/api32/rootless-device-signal-result/manager-app-report.json",
+    "reportSha256": "3d78b2d93e81a1359f60b77e07e25fb249954368ced42476aa2ed9e60d7870f7",
+    "independentCheck": "out/api32/rootless-device-signal-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_rootless_device_signal_result.py",
+    "verificationResult": "PASS_FUNCTIONAL_NETWORK_POLICY_AND_CLEANUP",
+    "imageVersion": "0.78.43",
+    "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+    "managerSha256": "b58fdeb6daed84d1c060e9e1b9d5290d0b06bdb20bcc3de3994b54bd58127e5f",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "sourcePinsVerified": 749,
+    "sampledPeakChildren": 33,
+    "observerSamples": 130,
+    "amsSamples": 10,
+    "maxObservedAmsRecords": 24,
+    "cachedImageNoDownloadVerified": true,
+    "rootlessDeviceProfileVerified": true,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Unmodified Aurora Play ARM64 Signal8.33.2 minSDK32, full43 declarative rootless device image, same host Java/five fresh JNI as AV passes. Retained certificate/UID10107, actual resumed/focused registration screen, verified intermediate Home/reopen, cached image without download, mounted source-built MediaProvider, actual device package/receiver policy, validated network, public async DNS/NXDOMAIN, network-bound HTTPS200 and fwmark timeout/EOF recovery.17 service lifetimes/13 adopted descendants reaped, no remaining, ownerexit0, no ANR/Java/native fatal, host SELinux/default max32 unchanged and sensitive permissions denied. Sampled peak33 keeps resource gate open. No account registration/messages/calls, physical phone, legacy-profile or fresh encrypted migration claim.",
+    "command": "python3 /home/pi/pocket-api32-vm/rootless-device-signal-validation/test_api32_app_on_pi.py --work-dir /home/pi/pocket-api32-vm/rootless-device-signal-validation --require-image-reuse --require-network --require-rpc-error-recovery"
+  },
+  "currentEmbeddedManager07844Trial": {
+    "status": "PASS_EMBEDDED_MANAGER44_SIGNAL_HOME_REOPEN_NETWORK",
+    "runId": "f3d6b07367354615a026d803814ff121",
+    "reportSha256": "1d6d201f07aca619d6e329e61d0845d93d1567b01c21d2de9e0ccd5d964bbda1",
+    "sourcePinsVerified": 750,
+    "imageVersion": "0.78.44",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "managerSha256": "deda37742ae89e7240897679e92bfd9f77d141136fd770771f42d3a82ec54e72",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "phases": [
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "firstLaunch",
+        "focus": "mCurrentFocus=Window{328a9f0 u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      },
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "reopened",
+        "focus": "mCurrentFocus=Window{328a9f0 u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      }
+    ],
+    "guestNetwork": {
+      "connected": true,
+      "validated": true,
+      "networkBoundHttpsStatus": 200,
+      "publicAsyncDns": {
+        "uid": 10108,
+        "network": "100",
+        "addresses": [
+          "104.20.23.154",
+          "172.66.147.243"
+        ],
+        "rawBytes": 61,
+        "rawRcode": 0,
+        "negativeRcode": 3,
+        "publicAsyncApi": true
+      },
+      "fwmarkErrorRecoveryVerified": true
+    },
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "21985"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "11",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostSensitivePermissionsAllDenied": true,
+    "sampledPeakChildren": 33,
+    "observerSamples": 131,
+    "amsSamples": 10,
+    "maxObservedAmsRecords": 28,
+    "freshHostNativeApi32RuntimeVerified": true,
+    "legacyProotExecutionVerified": false,
+    "hardProcessBoundVerified": false,
+    "accountRegistrationMessagesCallsVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "embeddedManagerControlVerified": true,
+    "negativeAuthorizationChecks": {
+      "guestPeerPid": 23032,
+      "guestPeerDenied": true,
+      "unknownOperationRejected": true,
+      "badInstallArgumentsRejected": true
+    },
+    "completedOwnerOperations": [
+      {
+        "operation": "network",
+        "pid": 21722
+      },
+      {
+        "operation": "network",
+        "pid": 21722
+      },
+      {
+        "operation": "install",
+        "pid": 21722
+      },
+      {
+        "operation": "open",
+        "pid": 21722
+      }
+    ],
+    "externalManagerCliObserved": false,
+    "rootlessDeviceProfileVerified": true,
+    "deviceProfileSnapshots": [
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      },
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      }
+    ],
+    "cachedImageNoDownloadVerified": true,
+    "sampledPeakWithinDefault32": false,
+    "evidence": "out/api32/embedded-manager-signal-result/independent-check.json",
+    "scope": "Current full44 image, same750 frozen sources/host Java/five fresh JNI as complete AV trials. Only test app specification differs. Real existing system_server PID21722 executes network/install/open; guest child and invalid operations rejected, no ManagerTools32 VM observed. Retained UID10107/certificate, registration focus/Home/reopen, cached image, mounted source-built MediaProvider, validated network/public async DNS/NXDOMAIN, network-bound HTTPS200/fwmark timeout/EOF recovery, all17 services/12 adopted descendants reaped, ownerexit0/no remaining/fatals/ANRs. Host SELinux/default32 and sensitive permissions unchanged. Sampled33 leaves budget gate open; no registration/account/messages/calls/phone claim.",
+    "adoptedDescendantsReaped": 12
+  },
+  "sharedGatekeeper45SignalTrial": {
+    "status": "PASS_SHARED_GATEKEEPER45_SIGNAL_HOME_REOPEN_NETWORK",
+    "job": {
+      "pid": 31355,
+      "token": "a4b9471e39fd4b418164a5baa7e19474",
+      "script": "/home/pi/pocket-api32-vm/crypto45-signal-validation/run-a4b9471e39fd4b418164a5baa7e19474.py",
+      "log": "/home/pi/pocket-api32-vm/crypto45-signal-validation/run-a4b9471e39fd4b418164a5baa7e19474.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto45-signal-validation/run-a4b9471e39fd4b418164a5baa7e19474.exit.json"
+    },
+    "candidate": "out/api32/crypto45-signal-candidate.json",
+    "candidateSha256": "40b3900712b7f6afb1cd64a91a97e88a251b3b0ff2b2bfc8881aedf14813cd2a",
+    "sourcePins": 756,
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "managerSha256": "a0fbcb1fa90b48b55d62f8360eb578f20e7a34c970838a12833ae898aed9e712",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "scope": "Unmodified Aurora Play Signal8.33.2 requiring API32 in complete45 shared-Gatekeeper image with freshly source-built host runtime. Exact Java/manifest/five JNI/image identical to the source756 full45 AV trial, only test download specification changes. Preserve retained app/profile data, require actual foreground, Home/reopen, validated network/public DNS/network-bound HTTPS and fwmark error recovery, mounted source-built provider and strict native cleanup. No registration/messages/calls/phone/legacy-PRoot or fresh-profile claim.",
+    "productionReleaseReady": false,
+    "processBudgetVerified": false,
+    "runId": "5b2468ca630a4ee58e861f5df7423065",
+    "reportSha256": "7d486b92682f1a6917dc84b1d8cc726e44e068c17ebdebb3e2c9ee0d87392900",
+    "sourcePinsVerified": 756,
+    "apkModified": false,
+    "phases": [
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "firstLaunch",
+        "focus": "mCurrentFocus=Window{72753ed u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      },
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "reopened",
+        "focus": "mCurrentFocus=Window{72753ed u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      }
+    ],
+    "guestNetwork": {
+      "connected": true,
+      "validated": true,
+      "networkBoundHttpsStatus": 200,
+      "publicAsyncDns": {
+        "uid": 10108,
+        "network": "100",
+        "addresses": [
+          "172.66.147.243",
+          "104.20.23.154"
+        ],
+        "rawBytes": 61,
+        "rawRcode": 0,
+        "negativeRcode": 3,
+        "publicAsyncApi": true
+      },
+      "fwmarkErrorRecoveryVerified": true
+    },
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "29693"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "12",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 16,
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostSensitivePermissionsAllDenied": true,
+    "sampledPeakChildren": 31,
+    "observerSamples": 121,
+    "amsSamples": 8,
+    "maxObservedAmsRecords": 23,
+    "freshHostNativeApi32RuntimeVerified": true,
+    "legacyProotExecutionVerified": false,
+    "hardProcessBoundVerified": false,
+    "accountRegistrationMessagesCallsVerified": false,
+    "physicalPhoneVerified": false,
+    "embeddedManagerControlVerified": true,
+    "negativeAuthorizationChecks": {
+      "guestPeerPid": 30844,
+      "guestPeerDenied": true,
+      "unknownOperationRejected": true,
+      "badInstallArgumentsRejected": true
+    },
+    "completedOwnerOperations": [
+      {
+        "operation": "network",
+        "pid": 29436
+      },
+      {
+        "operation": "install",
+        "pid": 29436
+      },
+      {
+        "operation": "open",
+        "pid": 29436
+      }
+    ],
+    "externalManagerCliObserved": false,
+    "rootlessDeviceProfileVerified": true,
+    "deviceProfileSnapshots": [
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      },
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      }
+    ],
+    "cachedImageNoDownloadVerified": true,
+    "sampledPeakWithinDefault32": true,
+    "evidence": "out/api32/crypto45-signal-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_crypto45_signal_result.py --run-id 5b2468ca630a4ee58e861f5df7423065",
+    "terminalStateEvidence": "out/api32/full45-terminal-state.json"
+  },
+  "currentFull45BudgetAudit": {
+    "status": "FAIL_CURRENT_FULL45_SAMPLED_PROCESS_BUDGET_PEAK34",
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "sourcePinsVerified": 756,
+    "distinctFullWorkloadStarts": 2,
+    "totalSamples": 233,
+    "sampledPeakChildren": 34,
+    "defaultHostPhantomMax": 32,
+    "allProcessesCounted": true,
+    "trials": [
+      {
+        "trial": "crypto45-av",
+        "runId": "e7d65fbf812c4800b0b99a6f66f30842",
+        "functionalValidation": "PASS",
+        "reportSha256": "b2c7e27c9ff2d6b5b45f00b2304309bf3e9bcc28e4b8b00ed3a4b8a1ccc373bd",
+        "independentCheckSha256": "69d27dca733628deaab798973b5d41df67050419debfe6eaf5fa5ffd9be36e23",
+        "samples": 112,
+        "sampledPeakChildren": 34,
+        "withinDefault32": false
+      },
+      {
+        "trial": "crypto45-signal",
+        "runId": "5b2468ca630a4ee58e861f5df7423065",
+        "functionalValidation": "PASS",
+        "reportSha256": "7d486b92682f1a6917dc84b1d8cc726e44e068c17ebdebb3e2c9ee0d87392900",
+        "independentCheckSha256": "ebc2feac44dbe6adcbdcff3a2bfe1d6cbf0b6567c16746b300ba365d804712b0",
+        "samples": 121,
+        "sampledPeakChildren": 31,
+        "withinDefault32": true
+      }
+    ],
+    "allFunctionalAndCleanupChecksPassed": true,
+    "processBudgetPassed": false,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Current45 both-camera muxed media and unmodified Signal with real foreground/Home/reopen and strict native cleanup, identical source756/production host Java/five JNI/image. Count every guest/native/helper/tracing process in each host-UID sample; only registered outer Manager is excluded. The separate67-sample credential diagnostic peak31 is scoped evidence and does not replace these full workloads. Prior44 peak35 evidence remains intact.",
+    "evidence": "out/api32/full45-budget-check.json",
+    "command": "python3 out/api32/verify_full45_budget.py",
+    "returnCode": 1
+  },
+  "bootReadinessReview": "out/api32/boot-readiness-review/evidence.json",
+  "installdCoreReview": "out/api32/installd-core-consolidation-review.json",
+  "bootReadiness47SignalTrial": {
+    "status": "PASS_BOOT_READINESS47_SIGNAL_HOME_REOPEN_NETWORK",
+    "job": {
+      "pid": 28106,
+      "token": "30a24d12839846f9ad20922a92c0d199",
+      "script": "/home/pi/pocket-api32-vm/readiness47-signal-validation/run-30a24d12839846f9ad20922a92c0d199.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-signal-validation/run-30a24d12839846f9ad20922a92c0d199.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-signal-validation/run-30a24d12839846f9ad20922a92c0d199.exit.json"
+    },
+    "candidate": "out/api32/readiness47-signal-candidate.json",
+    "candidateSha256": "846f368f77f2e189a1dd9c359d0460c690e8c21cbdb3973d7307cd2767000ad8",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "sourcePins": 757,
+    "managerSha256": "48ef96f620a85585ef1c53dedfda629cda392e9f166911d934d694ca0dd5ef8c",
+    "scope": "Unmodified Aurora Play Signal8.33.2 requiring API32 in complete47 boot-readiness image with freshly source-built host runtime. Exact Java/manifest/five JNI/image identical to the source757 full47 AV trial, only test download specification changes. Preserve retained app/profile data, require actual foreground, Home/reopen, validated network/public DNS/network-bound HTTPS and fwmark error recovery, mounted source-built provider and strict native cleanup. No registration/messages/calls/phone/legacy-PRoot or fresh-profile claim.",
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "4eb874f210d54f169a5c20920b3408a1",
+    "independentCheck": "out/api32/readiness47-signal-result/independent-check.json",
+    "independentCheckSha256": "55f1fb263429298c90e947c467e6ce1ee26303860d55579f521e908b92dc7db6",
+    "validationCommand": "python3 out/api32/verify_readiness47_signal_result.py --run-id 4eb874f210d54f169a5c20920b3408a1",
+    "validationResult": "PASS",
+    "sampledPeakChildren": 32,
+    "observerSamples": 130,
+    "sampledPeakWithinDefault32": true,
+    "cachedImageNoDownloadVerified": true,
+    "appOperationReadinessChecksVerified": true,
+    "pendingAppOperationWaitVerified": false,
+    "accountRegistrationMessagesCallsVerified": false
+  },
+  "currentFull47BudgetAudit": {
+    "status": "PASS_CURRENT_FULL47_SAMPLED_WORKLOAD_BUDGET",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "sourcePinsVerified": 757,
+    "distinctFullWorkloadStarts": 2,
+    "totalSamples": 302,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allProcessesCounted": true,
+    "trials": [
+      {
+        "trial": "readiness47-av",
+        "runId": "bf335cfed1f24ee6afb35a99a327eb69",
+        "functionalValidation": "PASS",
+        "reportSha256": "a99f3689cf494e3d69a849acf2f8fc16ca7b7f6595cb0c716516c8eac6886157",
+        "independentCheckSha256": "c2e237b663d202eb0ee2d233096eb560b5067df53b539e32cccd86a281bc4979",
+        "samples": 172,
+        "sampledPeakChildren": 30,
+        "withinDefault32": true
+      },
+      {
+        "trial": "readiness47-signal",
+        "runId": "4eb874f210d54f169a5c20920b3408a1",
+        "functionalValidation": "PASS",
+        "reportSha256": "77c84d0530f0fce39952e8c3a36f4a188ce8e084be24fc6d99e5122d2c744eb0",
+        "independentCheckSha256": "55f1fb263429298c90e947c467e6ce1ee26303860d55579f521e908b92dc7db6",
+        "samples": 130,
+        "sampledPeakChildren": 32,
+        "withinDefault32": true
+      }
+    ],
+    "allFunctionalAndCleanupChecksPassed": true,
+    "processBudgetPassed": true,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Frozen full47 baseline both-camera muxed AV and unmodified Aurora Signal, actual foreground/Home/reopen/network as applicable and strict cleanup. Same source757/image/host Java/five JNI. All guest/native/helper/tracing children counted, excluding only the registered outer Manager. Two sampled full starts do not prove repeated stability or a hard bound; pending-install timeout candidate is a separate build. Earlier full45 peak34 and full44 peak35 remain preserved.",
+    "evidence": "out/api32/full47-budget-check.json",
+    "command": "python3 out/api32/verify_full47_budget.py",
+    "returnCode": 0
+  },
+  "sharedInstalld48SignalTrial": {
+    "status": "PASS_INSTALLD_CORE48_SIGNAL_HOME_REOPEN_NETWORK",
+    "runId": "530366892b7b4edda5ae19d0813460ea",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "28eaa87904a47dce86da40660a13b322e129c89e16151af0b0a5cf81ce8b71f2",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json",
+    "independentCheckSha256": "8afa71e75fedf9187ec76312477025688e5c20149662a2f7f373fa930708424f",
+    "validationCommand": "python3 out/api32/verify_installd_core48_signal_result.py --run-id 530366892b7b4edda5ae19d0813460ea",
+    "validationResult": "PASS",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "guestMinSdk": 32,
+    "retainedAppUid": 10107,
+    "actualRegistrationFocusHomeReopenVerified": true,
+    "publicDnsAndNxDomainVerified": true,
+    "networkBoundHttpsStatus": 200,
+    "fwmarkErrorRecoveryVerified": true,
+    "sharedInstalldCorePid": 22641,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 29,
+    "observerSamples": 132,
+    "sampledPeakWithinDefault32": true,
+    "accountRegistrationMessagesCallsVerified": false,
+    "ce48RepeatVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-signal-terminal-state.json"
+  }
+}

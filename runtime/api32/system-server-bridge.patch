@@ -1,0 +1,19 @@
+--- a/core/jni/com_android_internal_os_Zygote.cpp
++++ b/core/jni/com_android_internal_os_Zygote.cpp
+@@ -89,6 +89,8 @@
+ 
+ #include "guest_api.h"
+ 
++namespace android { void pocketSystemServerChild32(); }
++
+ namespace {
+ 
+ // TODO (chriswailes): Add a function to initialize native Zygote data.
+@@ -1214,6 +1216,7 @@
+                        false, nullptr, nullptr, /* is_top_app= */ false,
+                        /* pkg_data_info_list */ nullptr,
+                        /* allowlisted_data_info_list */ nullptr, false, false);
++      android::pocketSystemServerChild32();
+   } else if (pid > 0) {
+       // The zygote process checks whether the child process has died or not.
+       ALOGI("System server process %d has been created", pid);

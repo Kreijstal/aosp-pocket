@@ -1,0 +1,1467 @@
+{
+  "schema": 1,
+  "status": "FULL07837_NORMAL_FRAMEWORK_AND_MANAGER_RESTART_PASS_CE_CRASH_PENDING",
+  "scope": "Unmodified packaged12L MediaProvider session, metadata/private-FUSE denial and ordinary-app file data through a typed native broker and host AppFuse pass a strict VM73 full-framework trial: one SystemUI, no ANR/fatal, all15 services reaped, original code restored. This validates supplied proxy FDs, not ordinary filesystem path integration. Production vold/StorageManager mount, per-app path routing, private lower views, MediaStore and cache coherence remain unfinished; typed vold advertises no external volume.",
+  "primarySources": {
+    "mediaProvider": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "tag": "android-platform-12.1.0_r23",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "scope": "Source interface research; binary module equivalence not yet established",
+      "files": {
+        "jni/FuseDaemon.cpp": {
+          "bytes": 74385,
+          "sha256": "aa7f4b1dafaf48b06a46746e8a568e12683625c2c33dbf324ed25582e550c56a"
+        },
+        "jni/FuseDaemon.h": {
+          "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+          "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+          "bytes": 2137,
+          "sha256": "d63c36f9b3e1e23a3e179cd33ca21da206b45f1a23ba510ecb037f1f06bbe9ca"
+        },
+        "src/com/android/providers/media/fuse/FuseDaemon.java": {
+          "bytes": 6874,
+          "sha256": "e48d9a58b10955c53ba1675d69f694e45db22ddc80e952e1411559c4a391853d"
+        },
+        "src/com/android/providers/media/fuse/ExternalStorageServiceImpl.java": {
+          "bytes": 6227,
+          "sha256": "b098f3f7c8353637dba990478c88276484ef6859151bb4abcb2384b9d6e50220"
+        },
+        "jni/com_android_providers_media_FuseDaemon.cpp": {
+          "bytes": 7089,
+          "sha256": "c8d09d3246e9615b52ae715cdc89f75c03f054da424e4aa509932c2a62ee3933"
+        },
+        "services/core/java/com/android/server/storage/StorageSessionController.java": {
+          "repository": "https://android.googlesource.com/platform/frameworks/base",
+          "commit": "159ab48288c45267fe5e7898c6b5dd7d66c3306a",
+          "bytes": 19091,
+          "sha256": "a00e7c7ba98a8c2e407661997b59afb23b0346026b931a92742ec0d1679e084f"
+        },
+        "core/java/android/service/storage/ExternalStorageService.java": {
+          "repository": "https://android.googlesource.com/platform/frameworks/base",
+          "commit": "159ab48288c45267fe5e7898c6b5dd7d66c3306a",
+          "bytes": 10684,
+          "sha256": "d9afcd40a677ec57883d1247c6d4147f6328c7f23d2dadc968a9946210522fdb"
+        },
+        "src/com/android/providers/media/MediaProvider.java": {
+          "bytes": 441307,
+          "sha256": "6629d7f37a42a71896264caabeb641792a03563fe8ded65daf0fbe40d0616819"
+        }
+      }
+    },
+    "libfuse": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "tag": "android-platform-12.1.0_r23",
+      "files": {
+        "lib/fuse_loop_mt.c": {
+          "bytes": 8124,
+          "sha256": "a2a099f11453cfb241d521da28571151e4b85dae335ab02880eac856f0e95efd"
+        },
+        "lib/fuse_lowlevel.c": {
+          "bytes": 79824,
+          "sha256": "1ad9cd38418d9fc28a6ada53d5605f64366484c4747538f43459ab0d8ecc61a9"
+        },
+        "lib/fuse_i.h": {
+          "bytes": 3401,
+          "sha256": "8e7008cc694830710f522d49b63ac68a16e359e38a9eec071c41c8fe89fb8bbe"
+        },
+        "include/fuse_lowlevel.h": {
+          "bytes": 67931,
+          "sha256": "443463cba8d67ff12623d5feac08c1b461c5e12cd6168f0f588a1db2cc8ff1aa"
+        },
+        "include/fuse_kernel.h": {
+          "bytes": 19425,
+          "sha256": "f9927271b03ccc0440a97cec6514fd29a84ef78810e879f290037ad613af9471"
+        },
+        "include/fuse_common.h": {
+          "bytes": 26411,
+          "sha256": "8ef74941e647873582a8309b55c85d65de9cdec66a6e07817e5d00baa4ba8b02"
+        },
+        "include/fuse_opt.h": {
+          "bytes": 7549,
+          "sha256": "472c9ee7a84bb9c20e58957a3ff47f34c18b4a159ad63b4db7f90aad1e8ff4ce"
+        },
+        "include/fuse_log.h": {
+          "bytes": 1968,
+          "sha256": "7f79a177c6ad78e0c5b5e3773c9e923286308c1dba1ece3a22cb278299d9bcdc"
+        }
+      }
+    }
+  },
+  "binaryModule": {
+    "imageVersion": "0.78.10",
+    "apkPath": "apex/com.android.mediaprovider/priv-app/MediaProvider/MediaProvider.apk",
+    "apkSha256": "914df3a1bb6942aaced446c3d7aaf0650cc2ab068f5a712d3bd8035ffdbfe523",
+    "libraries": {
+      "libfuse.so": {
+        "bytes": 257624,
+        "sha256": "3e97c7bea3a4479ff5643a14ccd37c86f9682ba7a2e29b9dbe853f4da350dd54"
+      },
+      "libfuse_jni.so": {
+        "bytes": 1022792,
+        "sha256": "ec4972bde74c27cb9b840733c762b6702ea05a4510f5c77579fff133b55daf62"
+      }
+    },
+    "observedAbi": "libfuse_jni imports fuse_session_loop_mt@FUSE_3.2 and fuse_session_new@FUSE_3.0; libfuse exports those entry points. FuseDaemon::Start takes unique_fd and string, matching the pinned source signature.",
+    "sourceBinaryEquivalenceVerified": false
+  },
+  "contract": {
+    "storageManager": "IVold.mount calls onVolumeChecking(fd,path,internalPath), which synchronously starts an ExternalStorageService session.",
+    "mediaProvider": "ExternalStorageServiceImpl starts FuseDaemon and waits for its native init callback to report active. MediaProvider supplies the real filesystem and access checks.",
+    "transportFeasibility": "Packaged12L libfuse accepts the packet socket after inherited host policy denies /dev/fuse cloning. Protocol7.31/multiplexing, real MediaProvider lifecycle/metadata and real file data through host AppFuse pass. Production mount/path routing remains pending; see realProviderDataPath.",
+    "initializationOrdering": "A userspace FUSE client must issue INIT concurrently with onVolumeChecking; waiting for that callback before INIT would deadlock FuseDaemon.start.",
+    "notificationOrdering": "Announce mounted only after callback success and successful protocol initialization; tear down session on failure.",
+    "identityAndRouting": "Normal app filesystem calls must reach real MediaProvider FUSE with original guest identity. MediaProvider backing accesses must reach lower CE storage without recursively re-entering FUSE. Current direct aliases alone do not implement scoped-storage checks.",
+    "mediaProviderForcedFusePath": "Pinned MediaProvider.getFuseFile replaces /storage/ with /mnt/user/<user>/. Even a PASS_THROUGH MediaProvider process must use FUSE on this explicit path; ordinary /storage backing accesses use its lower view.",
+    "callerThreadIdentity": "MediaProvider.openWithFuse keys mPendingOpenInfo by the actual caller thread ID. Verify client tid belongs to the socket peer process; derive UID/GID from its live PID/start-time identity record. Do not replace tid with tgid."
+  },
+  "requiredValidation": [
+    "Unmodified packaged12L libfuse over rootless transport: actual INIT negotiation, positive and negative operations, disconnect and resource cleanup",
+    "Real MediaProvider session through StorageManager and typed vold callbacks",
+    "Ordinary API32 MediaStore and emulated-file I/O with own app directory access and cross-app scoped-storage denial",
+    "Per-app guest identity preserved through broker and FUSE requests; no access granted from caller-supplied UID fields",
+    "Locked CE boot and unlock session lifecycle, persisted media across restart",
+    "Strict Manager boot/stop cohort and existing Android9/10 regressions"
+  ],
+  "runtimeVerified": false,
+  "externalVolumeAdvertised": false,
+  "currentProductionSource": "runtime/api32/storage_service.cpp",
+  "transportRuntimeVerified": true,
+  "transportCandidate": {
+    "path": "out/api32/fuse-transport-candidate.json",
+    "sha256": "0481fa87eab6eb076e8b41ff3492fe6b7b4ef9a987049bceae7d50256f20356d",
+    "sourceSnapshot": "out/api32/fuse-transport-source-snapshot",
+    "sourcePins": 21,
+    "apkSha256": "224f455410e1dbd4319eabc2b120d54755ba80bb8279be5eb360931657e66d15",
+    "apkBytes": 1713254
+  },
+  "transportResult": {
+    "path": "out/api32/fuse-transport-first-report.json",
+    "sha256": "1aafa4cae947457dd277073bcc3eec15f2dce0fc4777f0d444701536e57a1e6b",
+    "runId": "90a34c24c30245678c705fa93c55ecdb",
+    "validation": "PASS",
+    "hostUid": 10162,
+    "nativeExit": 0,
+    "log": "linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nWARNING: linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nfuse: failed to open /dev/fuse: Permission denied\nfuse: trying to continue without -o clone_fd.\nFUSE_STOCK32_PASS protocol=7.31 init=1 lookup=1 missing=denied caller_fields=preserved read=1 wrong_uid=denied write=1 release=1 forget=1 destroy=1 loop_exit=0 fd_leaks=0 kernel_mounts=0\n",
+    "pollErrors": 0,
+    "job": {
+      "pid": 30238,
+      "token": "9a303e75e1d3442fbe705969657ea20a",
+      "script": "/home/pi/pocket-api32-vm/fuse-transport-validation/run-9a303e75e1d3442fbe705969657ea20a.py",
+      "log": "/home/pi/pocket-api32-vm/fuse-transport-validation/run-9a303e75e1d3442fbe705969657ea20a.log",
+      "exit": "/home/pi/pocket-api32-vm/fuse-transport-validation/run-9a303e75e1d3442fbe705969657ea20a.exit.json"
+    },
+    "jobExitCode": 0,
+    "hostSettingsUnchanged": true,
+    "hostSdk": 36,
+    "completedHostProbeStopped": true,
+    "existingProfilesPreserved": true
+  },
+  "checks": [
+    {
+      "command": "c++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -pthread runtime/tests/api32/fuse_transport.cpp -o out/api32/fuse-transport-host",
+      "result": "PASS"
+    },
+    {
+      "command": "out/api32/fuse-transport-host",
+      "result": "PASS ASan/UBSan malformed replies, timeout, disconnect, valid errno recovery and invalidation"
+    },
+    {
+      "command": "python3 tools/build_api32_fuse_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --image out/api32/ce-metadata-image/pocket-api32-arm64-0.78.10.zip --out out/api32/fuse-transport-probe",
+      "result": "PASS native client/loader, Java/D8, APK and signature verification"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/fuse-transport-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/fuse-transport-validation/api32-fuse-probe.apk",
+      "result": "PASS unmodified packaged12L library; test callbacks only"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_fuse_probe.py tools/test_api32_fuse_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_native.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --zygote",
+      "result": "PASS matching source patches, native zygote JNI/app-process build; actual new framework runtime not yet checked"
+    },
+    {
+      "command": "python3 tools/build_api32_fuse_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --image out/api32/ce-metadata-image/pocket-api32-arm64-0.78.10.zip --out out/api32/fuse-peer-gid-probe",
+      "result": "PASS native peer/mode tests and fresh loader, Java/D8, APK signature"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/fuse-peer-gid-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/fuse-peer-gid-validation/api32-fuse-probe.apk --require-storage-mode --require-state-compat --require-peer-identity",
+      "result": "PASS mode fork/exec and API mutation checks,64groups/denylist compatibility, peerUID/TID/UID/GID checks and GID-only refresh, stock FUSE protocol7.31 regression, zero fd leaks"
+    },
+    {
+      "command": "python3 -m py_compile tools/test_api32_fuse_on_pi.py tools/build_api32_fuse_probe.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_fuse_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --image out/api32/ce-metadata-image/pocket-api32-arm64-0.78.10.zip --out out/api32/external-proxy-files-probe --external-proxy",
+      "result": "PASS native external JNI, native probe+fresh loader, Java/D8 and signed nondebuggable APK"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/external-proxy-files-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/external-proxy-files-validation/api32-fuse-probe.apk",
+      "result": "PASS actual AppFuse descriptors, shared mmap, handles, errno, kernel tids and blocked-sync concurrency"
+    },
+    {
+      "command": "c++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -pthread runtime/tests/api32/fuse_transport.cpp -o out/api32/fuse-transport-host",
+      "result": "PASS"
+    },
+    {
+      "command": "out/api32/fuse-transport-host",
+      "result": "PASS all existing faults plus out-of-order delivery, blocked-sync read, cancellation and protocol-failure wakeup of two pending calls"
+    },
+    {
+      "command": "python3 tools/build_api32_fuse_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --image out/api32/ce-metadata-image/pocket-api32-arm64-0.78.10.zip --out out/api32/fuse-concurrent-probe",
+      "result": "PASS packaged libfuse/Bionic probe+fresh loader, Java/D8 and signed APK"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/fuse-concurrent-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/fuse-concurrent-validation/api32-fuse-probe.apk --require-storage-mode --require-state-compat --require-peer-identity --require-concurrent-replies",
+      "result": "PASS out-of-order READ before FSYNC on packaged libfuse and all existing native protocol/identity regressions"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_fuse_probe.py tools/test_api32_fuse_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_fuse_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --image out/api32/ce-metadata-image/pocket-api32-arm64-0.78.10.zip --out out/api32/fuse-lower-view-fixed-probe",
+      "result": "PASS fresh loader lower view and signed native probe"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/fuse-lower-view-fixed-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/fuse-lower-view-fixed-validation/api32-fuse-probe.apk --require-storage-mode --require-state-compat --require-peer-identity --require-concurrent-replies --require-lower-view",
+      "result": "PASS lower backing data, forced-FUSE non-bypass and existing native regressions"
+    },
+    {
+      "command": "python3 tools/build_api32_media_session_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS guest Java/D8 APK, verified matching platform test signature, native FUSE client"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog out/api32/media-session-app/catalog-api29.json --api32-catalog out/api32/media-session-app/catalog-api32.json --media-session-probe32 out/api32/media-session-app --out out/api32/media-session-cached-manager-probe",
+      "result": "PASS host Java/D8 and APK signature; host JNI unchanged; no bundled image"
+    },
+    {
+      "command": "python3 tools/build_api32_fuse_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --image out/api32/ce-metadata-image/pocket-api32-arm64-0.78.10.zip --out out/api32/fuse-unix-rights-probe",
+      "result": "PASS fresh loader, native Unix datagram/SCM tests and signed APK"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/fuse-unix-rights-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/fuse-unix-rights-validation/api32-fuse-probe.apk --require-storage-mode --require-state-compat --require-peer-identity --require-concurrent-replies --require-lower-view --require-unix-datagram",
+      "result": "PASS filesystem sendto/sendmsg, connected sendmsg, SCM_RIGHTS/CLOEXEC and all existing native regressions"
+    },
+    {
+      "command": "python3 tools/build_api32_media_session_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/api32/media-session-policy-app",
+      "result": "PASS corrected policy probe Java/D8/native build and matching platform test signature; new policy assertions awaiting runtime"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog out/api32/media-session-policy-app/catalog-api29.json --api32-catalog out/api32/media-session-policy-app/catalog-api32.json --media-session-probe32 out/api32/media-session-policy-app --out out/api32/media-session-policy-manager-probe",
+      "result": "PASS host probe rebuilt with current Unix-routing loader, corrected guest policy test and existing zygote handoff library; host JNI unchanged"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/media-session-policy-validation/test_api32_media_session_on_pi.py --work-dir /home/pi/pocket-api32-vm/media-session-policy-validation",
+      "result": "PASS strict full framework boot, test APK install, real provider INIT/start/end callbacks, user-directory metadata and app-private FUSE denials, one SystemUI/no ANRs/fatals,15services cleanly reaped, original code restored; no mounted external volume or positive file-data claim"
+    }
+  ],
+  "nextImplementation": {
+    "brokerIdentity": "Use kernel peer credentials plus live PID/start-time guest identity records; app RPCs cannot supply a UID to the FUSE channel.",
+    "hostFileTransport": "ExternalFiles32 callbacks, typed native Files/HostFiles broker and real MediaProvider data pass together with actual guest file descriptors under strict Manager boot/stop gates. Integrate the session and authenticated FD delivery into production vold/Manager and ordinary app path routing.",
+    "requestIdentity": "Preserve current guest caller for MediaProvider read transforms: pinned pf_read uses req->ctx.uid in Transform in addition to handle uid. Existing CeFuse callbacks do not expose kernel caller PID, so an external-file transport must provide it without changing legacy CE semantics.",
+    "lowerFilesystem": "Real MediaProvider PASS_THROUGH backing view and session metadata pass. Add authenticated ordinary-app FUSE routing for shared media plus authorized lower app-private Android/data/obb views; keep forced /mnt/user/0/emulated on FUSE.",
+    "volumePublication": "Only publish a mounted emulated volume after the real session and app syscall routing are ready.",
+    "metadataTid": "Use peerIdentity() with the original raw syscall tid, not SO_PEERCRED.pid. It validates membership of that thread in the socket peer process.",
+    "forcedFuseView": "Route /mnt/user/0/emulated/... through real FUSE even for PASS_THROUGH MediaProvider. Its ordinary /storage/emulated/... accesses are lower backing I/O.",
+    "hostProxyIdentity": "Host AppFuse callbacks need kernel request tid; only the known host parent proxy may forward that kernel-origin identity to the native broker. Ordinary app RPCs use their own authenticated peer/tid.",
+    "concurrentRequests": "Multiplexed Channel independently native-validated against packaged libfuse. Preserve this nonblocking data plane when connecting the session/broker.",
+    "defaultProcessBudget": "One complete new-code boot/install/provider-session/stop passes with default unchanged host settings. Retain earlier trim/ANR failures; repeated fresh/integrated-image cohort remains required.",
+    "unixSockets": "Filesystem sendto/sendmsg fix passes native tests; validate zygote child notifications in framework. Abstract namespace handling remains unchanged. A host socket listing after stop did not show @com.android.internal.telephony, so the earlier name-collision hypothesis is unconfirmed; PhoneFactory bind errno needs direct evidence."
+  },
+  "storageModeHandoff": {
+    "implemented": true,
+    "loaderNativeVerified": true,
+    "zygoteBuilt": true,
+    "zygoteFrameworkRuntimeVerified": true,
+    "modeValues": "Pinned12L IVold REMOUNT_MODE_NONE/DEFAULT/INSTALLER/PASS_THROUGH/ANDROID_WRITABLE =0..4",
+    "candidate": "out/api32/fuse-peer-gid-candidate.json",
+    "report": "out/api32/fuse-peer-gid-report.json",
+    "reportSha256": "bc27120405bc6d6a83430b9d4c6994b7518c67fed741f910299513cc58ce0690",
+    "runId": "5651d964585b4ef2b4c6f351fa578400",
+    "scope": "Native loader mode selection/fork/exec, invalid value rejection and official control-API mutation denial after UID drop;64groups anddenylist preserved. Realzygote/MediaProvider runtime pending.",
+    "job": {
+      "pid": 10452,
+      "token": "c0a2dbf7c45d4064a64bad4b2c03870c",
+      "script": "/home/pi/pocket-api32-vm/fuse-peer-gid-validation/run-c0a2dbf7c45d4064a64bad4b2c03870c.py",
+      "log": "/home/pi/pocket-api32-vm/fuse-peer-gid-validation/run-c0a2dbf7c45d4064a64bad4b2c03870c.log",
+      "exit": "/home/pi/pocket-api32-vm/fuse-peer-gid-validation/run-c0a2dbf7c45d4064a64bad4b2c03870c.exit.json"
+    },
+    "zygoteArtifact": {
+      "path": "out/api32/native/libpocket_zygote_api32.so",
+      "sha256": "a747792247cc46758f70805fcc7ad854726c0e1d9b282ef097d4ba1c3b8f0ff3",
+      "bytes": 133752
+    },
+    "frameworkRuntimeEvidence": {
+      "report": "out/api32/media-session-policy-report.json",
+      "runId": "a3383963946542508e3b6906fda7afef",
+      "scope": "MediaProvider PASS_THROUGH path only: real daemon starts and looks up lower directories with current source-built zygote library/loader, while the saved original upper root is a symlink and a plain lstat would not be a directory. Other runtime mode views and app syscall routing remain unverified."
+    }
+  },
+  "peerThreadIdentity": {
+    "implemented": true,
+    "nativeVerified": true,
+    "realMediaProviderRuntimeVerified": false,
+    "kernelUid": "Derived from kernel socket credentials; no client UID/GID fields accepted",
+    "guestIdentity": "Live PID/start-time loader record supplies logical effective UID/GID",
+    "threadId": "Client tid must exist in /proc/<peer-tgid>/task/<tid>; same-process worker tid preserved rather than replaced with tgid",
+    "negativeChecks": [
+      "Wrong expected kernel UID rejected",
+      "Zero tid rejected",
+      "Foreign process tid rejected",
+      "Storage mode control API mutation rejected after logical UID drop"
+    ],
+    "gidOnlyChange": "Identity records now refresh after successful setgid/setregid/setresgid as well as UID changes; native check verifies newGID then restoration",
+    "scope": "Rootless guest identity metadata, not separate kernel guest isolation",
+    "candidate": "out/api32/fuse-peer-gid-candidate.json",
+    "report": "out/api32/fuse-peer-gid-report.json",
+    "reportSha256": "bc27120405bc6d6a83430b9d4c6994b7518c67fed741f910299513cc58ce0690",
+    "runId": "5651d964585b4ef2b4c6f351fa578400",
+    "hostUid": 10166,
+    "nativeExit": 0,
+    "hostSettingsUnchanged": true,
+    "pollErrors": 0,
+    "log": "linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nWARNING: linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nlinker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nWARNING: linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nFUSE32_STORAGE_MODE_EXEC_PASS mode=3 uid=19991 environment=consumed mutation=denied groups=64 denylist=1\nfuse: failed to open /dev/fuse: Permission denied\nfuse: trying to continue without -o clone_fd.\nFUSE_STOCK32_PASS protocol=7.31 init=1 lookup=1 missing=denied caller_fields=preserved peer_identity=verified thread_id=preserved foreign_thread=denied gid_only_change=verified read=1 wrong_uid=denied write=1 release=1 forget=1 destroy=1 loop_exit=0 fd_leaks=0 kernel_mounts=0\n",
+    "completedHostProbeStopped": true,
+    "nativeOwnersAbsent": true,
+    "existingGuestProfilesPreserved": true
+  },
+  "hostFileProxy": {
+    "implemented": true,
+    "nativeVerified": true,
+    "managerIntegrated": false,
+    "realMediaProviderRuntimeVerified": false,
+    "sources": [
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/ExternalFuse32.java",
+      "runtime/storage/native/external_fuse32.c"
+    ],
+    "candidate": "out/api32/external-proxy-files-candidate.json",
+    "report": "out/api32/external-proxy-files-report.json",
+    "reportSha256": "fe3936c87b1bd76779bf6d33e5125652c1500dabe7f06871ea36daede94bbd10",
+    "runId": "ee1e693740a54f76a5aea4fc8fb2ea47",
+    "apkSha256": "25817a6d2d54f778e21d96b108d3c938663b13d4fbcfdb22f10ec5131f28f8bf",
+    "hostUid": 10169,
+    "nativeExit": 0,
+    "checks": [
+      "Real AppFuse file descriptors passed by SCM_RIGHTS to actual guest Bionic through the current loader at logical UID19991",
+      "pread/pwrite and dup coherence; MAP_SHARED mmap/msync reaches memory-backed test callbacks",
+      "ErrnoException(EACCES) becomes guest pread errno EACCES",
+      "Kernel caller tids match main and worker threads; callbacks validate live kernel Tgid",
+      "Distinct per-open handles remain valid across read/write/fsync/flush/release",
+      "fdatasync and fsync preserve flags1 and0; another file can be read while fsync callback is blocked",
+      "All four handles released; exact child exits0; host probe stopped after terminal success"
+    ],
+    "readTids": [
+      10570,
+      10573
+    ],
+    "syncFlags": [
+      0,
+      1
+    ],
+    "releasedHandles": [
+      3,
+      4,
+      5,
+      6
+    ],
+    "identityContract": "Only authenticated host-parent RPC may forward kernel-origin tids to the native broker; host-open/size callbacks are not guest caller identity. Writeback/release may carry pid0, which must not be replaced with an invented caller.",
+    "legacyCeJni": "Existing ce_fuse.c/CeFuse.java unchanged; independent external native library and callback ABI",
+    "initialHarnessFixes": [
+      "Process.pid is absent on this host: authenticate the native child with SO_PEERCRED, real parent PID and invocation nonce instead.",
+      "Each test inode needs a distinct backing byte array; shared test data incorrectly made an independent-file read assertion fail."
+    ],
+    "hostSettingsUnchanged": true,
+    "pollErrors": 0,
+    "job": {
+      "pid": 16757,
+      "token": "9a6839463c494a789d25162abcb6ad20",
+      "script": "/home/pi/pocket-api32-vm/external-proxy-files-validation/run-9a6839463c494a789d25162abcb6ad20.py",
+      "log": "/home/pi/pocket-api32-vm/external-proxy-files-validation/run-9a6839463c494a789d25162abcb6ad20.log",
+      "exit": "/home/pi/pocket-api32-vm/external-proxy-files-validation/run-9a6839463c494a789d25162abcb6ad20.exit.json"
+    }
+  },
+  "concurrentTransport": {
+    "implemented": true,
+    "nativeVerified": true,
+    "realMediaProviderRuntimeVerified": false,
+    "source": "runtime/api32/fuse_transport.h",
+    "candidate": "out/api32/fuse-concurrent-candidate.json",
+    "report": "out/api32/fuse-concurrent-report.json",
+    "reportSha256": "9c36a7ecd090653c6d711dc6a64f318e5c88c6065fbe9ae49efc79a747fc21ff",
+    "runId": "9c0e659cdeb648269a81180b98ec74c6",
+    "apkSha256": "5bc964e5fb113229982f8380a82d4c3455c70c05ab0c3037bc78a8126416a1ee",
+    "hostUid": 10170,
+    "nativeExit": 0,
+    "design": "One receive thread dispatches replies by unique ID, at most128 pending calls; packet writes serialized separately, per-call deadlines, cancellation and protocol failures wake all pending callers. Owner joins broker workers before channel destruction.",
+    "checks": [
+      "Packaged libfuse callback blocks FSYNC while independent READ completes and its reply arrives first",
+      "Existing protocol7.31, errno, mode fork/exec,64groups/denylist, peerUID/TID/GID-only refresh checks pass",
+      "Zero native fd leaks; stock libfuse thread exits0; no guest kernel mount",
+      "ASan/UBSan host tests cover out-of-order payload/identity matching, two pending cancellations and malformed reply failure of both pending calls, alongside prior malformed/timeout/disconnect/errno/invalidation cases"
+    ],
+    "hostSettingsUnchanged": true,
+    "pollErrors": 0,
+    "job": {
+      "pid": 17647,
+      "token": "78e15d89f10a4947b1bbd7efee9b3c60",
+      "script": "/home/pi/pocket-api32-vm/fuse-concurrent-validation/run-78e15d89f10a4947b1bbd7efee9b3c60.py",
+      "log": "/home/pi/pocket-api32-vm/fuse-concurrent-validation/run-78e15d89f10a4947b1bbd7efee9b3c60.log",
+      "exit": "/home/pi/pocket-api32-vm/fuse-concurrent-validation/run-78e15d89f10a4947b1bbd7efee9b3c60.exit.json"
+    }
+  },
+  "mediaProviderLowerView": {
+    "implemented": true,
+    "nativeVerified": true,
+    "zygoteFrameworkRuntimeVerified": true,
+    "source": "runtime/loader/loader.c",
+    "mode": 3,
+    "mappedPrefix": "/storage/emulated -> backing /data/media (system-data/media on host)",
+    "forcedFusePrefixNotRedirected": "/mnt/user/0/emulated",
+    "candidate": "out/api32/fuse-lower-view-fixed-candidate.json",
+    "report": "out/api32/fuse-lower-view-fixed-report.json",
+    "reportSha256": "fee708930497f7061780044b501214460c922370e3e97e3cf6b2db99aa53cac1",
+    "runId": "71a81e1628eb45fbbe8893744effac5c",
+    "apkSha256": "65f252f85475e42386f99c98f5d550af21752689aa880fba285cc92753573ef0",
+    "hostUid": 10172,
+    "nativeExit": 0,
+    "checks": [
+      "Mode3 retained after fork/exec and UID drop; real backing file read through /storage/emulated/0",
+      "Backing root lstat reports directory; forced FUSE path remains absent rather than exposing lower bytes",
+      "Existing64groups/denylist, peer/thread identity, stock FUSE7.31, out-of-order FSYNC/READ and no-fd-leak tests pass"
+    ],
+    "hostSettingsUnchanged": true,
+    "realProviderReport": "out/api32/media-session-policy-report.json"
+  },
+  "realProviderSessionTrial": {
+    "implemented": true,
+    "runtimeVerified": false,
+    "candidate": "out/api32/media-session-policy-candidate.json",
+    "job": "out/api32/media-session-policy-job.json",
+    "status": "SESSION_METADATA_STRICT_PASS_PRODUCTION_MOUNT_PENDING",
+    "scope": "A platform-test-key-signed ordinary-UID guest app binds stock MediaProvider, passes a packet FD, and negotiates FUSE_INIT concurrently with service startup. Full file data, per-app lower views, production vold/StorageManager mount callback, host AppFuse and app path routing remain unverified.",
+    "failedTrials": [
+      {
+        "runId": "1cebd4d363704985afdb8a059bc34be9",
+        "report": "out/api32/media-session-first-report.json",
+        "reason": "Preflight incorrectly assumed upper storage path absent; no guest boot; original binaries restored."
+      },
+      {
+        "runId": "72c2e6b46679401baabbbbfe39846e61",
+        "report": "out/api32/media-session-retry-report.json",
+        "reportSha256": "93a1536d22a1383a712bd1444c0c0769e9240b7ccdd02b441655c918af0eecdc",
+        "reason": "Real framework boot/display and APK install reached activity launch; outer default phantom-process monitor trimmed shell and pocket-init; supervisor exit137, no provider result and no clean supervised stop. Original binaries restored.",
+        "phantomEvidence": "out/api32/media-session-retry-phantom-trim.log",
+        "phantomEvidenceSha256": "dfe72f19ed223f128eb3c1750c6ab4a410c206dd8dea20a84df0b4d7fe4fa09c",
+        "hostSettingsUnchanged": true
+      }
+    ],
+    "cachedTrialReason": "The prior install completed. A byte-hash-matching installed fixture can be launched without reinstall broadcasts/dexopt; this isolates the session test while leaving production installation/startup-budget validation unfinished.",
+    "initEvidence": {
+      "runId": "e0fe784c44c44b519facdae81bf48de6",
+      "candidate": "out/api32/media-session-cached-candidate.json",
+      "report": "out/api32/media-session-cached-report.json",
+      "reportSha256": "234fc34dac6ebaff797840807418d86333d3b7cb3ba928740f792f1ca0ec55d7",
+      "guestCallerUid": 10109,
+      "startCallback": true,
+      "nativeMarker": "MEDIA_FUSE32_INIT_PASS protocol=7.31 uid=10109",
+      "actualProviderClass": "com.android.providers.media.module/com.android.providers.media.fuse.ExternalStorageServiceImpl",
+      "daemonExited": true,
+      "supervisorExit": 0,
+      "servicesReaped": 15,
+      "remainingServices": 0,
+      "originalCodeRestored": true,
+      "fullTrialPassed": false,
+      "strictFailures": {
+        "anrs": [
+          "com.android.systemui",
+          "com.android.phone",
+          "com.android.systemui"
+        ],
+        "javaFatals": [
+          "main"
+        ],
+        "systemUiStarts": [
+          "15218",
+          "16182",
+          "17108"
+        ]
+      },
+      "failure": "The old native test expected app GETATTR of /storage/emulated to succeed; the pinned stock provider deliberately denies it. The request return errno was not logged in that old test, so a corrected policy probe must confirm the exact result."
+    },
+    "scopeCorrection": "Pinned FuseDaemon.is_app_accessible_path denies ordinary-app getattr of /storage/emulated and emulated Android/data or Android/obb FUSE access, including an app's own private directory. Android uses authorized lower bind views for private directories; full data routing must reproduce that split. The new metadata/private-FUSE-denial probe does not replace the remaining positive file-data, MediaStore and cross-app access requirements. The corrected real-provider run confirms root errno ENOENT(-2), user/Android/data directory lookup, denial of own/other app-private FUSE getattr, and both service callbacks. It does not claim positive file-data validation.",
+    "activityRecreation": "Guest fixture now handles orientation/keyboard/screen-size changes to avoid starting duplicate sessions during Activity recreation.",
+    "sessionLifecycleAndMetadataVerified": true,
+    "result": {
+      "runId": "a3383963946542508e3b6906fda7afef",
+      "report": "out/api32/media-session-policy-report.json",
+      "reportSha256": "56a81a06ec838874baaa882963d67744ba6005cd666594ea3a7f1329a599b77c",
+      "candidate": "out/api32/media-session-policy-candidate.json",
+      "apkSha256": "4ed36f8344e5541ddefbb080ae2b7d359d392b5413299c3c84bd14174fc597d8",
+      "guestFixtureApkSha256": "7e6bd2b7cbecf4feb7f1d3bef805ae8275920cf58d661bbcf2e95bfa209e6fb2",
+      "guestCallerUid": 10109,
+      "signaturePermission": "BIND_EXTERNAL_STORAGE_SERVICE, granted by the matching public development platform test signature; UID remains an ordinary app UID",
+      "startCallback": true,
+      "endCallback": true,
+      "nativeExit": 0,
+      "nativeLog": "API32_FRAMEWORK_POLICY guest_selinux=disabled host_policy=inherited\nINIT_RESULT=0\nMEDIA_FUSE32_INIT_PASS protocol=7.31 uid=10109\nROOT_GETATTR_RESULT=-2\nLOOKUP component=0 result=0\nLOOKUP component=Android result=0\nLOOKUP component=data result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32 result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32.other result=0\nMEDIA_FUSE32_PASS provider=real user_lookup=verified app_root=denied app_private_fuse=denied cross_package=denied kernel_mounts=0\n",
+      "expectedRootGetattrErrno": -2,
+      "fileDataVerified": false,
+      "perAppLowerViewVerified": false,
+      "mediaStoreVerified": false,
+      "productionVoldMountCallbackVerified": false,
+      "hostAppFuseConnectedToProvider": false,
+      "strictPassed": true,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "18610"
+      ],
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "ownerExit": 0,
+      "originalCodeRestored": true,
+      "guestDataReset": false,
+      "fixtureReinstalled": true,
+      "hostSettingsUnchanged": true,
+      "pollErrors": 0,
+      "cleanup": "out/api32/media-session-policy-cleanup.json"
+    },
+    "lastFailedPolicyRun": "out/api32/media-session-cached-report.json"
+  },
+  "unixDatagramPaths": {
+    "implemented": true,
+    "nativeVerified": true,
+    "frameworkRegressionVerified": true,
+    "source": "runtime/loader/loader.c",
+    "candidate": "out/api32/fuse-unix-rights-candidate.json",
+    "report": "out/api32/fuse-unix-rights-report.json",
+    "reportSha256": "81c399ce0cd42bcced0d3b610482bfacde86a5536722a699cddd3c51a87297b1",
+    "runId": "e8b2270871dd4a7eb7d304d5a3354545",
+    "checks": [
+      "AF_UNIX filesystem sendto and sendmsg destinations use the same guest path translation as bind/connect",
+      "Connected sendmsg with null name retains kernel behavior",
+      "SCM_RIGHTS carries a pipe FD; received descriptor has FD_CLOEXEC and reads the expected pipe byte",
+      "Existing lower-view, forced-FUSE non-bypass, storage modes, peer/thread identity, FUSE concurrency and no-fd-leak tests pass"
+    ],
+    "zygoteCase": "Pinned32 zygote sends SIGCHLD notifications with sendto to /data/system/unsolzygotesocket; the previous raw send targeted the host path and logged EACCES. Real startup and child-notification regression still needs the new framework trial.",
+    "notCovered": [
+      "AF_UNIX filesystem sendmmsg destination mapping",
+      "Abstract Unix name isolation and errno-specific PhoneFactory bind failure diagnosis",
+      "Real zygote exit-notification delivery and reliable startup with default host process budget"
+    ],
+    "frameworkRegressionScope": "One strict full-framework boot/install/real-provider-session/stop trial passes with the corrected loader; untranslated-zygote-write errors=0. Specific delivery of an exit notification and repeated/fresh-profile stability remain unverified.",
+    "frameworkReport": "out/api32/media-session-policy-report.json",
+    "zygoteNotificationDeliverySpecificallyVerified": false
+  },
+  "realProviderDataPath": {
+    "implemented": true,
+    "functionalRuntimeVerified": true,
+    "strictRuntimeVerified": true,
+    "productionManagerIntegrated": false,
+    "sources": [
+      "runtime/api32/fuse_files.h",
+      "runtime/api32/external_files_rpc.h",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/ExternalFiles32.java"
+    ],
+    "candidate": "out/api32/media-data-clean-candidate.json",
+    "sourceSnapshot": "out/api32/media-data-clean-source-snapshot",
+    "report": "out/api32/media-data-clean-report.json",
+    "reportSha256": "9ae31643ecc7dab06a5402ad45edd1d940578329072563d0c2f04ea11c1e6a35",
+    "runId": "709fb3eaaaaf4d42896ca5683022401f",
+    "apkSha256": "e78de638777fc079235c7157440c9cbd42293ad97d9abcca2e504f5e3071e63d",
+    "guestCallerUid": 10109,
+    "dataProof": {
+      "hostRpcImpersonationDenied": true,
+      "mainTid": 3766,
+      "workerTid": 3985,
+      "uid": 10109,
+      "readWrite": true,
+      "sharedMmap": true,
+      "readOnlyDenied": true
+    },
+    "hostCallbacks": {
+      "readTids": [
+        3985,
+        3766
+      ],
+      "callerUids": [
+        10109
+      ],
+      "capabilityFallbackCalls": 1,
+      "releasedFiles": 2,
+      "remainingSlots": 0
+    },
+    "backingDataVerified": true,
+    "startCallback": true,
+    "endCallback": true,
+    "nativeExit": 0,
+    "strictFailures": {
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "2679"
+      ]
+    },
+    "initStop": [
+      [
+        "15",
+        "0",
+        "0"
+      ]
+    ],
+    "originalCodeRestored": true,
+    "hostSettingsUnchanged": true,
+    "hostLifetimeAuthentication": "Kernel SO_PEERCRED must match expected host UID and PID. The host sends its open /proc/<pid>/stat via SCM_RIGHTS; broker checks procfs filesystem type, the fd link and pinned start time. Direct proc lookup returns ENOENT in the actual Android child; no dumpability or host policy changes are used.",
+    "callerIdentity": "Forwarded guest kernel TID is verified through its live process/start-time guest identity record. Kernel writeback with tid0 or a verified host thread uses the approved opener capability identity; one such fallback occurred. Guest UIDs are metadata under one real host UID, not kernel isolation.",
+    "checks": [
+      "RW and O_DIRECT RO opens under the actual ordinary app UID",
+      "Initial read, pwrite, MAP_SHARED/msync, fdatasync/fsync through actual MediaProvider-backed AppFuse FDs",
+      "Host backing bytes verified independently after write and shared mmap",
+      "Independent direct-open read observes synced write",
+      "Read-only FD rejects write",
+      "Same real-UID guest process cannot impersonate host callback peer",
+      "Distinct main/worker kernel read TIDs and derived UID10109 observed",
+      "Both file handles released, zero remaining slots, all15 guest services reaped"
+    ],
+    "remaining": [
+      "Repeated fresh-profile boots with the integrated packaged image",
+      "Production vold mount/StorageManager session callback",
+      "Ordinary filesystem open/stat/directory routing and per-app private lower views",
+      "MediaStore/public-file policy and cache invalidation/coherence",
+      "Locked CE/unlock/restart lifecycle for mounted storage"
+    ],
+    "hostChecks": "out/api32/media-data-host-validation.json",
+    "currentCandidate": "out/api32/media-data-clean-candidate.json",
+    "currentJob": "out/api32/media-data-clean-job.json",
+    "currentTrialStatus": "PASS",
+    "testHarnessOverlap": {
+      "observed": true,
+      "cause": "Host am_kill due to installPackageLI is immediately followed by am_proc_start and wm_restart_activity for the old ManagerCeProbe32 task; both retained guest profiles then boot concurrently. Confirmed on three APK replacement runs.",
+      "fix": "Launch and wait for outer host HOME before replacing the foreground Manager APK. The fixture itself shows when locked and turns the screen on; no separate wake/resume step is needed.",
+      "runtimeFixVerified": true,
+      "result": "Clean run had one owned guest supervisor, no CE test process restart, one SystemUI, no ANR/fatal, and strict PASS. Earlier event logs show the CE task was recreated immediately after installPackageLI killed the foreground Manager.",
+      "evidence": "out/api32/media-data-host-task-events.json",
+      "evidenceSha256": "90e56dfdb3574a961bbe3a4080ca214c21d27c3141442502a97d155c3ce14d26"
+    },
+    "functionalTrialsBeforeStrict": [
+      {
+        "candidate": "out/api32/media-data-lifetime-candidate.json",
+        "sourceSnapshot": "out/api32/media-data-lifetime-source-snapshot",
+        "report": "out/api32/media-data-lifetime-report.json",
+        "reportSha256": "0f2febde6fd3410f2fd45b7f628fec22f4cc6d3d9503aa7d2e2d46cca8870341",
+        "runId": "b20b79c7f99a4e5ea1ef14009425fa74",
+        "strictFailures": {
+          "anrs": [
+            "com.android.systemui",
+            "Window{7e64cc4 u0 com.android.settings/com.android.settings.FallbackHome}. Reason:7e64cc4 com.android.settings/com.android.settings.FallbackHome (server) is not responding. Waited 5014ms for FocusEvent(hasFocus=false)",
+            "com.android.settings (com.android.settings/.FallbackHome)"
+          ],
+          "javaFatals": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "27693",
+            "28528",
+            "28724"
+          ]
+        }
+      },
+      {
+        "runId": "4a62776f56a84dd792488720816860c1",
+        "apkSha256": "aafd9412a1bb0985ab3c1314e507ab38cdb0142a30a13edcb3e427e867193da6",
+        "functionalPassed": true,
+        "externalFilesVerified": true,
+        "strictPassed": false,
+        "anrs": [
+          "com.android.systemui",
+          "com.android.systemui"
+        ],
+        "javaFatals": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "31502",
+          "32234",
+          "735"
+        ],
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "report": "out/api32/media-data-optional-report.json",
+        "reportSha256": "6209c5d54e1aed43832476e9a53eebe81815fa5f1fdfb2b475057cc6492535c6",
+        "candidate": "out/api32/media-data-optional-candidate.json",
+        "originalCodeRestored": true
+      }
+    ],
+    "sourcePins": 166,
+    "pollErrors": 0,
+    "cleanup": "out/api32/media-data-clean-cleanup.json",
+    "validationCommands": [
+      {
+        "command": "python3 tools/build_api32_media_session_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --external-proxy --out out/api32/media-data-clean-app",
+        "result": "PASS guest Java/D8, platform test signature, native data broker and external JNI"
+      },
+      {
+        "command": "python3 tools/build_api29_manager.py --catalog out/api32/media-data-clean-app/catalog-api29.json --api32-catalog out/api32/media-data-clean-app/catalog-api32.json --media-session-probe32 out/api32/media-data-clean-app --out out/api32/media-data-clean-manager-probe",
+        "result": "PASS signed image-free Manager; base host JNI libraries unchanged, external JNI addition separately pinned"
+      },
+      {
+        "command": "python3 /home/pi/pocket-api32-vm/media-data-clean-validation/test_api32_media_session_on_pi.py --work-dir /home/pi/pocket-api32-vm/media-data-clean-validation --require-external-files",
+        "result": "PASS strict real provider/AppFuse file data, one SystemUI, no ANR/fatal, all15 services reaped, original code restored"
+      },
+      {
+        "command": "out/api32/external-files-rpc-host",
+        "result": "PASS ASan/UBSan lifetime/peer/framing/resource checks"
+      },
+      {
+        "command": "out/api32/fuse-files-host",
+        "result": "PASS ASan/UBSan typed data/open flags/identity/error/optional operation checks"
+      }
+    ]
+  },
+  "ordinaryAppOpen": {
+    "implemented": true,
+    "runtimeVerified": true,
+    "strictRuntimeVerified": true,
+    "productionEnabled": false,
+    "sources": [
+      "runtime/api32/external_open_rpc.h",
+      "runtime/loader/external_protocol.h",
+      "runtime/loader/external_runtime.h",
+      "runtime/app/src/dev/kreijstal/aosppocket/runtime/ExternalFiles32.java"
+    ],
+    "design": "Loader openat sends path/flags/raw tid to AppFiles; kernel peer credentials and live PID/start-time guest record derive the caller. MediaProvider approves Files.open before the native broker asks the exact host Manager to create an AppFuse descriptor. Only slot/cookie/flags cross the trusted attach endpoint; UID and raw provider inode/fh are absent. Host reply carries real proxy FD and procfs parent lifetime FD; native broker verifies the host peer, lifetime and host-owned AppFuse device/approved inode before returning the real FD to the app.",
+    "activation": "Opt-in .pocket-external-enabled marker is read at loader startup. Locator pins live broker PID/start time. No locator means ENOENT/unmounted path, not a raw lower-file fallback. Production Manager/vold has not enabled this feature.",
+    "candidate": "out/api32/media-path-budget-observed-candidate.json",
+    "job": "out/api32/media-path-budget-observed-job.json",
+    "status": "STRICT_PASS_EXISTING_REGULAR_FILE_OPENS",
+    "firstTrial": {
+      "report": "out/api32/media-path-first-report.json",
+      "reportSha256": "43f122c6cdb2bcadca325f1126e93a572e57e8fba20aad8d20134ed1c00d4e37",
+      "runId": "9ff8d6c6aaef42af94d732498a952b0a",
+      "functionalPassed": false,
+      "strictPassed": false,
+      "originalCodeRestored": true,
+      "systemUiStartCount": 178,
+      "javaFatalCount": 178,
+      "reason": "FileProvider canonicalizes /sdcard/. before mounting; ENODEV propagated from the new route and caused SystemUI startup crashes. Corrected absent-session errno to ENOENT; subsequent runtime check pending."
+    },
+    "hostChecks": [
+      "ASan/UBSan external-open-rpc-host: locator lifetime, socket collision, wrong kernel UID, malformed request, interrupted shutdown, stale locator preservation, zero fd leaks",
+      "ASan/UBSan external-loader-host: sdcard/self-primary aliases, backing alias and relative dirfd recovery, provider lower/forced distinction, absent session, fragmented SCM_RIGHTS replies, CLOEXEC, excess/truncated rights, errno, zero fd leaks"
+    ],
+    "remaining": [
+      "Directory/O_PATH metadata and canonicalization after mount",
+      "Create/truncate/rename/unlink/getdents and correct descriptor/path metadata",
+      "PMS-authorized app-private lower views",
+      "Cache coherence and invalidation across cached opens",
+      "Production vold/StorageManager lifecycle and DirectSession ownership",
+      "CE lock/unlock/restart and API28/29 regressions with final integrated image",
+      "Keep guest startup within the default host process budget and validate repeated clean starts"
+    ],
+    "secondTrial": {
+      "report": "out/api32/media-path-unmounted-report.json",
+      "reportSha256": "a8f4dbddb53f6dbbc05aa7eccfb916edbeb688d7d9e51c72b4b531163a38e22a",
+      "runId": "323a68a76f1c4081b90644b92935d492",
+      "originalCodeRestored": true,
+      "systemUiStartCount": 1,
+      "anrs": [
+        "org.thoughtcrime.securesms"
+      ],
+      "javaFatalCount": 0,
+      "reason": "Unmounted-path errno correction restores framework startup; ordinary app open returns EPROTO during descriptor handoff. No file-data proof in this trial."
+    },
+    "hostValidation": "out/api32/media-path-statfs-return-host-validation.json",
+    "handoffDiagnosisTrials": [
+      {
+        "report": "out/api32/media-path-framing-report.json",
+        "reportSha256": "e520e77355ac61e2e1b1a3dacb2063b1737ed1c2a51c5bc11f9590f8611fa7ad",
+        "runId": "9267597dde694787afaaa7b84206bf2e",
+        "originalCodeRestored": true,
+        "systemUiStartCount": 1,
+        "anrs": [],
+        "javaFatalCount": 0,
+        "nativeLog": "API32_FRAMEWORK_POLICY guest_selinux=disabled host_policy=inherited\nINIT_RESULT=0\nMEDIA_FUSE32_INIT_PASS protocol=7.31 uid=10109\nROOT_GETATTR_RESULT=-2\nLOOKUP component=0 result=0\nLOOKUP component=Android result=0\nLOOKUP component=data result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32 result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32.other result=0\nMEDIA_PROXY_PARENT_STAT bytes=-2 start=0 host_uid=10157\nMEDIA_PROXY_BROKER_RESULT=0 parent=14214 self=16253 app_parent=16087\nMEDIA_PATH_ATTACH result=-71 recv=8 valid=1 errno=0 rights=2 lifetime=1 filesystem=0 mode=0\nMEDIA_PATH_OPEN result=-71 uid=10109 tid=16144 flags=524290 transferred_fd=0\n",
+        "hostCallbacks": {
+          "readTids": [],
+          "callerUids": [],
+          "capabilityFallbackCalls": 0,
+          "releasedFiles": 1,
+          "remainingSlots": 0,
+          "openRequests": 1,
+          "openPeerDenials": 1
+        }
+      },
+      {
+        "report": "out/api32/media-path-statfs-report.json",
+        "reportSha256": "03301a5128fd3386f270ae586f3a4eed44c074d6254f3ca4e5304a2b2654bc33",
+        "runId": "7df0be64fae94d3796b70ed728ff439c",
+        "originalCodeRestored": true,
+        "systemUiStartCount": 1,
+        "anrs": [],
+        "javaFatalCount": 0,
+        "nativeLog": "API32_FRAMEWORK_POLICY guest_selinux=disabled host_policy=inherited\nINIT_RESULT=0\nMEDIA_FUSE32_INIT_PASS protocol=7.31 uid=10109\nROOT_GETATTR_RESULT=-2\nLOOKUP component=0 result=0\nLOOKUP component=Android result=0\nLOOKUP component=data result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32 result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32.other result=0\nMEDIA_PROXY_PARENT_STAT bytes=-2 start=0 host_uid=10157\nMEDIA_PROXY_BROKER_RESULT=0 parent=16616 self=18772 app_parent=18644\nMEDIA_PATH_ATTACH result=-71 recv=8 valid=1 errno=0 rights=2 lifetime=1 filesystem=0 statfs_errno=38 mode=0\nMEDIA_PATH_OPEN result=-71 uid=10109 tid=18699 flags=524290 transferred_fd=0\n",
+        "hostCallbacks": {
+          "readTids": [],
+          "callerUids": [],
+          "capabilityFallbackCalls": 0,
+          "releasedFiles": 0,
+          "remainingSlots": 0,
+          "openRequests": 1,
+          "openPeerDenials": 1
+        }
+      }
+    ],
+    "statfsDesign": "Host AppFuseBridge rejects STATFS before forwarding it. AppFuse descriptors are authenticated against the host-owned keeper device and approved proxy inode, plus parent PID/UID/lifetime descriptor. Loader fstatfs identifies that device and requests actual FUSE_STATFS from the real MediaProvider daemon using the authenticated current guest thread; no synthetic capacity is used. Mount fsid/flags remain unset in this virtual result. Unreachable STATFS callbacks were removed and the external JNI again matches its previously validated binary.",
+    "appFuseDispatchSource": "https://github.com/aosp-mirror/platform_system_core/blob/android12L-release/libappfuse/FuseBridgeLoop.cc#L172",
+    "updatedImageTrial": {
+      "report": "out/api32/media-path-current-image-report.json",
+      "reportSha256": "e45c79a6cf5e2a5a2090c9bf5b3ce0abc35a572b1dee977895435569259f5f41",
+      "runId": "1bb617089ca04f7e9cb6806825baa502",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "originalCodeRestored": true,
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "15322"
+      ],
+      "reason": "Updated0.78.20 image passes the matching image guard and clean boot/stop, but cached zygote binary lacks the current source storage-mode handoff; real provider rejects the upper source symlink before INIT. Rebuilding zygote from current sources."
+    },
+    "ordinaryOpenHandoffTrial": {
+      "report": "out/api32/media-path-handoff-report.json",
+      "reportSha256": "10c1e4caca9a52f92156ab4f2355bd42f26439448bc56a41d7a255d6f85d9606",
+      "runId": "8548f4919d4246368bf3552f9c3657a7",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "originalCodeRestored": true,
+      "systemUiStarts": [
+        "17957"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "nativeLog": "API32_FRAMEWORK_POLICY guest_selinux=disabled host_policy=inherited\nINIT_RESULT=0\nMEDIA_FUSE32_INIT_PASS protocol=7.31 uid=10109\nROOT_GETATTR_RESULT=-2\nLOOKUP component=0 result=0\nLOOKUP component=Android result=0\nLOOKUP component=data result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32 result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32.other result=0\nMEDIA_PROXY_PARENT_STAT bytes=-2 start=0 host_uid=10157\nMEDIA_PROXY_BROKER_RESULT=0 parent=17333 self=19496 app_parent=19339\nMEDIA_PATH_ATTACH result=9 recv=24 valid=1 errno=0 rights=1 lifetime=1 device=49 inode=3\nMEDIA_PATH_OPEN result=0 uid=10109 tid=19370 flags=524290 transferred_fd=1\n",
+      "reason": "Fresh zygote selects the provider lower view; actual ordinary app open receives a real AppFuse FD. Follow-on fstatvfs reports invalid values. Loader returned the checked-copy byte count instead of fstatfs success zero; the host scaffold masked the mismatch. Corrected scaffold reproduces failure, and return normalization plus checked-pipe/EFAULT regression passes. Android rerun pending."
+    },
+    "statfsReturnTrial": {
+      "report": "out/api32/media-path-statfs-return-report.json",
+      "reportSha256": "f0fda71e498d9d3c5e8e19d9f417d7bb271ee7c42e84b00067023bce3c5f5d10",
+      "runId": "1a5af41a767b4710b7c28288b88d4eab",
+      "originalCodeRestored": true,
+      "systemUiStarts": [
+        "20716"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "hostCallbacks": {
+        "readTids": [
+          22266,
+          22460
+        ],
+        "callerUids": [
+          10109
+        ],
+        "capabilityFallbackCalls": 1,
+        "releasedFiles": 3,
+        "remainingSlots": 0,
+        "openRequests": 3,
+        "openPeerDenials": 1
+      },
+      "reason": "Ordinary app completed all three opens and data operations, including fstatvfs, actual main/worker kernel IDs, and three releases. Host attach server close did not wake accept; teardown failed before the guest could report its final data proof. Strict/functional gates remain FAIL. Added explicit listener shutdown before close and accept/worker termination evidence."
+    },
+    "historicalHostValidation": "out/api32/media-path-host-validation.json",
+    "strictProof": {
+      "runId": "643351d0de514275ae91aa4c4c5fcfcc",
+      "report": {
+        "path": "out/api32/media-path-budget-observed-report.json",
+        "sha256": "4303b4a03a856c04d7a523c64a4c29d9525d61b9f7044d988cde7d5e6ea7e834"
+      },
+      "candidate": {
+        "path": "out/api32/media-path-budget-observed-candidate.json",
+        "sha256": "d7d23c0b988a23c243bf28e86bb249ed5c9aa2508827ac88459aa84e1e3101db"
+      },
+      "sourceSnapshot": "out/api32/media-path-budget-observed-source-snapshot",
+      "sourceCount": 176,
+      "allPinnedSourcesMatchedAfterRun": true,
+      "cleanup": {
+        "path": "out/api32/media-path-budget-observed-cleanup.json",
+        "sha256": "f24007a98a1053ad2e9f4b46c8451d04f0ead9749f7ffa1550f255486b8a118f"
+      },
+      "apkSha256": "6733735638df2954302864843390359d091ec24c757f4624f2c76733a777b688",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "a747792247cc46758f70805fcc7ad854726c0e1d9b282ef097d4ba1c3b8f0ff3"
+      },
+      "dataProof": {
+        "hostRpcImpersonationDenied": true,
+        "attachPeerImpersonationDenied": true,
+        "statfs": true,
+        "filesystemBlocks": 2096640,
+        "filesystemBlockSize": 4096,
+        "mainTid": 27610,
+        "workerTid": 27886,
+        "ordinaryPathOpen": true,
+        "openFlagsPreserved": true,
+        "aliasRead": true,
+        "crossPackageDenied": true,
+        "backingAliasDenied": true,
+        "uid": 10109,
+        "readWrite": true,
+        "sharedMmap": true,
+        "readOnlyDenied": true
+      },
+      "hostCallbacks": {
+        "readTids": [
+          27610,
+          27886
+        ],
+        "callerUids": [
+          10109
+        ],
+        "capabilityFallbackCalls": 1,
+        "releasedFiles": 3,
+        "remainingSlots": 0,
+        "openRequests": 3,
+        "openPeerDenials": 1,
+        "acceptThreadStopped": true,
+        "attachWorkersStopped": true
+      },
+      "nativeLog": "API32_FRAMEWORK_POLICY guest_selinux=disabled host_policy=inherited\nINIT_RESULT=0\nMEDIA_FUSE32_INIT_PASS protocol=7.31 uid=10109\nROOT_GETATTR_RESULT=-2\nLOOKUP component=0 result=0\nLOOKUP component=Android result=0\nLOOKUP component=data result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32 result=0\nLOOKUP component=dev.kreijstal.pocketmediasession32.other result=0\nMEDIA_PROXY_PARENT_STAT bytes=-2 start=0 host_uid=10157\nMEDIA_PROXY_BROKER_RESULT=0 parent=24922 self=27743 app_parent=27535\nMEDIA_PATH_ATTACH result=9 recv=24 valid=1 errno=0 rights=1 lifetime=1 device=70 inode=3\nMEDIA_PATH_OPEN result=0 uid=10109 tid=27610 flags=524290 transferred_fd=1\nMEDIA_PATH_ATTACH result=9 recv=24 valid=1 errno=0 rights=1 lifetime=1 device=70 inode=4\nMEDIA_PATH_OPEN result=0 uid=10109 tid=27610 flags=65536 transferred_fd=1\nMEDIA_PATH_ATTACH result=9 recv=24 valid=1 errno=0 rights=1 lifetime=1 device=70 inode=5\nMEDIA_PATH_OPEN result=0 uid=10109 tid=27886 flags=589824 transferred_fd=1\nMEDIA_PATH_OPEN result=-2 uid=10109 tid=27610 flags=0 transferred_fd=0\nMEDIA_PATH_OPEN result=-2 uid=10109 tid=27610 flags=0 transferred_fd=0\nMEDIA_PATH32_PASS opens=3 denied=2 statfs=1\nMEDIA_PROXY32_PASS opener_uid=10109 authenticated_data_calls=verified denied_peers=1 reads=3 writes=2 remaining_files=0\nMEDIA_FUSE32_PASS provider=real user_lookup=verified app_root=denied app_private_fuse=denied cross_package=denied kernel_mounts=0\n",
+      "backingDataVerified": true,
+      "systemUiStarts": [
+        "25555"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "hostSelinux": "Enforcing",
+      "hostPhantomLimitOverride": "null",
+      "hostPhantomMonitoringOverride": "null",
+      "runtimeCommand": "python3 /home/pi/pocket-api32-vm/media-path-budget-observed-validation/test_api32_media_session_on_pi.py --work-dir /home/pi/pocket-api32-vm/media-path-budget-observed-validation --require-external-files --require-external-paths --baseline-report /home/pi/pocket-api32-vm/bfix-validation/manager-app-report.json"
+    },
+    "startupBudgetFailureTrial": {
+      "report": {
+        "path": "out/api32/media-path-shutdown-report.json",
+        "sha256": "58265c24438e0097295f544bfeba02b8728da08bbeb6bcf67dfe0116442d7444"
+      },
+      "runId": "0a20a92f275b4e52a065555c8b91652a",
+      "originalCodeRestored": true,
+      "functionalPassed": false,
+      "strictPassed": false,
+      "ownerExitCode": 137,
+      "error": "java.io.IOException: Cached fixture launch failed",
+      "cause": "Host ActivityManager explicitly killed this run's shell/supervisor for Trimming phantom processes. The subsequent guest application attach failure occurs after registry death; no attach-server shutdown was exercised in this failed trial."
+    },
+    "startupProcessBudget": {
+      "unresolved": true,
+      "hostLimitVerifiedByCommand": "dumpsys activity settings",
+      "hostLimitObserved": "max_phantom_processes=32",
+      "processCensus": {
+        "path": "out/api32/media-path-budget-observed-process-budget.json",
+        "sha256": "30e19e34fc2691f746bc186134b68d236c3feafaeae5ddac56d2c03e683408d8"
+      },
+      "sampleIntervalSeconds": 3,
+      "observedPeakChildren": 37,
+      "observedPeakIsNotAnUpperBound": true,
+      "observationErrors": [],
+      "finalChildren": 0,
+      "earlierHostKillEvents": [
+        "11-08 14:05:05.289 26676 26819 I ActivityManager: Killing PhantomProcessRecord {267840b 22872:22798:sh/u0a157}: Trimming phantom processes",
+        "11-08 14:05:05.321 26676 26819 I ActivityManager: Killing PhantomProcessRecord {bd0c2e8 22887:22798:pocket-init-api32/u0a157}: Trimming phantom processes"
+      ],
+      "conclusion": "A strict file-path pass establishes this tested operation set, not startup reliability. The same APK previously lost its supervisor to the unchanged default host limit; process consolidation and/or bounded guest startup still require implementation and a repeated-start cohort."
+    }
+  },
+  "completeSourceImageRuntime": {
+    "evidence": "docs/api32-source-image-validation.json",
+    "imageVersion": "0.78.25",
+    "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "signalRunId": "3484900f8f9442739fe7bc4671eda639",
+    "combinedRunId": "045487726dfd49548b02a2d8cf687f51",
+    "signalReport": "out/api32/warm-player-app-manager-app-report.json",
+    "combinedReport": "out/api32/warm-player-media-media-session-report.json",
+    "runtimeCodeReplaced": false,
+    "strictPassed": true,
+    "microgAndEmbeddedBridgeTogether": true,
+    "earlyPlayerAndExtractorVerified": true,
+    "sampledPeakChildren": 32,
+    "hostSettingsUnchanged": true,
+    "scope": "Complete source-packaged runtime; real regular-file AppFuse/WAV/input/validated network. No production external mount, fresh-profile reliability or hard process-bound claim."
+  },
+  "sharedCoreMetricsRuntime": {
+    "evidence": "docs/api32-core-metrics-validation.json",
+    "imageVersion": "0.78.26",
+    "imageSha256": "1036140a7d14a31e43e5c837bed5bff2643e909a96e5c0a06eef51559909450f",
+    "appRuntime": {
+      "report": "out/api32/core-metrics-app-manager-app-report.json",
+      "reportSha256": "7534797c2b5b529063c57e4f05f85a12ca110c81dae66683f069711fad6b02da",
+      "runId": "38411e935fbd477cbc4458eb0a29825d",
+      "validation": "PASS",
+      "sharedMetricsAndCorePid": 3566,
+      "supervisedLifetimesReaped": 16,
+      "reapAccounting": true,
+      "singleSystemUi": true,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 234,
+      "observerErrors": [],
+      "hardProcessBoundProven": false,
+      "typedMetricsPolicyVerified": false
+    },
+    "combinedRuntime": {
+      "report": "out/api32/core-metrics-media-media-session-report.json",
+      "reportSha256": "7eb87dd2df4e6e7fda23c94cb3cddc56c00f7e09f22f0324b7ed64f78d2ae0d9",
+      "runId": "8eb2d6401c33443eabafac0fc7123d50",
+      "validation": "PASS",
+      "strictPassed": true,
+      "gates": {
+        "packagedImageVerified": true,
+        "playerBootStartVerified": true,
+        "externalFilesVerified": true,
+        "ordinaryPathsVerified": true,
+        "lazyMediaVerified": true,
+        "extractorFirstDemandVerified": true,
+        "extractorBootStartVerified": true,
+        "supervisedBootstrapVerified": true,
+        "memoryProfileVerified": true,
+        "systemServerBridgeVerified": true,
+        "coreMediaMetricsVerified": true,
+        "reapAccounting": true
+      },
+      "supervisedLifetimesReaped": 16,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "8225"
+      ],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 52,
+      "censusErrors": [],
+      "hardProcessBoundProven": false,
+      "codeHashesPreserved": 13,
+      "metricsProbe": [
+        {
+          "mode": "submit",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_SUBMITTED uid=10021 claimed_uid=1000 oneway=1\n"
+        },
+        {
+          "mode": "verify",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_VERIFIED stock_record=1 caller_uid=10021 forged_identity_replaced=1 forbidden_key_absent=1\n"
+        }
+      ]
+    },
+    "defaultHostProcessSettingsUnchanged": true,
+    "hardProcessBoundProven": false,
+    "scope": "Fully source-built host JNI; complete packaged runtime with stock media.metrics in existing native core; no runtime replacement or guest data reset; repeated fresh starts and complete mounted storage remain open"
+  },
+  "namespaceImplementation": {
+    "evidence": "docs/api32-namespace-validation.json",
+    "status": "HOST_NAMESPACE_PASS_REAL_PROVIDER_MKDIR_PASS_CREATE_NEEDS_MOUNTED_VOLUME",
+    "scope": "Typed trusted-broker namespace operations on live FUSE7.31. Production volume publication, ordinary-app mutation/dirfd syscalls, authorized private lower views and mounted MediaStore remain incomplete.",
+    "runtimeJob": "out/api32/namespace-media-job.json",
+    "runtimeRunId": "1ae323c6189b42aea147d4ee6f7ef0c5",
+    "nextAction": "Implement coherent ordinary-app namespace/dirfd routing and the production vold/StorageManager/ExternalStorageService mounted-volume lifecycle, then repeat against real provider policy."
+  },
+  "namespaceRpc": {
+    "evidence": "docs/api32-namespace-rpc-validation.json",
+    "status": "HOST_AND_ARM64_BIONIC_NAMESPACE_RPC_PASS_PRODUCTION_MOUNT_PENDING",
+    "nativeRunId": "62981a02a68d4c6ebac19c9d5ee3c6ae",
+    "productionMountEnabled": false
+  },
+  "directoryVfs": {
+    "evidence": "docs/api32-directory-validation.json",
+    "status": "HOST_AND_ARM64_BIONIC_DIRECTORY_AND_RELATIVE_SYSCALLS_PASS_PRODUCTION_VOLUME_PENDING",
+    "runId": "807b6ff345d4461abac70cccf71b71e9",
+    "apkSha256": "66677c95956960b743cf84dd01266788d6665b7a6055cc6d049a61f11d6410a4",
+    "productionVolumeEnabled": false,
+    "scope": "Rootless directory VFS component against a real-file-backed FUSE wire test peer. Does not prove real MediaProvider policy, real AppFuse directory mounts, production trusted-core embedding or mounted external_primary."
+  },
+  "nativeVolumeLifecycle": {
+    "evidence": "docs/api32-volume-validation.json",
+    "status": "NATIVE_REAL_APPFUSE_AND_BOOTSTRAP_CORRECTION_PASS_FULL_07829_RETRY_RUNNING",
+    "nativeRunId": "ffd26e6792ac4ac7b1be458f9d44488d",
+    "nativeComponentVerified": true,
+    "stockFrameworkVolumeVerified": false,
+    "imageVersion": "0.78.28",
+    "published": false,
+    "frameworkRunId": "034bb49d93614fa680368973afe634fa",
+    "frameworkValidation": "FAIL",
+    "bootstrapCorrectionNativeRunId": "e7d5c294805f44fda32ba4898486697e",
+    "nextImageVersion": "0.78.29",
+    "fullRetryStatus": "RUNNING_NOT_PROVEN"
+  },
+  "latestFrameworkVolumeTrial": {
+    "evidence": "docs/api32-volume-validation.json#detachRetryFollowup.fullTrial",
+    "runId": "eedace6d06d34705916fe2c0c47a9dc0",
+    "report": "out/api32/volume-live-proc-retry-app-result/manager-app-report.json",
+    "validation": "PASS",
+    "scope": "Full normal retained-profile framework mount/unmount/remount, real cached-FD holder retirement/new owner, new epoch and fresh9-step workload,40 private denials, preserved owner data, source-built MediaProvider, network/DNS/fwmark recovery, Home/reopen, image reuse and exact clean ownership passed. No deliberate transport fault in this full run; component-only lost-reply recovery remains distinct. CE ordering, outer restart/stale endpoint recovery, broader namespace semantics, repeated/hard process bounds and release/phone gates remain open."
+  },
+  "latestMountedPersistenceTrial": {
+    "evidence": "docs/api32-volume-validation.json#detachRetryFollowup.persistenceTrial",
+    "runId": "dac399bfa7da40b5bd26319dbff99bad",
+    "report": "out/api32/volume-live-proc-retry-persistence-result/manager-persistence-report.json",
+    "validation": "PASS",
+    "scope": "Normal outer Manager process restart only, after first guest cleanly stops. Cached installed image works without source server; unchanged ordinary app private token/text/taps/UID and nonexportable software Keystore decrypt after restart. Both mounted-backend cycles pass source/cleanup/reaping/no ANR/fatal/input gates. No CE or abrupt-crash recovery claim; sampled peak34 leaves default hard process-bound reliability open."
+  },
+  "frameworkReset48Trial": {
+    "status": "PASS_FRAMEWORK_RESET48_NAMESPACE_NETWORK_HOME_REOPEN",
+    "runId": "53ef421a11b24f10960c6848b6595e16",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "d6486500736df3125efb77f23c51ab77bf35c87cc429b0f970084dd102c85e73",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+    "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90",
+    "validationCommand": "python3 out/api32/verify_framework_reset_contract48_app_result.py --run-id 53ef421a11b24f10960c6848b6595e16",
+    "validationResult": "PASS",
+    "terminalState": "out/api32/framework-reset-contract48-terminal-state.json",
+    "packageCheck": "out/api32/framework-reset-contract48-package-check.json",
+    "callbackContractReview": "out/api32/framework-reset48-callback-contract-review.json",
+    "resetDurationMillis": 2663,
+    "frameworkVolumeResetVerified": true,
+    "oldEpoch": 851379328537255093,
+    "newEpoch": 7028363496576650002,
+    "retiredHolderPid": 12172,
+    "restoredOwnerPid": 13246,
+    "canaryInodesAndContentPreserved": true,
+    "crossUidPrivateStorageVerified": true,
+    "freshProviderWorkloadsAfterResetVerified": true,
+    "guestStoragePropertyUnchanged": true,
+    "networkDnsAndFwmarkRecoveryVerified": true,
+    "homeReopenVerified": true,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 14,
+    "sampledPeakChildren": 30,
+    "observerSamples": 138,
+    "runtimeImageChanged": false,
+    "productionJavaChanged": false,
+    "abruptManagerDeathVerified": false,
+    "freshPlaintextMigrationVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndFrameworkResetSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_POSTBOOT_AND_FRAMEWORK_RESET_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      },
+      {
+        "workload": "actual_framework_reset_mounted_provider_private40_network_home_reopen",
+        "runId": "53ef421a11b24f10960c6848b6595e16",
+        "starts": 1,
+        "samples": 138,
+        "peak": 30,
+        "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+        "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90"
+      }
+    ],
+    "distinctStarts": 11,
+    "totalSamples": 1281,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/installd-postboot48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ],
+    "frameworkStorageResetVerified": true,
+    "scope": "Same unchanged production image48/five JNI/production Java, across separately pinned test APKs. Full CE six-cycle trial remains its original frozen test/source scope; later test helper changes do not imply that exact latest test APK has repeated those cycles.",
+    "failedCallbackTrialExcludedFromFullWorkloadAggregate": "bad1cd36c8ad43ab9148493212b41db5"
+  },
+  "ordinaryManagerCrash48Trial": {
+    "status": "PASS_MANAGER_CRASH48_STALE_ENDPOINT_FILES_KEYSTORE_NETWORK_RECOVERY",
+    "runId": "160b1ac256b84225894020ebe4ebecc3",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "3769afe44a9996f7cff653bfa5936862109d618c132efb9efbce58395dad7d7f",
+    "sourcePinsVerified": 763,
+    "sourceSnapshot": "out/api32/manager-crash-ack48-app-source-snapshot",
+    "independentCheck": "out/api32/manager-crash-ack48-app-result/independent-check.json",
+    "independentCheckSha256": "e6a5ddc9499096ec4e9cf816d9a8816fa2011ddda0124437e504bb2bb5ac8807",
+    "validationCommand": "python3 out/api32/verify_manager_crash_ack48_app_result.py --run-id 160b1ac256b84225894020ebe4ebecc3",
+    "validationResult": "PASS",
+    "terminalState": "out/api32/manager-crash-ack48-terminal-state.json",
+    "packageCheck": "out/api32/manager-crash-ack48-package-check.json",
+    "crashedHostPid": 3374,
+    "resumedHostPid": 7741,
+    "guestStarts": 2,
+    "oldKernelProcessIdentitiesGone": 26,
+    "preStartLiveOldProcesses": 0,
+    "oldEpoch": -1109557664130948602,
+    "newEpoch": 3966043662980268260,
+    "originalCanaryInodesAndContentsPreserved": true,
+    "originalNonExportableKeyAndCiphertextPreserved": true,
+    "ownTestKeyRemovedAfterSuccess": true,
+    "noInstallOrForceStopAfterCrash": true,
+    "fixtureServerOfflineBeforeCrash": true,
+    "activityAcknowledgmentVerified": true,
+    "supplementalLauncherUsed": false,
+    "freshProviderPrivate40PerBootVerified": true,
+    "networkDnsFwmarkHomeReopenPerBootVerified": true,
+    "serviceLifetimesReapedAfterRecovery": 15,
+    "adoptedDescendantsReapedAfterRecovery": 13,
+    "sampledPeakChildren": 31,
+    "observerSamples": 241,
+    "amsSamples": 16,
+    "productionJavaChanged": false,
+    "runtimeImageChanged": false,
+    "liveOrphanCleanupPathObserved": false,
+    "freshPlaintextMigrationVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndNormalCrashSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_POSTBOOT_RESET_AND_NORMAL_CRASH_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      },
+      {
+        "workload": "actual_framework_reset_mounted_provider_private40_network_home_reopen",
+        "runId": "53ef421a11b24f10960c6848b6595e16",
+        "starts": 1,
+        "samples": 138,
+        "peak": 30,
+        "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+        "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90"
+      },
+      {
+        "workload": "actual_manager_sigkill_stale_endpoint_file_keystore_offline_recovery",
+        "runId": "160b1ac256b84225894020ebe4ebecc3",
+        "starts": 2,
+        "samples": 241,
+        "peak": 31,
+        "independentCheck": "out/api32/manager-crash-ack48-app-result/independent-check.json",
+        "independentCheckSha256": "e6a5ddc9499096ec4e9cf816d9a8816fa2011ddda0124437e504bb2bb5ac8807"
+      }
+    ],
+    "distinctStarts": 13,
+    "totalSamples": 1522,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/framework-reset48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ],
+    "frameworkStorageResetVerified": true,
+    "scope": "Same unchanged production image48/five JNI/production Java, across separately pinned test APKs. Full CE six-cycle trial remains its original frozen test/source scope; later test helper changes do not imply that exact latest test APK has repeated those cycles.",
+    "failedCallbackTrialExcludedFromFullWorkloadAggregate": "bad1cd36c8ad43ab9148493212b41db5",
+    "normalProfileManagerSigkillAndStaleEndpointRecoveryVerified": true,
+    "standaloneActivityAcknowledgmentDriverVerified": true,
+    "notStandaloneCrashTrialsExcludedFromPassingAggregate": [
+      "d13c1008247840948eae45ef92204199",
+      "12a75d2eb1d9422e8078f0699a5b90b7"
+    ],
+    "additionalPreservedScopedTrials": [
+      {
+        "scope": "observer_stop_timeout",
+        "runId": "44cbd06f8e54447bb1dc9b3c18064ff3",
+        "starts": 1,
+        "samples": 89,
+        "peak": 30,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/installd-postboot-app48-av-result/manager-app-report.json"
+      },
+      {
+        "scope": "observer_missing_proc_children",
+        "runId": "9fbd1969baff4e238b9ea9f3378b3b59",
+        "starts": 1,
+        "samples": 86,
+        "peak": 29,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/installd-postboot-children48-av-result/manager-app-report.json"
+      },
+      {
+        "scope": "old_callback_expectation",
+        "runId": "bad1cd36c8ad43ab9148493212b41db5",
+        "starts": 1,
+        "samples": 145,
+        "peak": 29,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/framework-reset48-app-result/manager-app-report.json"
+      },
+      {
+        "scope": "failed_driver_acceptance_and_manual_resume",
+        "runId": "d13c1008247840948eae45ef92204199",
+        "starts": 2,
+        "samples": 322,
+        "peak": 31,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/manager-crash48-app-result/manager-app-report.json"
+      },
+      {
+        "scope": "assisted_launcher_scope",
+        "runId": "12a75d2eb1d9422e8078f0699a5b90b7",
+        "starts": 2,
+        "samples": 392,
+        "peak": 30,
+        "rawStatus": "PASS",
+        "rawReport": "out/api32/manager-crash-owner48-app-result/manager-app-report.json"
+      }
+    ],
+    "listedAllScopeSamples": 2556,
+    "listedAllScopeSampledPeak": 32,
+    "listedAllScopeStarts": 20
+  }
+}

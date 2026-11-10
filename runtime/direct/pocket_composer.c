@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// App-private Android 9 HWC 1.1 output. Uses the pinned Redroid linear gralloc,
-// never a host/vendor handle. Host GPU allocation is a separate NDK operation.
+// App-private HWC 1.1 output over the profile's pinned linear software gralloc.
+// Android 9/10 use Redroid; Android 12L builds its software gralloc from AOSP.
 #define _GNU_SOURCE
 #include <hardware/hwcomposer.h>
 #include <cutils/properties.h>
@@ -21,6 +21,10 @@
 #include <time.h>
 #include <unistd.h>
 #include "composer_slots.h"
+#if defined(POCKET_GUEST_API) && POCKET_GUEST_API == 32
+typedef struct private_handle_t private_handle_t;
+#include "gralloc_priv.h"
+#endif
 
 typedef struct {
     hwc_composer_device_1_t device;
@@ -149,12 +153,19 @@ static int present(hwc_composer_device_1_t* device,size_t count,hwc_display_cont
         if(!complete || layer->compositionType!=HWC_FRAMEBUFFER_TARGET || !layer->handle)continue;
         pthread_mutex_lock(&c->lock);bool active=c->memory && c->active;pthread_mutex_unlock(&c->lock);
         if(!active)continue;
-        // Pinned Redroid gralloc: one FD, magic 0x3141592, even pixel stride,
+        // Pinned software gralloc: one FD, magic 0x3141592, even pixel stride,
         // linear RGBA/RGBX client target. Validate before touching its pixels.
         const native_handle_t* handle=layer->handle;
         size_t stride=((size_t)c->width+1)&~(size_t)1;
         size_t required=stride*(((size_t)c->height+1)&~(size_t)1)*4;
+#if defined(POCKET_GUEST_API) && POCKET_GUEST_API == 32
+        const struct private_handle_t* h=(const struct private_handle_t*)handle;
+        if(handle->version!=(int)sizeof(native_handle_t) || handle->numFds!=1 || handle->numInts<0 ||
+           (size_t)handle->numInts!=(sizeof(*h)-sizeof(native_handle_t))/sizeof(int)-1 ||
+           h->magic!=0x3141592 || h->flags || h->offset || h->size<0 || (size_t)h->size<required)continue;
+#else
         if(handle->numFds!=1 || handle->numInts<4 || handle->data[1]!=0x3141592 || handle->data[3]<0 || (size_t)handle->data[3]<required)continue;
+#endif
         uint64_t began=nanos();void* pixels=NULL;
         if(c->gralloc->lock(c->gralloc,handle,GRALLOC_USAGE_SW_READ_OFTEN,0,0,c->width,c->height,&pixels)!=0 || !pixels)continue;
         pthread_mutex_lock(&c->lock);

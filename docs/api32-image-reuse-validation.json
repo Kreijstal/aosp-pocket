@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "status": "HOST_DOWNLOAD_ARCHIVE_AND_MANAGER_BUILD_PASS_ANDROID_RUNTIME_PENDING",
+  "scope": "Retained-profile image upgrades reuse only installed files with exact mode and SHA256 after the entire incoming ZIP has been validated. Other files use the existing verified atomic replacement path. All guest data stays outside the immutable image inventory.",
+  "implementation": [
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageArchive.java",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/RemoteImage.java"
+  ],
+  "modeCheck": "unix:mode includes special bits; unavailable attribute support or unreadable installed content falls back to replacement. Cancellation propagates.",
+  "sourceImage": "out/api32/subreaper-image/pocket-api32-arm64-0.78.27.zip",
+  "hostChecks": [
+    {
+      "command": "javac --release 8 -d out/api32/image-reuse-host runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageDownload.java runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageArchive.java runtime/tests/ImageDownloadTest.java",
+      "result": "PASS"
+    },
+    {
+      "command": "java -cp out/api32/image-reuse-host dev.kreijstal.aosppocket.runtime.ImageDownloadTest",
+      "result": "PASS:54 assertions, including actual retained inode/timestamp, atomic repair of mode and same-length corruption, stale staging retirement, data preservation, malformed archives, symlink denial, cancellation/recovery, download verification and HTTP range behavior"
+    }
+  ],
+  "runtime": "PENDING; the next0.78.27 app run requires nonzero reuse and exact inventory/byte accounting. No Android performance claim from host tests.",
+  "telemetry": "Owner-private .pocket-image-install-stats.json records reused/replaced files, reused/written bytes, image SHA and install validation/copy duration; no new product UI",
+  "remaining": [
+    "Android upgrade reuse and unchanged guest data",
+    "Complete0.78.27 Signal/network, descendant accounting and combined media checks",
+    "Remaining full12L storage, credential/keyguard, stability, media/camera and legacy/release gates"
+  ],
+  "sourceSha256": {
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageArchive.java": "7dab0458e16a89d7a09f95fab7b47219b8f9694f1f27958a3c46b3196dd1d2a5",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/RemoteImage.java": "07bdb46109489c2de8f6dc64f8654ad97be29d02acbe4f499a6b4e04c47dd5f6",
+    "runtime/tests/ImageDownloadTest.java": "ebb02002f79ad57dddba2d5f06b29b85cbeab986fb5f2ecf3df8579ba093a7b3"
+  },
+  "apkValidation": "PASS: both0.78.27 image-free test APKs retain pinned SDK28/29/32 inventories, notices and ARM64/16KiB host libraries",
+  "appManager": {
+    "apk": "/home/kreijstal/git/aosp-pocket/out/api32/subreaper-app-manager-probe/api32-app-manager-probe.apk",
+    "sha256": "bfc3804fabfe60a861c6644956d4a932cbcbe2d995ad402f218e6dc5f86ba2d4",
+    "bytes": 8386560,
+    "probe": true,
+    "guestImagesBundled": 0,
+    "hostNativeLibrariesUnchanged": false,
+    "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+    "guestSdks": [
+      28,
+      29,
+      32
+    ],
+    "runtimeValidated": false,
+    "hostNativeSourceBuild": {
+      "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+      "libraries": {
+        "libpocket_runtime.so": {
+          "bytes": 22204208,
+          "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+        },
+        "libproot.so": {
+          "bytes": 822352,
+          "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+        },
+        "libpocket_frames.so": {
+          "bytes": 7312,
+          "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+        },
+        "libpocket_ce.so": {
+          "bytes": 14512,
+          "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+        }
+      }
+    }
+  },
+  "packagedImageRuntimeJob": {
+    "pid": 25180,
+    "token": "2e19b84f243b480ea8cdf484ae5c34c4",
+    "script": "/home/pi/pocket-api32-vm/subreaper-app-validation/run-2e19b84f243b480ea8cdf484ae5c34c4.py",
+    "log": "/home/pi/pocket-api32-vm/subreaper-app-validation/run-2e19b84f243b480ea8cdf484ae5c34c4.log",
+    "exit": "/home/pi/pocket-api32-vm/subreaper-app-validation/run-2e19b84f243b480ea8cdf484ae5c34c4.exit.json"
+  },
+  "packagedImageCandidate": "out/api32/subreaper-app-candidate.json",
+  "packagedImageSourceSnapshot": "out/api32/subreaper-app-source-snapshot",
+  "packagedImageRuntimeStatus": "COMPLETE_IMAGE_SIGNAL_NETWORK_AND_COMBINED_RUNTIME_PASS_FULL_CE_AND_OTHER_GATES_OPEN",
+  "packagedImageAppRuntime": {
+    "runId": "1e027ce3054347aaaf77a9cfe2b61991",
+    "validation": "PASS",
+    "strictPassed": true,
+    "kernelChildOwnershipVerified": true,
+    "descendantStop": [
+      [
+        "12",
+        "8",
+        "0",
+        "0"
+      ]
+    ],
+    "imageReuseVerified": true,
+    "initStop": [
+      [
+        "16",
+        "0",
+        "0"
+      ]
+    ],
+    "systemUiStarts": [
+      "16840"
+    ],
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "pollErrors": 0,
+    "report": "out/api32/subreaper-app-manager-app-report.json",
+    "reportSha256": "83a84d425e9b60842307f00b76187cd0dd179536f847664e4373078b5a40857e",
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "dd75b62160d0d9d685a490f1bf3839a1ae6ff8a187459533991f7cfe1ea8674c",
+      "reusedFiles": 2597,
+      "replacedFiles": 52,
+      "reusedBytes": 1285494296,
+      "writtenBytes": 18064398,
+      "durationMillis": 146900
+    },
+    "sampledPeakChildren": 32,
+    "censusSamples": 160,
+    "censusErrors": [],
+    "hardProcessBoundProven": false
+  },
+  "packagedImageMediaRuntime": {
+    "runId": "199e135fdafb4d97b60266386a689103",
+    "validation": "PASS",
+    "strictPassed": true,
+    "initStop": [
+      [
+        "16",
+        "0",
+        "0"
+      ]
+    ],
+    "descendantStop": [
+      [
+        "14",
+        "1",
+        "0",
+        "0"
+      ]
+    ],
+    "systemUiStarts": [
+      "20853"
+    ],
+    "anrs": [],
+    "javaFatals": [],
+    "nativeFatals": [],
+    "pollErrors": 0,
+    "supervisedLifetimeCount": 16,
+    "report": "out/api32/subreaper-media-media-session-report.json",
+    "reportSha256": "368f783b26bd6fe4f32f4e13b85d2fb81f069ab258ecdf5c1871157920f02cbc",
+    "gates": {
+      "packagedImageVerified": true,
+      "playerBootStartVerified": true,
+      "externalFilesVerified": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "extractorFirstDemandVerified": true,
+      "extractorBootStartVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "systemServerBridgeVerified": true,
+      "coreMediaMetricsVerified": true,
+      "reapAccounting": true,
+      "kernelChildOwnershipVerified": true
+    },
+    "runtimeCodeHashesPreserved": 13,
+    "observedPeakChildren": 31,
+    "samples": 8,
+    "censusScope": "Partial: observer started after guest boot, during the combined workload; startup peak is not established by this census",
+    "censusErrors": [],
+    "hardProcessBoundProven": false
+  }
+}

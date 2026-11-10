@@ -16,6 +16,7 @@ import dev.kreijstal.aosppocket.bridge.AndroidVersions;
 public final class SettingsActivity extends RuntimeActivity {
     private Button install, start, stop, apk, lastApp;
     private Spinner version;
+    private final List<Integer> versionSdks=new ArrayList<>();
     private TextView performance;
     private TextView adminStatus;
     private Button adminToggle,adminCopy,adminRevoke;
@@ -49,12 +50,15 @@ public final class SettingsActivity extends RuntimeActivity {
         status.setLines(2);
         layout.addView(status);
         version = new Spinner(this);
-        version.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
-            DirectImage.bundled(this,29)?new String[]{"Android 7.1.1 · PRoot", "Android 9 · direct backend", "Android 10"}
-                :new String[]{"Android 7.1.1 · PRoot", "Android 9 · direct backend"}));
+        List<String> names=new ArrayList<>();
+        versionSdks.add(25);names.add("Android 7.1.1 · PRoot");
+        versionSdks.add(28);names.add("Android 9 · direct backend");
+        if(DirectImage.bundled(this,29)){versionSdks.add(29);names.add("Android 10");}
+        if(DirectImage.bundled(this,32)){versionSdks.add(32);names.add("Android 12L · experimental");}
+        version.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,names));
         version.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
-                if (!updating && runtime != null) runtime.selectSdk(position == 2 ? 29 : position == 1 ? 28 : 25);
+                if (!updating && runtime != null) runtime.selectSdk(versionSdks.get(position));
             }
             @Override public void onNothingSelected(AdapterView<?> parent) { }
         });
@@ -156,7 +160,7 @@ public final class SettingsActivity extends RuntimeActivity {
             adminCopy.setEnabled(enabled);adminRevoke.setEnabled(ready);
         }
         updating = true;
-        if (ready) version.setSelection(runtime.selectedSdk() == 29 && version.getCount()>2 ? 2 : runtime.selectedSdk() == 28 ? 1 : 0, false);
+        if (ready) version.setSelection(Math.max(0,versionSdks.indexOf(runtime.selectedSdk())), false);
         version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());
         updating = false;
         apk.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping());

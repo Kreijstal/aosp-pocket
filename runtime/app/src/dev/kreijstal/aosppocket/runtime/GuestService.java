@@ -41,13 +41,15 @@ public final class GuestService extends Service {
     private DisplayGeometry hostDisplay;
     private int hostRefreshHz = 60;
     private DirectSession direct;
+    private DirectSession stoppedDirect;
     private AdminServer admin;
+    private boolean restartPending;
     private String adminError;
     private long adminGeneration;
     private final java.util.Set<FrameListener> visibleDisplays = new java.util.LinkedHashSet<>();
     private FrameListener displayOwner;
-    boolean directBackend() { return sdk == 28 || sdk == 29; }
-    String androidVersion() { return sdk==29?"10":sdk==28?"9":"7.1.1"; }
+    boolean directBackend() { return sdk == 28 || sdk == 29 || sdk == 32; }
+    String androidVersion() { return sdk==32?"12L":sdk==29?"10":sdk==28?"9":"7.1.1"; }
     boolean adminEnabled() { return admin != null; }
     String adminStatus() {
         return admin==null ? adminError==null?"Termux administration is off.":adminError
@@ -155,6 +157,8 @@ public final class GuestService extends Service {
     }
     void touch(android.view.MotionEvent event, float sx, float sy) { if (direct != null) direct.touch(event, sx, sy); }
     void key(int code) { if (direct != null) direct.key(code); }
+    boolean fullKey(android.view.KeyEvent event) { return direct != null && direct.fullKey(event); }
+    org.json.JSONObject sessionReport(boolean nativeLogs)throws Exception {DirectSession session=direct!=null?direct:stoppedDirect;return session==null?new org.json.JSONObject():session.report(nativeLogs);}
     void installApps(java.util.Map<String,Uri> apks) { if (direct != null && booted) direct.install(apks); }
     void importHostContacts() { if (direct != null && booted) direct.importHostContacts(); }
     void checkHostBridges() { if (direct != null && booted) direct.checkHostBridges(); }
@@ -163,7 +167,7 @@ public final class GuestService extends Service {
     boolean hasLastApp() { return direct != null && direct.hasLastApp(); }
     void openLastApp() { if (direct != null && booted) direct.openLastApp(); }
     void selectSdk(int value) {
-        if (value == sdk || running() || starting || preparing() || stopping || value != 25 && value != 28 && value != 29) return;
+        if (value == sdk || running() || starting || preparing() || stopping || value != 25 && value != 28 && value != 29 && value != 32) return;
         if (value != 25 && !DirectImage.bundled(this,value)) return;
         sdk = value;
         getSharedPreferences("guest-backend", MODE_PRIVATE).edit().putInt("sdk", sdk).apply();
@@ -177,6 +181,7 @@ public final class GuestService extends Service {
     }
     private void bootDirect() {
         if (direct != null) return;
+        stoppedDirect=null;
         receiver.reset();
         starting = true;
         direct = new DirectSession(this, new DisplayGeometry(width,height,dpi), hostRefreshHz, sdk, new DirectSession.Listener() {
@@ -186,8 +191,17 @@ public final class GuestService extends Service {
                 message("Android "+androidVersion()+" running · "+width+" × "+height);
             }
             @Override public void stopped(String text) {
+                if(sdk==32)stoppedDirect=direct;
                 direct = null; starting = false; booted = false; stopping = false;
-                if (!destroyed) { message(text); releaseForeground(); }
+                boolean again=restartPending;restartPending=false;
+                if (destroyed) return;
+                if (again) { message(text); startGuest(); return; }
+                message(text); releaseForeground();
+            }
+            @Override public void restart(String reason) {
+                if (destroyed || direct == null || stopping || restartPending) return;
+                restartPending = true; message(reason);
+                stopGuest();
             }
         });
         direct.visible(displayOwner != null);

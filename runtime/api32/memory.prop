@@ -1,0 +1,12 @@
+# Small rootless guests share the host's RAM. The immutable PocketMemory
+# framework resource overlay sets ActivityManager's cache default at construction.
+# This property declares the expected value for validation, without an override.
+# Leave process slots for active apps and on-demand native media services under
+# Android hosts' default phantom-process budget. This only bounds cached apps.
+ro.pocket.max_cached_processes=2
+# Bound compiler concurrency while this guest shares a small host's RAM.
+dalvik.vm.dex2oat-threads=2
+dalvik.vm.boot-dex2oat-threads=2
+# System code uses the factory preopts; APEX service JARs retain stock verify.
+# system_server must never execute ordinary /data/dalvik-cache AOT code.
+dalvik.vm.systemservercompilerfilter=verify

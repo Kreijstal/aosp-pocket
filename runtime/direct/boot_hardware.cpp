@@ -15,18 +15,29 @@
 #include <hwbinder/Parcel.h>
 #include <hwbinder/ProcessState.h>
 #include <hidl/HidlBinderSupport.h>
+#if POCKET_GUEST_API == 32
+#include <cutils/properties.h>
+#endif
 #include <android/hidl/base/1.0/BpHwBase.h>
 #include <android/hidl/base/1.0/BnHwBase.h>
 #include <android/hardware/health/2.0/BnHwHealth.h>
 #include <android/hardware/configstore/1.1/BnHwSurfaceFlingerConfigs.h>
 #include "SurfaceFlingerConfigs.h"
 #include <android/hidl/manager/1.1/BnHwServiceManager.h>
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
 #include <android/hidl/manager/1.2/BnHwServiceManager.h>
 #include <android/system/suspend/1.0/BnHwSystemSuspend.h>
 #include "../api29/power.h"
 #endif
+#if POCKET_GUEST_API == 32
+#define POCKET_HARDWARE_REQUEST "/hardware_localBroadcastIntent"
+#define POCKET_HARDWARE_PUBLISH "/hardware_binderBroadcastIntent"
+#else
+#define POCKET_HARDWARE_REQUEST "/localBroadcastIntent"
+#define POCKET_HARDWARE_PUBLISH "/binderBroadcastIntent"
+#endif
 #include <utils/String8.h>
+#include <linux/android/binder.h>
 #include <map>
 #include <errno.h>
 #include <pthread.h>
@@ -36,6 +47,9 @@
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
+#if POCKET_GUEST_API == 32
+#include "../api32/hardware_registry.h"
+#endif
 namespace android { namespace hardware {
 namespace {
 bool readAll(FILE* stream, void* data, size_t size) {
@@ -163,7 +177,7 @@ namespace {
 constexpr uint32_t kLookupHardware=0x10001;
 constexpr uint32_t kNativePing=0x5f504e47;
 constexpr const char* kHardwareToken="dev.kreijstal.pocket.HardwareRegistry";
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
 using HardwareManager=::android::hidl::manager::V1_2::IServiceManager;
 #else
 using HardwareManager=::android::hidl::manager::V1_1::IServiceManager;
@@ -171,26 +185,58 @@ using HardwareManager=::android::hidl::manager::V1_1::IServiceManager;
 using HardwareNotification=::android::hidl::manager::V1_0::IServiceNotification;
 constexpr const char* kCameraProvider="android.hardware.camera.provider@2.4::ICameraProvider";
 class HardwareServices final : public HardwareManager {
+#if POCKET_GUEST_API == 32
+    sp<FrameworkHardwareRegistry32> framework = new FrameworkHardwareRegistry32;
+#endif
     bool known(const hidl_string& descriptor,const hidl_string& name) {
         return (descriptor=="android.hardware.health@2.0::IHealth" && (name=="default" || name=="backup")) ||
-            (POCKET_GUEST_API==29 && descriptor=="android.system.suspend@1.0::ISystemSuspend" && name=="default");
+            (POCKET_GUEST_API>=29 && descriptor=="android.system.suspend@1.0::ISystemSuspend" && name=="default");
     }
 public:
+#if POCKET_GUEST_API == 32
+    sp<hidl::base::V1_0::IBase> frameworkService(const hidl_string& descriptor, const hidl_string& name) {
+        return framework->get(descriptor.c_str(), name.c_str());
+    }
+#endif
     Return<sp<hidl::base::V1_0::IBase>> get(const hidl_string& descriptor,const hidl_string& name) override {
         sp<hidl::base::V1_0::IBase> service;
         if(descriptor=="android.hardware.health@2.0::IHealth" && known(descriptor,name)) service=pocketHealthRelay();
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
         if(descriptor=="android.system.suspend@1.0::ISystemSuspend" && known(descriptor,name))service=pocketSystemSuspend();
+#endif
+#if POCKET_GUEST_API == 32
+        if (!service) service = frameworkService(descriptor, name);
 #endif
         return service;
     }
-    // This profile has a fixed set of explicitly implemented services.
-    Return<bool> add(const hidl_string&,const sp<hidl::base::V1_0::IBase>&) override {return false;}
+    Return<bool> add(const hidl_string& name,const sp<hidl::base::V1_0::IBase>& service) override {
+#if POCKET_GUEST_API == 32
+        if (!FrameworkHardwareRegistry32::mayRegister() || !service) return false;
+        hidl_vec<hidl_string> chain;
+        auto result = service->interfaceChain([&](const auto& value) { chain = value; });
+        return result.isOk() && framework->add(name, service, chain);
+#else
+        return false;
+#endif
+    }
     Return<Transport> getTransport(const hidl_string& descriptor,const hidl_string& name) override {
+#if POCKET_GUEST_API == 32
+        if(name=="default" && property_get_bool("ro.pocket.audio.enabled",false) &&
+           (descriptor=="android.hardware.audio@7.0::IDevicesFactory" ||
+            descriptor=="android.hardware.audio.effect@7.0::IEffectsFactory"))return Transport::PASSTHROUGH;
+        if (FrameworkHardwareRegistry32::declared(descriptor.c_str(), name.c_str())) return Transport::HWBINDER;
+#endif
         return known(descriptor,name)?Transport::HWBINDER:Transport::EMPTY;
     }
     Return<void> list(list_cb cb) override {
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API == 32
+        auto names = framework->list();
+        names.insert(names.end(), {"android.hardware.health@2.0::IHealth/backup", "android.hardware.health@2.0::IHealth/default", "android.system.suspend@1.0::ISystemSuspend/default"});
+        std::sort(names.begin(), names.end());
+        hidl_vec<hidl_string> values; values.resize(names.size());
+        for (size_t i = 0; i < names.size(); ++i) values[i] = names[i];
+        cb(values);
+#elif POCKET_GUEST_API >= 29
         cb({"android.hardware.health@2.0::IHealth/backup","android.hardware.health@2.0::IHealth/default","android.system.suspend@1.0::ISystemSuspend/default"});
 #else
         cb({"android.hardware.health@2.0::IHealth/default","android.hardware.health@2.0::IHealth/backup"});
@@ -198,14 +244,22 @@ public:
         return Void();
     }
     Return<void> listByInterface(const hidl_string& descriptor,listByInterface_cb cb) override {
+#if POCKET_GUEST_API == 32
+        if (frameworkService(descriptor, "default")) { cb({"default"}); return Void(); }
+#endif
         if(descriptor=="android.hardware.health@2.0::IHealth") cb({"default","backup"});
-        else if(POCKET_GUEST_API==29 && descriptor=="android.system.suspend@1.0::ISystemSuspend")cb({"default"});else cb({});
+        else if(POCKET_GUEST_API>=29 && descriptor=="android.system.suspend@1.0::ISystemSuspend")cb({"default"});else cb({});
         return Void();
     }
     Return<bool> registerForNotifications(const hidl_string& descriptor,const hidl_string& name,const sp<HardwareNotification>& callback) override {
+#if POCKET_GUEST_API == 32
+        if(FrameworkHardwareRegistry32::declared(descriptor.c_str(),name.empty()?"default":name.c_str()) ||
+           (name.empty() && FrameworkHardwareRegistry32::declared(descriptor.c_str(),"software")))
+            return framework->subscribe(descriptor.c_str(),name.c_str(),callback);
+#endif
         // cameraserver fetches its in-process provider directly; there are no registrations to report.
         if(callback && descriptor==kCameraProvider) return true;
-        if(POCKET_GUEST_API==29 && callback && descriptor=="android.system.suspend@1.0::ISystemSuspend" &&
+        if(POCKET_GUEST_API>=29 && callback && descriptor=="android.system.suspend@1.0::ISystemSuspend" &&
             (name.empty() || name=="default"))return callback->onRegistration(descriptor,"default",true).isOk();
         if(!callback || descriptor!="android.hardware.health@2.0::IHealth") return false;
         bool ok=true;
@@ -218,20 +272,40 @@ public:
     }
     Return<void> debugDump(debugDump_cb cb) override {cb({});return Void();}
     Return<void> registerPassthroughClient(const hidl_string&,const hidl_string&) override {return Void();}
-    Return<bool> unregisterForNotifications(const hidl_string& descriptor,const hidl_string&,const sp<HardwareNotification>& callback) override {
+    Return<bool> unregisterForNotifications(const hidl_string& descriptor,const hidl_string& name,const sp<HardwareNotification>& callback) override {
+#if POCKET_GUEST_API == 32
+        if(FrameworkHardwareRegistry32::declared(descriptor.c_str(),name.empty()?"default":name.c_str()) ||
+           (name.empty() && FrameworkHardwareRegistry32::declared(descriptor.c_str(),"software")))
+            return framework->unsubscribe(descriptor.c_str(),name.c_str(),callback);
+#else
+        (void)name;
+#endif
         return callback!=nullptr && (descriptor=="android.hardware.health@2.0::IHealth" || descriptor==kCameraProvider ||
-            (POCKET_GUEST_API==29 && descriptor=="android.system.suspend@1.0::ISystemSuspend"));
+            (POCKET_GUEST_API>=29 && descriptor=="android.system.suspend@1.0::ISystemSuspend"));
     }
-#if POCKET_GUEST_API == 29
-    // Fixed in-process services never register as lazy daemons. Client-lifetime
-    // callbacks and dynamic registration remain explicitly unavailable.
+#if POCKET_GUEST_API >= 29
+    // This profile does not run lazy hardware daemons or track their clients.
     Return<bool> registerClientCallback(const hidl_string&,const hidl_string&,
         const sp<hidl::base::V1_0::IBase>&,const sp<hidl::manager::V1_2::IClientCallback>&) override {return false;}
     Return<bool> unregisterClientCallback(const sp<hidl::base::V1_0::IBase>&,
         const sp<hidl::manager::V1_2::IClientCallback>&) override {return false;}
-    Return<bool> addWithChain(const hidl_string&,const sp<hidl::base::V1_0::IBase>&,
-        const hidl_vec<hidl_string>&) override {return false;}
+    Return<bool> addWithChain(const hidl_string& name,const sp<hidl::base::V1_0::IBase>& service,
+        const hidl_vec<hidl_string>& chain) override {
+#if POCKET_GUEST_API == 32
+        return framework->add(name, service, chain);
+#else
+        return false;
+#endif
+    }
     Return<void> listManifestByInterface(const hidl_string& descriptor,listManifestByInterface_cb cb) override {
+#if POCKET_GUEST_API == 32
+        if (FrameworkHardwareRegistry32::declared(descriptor.c_str(), "default")) { cb({"default"}); return Void(); }
+        if (FrameworkHardwareRegistry32::declared(descriptor.c_str(), "software")) { cb({"software"}); return Void(); }
+        // cameraserver loads this provider in process (runtime/api32/hidl_services.cpp).
+        if (descriptor == kCameraProvider && property_get_bool("ro.pocket.camera.enabled", false)) {
+            cb({"legacy/0"}); return Void();
+        }
+#endif
         if(descriptor=="android.hardware.health@2.0::IHealth")cb({"backup","default"});
         else if(descriptor=="android.system.suspend@1.0::ISystemSuspend")cb({"default"});else cb({});
         return Void();
@@ -241,13 +315,16 @@ public:
 #endif
 };
 class Registry final : public BHwBinder {
+#if POCKET_GUEST_API == 32
+    sp<HardwareServices> hardwareImplementation;
+#endif
     struct Entry { sp<IBinder> binder; sp<IBinder::DeathRecipient> death; };
     std::map<String16,Entry> services;
     Mutex mutex;
     sp<IBinder> health;
     sp<IBinder> hardwareManager;
     sp<IBinder> configstore;
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
     sp<IBinder> suspend;
 #endif
     class Death final : public IBinder::DeathRecipient {
@@ -268,18 +345,24 @@ class Registry final : public BHwBinder {
             if(!data.enforceInterface(kHardwareToken)) return PERMISSION_DENIED;
             String16 descriptor=data.readString16(),instance=data.readString16();
             sp<IBinder> service;
+#if POCKET_GUEST_API == 32
+            service = toBinder(hardwareImplementation->frameworkService(String8(descriptor).c_str(), String8(instance).c_str()));
+#endif
 #ifdef POCKET_MEDIA_CODECS
             if(instance==String16("default")) service=pocketSoftwareMediaService(String8(descriptor).c_str());
 #endif
             if((descriptor==String16("android.hardware.configstore@1.0::ISurfaceFlingerConfigs") || descriptor==String16("android.hardware.configstore@1.1::ISurfaceFlingerConfigs")) && instance==String16("default")) service=configstore;
             if(descriptor==String16("android.hardware.health@2.0::IHealth") && (instance==String16("default") || instance==String16("backup"))) service=health;
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
             if(descriptor==String16("android.system.suspend@1.0::ISystemSuspend") && instance==String16("default"))service=suspend;
 #endif
             if((descriptor==String16("android.hidl.manager@1.0::IServiceManager") || descriptor==String16("android.hidl.manager@1.1::IServiceManager") ||
-                (POCKET_GUEST_API==29 && descriptor==String16("android.hidl.manager@1.2::IServiceManager"))) && instance==String16("default")) service=hardwareManager;
+                (POCKET_GUEST_API>=29 && descriptor==String16("android.hidl.manager@1.2::IServiceManager"))) && instance==String16("default")) service=hardwareManager;
             reply->writeStrongBinder(service);if(cb) cb(*reply);return NO_ERROR;
         }
+#if POCKET_GUEST_API == 32
+        return UNKNOWN_TRANSACTION;
+#else
         if(code<1 || code>4 || data.dataSize()<16) return UNKNOWN_TRANSACTION;
         PocketBinderToken header={};
         if(!pocket_binder_token(data.data(),data.dataSize(),&header))return PERMISSION_DENIED;
@@ -304,13 +387,19 @@ class Registry final : public BHwBinder {
         }
         }
         if(cb)cb(*reply);return NO_ERROR;
+#endif
     }
 public:
     Registry() {
         configstore=new configstore::V1_1::BnHwSurfaceFlingerConfigs(new configstore::V1_1::implementation::SurfaceFlingerConfigs);
         health=new health::V2_0::BnHwHealth(pocketHealthRelay());
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
+#if POCKET_GUEST_API == 32
+        hardwareImplementation = new HardwareServices;
+        hardwareManager = new ::android::hidl::manager::V1_2::BnHwServiceManager(hardwareImplementation);
+#else
         hardwareManager=new ::android::hidl::manager::V1_2::BnHwServiceManager(new HardwareServices);
+#endif
         suspend=new ::android::system::suspend::V1_0::BnHwSystemSuspend(pocketSystemSuspend());
 #else
         hardwareManager=new ::android::hidl::manager::V1_1::BnHwServiceManager(new HardwareServices);
@@ -321,7 +410,7 @@ sp<IBinder> findRegistry() {
     sp<IBinder> activity=hostActivity();if(!activity)return nullptr;
     sp<Receiver> receiver=new Receiver;ProcessState::self()->startThreadPool();
     for(int i=0;i<15;++i) {
-        if(broadcast(activity,"/localBroadcastIntent",receiver)!=NO_ERROR)return nullptr;
+        if(broadcast(activity,POCKET_HARDWARE_REQUEST,receiver)!=NO_ERROR)return nullptr;
         auto manager=receiver->wait();if(manager)return manager;
     }
     return nullptr;
@@ -346,7 +435,7 @@ sp<hidl::manager::V1_0::IServiceManager> defaultServiceManager() {
     if(!base)return nullptr;
     return HardwareManager::castFrom(base).withDefault(nullptr);
 }
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
 sp<hidl::manager::V1_1::IServiceManager> defaultServiceManager1_1() {
     return hidl::manager::V1_1::IServiceManager::castFrom(defaultServiceManager()).withDefault(nullptr);
 }
@@ -356,15 +445,40 @@ sp<hidl::manager::V1_2::IServiceManager> defaultServiceManager1_2() {
 #endif
 // No request may fall back to a host hardware/global context manager.
 sp<IBinder> ProcessState::getContextObject(const sp<IBinder>&) {return nullptr;}
+#if POCKET_GUEST_API < 30
 sp<IBinder> ProcessState::getContextObject(const String16&,const sp<IBinder>&) {return nullptr;}
 bool ProcessState::becomeContextManager(context_check_func,void*) {errno=ENOTSUP;return false;}
+#else
+void ProcessState::becomeContextManager() {
+    fputs("POCKET_HIDL_GLOBAL_CONTEXT_UNSUPPORTED\n",stderr);abort();
+}
+#endif
 }} // android::hardware
+#if POCKET_GUEST_API == 32
+extern "C" int pocketRegisterSuspendControl32();
+#endif
+#if POCKET_GUEST_API == 32
+static int startHardwareServices32(bool initializeOutput) {
+#else
 extern "C" int pocketStartHardwareServices() {
+#endif
     using namespace android;using namespace android::hardware;
-    setbuf(stdout,nullptr);if(getuid()!=0)return 64;
+#if POCKET_GUEST_API == 32
+    if(initializeOutput)setbuf(stdout,nullptr);
+#else
+    setbuf(stdout,nullptr);
+#endif
+    if(getuid()!=0)return 64;
     ProcessState::self()->startThreadPool();sp<Registry> registry=new Registry;
-    status_t result=broadcast(hostActivity(),"/binderBroadcastIntent",registry);
+    status_t result=broadcast(hostActivity(),POCKET_HARDWARE_PUBLISH,registry);
     fprintf(stderr,"DIRECT_HWB_REGISTRY_READY status=%d pid=%d kernel_uid=%u\n",result,getpid(),pocket_kernel_uid_from_proc());
     if(result!=NO_ERROR)return 1;
+#if POCKET_GUEST_API == 32
+    if(pocketRegisterSuspendControl32())return 1;
+#endif
     IPCThreadState::self()->joinThreadPool();return 0;
 }
+#if POCKET_GUEST_API == 32
+extern "C" int pocketStartHardwareServices() {return startHardwareServices32(true);}
+extern "C" int pocketStartHardwareServicesInCore32() {return startHardwareServices32(false);}
+#endif

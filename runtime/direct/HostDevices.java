@@ -25,18 +25,26 @@ public final class HostDevices {
         Contacts(Context context) throws Exception {
             api=Class.forName("android.app.IActivityManager");
             manager=Class.forName("android.app.ActivityManager").getMethod("getService").invoke(null);
-            Object holder=api.getMethod("getContentProviderExternal",String.class,int.class,IBinder.class)
-                .invoke(manager,ContactsContract.AUTHORITY,0,token);
+            Object holder=Build.VERSION.SDK_INT==32
+                ? api.getMethod("getContentProviderExternal",String.class,int.class,IBinder.class,String.class)
+                    .invoke(manager,ContactsContract.AUTHORITY,0,token,"pocket-manager")
+                : api.getMethod("getContentProviderExternal",String.class,int.class,IBinder.class)
+                    .invoke(manager,ContactsContract.AUTHORITY,0,token);
             if(holder==null)throw new IOException("Guest ContactsProvider is unavailable");
             try {
                 Class<?> provider=Class.forName("android.content.IContentProvider");
                 Object value=holder.getClass().getField("provider").get(holder);
-                client=ContentProviderClient.class.getConstructor(ContentResolver.class,provider,boolean.class)
-                    .newInstance(context.getContentResolver(),value,true);
+                client=Build.VERSION.SDK_INT==32
+                    ? ContentProviderClient.class.getConstructor(ContentResolver.class,provider,String.class,boolean.class)
+                        .newInstance(context.getContentResolver(),value,ContactsContract.AUTHORITY,true)
+                    : ContentProviderClient.class.getConstructor(ContentResolver.class,provider,boolean.class)
+                        .newInstance(context.getContentResolver(),value,true);
             } catch(Exception error){release();throw error;}
         }
         private void release() throws Exception {
-            api.getMethod("removeContentProviderExternal",String.class,IBinder.class)
+            if(Build.VERSION.SDK_INT==32)api.getMethod("removeContentProviderExternalAsUser",String.class,IBinder.class,int.class)
+                .invoke(manager,ContactsContract.AUTHORITY,token,0);
+            else api.getMethod("removeContentProviderExternal",String.class,IBinder.class)
                 .invoke(manager,ContactsContract.AUTHORITY,token);
         }
         public void close() throws Exception {try{client.close();}finally{release();}}

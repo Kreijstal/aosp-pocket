@@ -31,8 +31,8 @@ def main():
         receiver=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);receiver.bind((local,0));receiver.settimeout(.05)
         loop=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);loop.bind(('127.0.0.1',0));loop.settimeout(.05)
         payload=C.create_string_buffer(b'policy')
-        def configure(mask,members):
-            data=bytearray(struct.pack('=IIII',0x504e5031,2,mask,0)+bytes(4*12500))
+        def configure(mask,members,version=2):
+            data=bytearray(struct.pack('=IIII',0x504e5031,version,mask,0)+bytes((5 if version==3 else 4)*12500))
             for chain,ids in members.items():
                 for uid in ids:data[16+chain*12500+uid//8]|=1<<(uid%8)
             policy.write_bytes(data)
@@ -61,6 +61,27 @@ def main():
         configure(16,{});send(10017,False)
         configure(8,{3:[10017]});send(10017,False);send(10017,False,loop);send(10018,True)
         configure(8,{});send(10017,True)
+        # API 32's new restricted allowlist uses version 3. Check real UDP
+        # delivery through the same interpreter path, including loopback scope.
+        configure(16,{4:[10017]},3);send(10017,True);send(10018,False);send(9999,True)
+        send(10018,True,loop)
+        configure(17,{4:[10017]},3);send(10017,False)
+        configure(17,{0:[10017],4:[10017]},3);send(10017,True)
+        configure(24,{3:[10017],4:[10017]},3);send(10017,False);send(10017,False,loop)
+        def create(uid,family,allowed):
+            nonlocal checks
+            lib.fw_setup(str(root).encode(),uid)
+            result=lib.fw_call(lib.fw_nr(8),family,socket.SOCK_DGRAM,0,0,0,0)
+            assert (result>=0 if allowed else result==-errno.EACCES),(uid,family,result,allowed)
+            if result>=0:socket.socket(fileno=result).close()
+            checks+=1
+        create(10017,socket.AF_INET,False);create(10017,socket.AF_INET6,False)
+        configure(16,{},3);create(10017,socket.AF_INET,True)
+        configure(8,{},3);create(10017,socket.AF_INET,True)
+        configure(8,{3:[10017]});create(10017,socket.AF_INET,True)
+        configure(32,{},3);send(10017,False)
+        configure(0,{},3);policy.write_bytes(policy.read_bytes()[:-1]);send(10017,False)
+        configure(0,{});policy.write_bytes(policy.read_bytes()+bytes(12500));send(10017,False)
         # The Manager's canonical data alias must select the same policy.
         (root/'system-data/misc').mkdir(parents=True);configure(2,{1:[10017]})
         (root/'system-data/misc/pocket-network-policy.rules').write_bytes(policy.read_bytes())

@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "status": "NORMAL_TRACE_MODE_PASS_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Make repeated self-SIGQUIT startup profiling opt-in, keep manual ART capture and strict startup gates. Memory comparison/restoration is recorded separately. No stable-startup, complete Android12L or Manager claim.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "hostVmMemoryMb": 1536,
+  "runId": "09c4b4c5f7c948aabc6e61f7ba2afe19",
+  "apkSha256": "0e0d02d1bf5b2f28fbdb8d88aff82fb067a53fa590d9dad38f6bc284d913f808",
+  "apkBytes": 7644207,
+  "imageManifestSha256": "f5283165b58815ff0c7c7c6fb54ce297843380ff5fbbfe14aa9e5088a55967e9",
+  "imageVerifiedFiles": 2645,
+  "sourceSha256": {
+    "tools/build_api32_probe.py": "2d26a959e5d9bc0e412f889fece392f021ec46f4407a9766432951501de8c5e6",
+    "tools/build_api32_android_probe.py": "a1258d7cd975a09af439f0481c841ffb32e2f9495aab8d0b28e6cb084379d9d8",
+    "tools/test_api32_on_pi.py": "64f4caaa30dd5bb7e2c36a48c0d5252a5720582aa752e9fd20c960ff30d83ef9",
+    "runtime/api32/art_trace.c": "ace3fcd500d897f0e5a517217620b079b8a0d49adc29e10bdc59f6fc6c5254e0"
+  },
+  "reportPath": "out/api32/normal-startup-report.json",
+  "reportSha256": "c2719b24f41b08a16214b963c9ee101363bf6313b8c5e7c584ef12f4f5ee00a0",
+  "checks": [
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/normal-startup-baseline-manifest.json",
+      "result": "PASS / exit 0; 7644207-byte signed APK. All 2645 hashes and exact three-asset delta verified. Actual RC explicitly sets POCKET_API32_TRACE_STARTUP=0; native runtime, trace sink, bootstrap and tools JAR unchanged."
+    },
+    {
+      "command": "Invoke each builder/test CLI with --trace-startup but without --system-server",
+      "result": "PASS / expected exit 2 with --trace-startup requires --system-server; no VM mutation."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Normal trace-mode component PASS, full startup FAIL / driver exit 1, guest exit 0. Manual ART trace probe passed with one write, no periodic private ART traces. Two SystemUI KeyguardService ANRs, Bluetooth service ANR and Gallery boot receiver ANR remain. No SystemUI/Launcher3 Java crash in this run. Later 40s UI/code/input phase passed. All 28 services reaped, none remaining/failed; host limit restored, SELinux Enforcing."
+    },
+    {
+      "command": "Replay the actual current driver marker/gate AST on out/api32/normal-startup-report.json",
+      "result": "PASS / exit 0; all required markers present and strict UI still rejects startup ANRs. Original report unchanged."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "profiling": {
+    "previousDefault": "POCKET_API32_TRACE_STARTUP=1",
+    "newDefault": "POCKET_API32_TRACE_STARTUP=0",
+    "diagnosticFlag": "--trace-startup",
+    "behaviorWhenExplicitlyEnabled": "Existing native sampler requests SIGQUIT on each eligible startup participant every 10 seconds, 12 samples per process. Eligible names: system_server, com.android.systemui and com.android.networkstack.process.",
+    "manualArtTraceProbePassed": true,
+    "traceWritesInThisRun": 1,
+    "privatePeriodicTraceArtifactsAfterProbeCleanup": [],
+    "nativeTraceImplementationChanged": false,
+    "crashAndAnrGatesUnchanged": true,
+    "driverRequiresExplicitMatchingMetadata": true
+  },
+  "startupAnrs": [
+    {
+      "process": "com.android.bluetooth",
+      "pid": 4262,
+      "reason": "executing service com.android.bluetooth/.btservice.AdapterService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 4283,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 4817,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 5856,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "uiStartupCrashes": [],
+  "missingRequiredMarkers": [],
+  "missingRequiredNativeMarkers": [],
+  "laterUiSystemUiPid": 5411,
+  "laterUiStableSeconds": 40,
+  "nativeLogChars": 1632210,
+  "nativeLogWithinCaptureLimit": true,
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "memoryComparisonEvidence": "docs/api32-startup-memory-comparison.json",
+  "originalVmConfigurationRestored": true,
+  "remainingCrashServiceGap": {
+    "tombstonedConnectFailures": 52,
+    "actualAnrArtArtifactsAvailable": false,
+    "evidence": "libdebuggerd_client and libc report the private tombstoned endpoint missing. Periodic self-signals previously supplied startup snapshots; disabling them leaves the missing requested-backtrace path visible. This does not prove the missing service causes every ANR.",
+    "nextImplementation": "App-private crash/intercept transport using matching tombstoned and framework-requested Java backtraces, retaining caller/FD ownership validation."
+  },
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "managerApi32Supported": false
+}

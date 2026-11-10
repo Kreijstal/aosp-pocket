@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "profile": "rootless-v1",
+  "omittedReferencePackages": [
+    {
+      "package": "com.android.emulator.multidisplay",
+      "directory": "system_ext/priv-app/MultiDisplayProvider/",
+      "reason": "Goldfish-only persistent service requires the QEMU multidisplay pipe; Pocket supplies its own display transport."
+    }
+  ],
+  "disabledBootReceivers": [
+    {
+      "package": "com.android.dynsystem",
+      "class": "com.android.dynsystem.BootCompletedReceiver",
+      "reason": "Kernel guest installation and reboot are unavailable to this rootless profile. Keep the package and its data, without starting the installer at every boot."
+    }
+  ]
+}

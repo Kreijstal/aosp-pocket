@@ -12,13 +12,13 @@ import java.util.*;
 import java.util.zip.*;
 import dev.kreijstal.aosppocket.bridge.DisplayGeometry;
 
-/** The pinned Android 9 image with syscall translation and unchanged Bionic. */
+/** Pinned direct images with syscall translation and unchanged Bionic. */
 final class DirectImage {
     static boolean bundled(Context context) {
         return bundled(context,28);
     }
     static boolean bundled(Context context,int sdk) {
-        if(sdk==29)return RemoteImage.available(context,29);
+        if(sdk==29 || sdk==32)return RemoteImage.available(context,sdk);
         if(sdk!=28)return false;
         if(RemoteImage.available(context))return true;
         try(InputStream in=context.getAssets().open("api28-rootfs/system/build.prop.payload")){return in.read()!=-1;}
@@ -28,8 +28,10 @@ final class DirectImage {
         return root(context,28);
     }
     static File root(Context context,int sdk) {
-        if(sdk!=28 && sdk!=29)throw new IllegalArgumentException("Unsupported direct guest SDK");
-        return new File(context.getFilesDir(),"api"+sdk+"-native-rootfs");
+        if(sdk!=28 && sdk!=29 && sdk!=32)throw new IllegalArgumentException("Unsupported direct guest SDK");
+        // Keep 12L's translated Unix socket names within sockaddr_un.sun_path,
+        // including in the separate validation package's longer app directory.
+        return new File(context.getFilesDir(),sdk==32?"api32":"api"+sdk+"-native-rootfs");
     }
     /** Owner recovery remains available even when the experimental backend cannot boot. */
     static boolean disableAttestation(Context context) throws IOException {
@@ -100,6 +102,7 @@ final class DirectImage {
                           {"system/bin/getprop","toybox"},
                           {"system/bin/setprop","/system/bin/toybox"},
                           {"system/bin/setprop","toybox"},
+                          {"system/bin/setprop","pocket-setprop-api32"},
                           {"system/bin/magisk","/sbin/magisk"},
                           {"system/bin/su","/sbin/magisk"},
                           {"system/bin/resetprop","/sbin/magisk"}};
@@ -117,7 +120,21 @@ final class DirectImage {
         return prepare(context,geometry,refreshHz,28,progress);
     }
     static File prepare(Context context,DisplayGeometry geometry,int refreshHz,int sdk,GuestImage.Progress progress) throws Exception {
-        File root=root(context,sdk);root.mkdirs();
+        File root=root(context,sdk);
+        File previous=sdk==32?new File(context.getFilesDir(),"api32-native-rootfs"):null;
+        if(previous!=null && Files.exists(previous.toPath(),LinkOption.NOFOLLOW_LINKS)) {
+            if(Files.isSymbolicLink(previous.toPath()) || !previous.isDirectory()
+                    || Files.exists(root.toPath(),LinkOption.NOFOLLOW_LINKS))
+                throw new IOException("Cannot migrate the experimental Android 12L image: conflicting paths");
+            if(!leftovers(previous).isEmpty())throw new IOException("Stop the previous Android 12L runtime before migrating its image");
+            Files.move(previous.toPath(),root.toPath(),StandardCopyOption.ATOMIC_MOVE);
+        }
+        if(!root.isDirectory() && !root.mkdirs())throw new IOException("Cannot create guest image directory");
+        // Recover after any path relocation, before projecting the encryption
+        // properties or starting processes against the recovered data view.
+        CeMigration.finishVerified(root);
+        if(sdk==32 && CeStorage.enabled(root) && !new File(root,CeMigration.LAYOUT32).isFile())
+            throw new IOException("Android 12L encrypted storage requires the five-root layout");
         // Our optional runtime generates these links after extraction. Remove
         // only its known targets before validating/re-extracting bundled files.
         clearGeneratedLinks(root);
@@ -129,7 +146,7 @@ final class DirectImage {
                 throw new IllegalStateException("Development host update requires an installed full Manager image");
         } catch (FileNotFoundException standalone) { /* Full distribution APK. */ }
         if(!RemoteImage.prepare(context,root,sdk,progress)) {
-        if(sdk!=28)throw new IOException("No Android 10 download is configured in this Manager");
+        if(sdk!=28)throw new IOException("No Android "+(sdk==32?"12L":"10")+" download is configured in this Manager");
         android.content.SharedPreferences cache=context.getSharedPreferences("manager-api28-image",Context.MODE_PRIVATE);
         android.content.SharedPreferences.Editor stamps=cache.edit();
         try(ZipFile apk=new ZipFile(context.getApplicationInfo().sourceDir)) {
@@ -167,16 +184,7 @@ final class DirectImage {
         }
         if(GuestProfile.detect(root).sdk!=sdk)throw new IOException("Downloaded Android image SDK does not match the selected profile");
         for(String name:new String[]{"system-data",".pocket-owner","dev/socket","dev/__properties__","dev/input","logs","tmp"})new File(root,name).mkdirs();
-        File data=new File(root,"data");
-        if(Files.isSymbolicLink(data.toPath())) {
-            if(!Files.readSymbolicLink(data.toPath()).toString().equals("system-data"))
-                throw new IOException("Unexpected Android 9 data link; refusing to replace it");
-            Files.delete(data.toPath());
-        } else if(data.exists() && (!data.isDirectory() || data.list()==null || data.list().length!=0))
-            throw new IOException("Unexpected nonempty Android 9 data directory; refusing to replace it");
-        // /data is translated to system-data by the interpreter. Keep this
-        // empty placeholder for namespace walking; no bind or self-bind exists.
-        if(!data.isDirectory() && !data.mkdir())throw new IOException("Cannot create guest data directory");
+        prepareDataPath(root,sdk);
         for(File entry:new File(root,"dev/__properties__").listFiles())
             if(!entry.delete())throw new IOException("Cannot reset guest property area");
         File console=new File(root,"pocket-console");Files.deleteIfExists(console.toPath());
@@ -185,16 +193,23 @@ final class DirectImage {
         String interpreter=new File(root,"system/bin/pocket-loader").getPath();
         prepareExecutables(new File(root,"system/bin"),interpreter);
         prepareExecutables(new File(root,"vendor/bin"),interpreter);
-        if(sdk==29){
+        if(sdk==29 || sdk==32){
             File[] modules=new File(root,"apex").listFiles();
-            if(modules==null)throw new IOException("Android 10 runtime APEX modules are missing");
+            if(modules==null)throw new IOException("Android runtime APEX modules are missing");
             for(File module:modules)prepareExecutables(new File(module,"bin"),interpreter);
-            for(String[] alias:new String[][]{{"etc","system/etc"},{"product","system/product"}}){
+            String[][] aliases=sdk==32?new String[][]{{"etc","system/etc"}}:new String[][]{{"etc","system/etc"},{"product","system/product"}};
+            for(String[] alias:aliases){
                 Path path=new File(root,alias[0]).toPath();
                 if(!Files.exists(path,LinkOption.NOFOLLOW_LINKS))Os.symlink(alias[1],path.toString());
                 else if(!Files.isSymbolicLink(path) || !Files.readSymbolicLink(path).toString().equals(alias[1]))
-                    throw new IOException("Unexpected Android 10 path alias: "+alias[0]);
+                    throw new IOException("Unexpected Android path alias: "+alias[0]);
             }
+        }
+        if(sdk==32) {
+            File config=new File(root,"linkerconfig");
+            if(!config.isDirectory() && !config.mkdir())throw new IOException("Cannot create linker configuration directory");
+            clearLinkerConfig(config);
+            Files.copy(new File(root,"bootstrap-linkerconfig").toPath(),new File(config,"ld.config.txt").toPath());
         }
         File getprop=new File(root,"system/etc/pocket-magisk/getprop");if(getprop.isFile())patchInterpreter(getprop,interpreter);
         // An externally installed optional Magisk runtime ships reserved
@@ -207,8 +222,8 @@ final class DirectImage {
         // remain separate. No Bionic-patching library is loaded by this backend.
         Files.deleteIfExists(new File(root,"system/lib64/libpocket_direct_boot.so").toPath());
         Files.deleteIfExists(new File(root,"system/bin/pocket-syscall-tracer").toPath());
-        Os.symlink(sdk==29?"toybox":"../etc/pocket-magisk/getprop",new File(root,"system/bin/getprop").getPath());
-        Os.symlink("toybox",new File(root,"system/bin/setprop").getPath());
+        if(sdk!=32)Os.symlink(sdk==29?"toybox":"../etc/pocket-magisk/getprop",new File(root,"system/bin/getprop").getPath());
+        Os.symlink(sdk==32?"pocket-setprop-api32":"toybox",new File(root,"system/bin/setprop").getPath());
         for(String applet:TOYBOX_APPLETS) {
             File link=new File(root,"system/bin/"+applet);
             if(!Files.exists(link.toPath(),LinkOption.NOFOLLOW_LINKS))Os.symlink("toybox",link.getPath());
@@ -224,7 +239,46 @@ final class DirectImage {
         }
         Files.write(temporary.toPath(),projected.getBytes("UTF-8"));
         Files.move(temporary.toPath(),properties.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+        if(sdk==32) {
+            // 12L loads this profile after all partition defaults. Its display
+            // defaults must follow the selected host geometry too.
+            File profile=new File(root,"system/etc/pocket-profile.prop"),next=new File(profile.getPath()+".display-new");
+            String content=new String(Files.readAllBytes(profile.toPath()),"UTF-8");
+            content=property(content,"ro.crypto.state",CeStorage.enabled(root)?"encrypted":"unencrypted");
+            if(CeStorage.enabled(root))content=property(content,"ro.crypto.type","file");
+            Files.write(next.toPath(),geometry.properties(content,refreshHz).getBytes("UTF-8"));
+            Files.move(next.toPath(),profile.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+        }
         return root;
+    }
+    static void prepareDataPath(File root,int sdk)throws IOException {
+        File data=new File(root,"data");
+        if(Files.isSymbolicLink(data.toPath())) {
+            if(!Files.readSymbolicLink(data.toPath()).toString().equals("system-data"))
+                throw new IOException("Unexpected Android 9 data link; refusing to replace it");
+            if(sdk==32)return;
+            Files.delete(data.toPath());
+        } else if(data.exists() && (!data.isDirectory() || data.list()==null || data.list().length!=0))
+            throw new IOException("Unexpected nonempty Android 9 data directory; refusing to replace it");
+        if(sdk==32) {
+            // Absolute /data is translated by the loader. A relative walk from
+            // the guest root must reach the same directory (12L's package
+            // manager uses Path.subpath() while creating its install parents).
+            if(data.isDirectory() && !data.delete())throw new IOException("Cannot replace the empty data placeholder");
+            Files.createSymbolicLink(data.toPath(),Paths.get("system-data"));return;
+        }
+        // Legacy profiles retain their existing namespace-walking placeholder.
+        if(!data.isDirectory() && !data.mkdir())throw new IOException("Cannot create guest data directory");
+    }
+    private static void clearLinkerConfig(File directory)throws IOException {
+        if(Files.isSymbolicLink(directory.toPath()))throw new IOException("Unexpected linker configuration symlink");
+        File[] children=directory.listFiles();
+        if(children==null)throw new IOException("Cannot read linker configuration directory");
+        for(File child:children) {
+            if(Files.isSymbolicLink(child.toPath()))throw new IOException("Unexpected linker configuration entry symlink");
+            if(child.isDirectory())clearLinkerConfig(child);
+            if(!child.delete())throw new IOException("Cannot reset linker configuration");
+        }
     }
     private static String property(String source,String key,String value) {
         java.util.regex.Pattern pattern=java.util.regex.Pattern.compile("(?m)^"+java.util.regex.Pattern.quote(key)+"=.*$");
@@ -255,11 +309,19 @@ final class DirectImage {
         }
     }
     static java.lang.Process start(File root) throws IOException {
+        return start(root,UUID.randomUUID().toString());
+    }
+    static java.lang.Process start(File root,String runId) throws IOException {
         int sdk=GuestProfile.detect(root).sdk;
-        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",Arrays.asList(
-            "/system/bin/pocket-init-api"+sdk,"/system/etc/init/init.syscall.rc"))).directory(root);
+        List<String> program=sdk==32?Arrays.asList("/system/bin/sh","/system/etc/pocket-runtime-boot.sh"):
+            Arrays.asList("/system/bin/pocket-init-api"+sdk,"/system/etc/init/init.syscall.rc");
+        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",program)).directory(root);
         builder.environment().clear();
         builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid(),sdk));
+        if(sdk==32) {
+            if(runId==null || !runId.matches("[a-zA-Z0-9-]{1,64}"))throw new IOException("Invalid runtime start ID");
+            builder.environment().put("POCKET_API32_RUN_ID",runId);
+        }
         File log=new File(root,"logs/manager-init.log");Files.write(log.toPath(),new byte[0]);
         builder.redirectInput(new File("/dev/null"));builder.redirectErrorStream(true);builder.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
         return builder.start();

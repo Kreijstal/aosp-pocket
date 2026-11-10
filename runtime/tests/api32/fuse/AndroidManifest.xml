@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.aosppocket.api32fusetest">
+  <application android:label="Pocket12L FUSE test" android:allowBackup="false" android:debuggable="false">
+    <activity android:name="dev.kreijstal.aosppocket.runtime.FuseTransportActivity" android:exported="true" android:launchMode="2" android:configChanges="1184">
+      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+    </activity>
+  </application>
+</manifest>

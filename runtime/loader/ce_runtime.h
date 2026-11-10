@@ -3,6 +3,7 @@
 // persistent guest names/content are owned by the Manager's encrypted VFS.
 #include <linux/memfd.h>
 static int ce_enabled;
+static int ce_vendor_enabled;
 static uint64_t ce_fuse_device;
 static long ce_copy_out(uintptr_t to,const char* from,size_t size) {
     while(size){size_t n=size>4096?4096:size;long rc=copy_to_user(to,from,n);if(rc<0)return rc;to+=n;from+=n;size-=n;}return 0;
@@ -37,6 +38,21 @@ static int ce_descriptor(int fd,const char* path) {
     if(prefix(path,pocket_loader_config.root,root_size) && prefix(path+root_size,"/.pocket-ce-dirs",16))return 1;
     if(fd<0 || !ce_fuse_device || !prefix(path,"/mnt/appfuse",12))return 0;
     struct stat st;return raw(__NR_fstat,fd,(long)&st,0,0,0,0)==0 && st.st_dev==ce_fuse_device;
+}
+static int ce_self_fd_link(const char* path) {
+    if(!equal(path,"/proc/",6))return -1;
+    const char* at=path+6;
+    if(equal(at,"self/",5))at+=5;
+    else if(equal(at,"thread-self/",12))at+=12;
+    else {
+        unsigned pid=0;const char* start=at;
+        while(*at>='0' && *at<='9'){unsigned digit=*at++-'0';if(pid>(INT32_MAX-digit)/10U)return -1;pid=pid*10+digit;}
+        if(at==start || *at++!='/' || pid!=(unsigned)raw(__NR_getpid,0,0,0,0,0,0))return -1;
+    }
+    if(!equal(at,"fd/",3))return -1;at+=3;
+    unsigned fd=0;const char* start=at;
+    while(*at>='0' && *at<='9'){unsigned digit=*at++-'0';if(fd>(INT32_MAX-digit)/10U)return -1;fd=fd*10+digit;}
+    return at!=start && !*at?(int)fd:-1;
 }
 static long ce_rpc(struct CeRequest* h,const char* p,const char* q,const char* data,struct CeReply* reply) {
     h->magic=0x31454350;h->version=1;h->uid=guest_identity?guest_uid[1]:0;h->gid=guest_identity?guest_gid[1]:0;
@@ -77,9 +93,10 @@ static int ce_candidate(const char* path) {
     const char* p=path;
     if(prefix(p,pocket_loader_config.root,root_size)) {
         p+=root_size;if(prefix(p,"/.pocket-ce-dirs",16))return 1;
-        if(prefix(p,"/system-data",12)){p+=12;return ce_user_path(p,"/user")||prefix(p,"/data",5)||ce_user_path(p,"/system_ce")||ce_user_path(p,"/misc_ce")||ce_user_path(p,"/media");}
+        if(prefix(p,"/system-data",12)){p+=12;return ce_user_path(p,"/user")||prefix(p,"/data",5)||ce_user_path(p,"/system_ce")||ce_user_path(p,"/misc_ce")||ce_user_path(p,"/media")||(ce_vendor_enabled&&ce_user_path(p,"/vendor_ce"));}
     }
     if(ce_user_path(p,"/data/user") || ce_user_path(p,"/data/system_ce") || ce_user_path(p,"/data/misc_ce") || ce_user_path(p,"/data/media") || ce_user_path(p,"/storage/emulated"))return 1;
+    if(ce_vendor_enabled && ce_user_path(p,"/data/vendor_ce"))return 1;
     if(ce_user_path(p,"/mnt/runtime/default/emulated") || ce_user_path(p,"/mnt/runtime/read/emulated") || ce_user_path(p,"/mnt/runtime/write/emulated"))return 1;
     if(ce_user_path(p,"/mnt/user")){const char* tail=p+10;while(*tail>='0'&&*tail<='9')tail++;if(prefix(tail,"/primary",8))return 1;}
     const char* paths[]={"/data/user/0","/data/data","/data/system_ce/0","/data/misc_ce/0","/data/media/0","/sdcard","/storage/emulated/0","/storage/self/primary","/mnt/user/0/primary","/mnt/runtime/default/emulated/0","/mnt/runtime/read/emulated/0","/mnt/runtime/write/emulated/0"};
@@ -173,6 +190,19 @@ static int ce_dispatch(long nr,__u64* r,ucontext_t* context) {
     long memory=raw(__NR_mmap,0,bytes,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(memory<0){r[0]=memory;return 1;}
     struct CeReply* reply=(void*)memory;char* p=(char*)(reply+1),*q=p+PATH_LIMIT,*temp=q+PATH_LIMIT,*scratch=temp+PATH_LIMIT;
     int fd=-1,handled=0;long rc=0;
+    // Bionic realpath reads the final /proc/self/fd link after opening O_PATH.
+    // That link names the virtual inode; dereferencing it as a CE path first
+    // incorrectly turns readlink(directory) into EINVAL (or leaks AppFuse paths).
+    if(nr==__NR_readlinkat && copy_path(temp,r[1])>=0 && (fd=ce_self_fd_link(temp))>=0) {
+        rc=ce_fd_path(fd,p);
+        if(rc>=0 && ce_descriptor(fd,p)) {
+            handled=1;
+            if(!r[3] || r[3]>INT32_MAX){rc=-EINVAL;goto done;}
+            rc=ce_fd_request(nr,fd,r,reply,p);
+            if(rc>=0){size_t count=reply->size<r[3]?reply->size:r[3];rc=ce_copy_out(r[2],reply->data,count)<0?-EFAULT:(long)count;}
+            goto close_reply;
+        }
+    }
     if(nr==__NR_newfstatat && (r[3]&AT_EMPTY_PATH)) {
         rc=r[1]?copy_path(temp,r[1]):0;
         if(rc==0) {

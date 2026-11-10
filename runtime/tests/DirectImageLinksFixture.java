@@ -22,6 +22,12 @@ public final class DirectImageLinksFixture {
             Files.createSymbolicLink(getprop,Paths.get("toybox"));
             DirectImage.clearGeneratedLinks(root.toFile());
             if(Files.exists(getprop,LinkOption.NOFOLLOW_LINKS))throw new AssertionError("Android 10 generated getprop link retained");
+            Files.write(getprop,new byte[]{32});
+            Files.createSymbolicLink(setprop,Paths.get("pocket-setprop-api32"));
+            DirectImage.clearGeneratedLinks(root.toFile());
+            if(Files.isSymbolicLink(getprop) || Files.readAllBytes(getprop)[0]!=32 || Files.exists(setprop,LinkOption.NOFOLLOW_LINKS))
+                throw new AssertionError("Android 12L native getprop changed or generated setprop link retained");
+            Files.delete(getprop);
             Files.createSymbolicLink(getprop,Paths.get("/unexpected-target"));
             Files.write(setprop,new byte[]{42});
             DirectImage.clearGeneratedLinks(root.toFile());

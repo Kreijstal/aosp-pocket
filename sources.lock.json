@@ -746,5 +746,875 @@
     "manager_boot_verified_vm": true,
     "on_demand_image_verified_vm": true,
     "manager_evidence": "docs/api29-manager-validation.json"
+  },
+  "guest_api32": {
+    "status": "foundation_bringup",
+    "sdk": 32,
+    "android": "12L",
+    "android_tag": "android-platform-12.1.0_r23",
+    "full_guest_boot_verified": false,
+    "pocket_manager_api32_supported": false,
+    "manager_downloadable_image_built": true,
+    "manager_image_preparation_verified_vm": true,
+    "manager_image_preparation_evidence": "docs/api32-manager-image-validation.json",
+    "manager_live_session_implemented": true,
+    "manager_basic_live_session_verified_vm": true,
+    "manager_basic_live_session_evidence": "docs/api32-manager-session-validation.json",
+    "manager_cached_image_restart_verified_vm": true,
+    "manager_ordinary_api32_app_data_keystore_persistence_verified_vm": true,
+    "manager_persistence_evidence": "docs/api32-manager-persistence-validation.json",
+    "reference_source_match": "Public API 32 platform tag with the same 2024-01-01 security patch level; emulator-specific build manifest is not available.",
+    "abi_reference": {
+      "kind": "aosp_sdk_image",
+      "package": "system-images;android-32;default;arm64-v8a",
+      "revision": 2,
+      "url": "https://dl.google.com/android/repository/sys-img/android/arm64-v8a-32_r02.zip",
+      "bytes": 643262633,
+      "sha1": "c57d92a4131590b2a3b62f2a728766aa6bbec57f",
+      "sha256": "cee6aab64d859bb9a0b93628638c46e36d5e1c8364410f53a5e74f197b9fa9e6",
+      "build_id": "SE1B.240122.005",
+      "build_incremental": "11418786",
+      "security_patch": "2024-01-01",
+      "use": "Pinned AOSP Android 12L ARM64 runtime reference; no guest boot claim."
+    },
+    "partition_tools": {
+      "lpunpack": {
+        "distribution": "Arch Linux android-tools 37.0.0-5 x86_64",
+        "source": "https://android.googlesource.com/platform/system/extras/+/refs/heads/main/partition_tools/",
+        "url": "https://archive.archlinux.org/packages/a/android-tools/android-tools-37.0.0-5-x86_64.pkg.tar.zst",
+        "archive_sha256": "e457a9e6e4acf159f582ab9d349d14e94422cdbae5bb85649c0d5d21685a4e22",
+        "member": "usr/bin/lpunpack",
+        "binary_sha256": "f4fa993d4f4c1ad56eb340fb0082f973a49872811bc985c4a2581b29b9bc7db0"
+      }
+    },
+    "headers": [
+      {
+        "cache": "bionic",
+        "url": "https://android.googlesource.com/platform/bionic",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "68898e5a86416e3f5f8bfd1c8119cfc95ed46946",
+        "paths": [
+          "libc/system_properties",
+          "libc/private",
+          "libc/async_safe",
+          "libc/include/sys",
+          "libc/platform"
+        ]
+      },
+      {
+        "cache": "libcxx",
+        "url": "https://android.googlesource.com/platform/external/libcxx",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "55cdd8a9892c9faec91319944984daeb1579e84a",
+        "paths": [
+          "include",
+          "src/filesystem",
+          "src/include"
+        ]
+      },
+      {
+        "cache": "system-core",
+        "url": "https://android.googlesource.com/platform/system/core",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "49b85e93561d1ab5e6bab68e36d8454e1ef1fa89",
+        "paths": [
+          "libutils/include",
+          "libcutils/include",
+          "liblog/include",
+          "libsystem/include",
+          "libbacktrace/include",
+          "libprocessgroup/include",
+          "base/include",
+          "libvndksupport/include",
+          "property_service",
+          "init",
+          "base",
+          "libprocessgroup",
+          "libcutils",
+          "include",
+          "storaged",
+          "libmemunreachable/include",
+          "libsync/include",
+          "libsysutils/include",
+          "storaged/binder",
+          "gatekeeperd",
+          "debuggerd"
+        ]
+      },
+      {
+        "cache": "libbase",
+        "url": "https://android.googlesource.com/platform/system/libbase",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "4a9ed2dba8b438d9754d0569d868ba8df3ebacb6",
+        "paths": [
+          "include",
+          "properties.cpp",
+          "strings.cpp"
+        ]
+      },
+      {
+        "cache": "frameworks-native",
+        "url": "https://android.googlesource.com/platform/frameworks/native",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "6a651b00bb528db9951dfd9bfbf68d96f5650f5a",
+        "paths": [
+          "libs/binder",
+          "headers",
+          "libs/gui/include",
+          "libs/ui/include",
+          "include",
+          "aidl",
+          "libs/nativebase/include",
+          "libs/nativewindow/include",
+          "libs/arect/include",
+          "cmds/installd",
+          "services/inputflinger",
+          "libs/input",
+          "libs/ftl",
+          "services/batteryservice/include",
+          "libs/permission"
+        ]
+      },
+      {
+        "cache": "frameworks-base",
+        "url": "https://android.googlesource.com/platform/frameworks/base",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "159ab48288c45267fe5e7898c6b5dd7d66c3306a",
+        "paths": [
+          "cmds/app_process",
+          "core/java/com/android/internal/os",
+          "core/jni",
+          "include",
+          "cmds/idmap2",
+          "core/java/android/os/incremental/IncrementalFileSystemControlParcel.aidl",
+          "core/java/android/os/Process.java",
+          "services/core/java/com/android/server/am/ContentProviderHelper.java"
+        ]
+      },
+      {
+        "cache": "libnativehelper",
+        "url": "https://android.googlesource.com/platform/libnativehelper",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "4ec443f268a452e50bfdeb14c0d826d08253b42e",
+        "paths": [
+          "include",
+          "include_jni",
+          "header_only_include",
+          "include_platform"
+        ]
+      },
+      {
+        "cache": "art",
+        "url": "https://android.googlesource.com/platform/art",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "ab1f62ad90952006e0a47cabdb3e5a3bcd07124e",
+        "paths": [
+          "sigchainlib",
+          "openjdkjvmti/include",
+          "libartpalette/include",
+          "runtime/signal_catcher.cc",
+          "libartpalette"
+        ]
+      },
+      {
+        "cache": "libhwbinder",
+        "url": "https://android.googlesource.com/platform/system/libhwbinder",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "6b4da8708ffe30bb355a987f3e8e143c05381061",
+        "paths": [
+          "include",
+          "ProcessState.cpp"
+        ]
+      },
+      {
+        "cache": "libhidl",
+        "url": "https://android.googlesource.com/platform/system/libhidl",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "a57ef569edcb23aa901cef96991a3cf6e09cce3f",
+        "paths": [
+          "base/include",
+          "transport/include",
+          "transport/base",
+          "transport/manager",
+          "transport/allocator",
+          "transport/memory",
+          "libhidlmemory",
+          "transport/token",
+          "transport/safe_union",
+          "transport/ServiceManagement.cpp"
+        ]
+      },
+      {
+        "cache": "hardware-interfaces",
+        "url": "https://android.googlesource.com/platform/hardware/interfaces",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "68f44501a2e4d13b1b7acf1816db15bdea1dbc87",
+        "paths": [
+          "configstore",
+          "health",
+          "media/omx",
+          "media/1.0",
+          "graphics",
+          "vibrator/1.0",
+          "vibrator/1.1",
+          "vibrator/1.2",
+          "camera",
+          "audio",
+          "common",
+          "keymaster",
+          "security",
+          "gatekeeper"
+        ]
+      },
+      {
+        "cache": "system-apex",
+        "url": "https://android.googlesource.com/platform/system/apex",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "561077b45055950c9853efd57cfd524b7b56329f",
+        "paths": [
+          "apexd/aidl"
+        ]
+      },
+      {
+        "cache": "system-vold",
+        "url": "https://android.googlesource.com/platform/system/vold",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "56ecaa03aa8bc2be47f1d610cd901f2e57c27bef",
+        "paths": [
+          "binder"
+        ]
+      },
+      {
+        "cache": "system-netd",
+        "url": "https://android.googlesource.com/platform/system/netd",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "b5f9d703a9066856299318db8c68947498bbac5f",
+        "paths": [
+          "binder",
+          "server",
+          "resolv/binder",
+          "include",
+          "client",
+          "libnetdutils"
+        ]
+      },
+      {
+        "cache": "system-media",
+        "url": "https://android.googlesource.com/platform/system/media",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "612d1707ddd53b341512a8de9b3255c314e7c0b2",
+        "paths": [
+          "audio/include",
+          "audio_utils/include",
+          "camera/include",
+          "private/camera/include"
+        ]
+      },
+      {
+        "cache": "frameworks-av",
+        "url": "https://android.googlesource.com/platform/frameworks/av",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "38ed956405fbc061c0aec2c986ded3ff4d486fa5",
+        "paths": [
+          "media/libaudioclient",
+          "services/audioflinger",
+          "services/audiopolicy",
+          "services/medialog",
+          "media/audioserver",
+          "include",
+          "media/libstagefright",
+          "media/libmedia",
+          "media/utils",
+          "services/mediaresourcemanager",
+          "media/libnbaio",
+          "media/libnblog",
+          "media/libmediaextractor",
+          "media/libaudiohal",
+          "media/libaudioprocessing",
+          "media/libeffects",
+          "media/libcpustats",
+          "media/libmediametrics",
+          "camera",
+          "services/camera/libcameraservice",
+          "services/mediametrics"
+        ]
+      },
+      {
+        "cache": "libhardware",
+        "url": "https://android.googlesource.com/platform/hardware/libhardware",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "9627870ef4d995c5f2dc491cdddffdb71c4c3fe9",
+        "paths": [
+          "include",
+          "modules/gralloc"
+        ]
+      },
+      {
+        "cache": "system-hardware-interfaces",
+        "url": "https://android.googlesource.com/platform/system/hardware/interfaces",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "23b5bc3050551a73c3850a081eb6bddaafa06725",
+        "paths": [
+          "suspend/1.0",
+          "suspend/aidl",
+          "keystore2"
+        ]
+      },
+      {
+        "cache": "system-logging",
+        "url": "https://android.googlesource.com/platform/system/logging",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "c6b780896ad97ad924782e5f66d85d485f3cec81",
+        "paths": [
+          "liblog/include",
+          "logwrapper/include"
+        ]
+      },
+      {
+        "cache": "system-tools-aidl",
+        "url": "https://android.googlesource.com/platform/system/tools/aidl",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "74d99eeb2ab88e4ea455c3963c86a576acb39d77",
+        "paths": [
+          "libaidl/include",
+          "aidl_to_cpp.cpp",
+          "generate_cpp.cpp"
+        ]
+      },
+      {
+        "cache": "system-linkerconfig",
+        "url": "https://android.googlesource.com/platform/system/linkerconfig",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "a79bc73753fcd584407619ff8144ea2fd73b19e6",
+        "paths": [
+          "contents",
+          "modules",
+          "proto"
+        ]
+      },
+      {
+        "cache": "packages-statsd",
+        "url": "https://android.googlesource.com/platform/packages/modules/StatsD",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "6037c57d2a5c27a447bc4c1b84caa49aacb5a5f6",
+        "paths": [
+          "lib/libstatssocket/include",
+          "statsd/src",
+          "statsd/Android.bp",
+          "aidl",
+          "apex",
+          "lib/libstatspull/include"
+        ]
+      },
+      {
+        "cache": "fmtlib",
+        "url": "https://android.googlesource.com/platform/external/fmtlib",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "a605473f79f9d4e4346bc95538a3eb7a7aaed53d",
+        "paths": [
+          "include"
+        ]
+      },
+      {
+        "cache": "system-tools-hidl",
+        "url": "https://android.googlesource.com/platform/system/tools/hidl",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "17128db022a17946ca4e2c577d558c5606786da7",
+        "paths": [
+          "utils/include"
+        ]
+      },
+      {
+        "cache": "libfmq",
+        "url": "https://android.googlesource.com/platform/system/libfmq",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "445a7f0d4235d10588c9b6947d5fcd90985d1ca7",
+        "paths": [
+          "include",
+          "base"
+        ]
+      },
+      {
+        "cache": "libselinux",
+        "url": "https://android.googlesource.com/platform/external/selinux",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "9e314ba3504282bf3cf6fcb63c6385b77ffbbdd2",
+        "paths": [
+          "libselinux/include",
+          "libselinux/src/android/android_platform.c",
+          "libselinux/src/enabled.c"
+        ]
+      },
+      {
+        "cache": "swiftshader",
+        "url": "https://android.googlesource.com/platform/external/swiftshader",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "e5cb061cd93aae4b6c6417bf8e11db760a7ce33c",
+        "paths": [
+          "/*"
+        ]
+      },
+      {
+        "cache": "proto-logging",
+        "url": "https://android.googlesource.com/platform/frameworks/proto_logging",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "27e4615587b22ae777557c7d1d53eee0b1f950d2",
+        "paths": [
+          "stats/atoms.proto"
+        ]
+      },
+      {
+        "cache": "boringssl",
+        "url": "https://android.googlesource.com/platform/external/boringssl",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "64a4bb7a8870d7d79c8236c14cd2e715a15d4b9e",
+        "paths": [
+          "src/include"
+        ]
+      },
+      {
+        "cache": "scrypt",
+        "url": "https://android.googlesource.com/platform/external/scrypt",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "4d7d2122ac94c19cd9f49066f36eceddf1680949",
+        "paths": [
+          "*"
+        ]
+      },
+      {
+        "cache": "dnsresolver",
+        "url": "https://android.googlesource.com/platform/packages/modules/DnsResolver",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "8e34bdf0ad56b97fbc511981aadd91d5618698db",
+        "paths": [
+          "binder",
+          "aidl_api",
+          "DnsProxyListener.cpp",
+          "Android.bp"
+        ]
+      },
+      {
+        "cache": "mdnsresponder",
+        "url": "https://android.googlesource.com/platform/external/mdnsresponder",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "27511f249eb57912f5eba10e8a26d5d73a61bd75",
+        "paths": [
+          "mDNSShared",
+          "mDNSPosix",
+          "Android.bp"
+        ]
+      },
+      {
+        "cache": "libhardware-legacy",
+        "url": "https://android.googlesource.com/platform/hardware/libhardware_legacy",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "2b71a428eefeb70fb2b8ddde3766cedeadb98acf",
+        "paths": [
+          "include",
+          "uevent.c"
+        ]
+      },
+      {
+        "cache": "packages-wifi",
+        "url": "https://android.googlesource.com/platform/packages/modules/Wifi",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "8ddb3092daeb6a7d4f7fa963651897ef18ba2637",
+        "paths": [
+          "service/java/com/android/server/wifi/WifiConfigStore.java",
+          "service/java/com/android/server/wifi/WifiConfigManager.java",
+          "service/java/com/android/server/wifi/util/Environment.java"
+        ]
+      },
+      {
+        "cache": "libvintf",
+        "url": "https://android.googlesource.com/platform/system/libvintf",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "469bc3f8bd22fff598fc098abfcfd60df984c98b",
+        "paths": [
+          "RuntimeInfo.cpp",
+          "include",
+          "Android.bp"
+        ]
+      },
+      {
+        "cache": "system-security",
+        "url": "https://android.googlesource.com/platform/system/security",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "391dab55876a8a2cd12babf3dcee5cdd01350c07",
+        "paths": [
+          "keystore2",
+          "keystore"
+        ]
+      },
+      {
+        "cache": "system-keymaster",
+        "url": "https://android.googlesource.com/platform/system/keymaster",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "72feb64c50e24121a5d1765d0a7718ec744380c9",
+        "paths": [
+          "include",
+          "android_keymaster",
+          "contexts",
+          "km_openssl",
+          "km_soft",
+          "legacy_support",
+          "Android.bp",
+          "ng"
+        ]
+      },
+      {
+        "cache": "packages-connectivity",
+        "url": "https://android.googlesource.com/platform/packages/modules/Connectivity",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "16216f3643609ea5b26ba2edc35a93d71aef9094",
+        "paths": [
+          "Tethering/src",
+          "Tethering/common",
+          "Tethering/apex"
+        ]
+      },
+      {
+        "cache": "system-memory-lmkd",
+        "url": "https://android.googlesource.com/platform/system/memory/lmkd",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "25d2b74cfcc9052a8e0ea04e977ec36221257eef",
+        "paths": [
+          "include",
+          "lmkd.cpp",
+          "Android.bp"
+        ]
+      },
+      {
+        "cache": "system-gatekeeper",
+        "url": "https://android.googlesource.com/platform/system/gatekeeper",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "6d141a300cd130398acedb15e6259864227bcc15",
+        "paths": [
+          "*"
+        ]
+      },
+      {
+        "cache": "libyuv",
+        "url": "https://android.googlesource.com/platform/external/libyuv",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "715a8b0584d482569ed39ee95291cfa9061c6aaf",
+        "paths": [
+          "files/include",
+          "files/source"
+        ]
+      },
+      {
+        "cache": "libjpeg-turbo",
+        "url": "https://android.googlesource.com/platform/external/libjpeg-turbo",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "e78a6612493d491c4c24069db740022f2822f284",
+        "paths": [
+          "*.h"
+        ]
+      },
+      {
+        "cache": "libexif",
+        "url": "https://android.googlesource.com/platform/external/libexif",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "3aadaf7a55e2586760606f73cf32d5539ad9b775",
+        "paths": [
+          "libexif"
+        ]
+      },
+      {
+        "cache": "tinyxml2",
+        "url": "https://android.googlesource.com/platform/external/tinyxml2",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "6cfe83651f3665cea686b90b51079848808f4bca",
+        "paths": [
+          "tinyxml2.h"
+        ]
+      },
+      {
+        "cache": "server-configurable-flags",
+        "url": "https://android.googlesource.com/platform/system/server_configurable_flags",
+        "tag": "android-platform-12.1.0_r23",
+        "commit": "cf0231f8f5c03f9c83a5a972cfbaa410782a63f4",
+        "paths": [
+          "libflags/include"
+        ]
+      }
+    ],
+    "aidl_tool": {
+      "source": "https://android.googlesource.com/platform/prebuilts/build-tools",
+      "tag": "android-platform-12.1.0_r23",
+      "commit": "4c476d580e7d566e2122c7cbc7c39601297a537d",
+      "files": [
+        {
+          "path": "linux-x86/bin/aidl",
+          "destination": "bin/aidl",
+          "bytes": 4211176,
+          "sha256": "9a849663ba2c08e93177fad66bcb3b1930a4644e5838c7ee634415222c2fb75a"
+        },
+        {
+          "path": "linux-x86/lib64/libc++.so",
+          "destination": "lib64/libc++.so",
+          "bytes": 923168,
+          "sha256": "b4bf6891d676b4679512db9b2a09a57b4a1579cf99e8c5f8edcf90e9e14b3489"
+        }
+      ]
+    },
+    "native_foundation_verified": true,
+    "native_foundation_evidence": "docs/api32-android-validation.json",
+    "zygote_foundation_verified": true,
+    "zygote_foundation_evidence": "docs/api32-zygote-validation.json",
+    "init_foundation_verified": true,
+    "init_foundation_evidence": "docs/api32-init-validation.json",
+    "hidl_tool": {
+      "source": "https://android.googlesource.com/platform/prebuilts/build-tools",
+      "tag": "android-platform-12.1.0_r23",
+      "commit": "4c476d580e7d566e2122c7cbc7c39601297a537d",
+      "files": [
+        {
+          "path": "linux-x86/bin/hidl-gen",
+          "destination": "bin/hidl-gen",
+          "bytes": 5977536,
+          "sha256": "963d5265315fec5a43b434ec0aed933dbbb2ac698d9f97be9da19f963c97ee75"
+        },
+        {
+          "path": "linux-x86/lib64/libc++.so",
+          "destination": "lib64/libc++.so",
+          "bytes": 923168,
+          "sha256": "b4bf6891d676b4679512db9b2a09a57b4a1579cf99e8c5f8edcf90e9e14b3489"
+        }
+      ]
+    },
+    "hardware_foundation_verified": true,
+    "hardware_foundation_evidence": "docs/api32-hardware-validation.json",
+    "apex_inventory_verified": true,
+    "apex_inventory_evidence": "docs/api32-apex-validation.json",
+    "jca_fonts_verified": true,
+    "jca_fonts_evidence": "docs/api32-preload-validation.json",
+    "installd_data_lifecycle_verified": true,
+    "installd_boot_time_dexopt_verified": true,
+    "installd_evidence": "docs/api32-installd-validation.json",
+    "software_graphics_verified": true,
+    "surfaceflinger_service_verified": true,
+    "graphics_evidence": "docs/api32-graphics-validation.json",
+    "input_reader_foundation_verified": true,
+    "input_host_wake_lifecycle_verified": true,
+    "input_evidence": "docs/api32-input-validation.json",
+    "framework_hidl_registration_verified": true,
+    "framework_hidl_evidence": "docs/api32-framework-hidl-validation.json",
+    "netd_foundation_verified": true,
+    "guest_network_traffic_policy_verified": true,
+    "internet_socket_creation_denial_verified": true,
+    "network_evidence": "docs/api32-network-validation.json",
+    "dnsresolver_control_verified": true,
+    "host_dns_getaddrinfo_verified": true,
+    "dns_permission_denial_verified": true,
+    "dns_listener_lifecycle_verified": true,
+    "dns_evidence": "docs/api32-dns-validation.json",
+    "mdns_frontend_verified": true,
+    "mdns_stock_responder_verified": true,
+    "mdns_registration_lifecycle_verified": true,
+    "mdns_role_denial_verified": true,
+    "mdns_evidence": "docs/api32-mdns-validation.json",
+    "stock_audio_services_verified": true,
+    "audio_hal_foundation_verified": true,
+    "host_pcm_output_verified": true,
+    "audio_host_role_denial_verified": true,
+    "audio_evidence": "docs/api32-audio-validation.json",
+    "private_uevent_channel_verified": true,
+    "uevent_fork_isolation_verified": true,
+    "stock_uevent_jni_verified": true,
+    "uevent_evidence": "docs/api32-uevent-validation.json",
+    "apex_shared_device_data_verified": true,
+    "apex_shared_data_evidence": "docs/api32-apex-data-validation.json",
+    "storage_control_foundation_verified": true,
+    "internal_user_storage_preparation_verified": true,
+    "storage_file_io_reset_persistence_verified": true,
+    "storage_role_denial_verified": true,
+    "storage_evidence": "docs/api32-storage-validation.json",
+    "vintf_kernel_conversion_verified": true,
+    "vintf_kernel_conversion_evidence": "docs/api32-vintf-validation.json",
+    "framework_boot_property_verified": true,
+    "framework_boot_property_evidence": "docs/api32-memory-validation.json",
+    "process_uid_lookup_verified": true,
+    "process_uid_lookup_evidence": "docs/api32-process-identity-validation.json",
+    "software_keymaster_foundation_verified": true,
+    "keystore2_control_foundation_verified": true,
+    "keystore2_evidence": "docs/api32-keystore-validation.json",
+    "software_keystore_crypto_verified": true,
+    "keystore_role_denial_verified": true,
+    "framework_user_unlock_verified": true,
+    "framework_user_unlock_evidence": "docs/api32-memory-validation.json",
+    "private_art_stack_trace_verified": true,
+    "art_stack_trace_evidence": "docs/api32-art-trace-validation.json",
+    "guest_memory_policy_verified": true,
+    "guest_memory_role_denial_verified": true,
+    "memory_evidence": "docs/api32-memory-validation.json",
+    "settings_provider_round_trip_verified": true,
+    "settings_provider_evidence": "docs/api32-memory-validation.json",
+    "software_gatekeeper_foundation_verified": true,
+    "gatekeeper_role_denial_verified": true,
+    "gatekeeper_evidence": "docs/api32-gatekeeper-validation.json",
+    "gatekeeper_hardware_security_verified": false,
+    "ordinary_app_install_verified": true,
+    "ordinary_app_activity_resume_verified": true,
+    "ordinary_app_settings_access_verified": true,
+    "ordinary_app_keystore_verified": true,
+    "ordinary_app_https_verified": true,
+    "ordinary_app_process_restart_persistence_verified": true,
+    "app_lifecycle_evidence": "docs/api32-app-lifecycle-validation.json",
+    "guest_framework_policy_disabled_verified": true,
+    "framework_policy_evidence": "docs/api32-app-lifecycle-validation.json",
+    "host_frame_presentation_verified": true,
+    "host_input_delivery_verified": true,
+    "host_keyboard_delivery_verified": true,
+    "host_repeated_input_delivery_verified": true,
+    "host_keyboard_evidence": "docs/api32-host-keyboard-validation.json",
+    "systemui_speed_compilation_verified": true,
+    "systemui_startup_verified": false,
+    "usable_launcher_verified": false,
+    "ui_runtime_evidence": "docs/api32-ui-runtime-validation.json",
+    "guest_cached_process_limit_verified": true,
+    "guest_cached_process_limit": 4,
+    "guest_cached_process_default_at_construction_verified": true,
+    "guest_cached_process_limit_override_required": false,
+    "guest_cached_process_default_evidence": "docs/api32-early-memory-validation.json",
+    "normal_service_startup_implemented": true,
+    "normal_service_startup_evidence": "docs/api32-runtime-boot-validation.json",
+    "normal_startup_runs_component_suite": false,
+    "normal_startup_stability_verified": false,
+    "normal_startup_default_host_process_budget_verified": false,
+    "uid0_native_service_core_implemented": true,
+    "uid0_native_service_core_components": 8,
+    "uid0_native_service_core_component_checks_verified": true,
+    "uid0_native_service_core_evidence": "docs/api32-service-process-validation.json",
+    "normal_runtime_services_with_native_core": 15,
+    "native_service_layout": 2,
+    "software_crypto_hal_shared_process_implemented": true,
+    "software_crypto_hal_shared_process_verified": true,
+    "software_crypto_hal_shared_process_evidence": "docs/api32-service-process-validation.json",
+    "normal_startup_default_host_limit_run_completed": true,
+    "normal_startup_default_host_limit_completion_evidence": "docs/api32-service-process-validation.json",
+    "software_renderer_worker_scheduling_implemented": true,
+    "software_renderer_worker_scheduling_verified": true,
+    "software_renderer_worker_scheduling_evidence": "docs/api32-renderer-worker-validation.json",
+    "default_software_renderer_worker_scheduling_enabled": false,
+    "host_display_input_evidence": "docs/api32-host-display-validation.json",
+    "native_binder_dump_role_mapping_verified": true,
+    "native_binder_dump_evidence": "docs/api32-binder-dump-validation.json",
+    "loader_nested_signal_dispatch_verified": true,
+    "loader_nested_signal_evidence": "docs/api32-signal-validation.json",
+    "platform_readonly_view_verified": true,
+    "platform_readonly_view_evidence": "docs/api32-readonly-validation.json",
+    "systemui_speed_cache_reuse_verified": true,
+    "stock_window_manager_dump_verified": true,
+    "framework_boot_image_extension_verified": true,
+    "framework_preoptimized_artifacts_packaged": true,
+    "framework_artifact_evidence": "docs/api32-framework-artifacts-validation.json",
+    "systemserver_speed_compilation_verified": false,
+    "systemserver_compilation_filter_observed": "system_prebuilt_speed; apex_verify",
+    "systemserver_trusted_preopt_selection_verified": true,
+    "systemserver_executable_code_mapping_verified": true,
+    "systemserver_dexopt_evidence": "docs/api32-systemserver-dexopt-validation.json",
+    "systemserver_data_cache_aot_trust_supported": false,
+    "systemserver_speed_compilation_scope": "Ordinary data-cache AOT is not a valid system_server execution source. Stock speed preopt selection/mapping is verified by the separate flags.",
+    "primary_zygote_full_preload_verified": true,
+    "primary_zygote_preload_evidence": "docs/api32-primary-preload-validation.json",
+    "systemserver_six_artifact_warm_reuse_verified": true,
+    "native_suspend_control_verified": true,
+    "native_suspend_control_evidence": "docs/api32-suspend-validation.json",
+    "host_kernel_suspend_control_supported": false,
+    "systemui_executable_code_mapping_verified": true,
+    "systemui_executable_code_mapping_scope": "Later stable UI phase and initial ANR PIDs 914/5922 at approximately 2, 8 and 16 seconds; executable speed ELF inode/device verified. Mapping does not establish execution of every instruction or clean startup.",
+    "systemui_code_evidence": "docs/api32-ui-code-validation.json",
+    "startup_code_observer_optin_supported": true,
+    "default_startup_code_observer_enabled": false,
+    "startup_code_observation_evidence": "docs/api32-startup-code-validation.json",
+    "pending_report_poll_guard_verified": true,
+    "default_startup_profiling_enabled": false,
+    "startup_profiling_optin_supported": true,
+    "normal_startup_evidence": "docs/api32-normal-startup-validation.json",
+    "startup_memory_comparison_evidence": "docs/api32-startup-memory-comparison.json",
+    "tombstoned_requested_java_backtrace_verified": true,
+    "tombstoned_trace_persistence_verified": true,
+    "tombstoned_role_scope_verified": true,
+    "tombstoned_native_fatal_capture_verified": false,
+    "tombstoned_evidence": "docs/api32-tombstoned-validation.json",
+    "bluetooth_rootless_scheduling_verified": true,
+    "bluetooth_radio_supported": false,
+    "bluetooth_feature_declaration_matches_backend": true,
+    "bluetooth_scheduling_evidence": "docs/api32-service-scheduling-validation.json",
+    "camera_feature_declaration_matches_backend": true,
+    "software_hardware_declaration_evidence": "docs/api32-software-hardware-validation.json",
+    "stock_camera_service_empty_profile_verified": true,
+    "camera_hidl_registration_verified": true,
+    "camera_hidl_role_denial_verified": true,
+    "host_camera_capture_supported": false,
+    "camera_service_evidence": "docs/api32-software-hardware-validation.json",
+    "stock_perfetto_consumer_service_verified": true,
+    "perfetto_guest_uid_session_ownership_verified": true,
+    "perfetto_unregistered_peer_rejection_verified": true,
+    "perfetto_evidence": "docs/api32-perfetto-validation.json",
+    "traced_probes_supported": false,
+    "host_kernel_system_tracing_supported": false,
+    "overlay_aapt2_tool": {
+      "version": "7.1.3-7984345",
+      "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/7.1.3-7984345/aapt2-7.1.3-7984345-linux.jar",
+      "bytes": 2062453,
+      "sha256": "9582d97439fa1360ecd322e6a39c9e56fb3fc7a2f459bef8b258ce21790985b8",
+      "binarySha256": "bba94dd72057740ef241146a1c9e3821fc8ab5a0dbd1fc4b7a4570c7e9f0c85a"
+    },
+    "manager_install_package_broadcast_ordering_implemented": true,
+    "manager_install_package_broadcast_ordering_verified_vm": true,
+    "manager_signal_evidence": "docs/api32-manager-signal-validation.json",
+    "manager_unmodified_api32_signal_startup_verified_vm": true,
+    "host_uplink_network_agent_implemented": true,
+    "host_uplink_network_agent_verified_vm": true,
+    "host_uplink_network_agent_evidence": "docs/api32-host-uplink-validation.json",
+    "system_api_stubs": {
+      "repository": "https://android.googlesource.com/platform/prebuilts/sdk",
+      "commit": "9fe6723b681aa4bcf8392817376819f58a25ea2e",
+      "path": "32/system/android.jar",
+      "url": "https://android.googlesource.com/platform/prebuilts/sdk/+/9fe6723b681aa4bcf8392817376819f58a25ea2e/32/system/android.jar?format=TEXT",
+      "bytes": 61321291,
+      "sha256": "b8227de5f63d5ae1976ecdf1172b482b9d2b58ad274183db5a8d14ee531e1747",
+      "format": "gitiles-base64",
+      "gitBlobSha1": "3bd3036d81b3179bda7f90a4e1ef6cd137855fb0"
+    },
+    "kernel_tcp_stall_diagnostics_supported": false,
+    "dns_only_guest_stall_profile_implemented": true,
+    "dns_raw_packet_resolver_implemented": true,
+    "dns_raw_packet_resolver_verified_vm": true,
+    "network_monitor_validated_verified_vm": true,
+    "dns_raw_packet_resolver_evidence": "docs/api32-raw-dns-validation.json",
+    "ce_namespace_api32_layout_implemented": true,
+    "ce_five_root_transport_verified_vm": true,
+    "ce_vold_api32_adapter_built": true,
+    "ce_vold_api32_runtime_verified": true,
+    "ce_framework_credential_lifecycle_verified": true,
+    "ce_storage_evidence": "docs/api32-ce-storage-validation.json",
+    "ce_manager_integration_implemented": true,
+    "ce_manager_integration_runtime_verified": true,
+    "external_storage_mode_handoff_implemented": true,
+    "external_storage_mode_handoff_native_verified_vm": true,
+    "external_storage_mode_handoff_zygote_runtime_verified": true,
+    "external_fuse_peer_thread_identity_implemented": true,
+    "external_fuse_peer_thread_identity_native_verified_vm": true,
+    "external_fuse_storage_evidence": "docs/api32-emulated-storage-validation.json",
+    "external_fuse_host_proxy_implemented": true,
+    "external_fuse_host_proxy_native_verified_vm": true,
+    "external_fuse_host_proxy_manager_integrated": false,
+    "external_fuse_concurrent_transport_implemented": true,
+    "external_fuse_concurrent_transport_native_verified_vm": true,
+    "external_storage_lower_view_implemented": true,
+    "external_storage_lower_view_native_verified_vm": true,
+    "external_storage_real_provider_session_runtime_verified": false,
+    "external_storage_real_provider_session_init_verified_vm": true,
+    "unix_datagram_path_translation_implemented": true,
+    "unix_datagram_path_translation_native_verified_vm": true,
+    "external_storage_lower_view_zygote_runtime_verified_vm": true,
+    "external_storage_real_provider_session_metadata_verified_vm": true,
+    "external_fuse_real_provider_file_data_functionally_verified_vm": true,
+    "external_fuse_real_provider_file_data_strict_verified_vm": true,
+    "external_fuse_host_callback_lifetime_descriptor_implemented": true
   }
 }

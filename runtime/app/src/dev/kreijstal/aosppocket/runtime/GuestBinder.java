@@ -24,31 +24,41 @@ import java.util.List;
 /** Compatibility with the Ananbox guest's Binder bootstrap protocol. */
 final class GuestBinder extends BroadcastReceiver {
     static final String ACTION = "com.github.ananbox.BINDER";
-    private IBinder manager;
-    private final List<IBinder> pending = new ArrayList<>();
+    private static final class Endpoint {
+        IBinder manager;
+        final List<IBinder> pending = new ArrayList<>();
+        void reset() { manager = null; pending.clear(); }
+    }
+    private final Endpoint nativeEndpoint = new Endpoint();
+    private final Endpoint hardwareEndpoint = new Endpoint();
 
-    synchronized void reset() { manager = null; pending.clear(); }
+    synchronized void reset() { nativeEndpoint.reset(); hardwareEndpoint.reset(); }
 
     @Override public synchronized void onReceive(Context context, Intent intent) {
         Bundle extras = intent.getExtras();
         if (extras == null) return;
-        IBinder incoming = extras.getBinder("binder");
+        receiveEndpoint(extras, "binder", "local", nativeEndpoint);
+        receiveEndpoint(extras, "hardware_binder", "hardware_local", hardwareEndpoint);
+    }
+
+    private void receiveEndpoint(Bundle extras, String publishKey, String requestKey, Endpoint endpoint) {
+        IBinder incoming = extras.getBinder(publishKey);
         if (incoming != null && incoming.pingBinder()) {
             // isBinderAlive() can retain a cached true result after the old
             // guest died. A newly published, pinged manager supersedes it.
-            manager = incoming;
-            Log.i("PocketRuntime", "Guest Binder service manager received");
-            for (IBinder waiting : pending) handoff(waiting);
-            pending.clear();
+            endpoint.manager = incoming;
+            Log.i("PocketRuntime", "Guest Binder endpoint received: " + publishKey);
+            for (IBinder waiting : endpoint.pending) handoff(waiting, endpoint.manager);
+            endpoint.pending.clear();
             return;
         }
-        IBinder local = extras.getBinder("local");
+        IBinder local = extras.getBinder(requestKey);
         if (local == null) return;
-        if (manager == null) pending.add(local);
-        else handoff(local);
+        if (endpoint.manager == null) endpoint.pending.add(local);
+        else handoff(local, endpoint.manager);
     }
 
-    private void handoff(IBinder local) {
+    private void handoff(IBinder local, IBinder manager) {
         Parcel request = Parcel.obtain(), reply = Parcel.obtain();
         try {
             request.writeInterfaceToken("com.github.ananbox.ILocalInterface");
@@ -82,7 +92,7 @@ final class GuestBinder extends BroadcastReceiver {
         broadcast.invoke(capture, null, null, null, null, 0, null, null,
             null, 0, null, false, false, 0);
         if (code[0] <= 0) throw new IllegalStateException("Missing host broadcast transaction");
-        for (String name : new String[]{"local", "binder"}) {
+        for (String name : new String[]{"local", "binder", "hardware_local", "hardware_binder"}) {
             // Guest processes replay this parcel and give up after 6 seconds,
             // and their own ActivityManager kills unattached processes soon
             // after. The background queue can hold a broadcast for minutes

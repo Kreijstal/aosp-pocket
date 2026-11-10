@@ -1,0 +1,426 @@
+{
+  "runId": "001946a55718472daaff9654f3cc40c0",
+  "hostUid": 10154,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "apkSha256": "94ff394679ad023a06de81dd4240086176b340e299139576870c173d1bcd00c1",
+  "imageManifestSha256": "2858a6d6645f26a476b668afc575f7401043599dbc0c43f86ab7fa97ab459a6c",
+  "imageVerifiedFiles": 2552,
+  "debuggable": false,
+  "deltaUpdate": true,
+  "fullGuestBootVerified": false,
+  "schema": 1,
+  "validation": "COMPONENT PASS / combined app test PARTIAL",
+  "scope": "Stock SDK 32 Gatekeeper daemon and emulator software HAL in the isolated non-debuggable fixture; credential/SID protocol only, no secure-token, lock-screen or encrypted-storage claim",
+  "softwareGatekeeperVerified": true,
+  "gatekeeperDeviceSetupReportVerified": true,
+  "wrongPasswordRejectedVerified": true,
+  "alteredSidRejectedVerified": true,
+  "challengeFieldsVerified": true,
+  "sidLifecycleVerified": true,
+  "gatekeeperCallerDenialVerified": true,
+  "hardwareBacked": false,
+  "authTokenMacSecurityVerified": false,
+  "signatureOnlyMutationRejectedVerified": false,
+  "daemonRestartPersistenceVerified": false,
+  "lockScreenPasswordCycleVerified": false,
+  "credentialBoundKeyUseVerified": false,
+  "encryptedCeIntegrationVerified": false,
+  "ordinaryAppInstallVerified": false,
+  "source": {
+    "daemonProject": "platform/system/core",
+    "daemonCommit": "49b85e93561d1ab5e6bab68e36d8454e1ef1fa89",
+    "daemonPath": "gatekeeperd",
+    "halProject": "platform/hardware/interfaces",
+    "halCommit": "68f44501a2e4d13b1b7acf1816db15bdea1dbc87",
+    "halPath": "gatekeeper/1.0/software",
+    "coreProject": "platform/system/gatekeeper",
+    "coreCommit": "6d141a300cd130398acedb15e6259864227bcc15",
+    "runtime": "immutable SDK daemon and software HAL credential code; ordinary fixture ELF interpreter adaptation; startup-only configureRpcThreadpool(1,true) -> (2,true) interposition"
+  },
+  "permissionModel": "Daemon permission decisions remain stock ACCESS_KEYGUARD_SECURE_STORAGE checks. Probe runs after the actual framework permission controller is ready. UID 39999: enroll returns ERROR, clearSecureUserId leaves an enrolled SID unchanged, public SID lookup remains readable per stock contract, raw HIDL lookup is denied. Logical roles share the outer Android app UID; no extra kernel security boundary is claimed.",
+  "softwareLimitations": "AOSP SoftGateKeeper caches a successful password hash by SID. Signature-only mutation with the correct cached password need not be rejected. The probe changes SID and requires rejection. The SDK software HAL uses emulator token-signature behavior; this is not hardware-backed or production-grade authentication-token security. Persistent throttling, auth-bound keys, lock-screen credentials and encrypted CE remain unverified.",
+  "currentBlocker": "The framework policy fix resolved PackageInstaller staging restorecon. App lifecycle checks now pass in the follow-up evidence; usable UI/Manager and secure credential-storage gates remain unverified.",
+  "verifiedMarkers": [
+    "API32_FRAMEWORK_BOOT_PASS stock_system_server=1 boot_completed=1 activity_package_window=live",
+    "API32_FRAMEWORK_USER_UNLOCKED user=0 source=UserManager",
+    "API32_SETTINGS_PROVIDER_PASS stock_provider=1 client=external_tool call=real query=real nonce=verified cleanup=1",
+    "API32_GATEKEEPER_ROLE_DENIED_PASS uid=39999 enroll=error clear_sid=unchanged public_sid=readable raw_hal=denied",
+    "API32_GATEKEEPER_PASS stock_daemon=12L stock_software_hal=1 setup_report=real enrollment=real wrong_password=rejected altered_sid=rejected challenge=matched sid_lifecycle=verified hardware_backed=0 emulator_token_mac=not_secure cleanup=1",
+    "API32_GATEKEEPER_RPC_POOL requested=1 actual=2 backend=stock_sdk_software",
+    "API32_INIT_STOPPED reaped=26 remaining=0 failed=0"
+  ],
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_gatekeeper.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; startup adapter and typed C++ client, -Wall -Wextra -Werror"
+    },
+    {
+      "command": "python3 tools/build_api32_framework.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; gated HIDL declaration, interface-chain validation and caller filtering"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --reuse-native --delta-from out/api32/gatekeeper-ready-image-manifest.json",
+      "result": "PASS; signed delta input set/hashes validated"
+    },
+    {
+      "command": "ssh -o BatchMode=yes pi@juanraspberry 'python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps'",
+      "result": "PARTIAL / exit 1: boot, unlock, Settings and both Gatekeeper markers passed; app session restorecon failed before installation."
+    }
+  ],
+  "followupValidation": {
+    "runId": "41231af2d3704044b333c531d8de96c0",
+    "evidence": "docs/api32-app-lifecycle-validation.json",
+    "result": "Combined app test PASS / exit 0; both Gatekeeper markers passed again; host SELinux Enforcing before/after."
+  },
+  "sharedGatekeeper45Trial": {
+    "status": "FAIL_NATIVE_CLIENT_INTERPRETER_UNPATCHED",
+    "candidate": "out/api32/crypto-frontend-candidate.json",
+    "candidateSha256": "66e0bca1403f6847e44b14e65af697cf48b594a52cdae9539d9d0f213126c7a4",
+    "sourcePins": 756,
+    "imagePackageCheck": {
+      "status": "PASS_SHARED_GATEKEEPER45_IMAGE_PACKAGE",
+      "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+      "imageBytes": 590922803,
+      "imageVersion": "0.78.45",
+      "changedEntriesSince44": [
+        "system/bin/pocket-crypto-api32",
+        "system/etc/init/pocket-runtime.rc",
+        "system/etc/pocket-runtime-boot.sh",
+        "pocket-image.json"
+      ],
+      "entriesVerified": 2649,
+      "services": [
+        "idmap2d",
+        "mdnsd",
+        "pocket-adbd",
+        "pocket-audio",
+        "pocket-cameraserver",
+        "pocket-framework",
+        "pocket-installd",
+        "pocket-keymaster",
+        "pocket-keystore",
+        "pocket-mediaextractor",
+        "pocket-mediaserver",
+        "pocket-mediaswcodec",
+        "pocket-registry",
+        "pocket-runtime-bootstrap",
+        "pocket-surfaceflinger",
+        "pocket-tombstoned",
+        "pocket-traced"
+      ],
+      "cryptoSha256": "6ba76c063b561f769360af109536a75fe3c89ece1574cd205fce4137a8b8c049",
+      "allOtherPayloadsUnchanged": true,
+      "runtimeVerified": false,
+      "credentialLifecycleVerified": false,
+      "processBudgetVerified": false,
+      "productionReleaseReady": false
+    },
+    "sourceBuild": "out/api32/crypto-frontend-image/native-crypto/build.json",
+    "diagnosticRunner": {
+      "sha256": "ef7bb6094d856dfd89b3a20357c359924c753187d32594d07992fd44cb94a845",
+      "frozenPath": "diagnostic-runner.py"
+    },
+    "commands": [
+      {
+        "command": "python3 tools/build_api32_crypto.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated --frontend --out out/api32/crypto-frontend45",
+        "result": "PASS"
+      },
+      {
+        "command": "python3 -m unittest tools.tests.test_api32_crypto_layout -v",
+        "result": "PASS: 3 tests, with mismatched identity/preload/duplicate/startup rejection cases"
+      },
+      {
+        "command": "python3 tools/validate_download_manager.py out/api32/crypto-frontend-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+        "result": "PASS"
+      }
+    ],
+    "relativeTo44ProcessSaving": 1,
+    "runtimeVerified": false,
+    "credentialLifecycleVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Normal full45 Manager startup: only image crypto executable and its paired startup differ from44. Temporary Gatekeeper identity enrollment/verify/challenge/re-enrollment/SID cleanup and ordinary UID39999 denial via compiled pinned-interface client. No real user0 lock or CE changes. All processes counted; host max32/SELinux/permissions unchanged; no media, account, CE, hard budget or phone claim.",
+    "stockSoftwareHalLimitation": "The unchanged SDK software HAL fast password cache is keyed by SID rather than handle. Re-enrollment checks new authentication first, then old-password rejection. This does not prove immediate stale-cache invalidation or hardware-backed security.",
+    "job": {
+      "pid": 18897,
+      "token": "f83ff808677141c89d2817fbddc5d835",
+      "script": "/home/pi/pocket-api32-vm/crypto-frontend-validation/run-f83ff808677141c89d2817fbddc5d835.py",
+      "log": "/home/pi/pocket-api32-vm/crypto-frontend-validation/run-f83ff808677141c89d2817fbddc5d835.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto-frontend-validation/run-f83ff808677141c89d2817fbddc5d835.exit.json"
+    },
+    "runId": "5cdf3c36f21743439f272ba21dd07667",
+    "failureAudit": "out/api32/crypto-frontend-result/failure-audit.json",
+    "sameUidFrontendRegistrationObserved": true
+  },
+  "sharedGatekeeper45LoaderTrial": {
+    "status": "CREDENTIAL_CLIENT_PASS_STRICT_VOLUME_NOT_READY_FAIL",
+    "candidate": "out/api32/crypto-frontend-loader-candidate.json",
+    "sourcePins": 756,
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "changedSinceFailedTrial": [
+      "runtime/tests/api32/ManagerAppProbe32.java"
+    ],
+    "scope": "Bind the copied credential client to the real instance Pocket loader, as existing native clients already do. Only test DEX/signatures change; image/native client/host production Java/five JNI stay unchanged. Cached45 offline reuse; preserve initial failed evidence. Init lifetime counts may include valid idmap2d idle restarts; require all actual starts/reaps and mandatory/declared service set, without assuming one fixed count.",
+    "runtimeVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "job": {
+      "pid": 22378,
+      "token": "0082363abadf412da5ad1d856de0352b",
+      "script": "/home/pi/pocket-api32-vm/crypto-frontend-loader-validation/run-0082363abadf412da5ad1d856de0352b.py",
+      "log": "/home/pi/pocket-api32-vm/crypto-frontend-loader-validation/run-0082363abadf412da5ad1d856de0352b.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto-frontend-loader-validation/run-0082363abadf412da5ad1d856de0352b.exit.json"
+    },
+    "runId": "246c0d97382d43fab51df62d6628e61c",
+    "failureAudit": "out/api32/crypto-frontend-loader-result/failure-audit.json",
+    "temporaryCredentialClientValidation": "PASS"
+  },
+  "sharedGatekeeper45MountedTrial": {
+    "status": "PASS_SAME_UID_GATEKEEPER45_CREDENTIAL_LIFECYCLE",
+    "candidate": "out/api32/crypto-frontend-mounted-candidate.json",
+    "sourcePins": 756,
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "changedSincePriorTrial": [
+      "runtime/tests/api32/ManagerAppProbe32.java"
+    ],
+    "scope": "Actual normal Manager boot on full45, pinned Gatekeeper frontend and software HALs in one UID1000 PID, real temporary-identity credential lifecycle and ordinary-role denial; strict cleanup/default host policy unchanged. Stock SID-only fast-cache semantics retained; old password rejection measured after new authentication. No user0 lock changes, CE preservation, media, hard resource bound or physical phone claim.",
+    "runtimeVerified": true,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "job": {
+      "pid": 24872,
+      "token": "5012304daf494c50ae59de492781b303",
+      "script": "/home/pi/pocket-api32-vm/crypto-frontend-mounted-validation/run-5012304daf494c50ae59de492781b303.py",
+      "log": "/home/pi/pocket-api32-vm/crypto-frontend-mounted-validation/run-5012304daf494c50ae59de492781b303.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto-frontend-mounted-validation/run-5012304daf494c50ae59de492781b303.exit.json"
+    },
+    "runId": "dda26cc330424d2e86fdd983409fd2aa",
+    "reportSha256": "dfecbb805064d45df7b3c68a4a6003cfcc254e0112f969c6b421faa0c78c45ce",
+    "sourcePinsVerified": 756,
+    "diagnosticRunnerPinVerified": true,
+    "managerSha256": "9819ed4926b29d81a1b00e43b095b90ed68c2fbd96037cc9d34ebb3126b0d30a",
+    "cryptoPid": 21978,
+    "sameUidFrontendVerified": true,
+    "temporaryCredentialLifecycleVerified": true,
+    "realUser0CredentialChanged": false,
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "22400"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "16",
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 16,
+    "sampledPeakChildren": 31,
+    "observerSamples": 67,
+    "amsSamples": 2,
+    "hostDefault32AndPermissionsUnchanged": true,
+    "relativeTo44ProcessSaving": 1,
+    "stockSidOnlyFastCachePreserved": true,
+    "currentImageCePreservationVerified": false,
+    "mediaCompatibilityVerified": false,
+    "physicalPhoneVerified": false,
+    "evidence": "out/api32/crypto-frontend-mounted-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_crypto_frontend_mounted_result.py --run-id dda26cc330424d2e86fdd983409fd2aa",
+    "terminalStateEvidence": "out/api32/crypto-frontend-mounted-terminal-state.json",
+    "externalVolumeReadyBeforeCrypto": true
+  },
+  "bootReadiness46Trial": {
+    "status": "PASS_ACTUAL_BOOT_READINESS46_EARLY_INPUT_AND_TEMPORARY_CREDENTIALS",
+    "candidate": "out/api32/startup-readiness-candidate.json",
+    "candidateSha256": "43c42a5f8fc2d3cdf8cb11a93235e0bf07298844b59124a5b2e9479344b59de1",
+    "sourcePins": 757,
+    "job": {
+      "pid": 10412,
+      "token": "4ede798500d24862b4dec2a3a7139ee5",
+      "script": "/home/pi/pocket-api32-vm/startup-readiness-validation/run-4ede798500d24862b4dec2a3a7139ee5.py",
+      "log": "/home/pi/pocket-api32-vm/startup-readiness-validation/run-4ede798500d24862b4dec2a3a7139ee5.log",
+      "exit": "/home/pi/pocket-api32-vm/startup-readiness-validation/run-4ede798500d24862b4dec2a3a7139ee5.exit.json"
+    },
+    "imageVersion": "0.78.46",
+    "imageSha256": "b5f4be5a1179aec73fb63af5314c7e55679cd5ef73d3f5a1ddc6fb8aedc10d29",
+    "managerSha256": "443f7c1c440ee89513fe49584d20beabb598ecc38a2d4be6ffae5701767ecfd7",
+    "packageCheck": {
+      "status": "PASS_BOOT_READINESS46_IMAGE_PACKAGE",
+      "imageVersion": "0.78.46",
+      "imageSha256": "b5f4be5a1179aec73fb63af5314c7e55679cd5ef73d3f5a1ddc6fb8aedc10d29",
+      "imageBytes": 590925256,
+      "entriesVerified": 2650,
+      "addedEntries": [
+        "system/etc/pocket-app-readiness32"
+      ],
+      "changedEntriesSince45": [
+        "system/bin/pocket-crypto-api32",
+        "system/framework/pocket-manager.jar",
+        "pocket-image.json"
+      ],
+      "allOtherNativeAndPlatformPayloadsUnchanged": true,
+      "cryptoAlgorithmAndPatchedSourceUnchanged": true,
+      "cryptoMatchesFreshOutputDirectoryReproBuild": true,
+      "cryptoReproCheck": "out/api32/readiness-crypto-repro-check.json",
+      "guestManagerJarSha256": "ca6a92e55840715ebaa6cb826a2c2f4ca9b1ac66f04f7d841364877ea7ef7ad0",
+      "runtimeVerified": false,
+      "processBudgetVerified": false,
+      "productionReleaseReady": false
+    },
+    "cryptoOutputDirectoryReproCheck": "out/api32/readiness-crypto-repro-check.json",
+    "scope": "Actual new full46 Manager boot, same-process volatile boot-completion/user/mount readiness transition, real early HOME key acceptance before readyForApps, temporary Gatekeeper credential lifecycle and ordinary-role denial. Complete external mount/native descendant teardown and default host policy unchanged. No real user0 password change, locked-CE, media/account, process-bound or physical-phone claim.",
+    "appOperationWaitPathRuntimeVerified": false,
+    "lockedCeKeyguardVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "70975967c8b0439f9607a007ced89428",
+    "reportSha256": "12ef4b9be9b11fc0eeeb7961792e1141fe5ed37b8876556e63452bcce6c2b73b",
+    "sourcePinsVerified": 757,
+    "diagnosticRunnerPinVerified": true,
+    "cryptoPid": 3399,
+    "sameUidFrontendVerified": true,
+    "temporaryCredentialLifecycleVerified": true,
+    "realUser0CredentialChanged": false,
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "3802"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "7",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 16,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 30,
+    "observerSamples": 117,
+    "amsSamples": 3,
+    "hostDefault32AndPermissionsUnchanged": true,
+    "startupOwnerPid": 3581,
+    "startupReadiness": [
+      {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31965401,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": false,
+        "readyForApps": false
+      },
+      {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31969480,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": true,
+        "readyForApps": false
+      },
+      {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 32012171,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": true,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": true,
+        "readyForApps": true
+      }
+    ],
+    "startupInput": {
+      "keyCode": 3,
+      "acceptedBefore": 0,
+      "acceptedAfter": 4,
+      "stateBeforeSend": {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31965401,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": false,
+        "readyForApps": false
+      },
+      "stateAfterAccepted": {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31966562,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": false,
+        "readyForApps": false
+      },
+      "source": "GuestInput32.injectInputEventReply"
+    },
+    "actualBootReadinessTransitionVerified": true,
+    "earlyInputBeforeAppReadyVerified": true,
+    "stockSidOnlyFastCachePreserved": true,
+    "currentImageCePreservationVerified": false,
+    "mediaCompatibilityVerified": false,
+    "physicalPhoneVerified": false,
+    "evidence": "out/api32/startup-readiness-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_startup_readiness_result.py --run-id 70975967c8b0439f9607a007ced89428"
+  }
+}

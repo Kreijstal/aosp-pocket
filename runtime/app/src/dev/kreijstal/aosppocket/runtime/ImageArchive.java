@@ -11,6 +11,10 @@ import java.util.zip.*;
 /** Validates all immutable system files before replacing any installed file. */
 final class ImageArchive {
     static final long LIMIT=2L*1024*1024*1024;
+    static final class InstallStats {
+        int reusedFiles,replacedFiles;
+        long reusedBytes,writtenBytes;
+    }
     static final class Entry {
         final long size,crc;final String sha;final int mode;
         Entry(long size,long crc,String sha,int mode)throws IOException {
@@ -20,13 +24,19 @@ final class ImageArchive {
         }
     }
     static void path(String name)throws IOException {
-        if(!(name.startsWith("system/") || name.startsWith("vendor/") || name.startsWith("apex/")) || name.indexOf('\\')>=0 || name.indexOf('\0')>=0)
+        if(!(name.startsWith("system/") || name.startsWith("system_ext/") || name.startsWith("vendor/")
+                || name.startsWith("product/") || name.startsWith("apex/") || name.startsWith("odm/") || name.startsWith("oem/")
+                || name.equals(".pocket-readonly-system") || name.equals("bootstrap-linkerconfig"))
+                || name.indexOf('\\')>=0 || name.indexOf('\0')>=0)
             throw new IOException("Invalid image path");
         for(String part:name.split("/",-1))if(part.isEmpty() || part.equals(".") || part.equals(".."))throw new IOException("Invalid image path");
     }
     static File target(File root,String name)throws IOException {
+        path(name);return checkedTarget(root,name);
+    }
+    private static File checkedTarget(File root,String name)throws IOException {
         if(Files.isSymbolicLink(root.toPath()))throw new IOException("Image root is a symlink");
-        path(name);File result=new File(root,name);
+        File result=new File(root,name);
         if(!result.getCanonicalPath().startsWith(root.getCanonicalPath()+"/"))throw new IOException("Image path escapes root");
         for(File parent=result;parent!=null && !parent.equals(root);parent=parent.getParentFile())
             if(Files.isSymbolicLink(parent.toPath()))throw new IOException("Image path contains a symlink");
@@ -62,14 +72,33 @@ final class ImageArchive {
             throw new IOException("Image is missing required files");
         return total;
     }
-    static void install(File archive,File root,Map<String,Entry> files,String manifestSha,String imageSha,ImageDownload.Progress progress)throws IOException {
+    private static boolean installedBytesMatch(File file,Entry spec)throws IOException {
+        if(!file.isFile() || file.length()!=spec.size)return false;
+        try {
+            int mode=((Number)Files.getAttribute(file.toPath(),"unix:mode",LinkOption.NOFOLLOW_LINKS)).intValue();
+            if((mode&07777)!=spec.mode)return false;
+            try(InputStream in=Files.newInputStream(file.toPath(),LinkOption.NOFOLLOW_LINKS)) {
+                return ImageDownload.hash(in,spec.size).equals(spec.sha);
+            }
+        }catch(InterruptedIOException cancelled){throw cancelled;}
+        catch(UnsupportedOperationException | IllegalArgumentException | IOException unreadable){return false;}
+    }
+    static InstallStats install(File archive,File root,Map<String,Entry> files,String manifestSha,String imageSha,ImageDownload.Progress progress)throws IOException {
         if(!root.isDirectory() && !root.mkdirs())throw new IOException("Cannot create guest image directory");
+        InstallStats stats=new InstallStats();
         try(ZipFile zip=new ZipFile(archive)) {
             long total=validate(zip,root,files,manifestSha),done=0;
             atomicText(new File(root,".pocket-image-installing"),imageSha+"\n");
             progress.update(0,total);
             for(Map.Entry<String,Entry> item:files.entrySet()) {
-                ImageDownload.cancelled();File file=target(root,item.getKey()),temporary=target(root,item.getKey()+".pocket-new");Entry spec=item.getValue();
+                ImageDownload.cancelled();File file=target(root,item.getKey()),temporary=checkedTarget(root,item.getKey()+".pocket-new");Entry spec=item.getValue();
+                // The complete incoming archive was validated above. Reuse only
+                // exact installed bytes and mode; runtime-patched ELF files or
+                // corrupt/missing files still take the atomic replacement path.
+                if(installedBytesMatch(file,spec)) {
+                    Files.deleteIfExists(temporary.toPath());stats.reusedFiles++;stats.reusedBytes+=spec.size;
+                    done+=spec.size;progress.update(done,total);continue;
+                }
                 if(!file.getParentFile().isDirectory() && !file.getParentFile().mkdirs())throw new IOException("Cannot create image directory");
                 MessageDigest hash=ImageDownload.digest();long written=0;
                 try(InputStream in=zip.getInputStream(zip.getEntry(item.getKey()));FileOutputStream out=new FileOutputStream(temporary)) {
@@ -85,8 +114,9 @@ final class ImageArchive {
                 PosixFilePermission[] bits=PosixFilePermission.values();
                 for(int bit=0;bit<9;bit++)if((spec.mode&(0400>>bit))!=0)permissions.add(bits[bit]);
                 Files.setPosixFilePermissions(temporary.toPath(),permissions);
-                ImageDownload.move(temporary,file);done+=written;progress.update(done,total);
+                ImageDownload.move(temporary,file);stats.replacedFiles++;stats.writtenBytes+=written;done+=written;progress.update(done,total);
             }
         }
+        return stats;
     }
 }

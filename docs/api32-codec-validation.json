@@ -1,0 +1,1050 @@
+{
+  "schema": 1,
+  "status": "PASS_ORDINARY_APP_AAC_AVC_ROUND_TRIPS_ON_CURRENT_IMAGE",
+  "productionReleaseReady": false,
+  "runId": "ee6cb7d272d8461497750c4171f33864",
+  "vmInstance": 73,
+  "imageVersion": "0.78.37",
+  "imageSha256": "951197adefd97368213b9e09a17a9b6ae8e7dcb127a13ac2fef13860766dcff9",
+  "managerSha256": "d2bbee73207111356e1390a3a34170ba341bd7885a71878f647825eebc33590e",
+  "report": "out/api32/codec-app-result/manager-app-report.json",
+  "reportSha256": "1bcf35829de56a16be6b4025d87a84e434c3917bf3446401f17d15fda5d1af45",
+  "independentCheck": "out/api32/codec-app-result/independent-check.json",
+  "verificationCommand": "python3 out/api32/verify_codec_app_result.py",
+  "sourceSnapshot": {
+    "path": "out/api32/codec-app-source-snapshot",
+    "pinsVerified": 736
+  },
+  "ordinaryApp": {
+    "package": "dev.kreijstal.pocketcodec32test",
+    "minSdk": 32,
+    "targetSdk": 32,
+    "uid": 10111,
+    "requestedPermissions": [],
+    "certificateSha256": "b04ea6cd081f4b5afb30b25f5492ccd044c821fd1e17d18c72067f1b9fcf6916",
+    "platformSigned": false,
+    "apkSha256": "dd4b9805c0b5df5ba11150902bf54db8d6eebdd654aa4202dbbd4bad08531fd9"
+  },
+  "scope": "Real software MediaCodec compression and decode through public APIs in an ordinary app UID. AAC signal and all twelve AVC frame pixels validated twice with distinct workload nonces across actual Home/reopen. Same complete mounted image, cached image reused, source-built MediaProvider mounted and queryable; all native services/descendants reaped. Observer reads the registered Activity report; it does not execute the codecs. No phone or hardware codec test.",
+  "phases": [
+    {
+      "phase": "firstLaunch",
+      "nonce": "250576cd-0a68-448c-a3fd-5da591468e89",
+      "elapsedMillis": 14191,
+      "aac": {
+        "encoder": "c2.android.aac.encoder",
+        "encodedBytes": 1707,
+        "packets": 10,
+        "sampleRate": 48000,
+        "channels": 1,
+        "inputSamples": 10240,
+        "decodedSamples": 10240,
+        "rms": 5633.408993490482,
+        "frequencyHz": 439.453125
+      },
+      "aacDecoder": "c2.android.aac.decoder",
+      "avc": {
+        "encoder": "c2.android.avc.encoder",
+        "encodedBytes": 778,
+        "packets": 12,
+        "width": 64,
+        "height": 64,
+        "inputFrames": 12,
+        "decodedFrames": 12
+      },
+      "avcDecoder": "c2.android.avc.decoder",
+      "allTwelveFramePixelsVerified": true
+    },
+    {
+      "phase": "reopened",
+      "nonce": "9e9a97b3-61f2-4b89-86f3-0b2de6682422",
+      "elapsedMillis": 3186,
+      "aac": {
+        "encoder": "c2.android.aac.encoder",
+        "encodedBytes": 1707,
+        "packets": 10,
+        "sampleRate": 48000,
+        "channels": 1,
+        "inputSamples": 10240,
+        "decodedSamples": 10240,
+        "rms": 5633.408993490482,
+        "frequencyHz": 439.453125
+      },
+      "aacDecoder": "c2.android.aac.decoder",
+      "avc": {
+        "encoder": "c2.android.avc.encoder",
+        "encodedBytes": 778,
+        "packets": 12,
+        "width": 64,
+        "height": 64,
+        "inputFrames": 12,
+        "decodedFrames": 12
+      },
+      "avcDecoder": "c2.android.avc.decoder",
+      "allTwelveFramePixelsVerified": true
+    }
+  ],
+  "serviceLifetimesReaped": 16,
+  "sampledProcessBudget": {
+    "peakChildren": 34,
+    "samples": 94,
+    "errors": [],
+    "hardBoundProven": false
+  },
+  "hostSettings": {
+    "selinux": "Enforcing",
+    "phantomLimit": "null",
+    "phantomMonitoring": "null",
+    "unchanged": true
+  },
+  "remaining": [
+    "Camera capture and microphone/speaker workloads",
+    "Other codec formats, larger resolutions, surface output and media containers",
+    "Default process budget and repeated fresh starts",
+    "Fresh final-image plaintext-to-encrypted migration",
+    "Legacy Android9/10 and physical phone runtime regressions",
+    "Release provenance and HTTPS publication"
+  ],
+  "currentSurfaceInput42Trial": {
+    "status": "TERMINAL_STRICT_EGL_SURFACE_CODEC_PASS",
+    "runId": "8afc52b35e8a4b6597568d75f2cf400c",
+    "reportSha256": "b52a57db4991722b6106462bed4ae1d6f3ef3d23cec4865029b7a1de7680c7a1",
+    "sourcePinsVerified": 747,
+    "managerSha256": "0cda1766410d18f0e8fa00001c92652b5503fc23be342b7d0ac16c6df7fb6355",
+    "imageVersion": "0.78.42",
+    "imageSha256": "7e6a9b9886f8ac2d88a9969c374dd99307c589d9fe210daa396c944ce297ff22",
+    "appArchiveSha256": "06f5ea71bc3a1007bb78b0ac72ec3472afd57ba4aae208e88cd1dcd6e3122f2d",
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "8621"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "13",
+          "8",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "hostDefaultPhantomPolicyVerified": true,
+    "sampledPeakChildren": 33,
+    "observerSamples": 105,
+    "amsSamples": 7,
+    "maxObservedAmsRecords": 0,
+    "actualSurfaceInputVerified": true,
+    "hardProcessBoundVerified": false,
+    "cameraRecorderDecoderSurfaceVideoCallsVerified": false,
+    "physicalPhoneOrHardwareCodecVerified": false,
+    "productionReleaseReady": false,
+    "job": {
+      "pid": 28851,
+      "token": "2e19c32e9cfa4e6d9aecc6bd2884b7dd",
+      "script": "/home/pi/pocket-api32-vm/codec-surface-validation/run-2e19c32e9cfa4e6d9aecc6bd2884b7dd.py",
+      "log": "/home/pi/pocket-api32-vm/codec-surface-validation/run-2e19c32e9cfa4e6d9aecc6bd2884b7dd.log",
+      "exit": "/home/pi/pocket-api32-vm/codec-surface-validation/run-2e19c32e9cfa4e6d9aecc6bd2884b7dd.exit.json"
+    },
+    "validation": "PASS",
+    "strictPassed": true,
+    "supervisorReturnCode": 0,
+    "candidate": "out/api32/codec-surface-candidate.json",
+    "report": "out/api32/codec-surface-result/manager-app-report.json",
+    "independentCheck": "out/api32/codec-surface-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_codec_surface_result.py",
+    "verificationResult": "PASS",
+    "buildCommand": "python3 tools/build_api32_codec_app.py --out out/api32/codec-surface-app-probe",
+    "buildResult": "PASS",
+    "managerValidatorCommand": "python3 tools/validate_download_manager.py out/api32/codec-surface-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+    "managerValidatorResult": "PASS",
+    "command": "python3 /home/pi/pocket-api32-vm/codec-surface-validation/test_api32_app_on_pi.py --work-dir /home/pi/pocket-api32-vm/codec-surface-validation --require-image-reuse",
+    "scope": "Ordinary no-permission SDK32 codec app UID10111, same signing certificate, full unchanged42 image and exact host Java/five freshly source-built JNI from Signal/all-camera pass. AAC PCM, AVC byte-buffer pixels and actual EGL Surface AVC encoding/decoded pixels/PTS/EOS repeated after verified Home. Google SwiftShader, c2.android.avc encoder/decoder,64x64/twelve frames per phase.17 service lifetimes and13 adopted descendants reaped, zero remaining, ownerexit0, no fatal/ANR, default host policy unchanged. Sampled peak33; seven actual AMS dumps show zero tracked records, which does not establish a bound. No Camera2-to-encoder/MediaRecorder, decoder output Surface, account calls, hardware codec or physical phone claim.",
+    "surfacePhases": [
+      {
+        "phase": "firstLaunch",
+        "uid": 10111,
+        "nonce": "e2032418-0ef7-4407-82a5-c1053f594b15",
+        "generation": 1,
+        "width": 64,
+        "height": 64,
+        "frames": 12,
+        "encodedBytes": 780,
+        "encodeMillis": 539,
+        "glRenderer": "Google SwiftShader",
+        "encoder": "c2.android.avc.encoder",
+        "decoder": "c2.android.avc.decoder"
+      },
+      {
+        "phase": "reopened",
+        "uid": 10111,
+        "nonce": "0047eabb-7e68-43b4-863f-0e86d6972f12",
+        "generation": 2,
+        "width": 64,
+        "height": 64,
+        "frames": 12,
+        "encodedBytes": 780,
+        "encodeMillis": 404,
+        "glRenderer": "Google SwiftShader",
+        "encoder": "c2.android.avc.encoder",
+        "decoder": "c2.android.avc.decoder"
+      }
+    ]
+  },
+  "decoderSurface44Trial": {
+    "status": "PASS_API32_DECODER_SURFACE_PIXELS_PTS_AND_ENCODER_AAC_REPEAT",
+    "runId": "30a03b7e1aa24194b024ee6df332a4a4",
+    "reportSha256": "a7cd69ff40e765f99f9bb2faa343f9a2e910b3cc3e2eb754f3dbb55be9f20f44",
+    "sourcePinsVerified": 751,
+    "managerSha256": "566918026287e4a2834036b6d01b7e6ffeb18138c3ac8b3c94e5b69844788394",
+    "imageVersion": "0.78.44",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "appArchiveSha256": "c04b46e1737a7747972a32068dade8082c9ebdc86bf3b464c75368a40d080b73",
+    "phases": [
+      {
+        "phase": "firstLaunch",
+        "uid": 10111,
+        "pid": 27863,
+        "nonce": "f102de07-9672-45b7-8fb4-b257c5548e99",
+        "generation": 1,
+        "aac": {
+          "encoder": "c2.android.aac.encoder",
+          "decoder": {
+            "name": "c2.android.aac.decoder",
+            "outputs": 10,
+            "elapsedMillis": 248,
+            "format": "{sample-rate=48000, aac-drc-boost-level=127, aac-drc-output-loudness=-1, mime=audio/raw, channel-count=1, aac-drc-effect-type=3, aac-drc-cut-level=127, aac-encoded-target-level=-1, max-output-channel-count=8, aac-max-output-channel_count=8, aac-target-ref-level=64, aac-drc-album-mode=0}"
+          },
+          "encodedBytes": 1707,
+          "packets": 10,
+          "sampleRate": 48000,
+          "channels": 1,
+          "inputSamples": 10240,
+          "decodedSamples": 10240,
+          "rms": 5633.408993490482,
+          "frequencyHz": 439.453125,
+          "encodeMillis": 676
+        },
+        "byteBufferAvc": {
+          "encoder": "c2.android.avc.encoder",
+          "decoder": {
+            "name": "c2.android.avc.decoder",
+            "outputs": 12,
+            "elapsedMillis": 234,
+            "format": "{crop-right=63, max-height=240, sar-width=1, color-format=2135033992, slice-height=64, image-data=java.nio.HeapByteBuffer[pos=0 lim=104 cap=104], mime=video/raw, stride=64, color-standard=0, color-transfer=0, sar-height=1, crop-bottom=63, max-width=320, crop-left=0, width=64, color-range=2, crop-top=0, rotation-degrees=0, height=64}"
+          },
+          "encodedBytes": 778,
+          "packets": 12,
+          "width": 64,
+          "height": 64,
+          "inputFrames": 12,
+          "decodedFrames": 12,
+          "pixels": [
+            {
+              "frame": 0,
+              "y": 32,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 1,
+              "y": 36.9375,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 2,
+              "y": 42.0625,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 3,
+              "y": 46.88232421875,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 4,
+              "y": 51.961181640625,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 5,
+              "y": 56.96533203125,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 6,
+              "y": 61.9892578125,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 7,
+              "y": 67,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 8,
+              "y": 72,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 9,
+              "y": 77,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 10,
+              "y": 82,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 11,
+              "y": 87,
+              "u": 96,
+              "v": 160
+            }
+          ],
+          "encodeMillis": 682
+        },
+        "surfaceAvc": {
+          "encoder": "c2.android.avc.encoder",
+          "decoder": {
+            "name": "c2.android.avc.decoder",
+            "outputs": 12,
+            "elapsedMillis": 348,
+            "format": "{crop-right=63, max-height=240, sar-width=1, color-format=2135033992, slice-height=64, image-data=java.nio.HeapByteBuffer[pos=0 lim=104 cap=104], mime=video/raw, stride=64, color-standard=4, color-transfer=3, sar-height=1, crop-bottom=63, max-width=320, crop-left=0, width=64, color-range=2, crop-top=0, rotation-degrees=0, height=64}"
+          },
+          "encodedBytes": 780,
+          "packets": 12,
+          "width": 64,
+          "height": 64,
+          "inputFrames": 12,
+          "decodedFrames": 12,
+          "pixels": [
+            {
+              "frame": 0,
+              "presentationTimeUs": 100000,
+              "expectedLuma": 70.96470588235294,
+              "y": 72,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 1,
+              "presentationTimeUs": 200000,
+              "expectedLuma": 77.83529411764707,
+              "y": 76.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 2,
+              "presentationTimeUs": 300000,
+              "expectedLuma": 84.70588235294117,
+              "y": 83.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 3,
+              "presentationTimeUs": 400000,
+              "expectedLuma": 91.5764705882353,
+              "y": 90.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 4,
+              "presentationTimeUs": 500000,
+              "expectedLuma": 98.44705882352942,
+              "y": 97.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 5,
+              "presentationTimeUs": 600000,
+              "expectedLuma": 105.31764705882352,
+              "y": 104.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 6,
+              "presentationTimeUs": 700000,
+              "expectedLuma": 112.18823529411765,
+              "y": 112,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 7,
+              "presentationTimeUs": 800000,
+              "expectedLuma": 119.05882352941177,
+              "y": 119,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 8,
+              "presentationTimeUs": 900000,
+              "expectedLuma": 125.92941176470588,
+              "y": 126,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 9,
+              "presentationTimeUs": 1000000,
+              "expectedLuma": 132.8,
+              "y": 132,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 10,
+              "presentationTimeUs": 1100000,
+              "expectedLuma": 139.67058823529413,
+              "y": 139,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 11,
+              "presentationTimeUs": 1200000,
+              "expectedLuma": 146.54117647058823,
+              "y": 146,
+              "u": 128,
+              "v": 128
+            }
+          ],
+          "outputSurface": {
+            "name": "c2.android.avc.decoder",
+            "outputs": 12,
+            "pixels": [
+              {
+                "frame": 0,
+                "presentationTimeUs": 100000,
+                "surfaceTimestampNanos": 100000000,
+                "expectedGray": 64,
+                "red": 65,
+                "green": 65,
+                "blue": 65,
+                "minChannel": 65,
+                "maxChannel": 65,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 1,
+                "presentationTimeUs": 200000,
+                "surfaceTimestampNanos": 200000000,
+                "expectedGray": 72,
+                "red": 70.97222222222223,
+                "green": 70.97222222222223,
+                "blue": 70.97222222222223,
+                "minChannel": 70,
+                "maxChannel": 71,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 2,
+                "presentationTimeUs": 300000,
+                "surfaceTimestampNanos": 300000000,
+                "expectedGray": 80,
+                "red": 78.97222222222223,
+                "green": 78.97222222222223,
+                "blue": 78.97222222222223,
+                "minChannel": 78,
+                "maxChannel": 79,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 3,
+                "presentationTimeUs": 400000,
+                "surfaceTimestampNanos": 400000000,
+                "expectedGray": 88,
+                "red": 86.97222222222223,
+                "green": 86.97222222222223,
+                "blue": 86.97222222222223,
+                "minChannel": 86,
+                "maxChannel": 87,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 4,
+                "presentationTimeUs": 500000,
+                "surfaceTimestampNanos": 500000000,
+                "expectedGray": 96,
+                "red": 94.97222222222223,
+                "green": 94.97222222222223,
+                "blue": 94.97222222222223,
+                "minChannel": 94,
+                "maxChannel": 95,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 5,
+                "presentationTimeUs": 600000,
+                "surfaceTimestampNanos": 600000000,
+                "expectedGray": 104,
+                "red": 103.94444444444444,
+                "green": 103.94444444444444,
+                "blue": 103.94444444444444,
+                "minChannel": 102,
+                "maxChannel": 104,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 6,
+                "presentationTimeUs": 700000,
+                "surfaceTimestampNanos": 700000000,
+                "expectedGray": 112,
+                "red": 112,
+                "green": 112,
+                "blue": 112,
+                "minChannel": 112,
+                "maxChannel": 112,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 7,
+                "presentationTimeUs": 800000,
+                "surfaceTimestampNanos": 800000000,
+                "expectedGray": 120,
+                "red": 120,
+                "green": 120,
+                "blue": 120,
+                "minChannel": 120,
+                "maxChannel": 120,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 8,
+                "presentationTimeUs": 900000,
+                "surfaceTimestampNanos": 900000000,
+                "expectedGray": 128,
+                "red": 128,
+                "green": 128,
+                "blue": 128,
+                "minChannel": 128,
+                "maxChannel": 128,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 9,
+                "presentationTimeUs": 1000000,
+                "surfaceTimestampNanos": 1000000000,
+                "expectedGray": 136,
+                "red": 135,
+                "green": 135,
+                "blue": 135,
+                "minChannel": 135,
+                "maxChannel": 135,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 10,
+                "presentationTimeUs": 1100000,
+                "surfaceTimestampNanos": 1100000000,
+                "expectedGray": 144,
+                "red": 143,
+                "green": 143,
+                "blue": 143,
+                "minChannel": 143,
+                "maxChannel": 143,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 11,
+                "presentationTimeUs": 1200000,
+                "surfaceTimestampNanos": 1200000000,
+                "expectedGray": 152,
+                "red": 151,
+                "green": 151,
+                "blue": 151,
+                "minChannel": 151,
+                "maxChannel": 151,
+                "sampledPixels": 2304
+              }
+            ],
+            "outputMode": "surface-texture",
+            "width": 64,
+            "height": 64,
+            "endOfStream": true,
+            "eglVendor": "Google Inc.",
+            "glRenderer": "Google SwiftShader",
+            "elapsedMillis": 1587
+          },
+          "encodeMillis": 422,
+          "inputMode": "egl-surface",
+          "eglVendor": "Google Inc.",
+          "glRenderer": "Google SwiftShader",
+          "endOfStream": true
+        }
+      },
+      {
+        "phase": "reopened",
+        "uid": 10111,
+        "pid": 27863,
+        "nonce": "36c4fbd0-80d4-406e-9213-d367309ee291",
+        "generation": 2,
+        "aac": {
+          "encoder": "c2.android.aac.encoder",
+          "decoder": {
+            "name": "c2.android.aac.decoder",
+            "outputs": 10,
+            "elapsedMillis": 196,
+            "format": "{sample-rate=48000, aac-drc-boost-level=127, aac-drc-output-loudness=-1, mime=audio/raw, channel-count=1, aac-drc-effect-type=3, aac-drc-cut-level=127, aac-encoded-target-level=-1, max-output-channel-count=8, aac-max-output-channel_count=8, aac-target-ref-level=64, aac-drc-album-mode=0}"
+          },
+          "encodedBytes": 1707,
+          "packets": 10,
+          "sampleRate": 48000,
+          "channels": 1,
+          "inputSamples": 10240,
+          "decodedSamples": 10240,
+          "rms": 5633.408993490482,
+          "frequencyHz": 439.453125,
+          "encodeMillis": 811
+        },
+        "byteBufferAvc": {
+          "encoder": "c2.android.avc.encoder",
+          "decoder": {
+            "name": "c2.android.avc.decoder",
+            "outputs": 12,
+            "elapsedMillis": 414,
+            "format": "{crop-right=63, max-height=240, sar-width=1, color-format=2135033992, slice-height=64, image-data=java.nio.HeapByteBuffer[pos=0 lim=104 cap=104], mime=video/raw, stride=64, color-standard=0, color-transfer=0, sar-height=1, crop-bottom=63, max-width=320, crop-left=0, width=64, color-range=2, crop-top=0, rotation-degrees=0, height=64}"
+          },
+          "encodedBytes": 778,
+          "packets": 12,
+          "width": 64,
+          "height": 64,
+          "inputFrames": 12,
+          "decodedFrames": 12,
+          "pixels": [
+            {
+              "frame": 0,
+              "y": 32,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 1,
+              "y": 36.9375,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 2,
+              "y": 42.0625,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 3,
+              "y": 46.88232421875,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 4,
+              "y": 51.961181640625,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 5,
+              "y": 56.96533203125,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 6,
+              "y": 61.9892578125,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 7,
+              "y": 67,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 8,
+              "y": 72,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 9,
+              "y": 77,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 10,
+              "y": 82,
+              "u": 96,
+              "v": 160
+            },
+            {
+              "frame": 11,
+              "y": 87,
+              "u": 96,
+              "v": 160
+            }
+          ],
+          "encodeMillis": 294
+        },
+        "surfaceAvc": {
+          "encoder": "c2.android.avc.encoder",
+          "decoder": {
+            "name": "c2.android.avc.decoder",
+            "outputs": 12,
+            "elapsedMillis": 308,
+            "format": "{crop-right=63, max-height=240, sar-width=1, color-format=2135033992, slice-height=64, image-data=java.nio.HeapByteBuffer[pos=0 lim=104 cap=104], mime=video/raw, stride=64, color-standard=4, color-transfer=3, sar-height=1, crop-bottom=63, max-width=320, crop-left=0, width=64, color-range=2, crop-top=0, rotation-degrees=0, height=64}"
+          },
+          "encodedBytes": 780,
+          "packets": 12,
+          "width": 64,
+          "height": 64,
+          "inputFrames": 12,
+          "decodedFrames": 12,
+          "pixels": [
+            {
+              "frame": 0,
+              "presentationTimeUs": 100000,
+              "expectedLuma": 70.96470588235294,
+              "y": 72,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 1,
+              "presentationTimeUs": 200000,
+              "expectedLuma": 77.83529411764707,
+              "y": 76.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 2,
+              "presentationTimeUs": 300000,
+              "expectedLuma": 84.70588235294117,
+              "y": 83.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 3,
+              "presentationTimeUs": 400000,
+              "expectedLuma": 91.5764705882353,
+              "y": 90.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 4,
+              "presentationTimeUs": 500000,
+              "expectedLuma": 98.44705882352942,
+              "y": 97.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 5,
+              "presentationTimeUs": 600000,
+              "expectedLuma": 105.31764705882352,
+              "y": 104.9375,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 6,
+              "presentationTimeUs": 700000,
+              "expectedLuma": 112.18823529411765,
+              "y": 112,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 7,
+              "presentationTimeUs": 800000,
+              "expectedLuma": 119.05882352941177,
+              "y": 119,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 8,
+              "presentationTimeUs": 900000,
+              "expectedLuma": 125.92941176470588,
+              "y": 126,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 9,
+              "presentationTimeUs": 1000000,
+              "expectedLuma": 132.8,
+              "y": 132,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 10,
+              "presentationTimeUs": 1100000,
+              "expectedLuma": 139.67058823529413,
+              "y": 139,
+              "u": 128,
+              "v": 128
+            },
+            {
+              "frame": 11,
+              "presentationTimeUs": 1200000,
+              "expectedLuma": 146.54117647058823,
+              "y": 146,
+              "u": 128,
+              "v": 128
+            }
+          ],
+          "outputSurface": {
+            "name": "c2.android.avc.decoder",
+            "outputs": 12,
+            "pixels": [
+              {
+                "frame": 0,
+                "presentationTimeUs": 100000,
+                "surfaceTimestampNanos": 100000000,
+                "expectedGray": 64,
+                "red": 65,
+                "green": 65,
+                "blue": 65,
+                "minChannel": 65,
+                "maxChannel": 65,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 1,
+                "presentationTimeUs": 200000,
+                "surfaceTimestampNanos": 200000000,
+                "expectedGray": 72,
+                "red": 70.97222222222223,
+                "green": 70.97222222222223,
+                "blue": 70.97222222222223,
+                "minChannel": 70,
+                "maxChannel": 71,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 2,
+                "presentationTimeUs": 300000,
+                "surfaceTimestampNanos": 300000000,
+                "expectedGray": 80,
+                "red": 78.97222222222223,
+                "green": 78.97222222222223,
+                "blue": 78.97222222222223,
+                "minChannel": 78,
+                "maxChannel": 79,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 3,
+                "presentationTimeUs": 400000,
+                "surfaceTimestampNanos": 400000000,
+                "expectedGray": 88,
+                "red": 86.97222222222223,
+                "green": 86.97222222222223,
+                "blue": 86.97222222222223,
+                "minChannel": 86,
+                "maxChannel": 87,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 4,
+                "presentationTimeUs": 500000,
+                "surfaceTimestampNanos": 500000000,
+                "expectedGray": 96,
+                "red": 94.97222222222223,
+                "green": 94.97222222222223,
+                "blue": 94.97222222222223,
+                "minChannel": 94,
+                "maxChannel": 95,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 5,
+                "presentationTimeUs": 600000,
+                "surfaceTimestampNanos": 600000000,
+                "expectedGray": 104,
+                "red": 103.94444444444444,
+                "green": 103.94444444444444,
+                "blue": 103.94444444444444,
+                "minChannel": 102,
+                "maxChannel": 104,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 6,
+                "presentationTimeUs": 700000,
+                "surfaceTimestampNanos": 700000000,
+                "expectedGray": 112,
+                "red": 112,
+                "green": 112,
+                "blue": 112,
+                "minChannel": 112,
+                "maxChannel": 112,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 7,
+                "presentationTimeUs": 800000,
+                "surfaceTimestampNanos": 800000000,
+                "expectedGray": 120,
+                "red": 120,
+                "green": 120,
+                "blue": 120,
+                "minChannel": 120,
+                "maxChannel": 120,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 8,
+                "presentationTimeUs": 900000,
+                "surfaceTimestampNanos": 900000000,
+                "expectedGray": 128,
+                "red": 128,
+                "green": 128,
+                "blue": 128,
+                "minChannel": 128,
+                "maxChannel": 128,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 9,
+                "presentationTimeUs": 1000000,
+                "surfaceTimestampNanos": 1000000000,
+                "expectedGray": 136,
+                "red": 135,
+                "green": 135,
+                "blue": 135,
+                "minChannel": 135,
+                "maxChannel": 135,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 10,
+                "presentationTimeUs": 1100000,
+                "surfaceTimestampNanos": 1100000000,
+                "expectedGray": 144,
+                "red": 143,
+                "green": 143,
+                "blue": 143,
+                "minChannel": 143,
+                "maxChannel": 143,
+                "sampledPixels": 2304
+              },
+              {
+                "frame": 11,
+                "presentationTimeUs": 1200000,
+                "surfaceTimestampNanos": 1200000000,
+                "expectedGray": 152,
+                "red": 151,
+                "green": 151,
+                "blue": 151,
+                "minChannel": 151,
+                "maxChannel": 151,
+                "sampledPixels": 2304
+              }
+            ],
+            "outputMode": "surface-texture",
+            "width": 64,
+            "height": 64,
+            "endOfStream": true,
+            "eglVendor": "Google Inc.",
+            "glRenderer": "Google SwiftShader",
+            "elapsedMillis": 1093
+          },
+          "encodeMillis": 322,
+          "inputMode": "egl-surface",
+          "eglVendor": "Google Inc.",
+          "glRenderer": "Google SwiftShader",
+          "endOfStream": true
+        }
+      }
+    ],
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "26648"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "10",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "hostDefaultPhantomPolicyVerified": true,
+    "sampledPeakChildren": 33,
+    "observerSamples": 105,
+    "amsSamples": 7,
+    "maxObservedAmsRecords": 28,
+    "actualSurfaceInputVerified": true,
+    "actualDecoderSurfaceOutputVerified": true,
+    "embeddedManagerControlVerified": true,
+    "rootlessDeviceProfileVerified": true,
+    "adoptedDescendantsReaped": 12,
+    "hardProcessBoundVerified": false,
+    "cameraMediaRecorderCallsVerified": false,
+    "physicalPhoneOrHardwareCodecVerified": false,
+    "productionReleaseReady": false,
+    "evidence": "out/api32/decoder-surface-result/independent-check.json",
+    "command": "python3 out/api32/verify_decoder_surface_result.py --run-id 30a03b7e1aa24194b024ee6df332a4a4",
+    "scope": "Ordinary UID10111, no requested permissions. Exact unchanged full44 runtime and production host/five fresh JNI. AAC PCM and AVC byte-buffer checks retained; Surface encoder input plus actual decoder SurfaceTexture/OES rendering,2304 sampled RGB pixels per frame, all12 PTS/frame indices per phase and EOS pass twice after Home/reopen.751 frozen pins/exact APK/image/archive verified. Existing owner-control auth and negative checks, mounted source-built provider/device policy, cached image and full cleanup pass. Default host32 unchanged;105 samples peak33 keeps resource gate open. No camera recorder/phone/hardware-codec/fresh CE/legacy/release claim."
+  },
+  "cameraMediaRecorderFollowup": {
+    "runId": "354adf097c8f4aa6acbeaf8248b0f239",
+    "validation": "PASS",
+    "evidence": "docs/api32-av-validation.json#cameraRecorderAudioDrain44Trial",
+    "scope": "Same44 runtime software codecs also pass real Camera2+microphone MediaRecorder MP4,48 decoded camera frames and49152 PCM samples across both cameras and Home/reopen, with actual overlapping packet timelines; no hardware-codec/phone/lip-sync claim. Latest process peak35 remains open."
+  }
+}

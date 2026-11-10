@@ -1,0 +1,429 @@
+{
+  "schema": 1,
+  "status": "OWNER_COMMAND_REMOVAL_FUNCTIONAL_PASS_LATER_MEDIA_BUDGET35_OPEN",
+  "productionReleaseReady": false,
+  "design": {
+    "transport": "Existing private InputControl32 socket, opcode4; peer kernel PID/UID and proc stat FD/start-time authenticated before dispatch",
+    "owner": "Existing system_server; lazily loads pocket-manager.jar outside bootclasspath",
+    "operations": [
+      "install",
+      "open",
+      "dialer",
+      "network",
+      "contacts",
+      "devices"
+    ],
+    "resourceLimits": {
+      "clients": 4,
+      "concurrentManagerOperations": 1,
+      "arguments": 2,
+      "argumentUtf8Bytes": 1024,
+      "responseBytes": 65536
+    },
+    "imageOptIn": "system/etc/pocket-manager-control32 == input-control-v1 newline",
+    "legacyCompatibility": "Marker absent retains original CLI; a failed new-protocol command never retries through CLI because the operation may have committed",
+    "closeBehavior": "DirectSession tracks and closes in-flight Manager sockets",
+    "preservedBehavior": "Real PackageInstaller commit/status and matching ordinary-app package broadcast receipt before activity launch; input channel remains independent"
+  },
+  "builds": [
+    {
+      "command": "python3 tools/build_api32_manager_tools.py --out out/api32/embedded-manager-tools",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_runtime_tools.py --out out/api32/embedded-runtime-tools",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/embedded-manager-av-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+      "result": "PASS"
+    }
+  ],
+  "package": {
+    "status": "PASS_FULL44_EMBEDDED_MANAGER_IMAGE_PACKAGE",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "bytes": 590904855,
+    "filesVerified": 2649,
+    "added": [
+      "system/etc/pocket-manager-control32"
+    ],
+    "removed": [],
+    "changedExistingPayloads": [
+      "system/framework/pocket-manager.jar",
+      "system/framework/pocket-tools.jar"
+    ],
+    "nativeAndPlatformPayloadsUnchanged": true,
+    "runtimeValidated": true,
+    "runtimeValidationEvidence": "out/api32/embedded-manager-av-result/independent-check.json"
+  },
+  "managerSha256": "df9ebd913d36236647deef0d8832b9283a210f249b74bcd467b61d657892e527",
+  "sourcePins": 750,
+  "old43Compatibility": {
+    "status": "PASS_NEW_MANAGER_OLD43_EXTERNAL_CLI_AND_FULL_AV",
+    "runId": "c5b5f2e3de7d4aabb7464ef4757cde48",
+    "reportSha256": "0764c932201dcc01e729097f3dbf87e368abd763b82ef7180079463d149f8655",
+    "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+    "managerSha256": "3d79ef56bc7e08590648ab854b2178bb00327f88a4aca59a3dce32fa89db47a5",
+    "sourcePinsVerified": 750,
+    "sampledPeakChildren": 32,
+    "observerSamples": 112,
+    "externalManagerCliVerified": true
+  },
+  "compatibilityScopeCorrection": {
+    "candidate": "out/api32/embedded-manager-compat43-candidate.json",
+    "candidateSha256": "62d66848177a1b7b8e07cdd482efe131b9f9a5921df4f715425c0b0ed02ea247",
+    "correction": "The inherited scope sentence claiming unchanged production host Java is inaccurate for this compatibility trial. GuestManager32.java is added and DirectSession.java changes; the staged source-delta assertion explicitly verifies those two paths. The old43 image, all five host JNI libraries, ordinary AV APK and catalog are unchanged, and only classes.dex plus APK signatures differ from the43 AV Manager. No embedded-protocol runtime support is claimed until full44 is tested.",
+    "rawCandidatePreserved": true
+  },
+  "runtime44": {
+    "runId": "839ca0255c47479fabb844653b44eaf4",
+    "status": "PASS_EMBEDDED_MANAGER44_FULL_AV_AUTHORIZATION_AND_CLEANUP",
+    "work": "/home/pi/pocket-api32-vm/embedded-manager-av-validation",
+    "candidate": "out/api32/embedded-manager-av-candidate.json",
+    "candidateSha256": "d426c457a9c380128db8ce00ba43c5e645eb2e720299230882150421f2cc80ea",
+    "reportSha256": "cb8f1e786f86e6d6eeed6569eb119ea23a65c70358a92200128108322dc37b58",
+    "sourcePinsVerified": 750,
+    "imageVersion": "0.78.44",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "managerSha256": "df9ebd913d36236647deef0d8832b9283a210f249b74bcd467b61d657892e527",
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "10121"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "12",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+      "reusedFiles": 2594,
+      "replacedFiles": 55,
+      "reusedBytes": 1286026658,
+      "writtenBytes": 18317450,
+      "durationMillis": 134646
+    },
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostMediaPermissionsRestored": true,
+    "sampledPeakChildren": 32,
+    "observerSamples": 180,
+    "amsSamples": 7,
+    "maxObservedAmsRecords": 0,
+    "unsupportedPackagesAbsentFromSamples": true,
+    "sampledPeakWithinDefault32": true,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "classifiedHelpers": [
+      {
+        "entrypoint": null,
+        "operation": null
+      },
+      {
+        "entrypoint": "dev.kreijstal.aosppocket.guest.AppInspector32",
+        "operation": null
+      },
+      {
+        "entrypoint": "dev.kreijstal.aosppocket.guest.MediaPermissions32",
+        "operation": null
+      },
+      {
+        "entrypoint": "dev.kreijstal.aosppocket.guest.SystemServerDexopt32",
+        "operation": null
+      }
+    ],
+    "externalManagerCliObserved": false,
+    "embeddedManagerControlVerified": true,
+    "systemServerPid": 9845,
+    "completedOwnerOperations": [
+      "install",
+      "open"
+    ],
+    "negativeAuthorizationChecks": {
+      "guestPeerPid": 10777,
+      "guestPeerDenied": true,
+      "unknownOperationRejected": true,
+      "badInstallArgumentsRejected": true
+    },
+    "evidence": "out/api32/embedded-manager-av-result/independent-check.json",
+    "command": "python3 out/api32/verify_embedded_manager_av_result.py",
+    "adoptedDescendantsReaped": 12
+  },
+  "remaining": [
+    "Normal default-host process budget: Signal security/network trial sampled33; three complete AV starts sampled32/32/31",
+    "Existing finite media/storage/fresh-encryption/legacy/phone/release gates in api32-source-image-validation.json"
+  ],
+  "budgetCaution": "528 samples across four distinct framework starts peak32/32/31/33. All strict functional/authorization/cleanup checks pass, but combined <=32 sampled budget check returns1. Peak33 includes two DNS-permission test clients, a starting guest app and Traceur shell; no ManagerTools32 CLI VM. All processes remain counted and old43 failures preserved. No unique-cause, universal concurrency-bound, phone or release claim.",
+  "repeatedStarts": [
+    {
+      "runId": "839ca0255c47479fabb844653b44eaf4",
+      "reportSha256": "cb8f1e786f86e6d6eeed6569eb119ea23a65c70358a92200128108322dc37b58",
+      "sourcePinsVerified": 750,
+      "sampledPeakChildren": 32,
+      "observerSamples": 180,
+      "embeddedManagerControlVerified": true,
+      "evidence": "out/api32/embedded-manager-av-result/independent-check.json"
+    },
+    {
+      "runId": "e57c03fb653e46df8859f546d85b1b42",
+      "reportSha256": "cd3401b33283d875afd7172fd1306d15f64ed9c6ce25232c557884ad18105712",
+      "sourcePinsVerified": 750,
+      "sampledPeakChildren": 32,
+      "observerSamples": 108,
+      "embeddedManagerControlVerified": true,
+      "evidence": "out/api32/embedded-manager-av-repeat1-result/independent-check.json"
+    },
+    {
+      "runId": "3b111b15d9e54402be9b23ccaa4b4fb3",
+      "reportSha256": "6c3aa84a72e86f699f223a84a3b8c0d8429880f32571924ae598b54774594541",
+      "sourcePinsVerified": 750,
+      "sampledPeakChildren": 31,
+      "observerSamples": 109,
+      "embeddedManagerControlVerified": true,
+      "evidence": "out/api32/embedded-manager-av-repeat2-result/independent-check.json"
+    }
+  ],
+  "collectionCorrection": {
+    "failedLog": "out/api32/embedded-manager44-continuation.log",
+    "cause": "Cached repeat has linked candidate JSON and previous-run receipt, not candidate.pin. Collector incorrectly required initial-stage-only pin file.",
+    "resolution": "Collected existing terminal repeat1 after selecting the actual immutable candidate/previous-run receipts; no guest rerun, source change or raw report rewriting.",
+    "verificationCommand": "python3 out/api32/verify_embedded_manager_av_result.py --repeat 1 --run-id e57c03fb653e46df8859f546d85b1b42",
+    "result": "PASS"
+  },
+  "signal44": {
+    "status": "PASS_EMBEDDED_MANAGER44_SIGNAL_HOME_REOPEN_NETWORK",
+    "runId": "f3d6b07367354615a026d803814ff121",
+    "reportSha256": "1d6d201f07aca619d6e329e61d0845d93d1567b01c21d2de9e0ccd5d964bbda1",
+    "sourcePinsVerified": 750,
+    "imageVersion": "0.78.44",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "managerSha256": "deda37742ae89e7240897679e92bfd9f77d141136fd770771f42d3a82ec54e72",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "phases": [
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "firstLaunch",
+        "focus": "mCurrentFocus=Window{328a9f0 u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      },
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "reopened",
+        "focus": "mCurrentFocus=Window{328a9f0 u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      }
+    ],
+    "guestNetwork": {
+      "connected": true,
+      "validated": true,
+      "networkBoundHttpsStatus": 200,
+      "publicAsyncDns": {
+        "uid": 10108,
+        "network": "100",
+        "addresses": [
+          "104.20.23.154",
+          "172.66.147.243"
+        ],
+        "rawBytes": 61,
+        "rawRcode": 0,
+        "negativeRcode": 3,
+        "publicAsyncApi": true
+      },
+      "fwmarkErrorRecoveryVerified": true
+    },
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "21985"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "11",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostSensitivePermissionsAllDenied": true,
+    "sampledPeakChildren": 33,
+    "observerSamples": 131,
+    "amsSamples": 10,
+    "maxObservedAmsRecords": 28,
+    "freshHostNativeApi32RuntimeVerified": true,
+    "legacyProotExecutionVerified": false,
+    "hardProcessBoundVerified": false,
+    "accountRegistrationMessagesCallsVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "embeddedManagerControlVerified": true,
+    "negativeAuthorizationChecks": {
+      "guestPeerPid": 23032,
+      "guestPeerDenied": true,
+      "unknownOperationRejected": true,
+      "badInstallArgumentsRejected": true
+    },
+    "completedOwnerOperations": [
+      {
+        "operation": "network",
+        "pid": 21722
+      },
+      {
+        "operation": "network",
+        "pid": 21722
+      },
+      {
+        "operation": "install",
+        "pid": 21722
+      },
+      {
+        "operation": "open",
+        "pid": 21722
+      }
+    ],
+    "externalManagerCliObserved": false,
+    "rootlessDeviceProfileVerified": true,
+    "deviceProfileSnapshots": [
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      },
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      }
+    ],
+    "cachedImageNoDownloadVerified": true,
+    "sampledPeakWithinDefault32": false,
+    "evidence": "out/api32/embedded-manager-signal-result/independent-check.json",
+    "command": "python3 out/api32/verify_embedded_manager_signal_result.py --run-id f3d6b07367354615a026d803814ff121",
+    "adoptedDescendantsReaped": 12
+  },
+  "budget": {
+    "status": "FUNCTIONAL_PASS_DEFAULT_BUDGET_SAMPLE_EXCEEDED",
+    "trials": [
+      {
+        "trial": "embedded-manager-av",
+        "runId": "839ca0255c47479fabb844653b44eaf4",
+        "guestSessionRunId": "9eb61eab160a4c56828e7171b3052db5",
+        "sampledPeakChildren": 32,
+        "samples": 180,
+        "reportSha256": "cb8f1e786f86e6d6eeed6569eb119ea23a65c70358a92200128108322dc37b58",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": true
+      },
+      {
+        "trial": "embedded-manager-av-repeat1",
+        "runId": "e57c03fb653e46df8859f546d85b1b42",
+        "guestSessionRunId": "488a7e6534594952b427a7c2747d8a16",
+        "sampledPeakChildren": 32,
+        "samples": 108,
+        "reportSha256": "cd3401b33283d875afd7172fd1306d15f64ed9c6ce25232c557884ad18105712",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": true
+      },
+      {
+        "trial": "embedded-manager-av-repeat2",
+        "runId": "3b111b15d9e54402be9b23ccaa4b4fb3",
+        "guestSessionRunId": "e340dfc29906475bab1ffb153f6ca85e",
+        "sampledPeakChildren": 31,
+        "samples": 109,
+        "reportSha256": "6c3aa84a72e86f699f223a84a3b8c0d8429880f32571924ae598b54774594541",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": true
+      },
+      {
+        "trial": "embedded-manager-signal",
+        "runId": "f3d6b07367354615a026d803814ff121",
+        "guestSessionRunId": "72f4be9058a0424991606aa38eca316c",
+        "sampledPeakChildren": 33,
+        "samples": 131,
+        "reportSha256": "1d6d201f07aca619d6e329e61d0845d93d1567b01c21d2de9e0ccd5d964bbda1",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": false
+      }
+    ],
+    "samples": 528,
+    "peakChildren": 33,
+    "distinctFrameworkStarts": 4,
+    "distinctAvWorkloads": 6,
+    "hostPolicyUnchanged": true,
+    "externalManagerCommandVmObserved": false,
+    "sampledBudgetWithinDefault32": false,
+    "hardProcessBoundVerified": false,
+    "scope": "Three complete ordinary all-camera/audio/Home/reopen starts plus unchanged Play Signal Home/reopen/network start on44. Includes all observed test helpers; no process subtractions or host-limit changes. Finite sampled workload evidence, not a universal concurrency bound or phone/release claim.",
+    "productionReleaseReady": false,
+    "evidence": "out/api32/embedded-manager44-budget-check.json",
+    "command": "python3 out/api32/verify_embedded_manager44_budget.py",
+    "returnCode": 1,
+    "peakCensus": "out/api32/embedded-manager-signal-result/peak-census.json"
+  },
+  "cleanupEvidence": "All four44 trials report17 service lifetimes and12 adopted descendants reaped, remaining0/query_error0. Raw console counts verified; historical43 count13 is not reused.",
+  "laterMediaFollowup": {
+    "evidence": "docs/api32-av-validation.json#cameraRecorderAudioDrain44Trial",
+    "budgetEvidence": "out/api32/full44-media-budget-check.json",
+    "scope": "Same full44 runtime/production host Java/five JNI later pass real decoder Surface and both-camera muxed AAC/AVC recording before/after Home/reopen. Broader956-sample/eight-start audit contains7 strict functional passes and1 preserved fixture failure, peak35; budget stays open. Original528-sample four-start peak33 evidence remains intact."
+  }
+}

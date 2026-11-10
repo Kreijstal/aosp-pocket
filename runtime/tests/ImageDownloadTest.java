@@ -72,6 +72,9 @@ public final class ImageDownloadTest {
 
         Map<String,byte[]> files=new TreeMap<>();files.put("system/bin/init",new byte[]{1,2,3});files.put("vendor/etc/config",new byte[]{4,5});
         files.put("apex/com.android.runtime/apex_manifest.json",new byte[]{6,7});
+        for(String name:new String[]{"system_ext/framework/services.jar","product/overlay/PocketMemory/PocketMemory.apk",
+                "odm/etc/config","oem/etc/config",".pocket-readonly-system","bootstrap-linkerconfig"})
+            files.put(name,("image:"+name).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         Map<String,ImageArchive.Entry> entries=specs(files);File archive=zip(temp,files);File root=temp.resolve("root").toFile();root.mkdirs();
         Path data=root.toPath().resolve("system-data/private");Files.createDirectories(data.getParent());Files.write(data,new byte[]{99});
         ImageArchive.install(archive,root,entries,sha(MANIFEST),digest,PROGRESS);
@@ -79,6 +82,27 @@ public final class ImageDownloadTest {
         check(Arrays.equals(files.get("system/bin/init"),Files.readAllBytes(root.toPath().resolve("system/bin/init"))),"Installed bytes differ");
         check(Arrays.equals(files.get("apex/com.android.runtime/apex_manifest.json"),Files.readAllBytes(root.toPath().resolve("apex/com.android.runtime/apex_manifest.json"))),"APEX payload was not installed");
         check(Files.isExecutable(root.toPath().resolve("system/bin/init")),"Executable permission lost");
+        for(Map.Entry<String,byte[]> item:files.entrySet())
+            check(Arrays.equals(item.getValue(),Files.readAllBytes(root.toPath().resolve(item.getKey()))),"Partition/root payload differs: "+item.getKey());
+        Path installedInit=root.toPath().resolve("system/bin/init"),linkedInit=temp.resolve("unchanged-init-link");
+        Files.createLink(linkedInit,installedInit);
+        java.nio.file.attribute.FileTime originalTime=java.nio.file.attribute.FileTime.fromMillis(1234000);
+        Files.setLastModifiedTime(installedInit,originalTime);
+        ImageArchive.InstallStats reused=ImageArchive.install(archive,root,entries,sha(MANIFEST),digest,PROGRESS);
+        check(reused.reusedFiles==files.size() && reused.replacedFiles==0 && reused.writtenBytes==0,"Unchanged image was rewritten");
+        check(Files.isSameFile(installedInit,linkedInit) && Files.getLastModifiedTime(installedInit).equals(originalTime),"Reuse changed the installed inode or timestamp");
+        Files.setPosixFilePermissions(installedInit,java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
+        ImageArchive.InstallStats modes=ImageArchive.install(archive,root,entries,sha(MANIFEST),digest,PROGRESS);
+        check(modes.replacedFiles==1 && Files.isExecutable(installedInit) && !Files.isSameFile(installedInit,linkedInit),"Incorrect mode was not atomically repaired");
+        Files.delete(linkedInit);Files.createLink(linkedInit,installedInit);
+        Files.write(installedInit,new byte[]{8,8,8});
+        ImageArchive.InstallStats repaired=ImageArchive.install(archive,root,entries,sha(MANIFEST),digest,PROGRESS);
+        check(repaired.replacedFiles==1 && !Files.isSameFile(installedInit,linkedInit)
+            && Arrays.equals(Files.readAllBytes(installedInit),files.get("system/bin/init")),"Same-length corruption was reused");
+        Path unfinished=root.toPath().resolve("system/bin/init.pocket-new");Files.write(unfinished,new byte[]{7});
+        ImageArchive.install(archive,root,entries,sha(MANIFEST),digest,PROGRESS);
+        check(!Files.exists(unfinished),"Unchanged-file reuse retained unfinished staging bytes");
+        check(Files.readAllBytes(data)[0]==99,"Incremental image update changed guest data");
         Map<String,ImageArchive.Entry> corruptSpecs=new TreeMap<>(entries);
         ImageArchive.Entry spec=entries.get("vendor/etc/config");corruptSpecs.put("vendor/etc/config",new ImageArchive.Entry(spec.size,spec.crc,sha(new byte[]{9}),spec.mode));
         Files.write(root.toPath().resolve("system/bin/init"),new byte[]{77});
@@ -89,10 +113,20 @@ public final class ImageDownloadTest {
         rejected(()->ImageArchive.path("system-data/private"));
         rejected(()->ImageArchive.path("/system/bin/init"));rejected(()->ImageArchive.path("system//bin/init"));
         rejected(()->ImageArchive.path("system\\bin\\init"));
+        for(String name:new String[]{"data/private",".pocket-owner/private",".pocket-image-id","bootstrap-linkerconfig/child",
+                ".pocket-readonly-system.pocket-new","product/../data/private","system_ext//framework/a.jar","odm/./etc/config"})
+            rejected(()->ImageArchive.path(name));
         File linked=temp.resolve("linked").toFile();linked.mkdir();Path outside=Files.createDirectory(temp.resolve("outside"));
         Files.createSymbolicLink(linked.toPath().resolve("system"),outside);
         rejected(()->ImageArchive.install(archive,linked,entries,sha(MANIFEST),digest,PROGRESS));
         check(!Files.exists(outside.resolve("bin/init")),"Archive followed a symlink");
+        File linkedProduct=temp.resolve("linked-product").toFile();linkedProduct.mkdir();
+        Files.createSymbolicLink(linkedProduct.toPath().resolve("product"),outside);
+        rejected(()->ImageArchive.install(archive,linkedProduct,entries,sha(MANIFEST),digest,PROGRESS));
+        File linkedMarker=temp.resolve("linked-marker").toFile();linkedMarker.mkdir();
+        Files.createSymbolicLink(linkedMarker.toPath().resolve(".pocket-readonly-system.pocket-new"),data);
+        rejected(()->ImageArchive.install(archive,linkedMarker,entries,sha(MANIFEST),digest,PROGRESS));
+        check(Files.readAllBytes(data)[0]==99,"Root-file staging followed a link into guest data");
         rejected(()->ImageArchive.install(archive,root,entries,sha(new byte[]{7}),digest,PROGRESS));
         File recovery=temp.resolve("recovery").toFile();recovery.mkdir();
         rejected(()->ImageArchive.install(archive,recovery,entries,sha(MANIFEST),digest,(done,total)->{if(done>0)Thread.currentThread().interrupt();}));

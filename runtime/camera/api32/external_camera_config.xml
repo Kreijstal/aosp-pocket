@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<ExternalCamera>
+    <Provider><ignore></ignore></Provider>
+    <Device>
+        <MaxJpegBufferSize bytes="8388608"/>
+        <NumVideoBuffers count="4"/>
+        <NumStillBuffers count="2"/>
+        <FpsList>
+            <Limit width="640" height="480" fpsBound="30.0"/>
+            <Limit width="1280" height="720" fpsBound="30.0"/>
+            <Limit width="1920" height="1080" fpsBound="15.0"/>
+            <Limit width="4096" height="3072" fpsBound="10.0"/>
+        </FpsList>
+    </Device>
+</ExternalCamera>

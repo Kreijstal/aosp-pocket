@@ -1,0 +1,278 @@
+{
+  "runId": "1b572ad030054aeeac92bb2d94d1d7da",
+  "passed": true,
+  "exitCode": 0,
+  "hostUid": 10154,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "apkSha256": "fe6b2a419f32d41d09f77a9a121c7b1fc516f27da43bebbe6eab50b271309847",
+  "imageManifestSha256": "c9cf8b78a4dfc99b55e70075012b42133bc9f77098e1c7dc4fafd0e26b9462de",
+  "imageVerifiedFiles": 2557,
+  "extractedFiles": 5,
+  "extractionMillis": 440,
+  "imageVerificationMillis": 66551,
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostDisplay": {
+    "width": 480,
+    "height": 800,
+    "framesReceived": 693,
+    "framesPresented": 789,
+    "guestPatternMatches": 16,
+    "hostPatternMatches": 16,
+    "matchedNonce": "a73dbab3a6dc4b4eaa56c498e13f0820",
+    "matchedTargetToken": "a73dbab3a6dc4b4eaa56c498e13f0820:24:140:432:32:240:196",
+    "pixelCopyStatus": 0,
+    "inputEventsAccepted": 2,
+    "inputEventsRejected": 0,
+    "error": "java.io.IOException: Connection reset by peer",
+    "viewX": 0,
+    "viewY": 103,
+    "viewWidth": 480,
+    "viewHeight": 649,
+    "inputReady": {
+      "runId": "1b572ad030054aeeac92bb2d94d1d7da",
+      "nonce": "a73dbab3a6dc4b4eaa56c498e13f0820",
+      "patternLeft": 24,
+      "patternTop": 140,
+      "patternWidth": 432,
+      "patternHeight": 32,
+      "buttonX": 240,
+      "buttonY": 196,
+      "targetToken": "a73dbab3a6dc4b4eaa56c498e13f0820:24:140:432:32:240:196"
+    },
+    "guestPatternSamples": [
+      "ffa7fd25",
+      "ff3d6732",
+      "ffbae03f",
+      "ffb3e94c",
+      "ffa6fc59",
+      "ffdc8666",
+      "ff4b1173",
+      "ff4e1480",
+      "ffaaf08d",
+      "ff560c9a",
+      "ffc49ea7",
+      "ff98c2b4",
+      "ffe1bbc1",
+      "ff3f65ce",
+      "ff0852db",
+      "ff207ae8"
+    ],
+    "sampleTargetToken": "a73dbab3a6dc4b4eaa56c498e13f0820:24:140:432:32:240:196"
+  },
+  "fullGuestBootVerified": false,
+  "hostScreenshotSha256": "4002545d2315878fb6287b30a4aa2640650b97550df1655692bf38ba2f186333",
+  "schema": 1,
+  "scope": "PASS: experimental API 32 host display and one real host tap into an ordinary installed app; no launcher reliability, keyboard, full guest or Manager support claim.",
+  "hostFramePresentationVerified": true,
+  "hostInputDeliveryVerified": true,
+  "hostOwnerLifetimeDescriptorAuthenticationVerified": true,
+  "guestInputPeerDenied": true,
+  "managerApi32Supported": false,
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 0,
+    "after": "null",
+    "restored": true
+  },
+  "hostScreenshotArtifact": "out/api32/host-display-dump-identity.png",
+  "screenshotVisuallyInspected": true,
+  "failure": null,
+  "layoutVersionedPixelGateImplemented": true,
+  "layoutVersionedPixelGateValidated": true,
+  "guestInputPeerDenialPreviouslyVerified": true,
+  "verifiedMarkers": [
+    "LOADER_SIGNAL_DURING_TRAP_PASS interrupted=blocking_write handler=filesystem_io",
+    "API32_DUMP_IDENTITY_PASS uid=0 pid=kernel_matched allowed=1 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=1000 pid=kernel_matched allowed=1 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=39999 pid=kernel_matched allowed=0 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=39999 pid=kernel_matched allowed=0 token=absent",
+    "API32_FRAMEWORK_BOOT_PASS stock_system_server=1 boot_completed=1 activity_package_window=live",
+    "API32_FRAMEWORK_USER_UNLOCKED user=0 source=UserManager",
+    "API32_SETTINGS_PROVIDER_PASS stock_provider=1 client=external_tool call=real query=real nonce=verified cleanup=1",
+    "API32_GATEKEEPER_PASS stock_daemon=12L stock_software_hal=1 setup_report=real enrollment=real wrong_password=rejected altered_sid=rejected challenge=matched sid_lifecycle=verified hardware_backed=0 emulator_token_mac=not_secure cleanup=1",
+    "API32_APP_INSTALL_READY_PASS action=android.intent.action.PACKAGE_REPLACED observer=registered_app observer_uid=10106 update_time=1793624039777 sequence_delta=2",
+    "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=1533780044",
+    "API32_APP_ACTIVITY_PASS uid=10105 pid=29212 resumed=1 drawn=false",
+    "API32_APP_ACTIVITY_PASS uid=10105 pid=29325 resumed=1 drawn=false",
+    "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+    "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+    "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+    "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified",
+    "API32_INPUT_GUEST_PEER_DENIED_PASS uid=1000 kernel_pid=not_host_owner",
+    "API32_APP_INPUT_READY nonce=a73dbab3a6dc4b4eaa56c498e13f0820 target=a73dbab3a6dc4b4eaa56c498e13f0820:24:140:432:32:240:196",
+    "API32_HOST_INPUT_PASS ordinary_app_clicks=1 nonce=a73dbab3a6dc4b4eaa56c498e13f0820",
+    "API32_NATIVE_RUNTIME_PASS",
+    "API32_INPUT_CONTROL_READY sdk=32 host_pid=26306 kernel_peer_credentials=required",
+    "API32_HOST_TOUCH_QUEUED action=0 x=240.0 y=195.99384 event_time=59502115 guest_uptime=59503262 queued=true",
+    "API32_HOST_TOUCH_QUEUED action=1 x=240.0 y=195.99384 event_time=59502115 guest_uptime=59503343 queued=true",
+    "API32_INIT_STOPPED reaped=27 remaining=0 failed=0"
+  ],
+  "previousFailures": [
+    {
+      "runId": "57928566fd24465f89b905241cafac3a",
+      "exitCode": 137,
+      "cause": "Host ActivityManager explicitly logged Killing PhantomProcessRecord for the test sh process: Trimming phantom processes. Subsequent validation used a temporary limit of 256 on VM73 only, restored after each run."
+    },
+    {
+      "runId": "e2cde0f6ed90411d8200923d58763a86",
+      "exitCode": 1,
+      "cause": "InputControl32 could not open the non-debuggable parent /proc/PID/stat. The implementation now requests the parent-opened kernel proc descriptor over SCM_RIGHTS and checks its kernel fd link plus the expected start time; valid-host authentication is still untested because the pixel gate withheld input."
+    },
+    {
+      "runId": "1263efef3c7e472180977c6f2b53805e",
+      "apkSha256": "2d82e1104c068137f18820971f99cdb4761f16ec0fd265cb5559aa136a4e5f62",
+      "exitCode": 1,
+      "cause": "App finished ordinary Settings, AndroidKeyStore, HTTPS and process-restart checks, then reported a draw. The published patternTop/buttonY were 140/196; the final app snapshot had moved to 164/220. No nonce pattern matched the compositor buffer, so the driver correctly withheld the tap; clicks stayed zero.",
+      "verifiedMarkers": [
+        "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=803120550",
+        "API32_APP_ACTIVITY_PASS uid=10105 pid=31282 resumed=1 drawn=false",
+        "API32_APP_ACTIVITY_PASS uid=10105 pid=31375 resumed=1 drawn=false",
+        "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+        "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+        "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+        "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified",
+        "API32_INPUT_GUEST_PEER_DENIED_PASS uid=1000 kernel_pid=not_host_owner",
+        "API32_INPUT_CONTROL_READY sdk=32 host_pid=28401 kernel_peer_credentials=required",
+        "API32_INIT_STOPPED reaped=28 remaining=0 failed=0"
+      ],
+      "hostDisplay": {
+        "width": 480,
+        "height": 800,
+        "framesReceived": 720,
+        "framesPresented": 1296,
+        "guestPatternMatches": 0,
+        "hostPatternMatches": 0,
+        "pixelCopyStatus": -1,
+        "inputEventsAccepted": 0,
+        "inputEventsRejected": 0,
+        "error": "java.io.IOException: Connection reset by peer",
+        "viewX": 0,
+        "viewY": 103,
+        "viewWidth": 480,
+        "viewHeight": 649,
+        "inputReady": {
+          "runId": "1263efef3c7e472180977c6f2b53805e",
+          "nonce": "668d0a49a50c457ba3a6bc114a5aa2fb",
+          "patternLeft": 24,
+          "patternTop": 140,
+          "patternWidth": 432,
+          "patternHeight": 32,
+          "buttonX": 240,
+          "buttonY": 196
+        }
+      }
+    },
+    {
+      "runId": "778766343dcf48628f174dee14d6ca40",
+      "apkSha256": "4bc26b549f01875c951544ed1923fbab0d95f6edef3e0d9fa2b71ca521547cda",
+      "exitCode": 1,
+      "failure": "Latest run installed the ordinary SDK 32 app, then the guest zygote service pocket-framework (PID 1297) exited with signal 31 (SIGSYS); init restarted it as PID 3988. The app probe subsequently received DeadObjectException while releasing its ActivityManager external provider reference. The triggering syscall/reason is not yet identified. The layout-versioned pixel gate and valid-host descriptor handshake were not reached. No host tap was sent."
+    },
+    {
+      "runId": "caa8c0b00e454676a572d9293c7b3797",
+      "apkSha256": "a322630c8f969b67e912e7ddd4e07234f495573c19b5a6bb278d880c99f95fb9",
+      "exitCode": 1,
+      "cause": "App launched before asynchronous package-removal/replacement processing completed; AMS subsequently removed the just-started activity."
+    },
+    {
+      "runId": "3a18b498b38d4847a874925b2d3782c9",
+      "apkSha256": "928be685f4bc68741c347f78aab8d3d1e3ea35c6292f4325b12ce520cb33cf69",
+      "exitCode": 1,
+      "cause": "Standalone app_process receiver had no registered ApplicationThread; stock BroadcastQueue skipped its receiver as process gone or crashing."
+    },
+    {
+      "runId": "a3f2e53ab0b842cfac9f98614df188c7",
+      "apkSha256": "5486c78e979d3466b12a31b67600cfa206fc65c8aee688289f28d23b849c2a21",
+      "exitCode": 1,
+      "cause": "Target MY_PACKAGE_REPLACED manifest receiver did not persist a current-install receipt within the deadline. Replaced with an independently registered ordinary-app observer."
+    },
+    {
+      "runId": "3e97255eed3d4392852b1fbea5cf8ece",
+      "apkSha256": "589206fd2576e2c0a6058a1904f6458a6ce2d23a3bc2d26cf3fcd0ee497ad2cb",
+      "exitCode": 1,
+      "failure": "The correct current-nonce app pixels matched all 16 samples in the composer buffer and host Surface PixelCopy. The driver tapped the matching current-layout button. The host-owner PID/UID and kernel-stat-descriptor handshake succeeded, and IInputManager asynchronously queued both touch events, but the ordinary app click counter stayed zero for 90 seconds. Queue acceptance does not establish guest dispatch. The subsequent compositor EOF was recorded during failed-test cleanup. Input delivery remains unverified."
+    },
+    {
+      "runId": "a86b1ae404c74b7eb8164cb5ce15f5e5",
+      "apkSha256": "aa0c6380d5b5bc6180985bfac0ddc721c2deb28866a579d0fa710450c59d917d",
+      "exitCode": 1,
+      "failure": "The driver tapped host coordinate 240,281 after 16 current-nonce host pixels matched. InputControl32 queued DOWN and UP at guest coordinate 240.0,219.41449, within the published current-layout button at 240,220, but the ordinary app click counter stayed zero. Input/power/window diagnostic dumps were denied: native Binder DUMP exposed the host UID 10154 because that control transaction was excluded from guest-role attribution. Correct-geometry queueing is proven; dispatcher/window/power cause remains unresolved. Cleanup reaped 28 services with zero remaining or failed."
+    }
+  ],
+  "packageInstallObserver": {
+    "package": "dev.kreijstal.aosppocket.guestbridge",
+    "uid": 10106,
+    "registeredApplicationThread": true,
+    "event": "android.intent.action.PACKAGE_REPLACED",
+    "eventTargetUid": 10105,
+    "actualPackageMetadataMatched": true,
+    "targetLifecyclePolicyUnchanged": true
+  },
+  "bootToolsJarSplit": {
+    "bootJarSha256": "c0d33e42020f490363391ec306169642d7db1b70d5c02b4bf845ecc8f1733987",
+    "toolsJarSha256": "f7660cdbb222b4e0f494efae137d2c56cb8eadf5432a2ca75ce39cf8d16158c2",
+    "dexPayloadOffset": 48,
+    "dexAlignment": 4,
+    "fixedZipTimestamp": "1980-01-01",
+    "realZygoteAndStandaloneToolsVerified": true,
+    "bootJarStabilityAcrossHelperOnlyChangesVerified": true,
+    "startupPerformanceImprovementMeasured": false
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --reuse-native --delta-from out/api32/host-display-input-state-baseline-image-manifest.json",
+      "result": "PASS / exit 0; signed 7,673,046-byte APK. Five embedded assets exactly matched deployed baseline diff and SHA-256 values; boot JAR unchanged."
+    },
+    {
+      "command": "python3 out/api32/run_display_with_vm73_phantom_limit.py",
+      "result": "PASS / exit 0; runs python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display. All 16 guest and host pixel samples matched; two input events queued; ordinary app recorded exactly one click; init reaped 27 services with zero remaining or failed. VM73 phantom limit restored; host SELinux Enforcing."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "touchQueueEvidence": [
+    "API32_HOST_TOUCH_QUEUED action=0 x=240.0 y=195.99384 event_time=59502115 guest_uptime=59503262 queued=true",
+    "API32_HOST_TOUCH_QUEUED action=1 x=240.0 y=195.99384 event_time=59502115 guest_uptime=59503343 queued=true"
+  ],
+  "diagnosticDumpPermissionDenials": [],
+  "diagnosticBuild": {
+    "apkSha256": "fe6b2a419f32d41d09f77a9a121c7b1fc516f27da43bebbe6eab50b271309847",
+    "apkBytes": 7673046,
+    "imageManifestSha256": "c9cf8b78a4dfc99b55e70075012b42133bc9f77098e1c7dc4fafd0e26b9462de",
+    "embeddedGuestFiles": [
+      "data/local/tmp/api32-guest-test.apk",
+      "probe.sh",
+      "system/app/PocketServices/PocketServices.apk",
+      "system/bin/pocket-binder-probe-api32",
+      "system/lib64/libpocket_binder_api32.so"
+    ]
+  },
+  "remainingIssues": "Earlier display runs queued touch events without an app click. Their input/power/window state capture was blocked by native Binder DUMP identity attribution. The latest run passed; its success does not establish that the DUMP fix resolved those prior intermittent input failures. Stock framework diagnostic dump attribution, repeated touch/keyboard behavior, usable launcher, framework ConnectivityManager callbacks, full guest credential/storage lifecycle, real third-party API32 apps and production Manager/image support remain to be validated.",
+  "hostInputRepeatabilityVerified": false,
+  "hostKeyboardDeliveryVerified": false,
+  "stockFrameworkDiagnosticDumpVerified": false,
+  "expandedInputFollowup": {
+    "runId": "b385d1b0230f41c7864d27496b0de748",
+    "passed": true,
+    "evidence": "docs/api32-host-keyboard-validation.json",
+    "threeAcknowledgedClicks": true,
+    "editTextHardwareKeyInput": true,
+    "hostTouchesAccepted": 8,
+    "hostKeysAccepted": 12,
+    "inputRejected": 0,
+    "guestCachedProcessLimit": 4
+  }
+}

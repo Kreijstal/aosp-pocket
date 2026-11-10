@@ -1,0 +1,4 @@
+# Rootless audio: stock 12L services, matching passthrough HIDL and host PCM.
+ro.pocket.audio.enabled=1
+ro.hardware.audio.primary=pocket
+aaudio.mmap_policy=1

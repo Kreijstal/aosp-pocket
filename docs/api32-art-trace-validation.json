@@ -1,0 +1,211 @@
+{
+  "schema": 1,
+  "scope": "Actual SDK 32 ART SIGQUIT text captured in the isolated non-debuggable Pocket app; no full guest boot or Manager claim",
+  "runId": "6c20e4b34fc247dd91fc65dc33b042f8",
+  "hostVmInstance": 73,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "apkSha256": "00a45df9113b9a669a1f69769fe8586d2ec4e606f87b241032da00d20f81e695",
+  "deltaUpdate": true,
+  "imageVerifiedFiles": 2545,
+  "probePassed": true,
+  "actualJavaMainAndSleepingWorkerVerified": true,
+  "privateTraceProbeDeleted": true,
+  "completeFrameworkTraceReadVerified": true,
+  "fullGuestBootVerified": false,
+  "frameworkTestExitCode": 4,
+  "frameworkDiagnosis": "ActivityManager global monitor owners are waiting in LmkdConnection.waitForConnection via ProcessList.writeLmkd during OOM adjustment and process removal. System-server main waits on that monitor; NetworkStack main waits for ActivityManager publishService/publishContentProviders replies. Native logs independently report 3000 ms SLOW OOM ADJ and connection retries. Missing stats service remains separate/unproven as this timeout cause.",
+  "stackSamples": [
+    {
+      "path": "root/tmp/art-traces/anr_5826_40588_984718510",
+      "bytes": 258186,
+      "truncated": false,
+      "process": "system_server",
+      "contentSha256": "4c0dca1ecf18b5c8dfe9a7aaed0bdbe8b8bcb9fa14fae92d1c74c6249539c1a5",
+      "selectedThreads": [
+        {
+          "thread": "\"main\" prio=5 tid=1 Blocked",
+          "managedFrames": [
+            "  at com.android.server.am.ActivityManagerService.broadcastIntentWithFeature(ActivityManagerService.java:13714)",
+            "  - waiting to lock <0x077ead33> (a com.android.server.am.ActivityManagerService) held by thread 114",
+            "  at android.app.ContextImpl.sendStickyBroadcastAsUser(ContextImpl.java:1641)",
+            "  at com.android.server.audio.AudioService.sendStickyBroadcastToAll(AudioService.java:3808)",
+            "  at com.android.server.audio.AudioService.broadcastRingerMode(AudioService.java:5960)",
+            "  at com.android.server.audio.AudioService.readPersistedSettings(AudioService.java:2328)",
+            "  at com.android.server.audio.AudioService.readAudioSettings(AudioService.java:5101)",
+            "  at com.android.server.audio.AudioService.access$8500(AudioService.java:204)",
+            "  at com.android.server.audio.AudioService$AudioServiceBroadcastReceiver.onReceive(AudioService.java:7951)",
+            "  at android.app.LoadedApk$ReceiverDispatcher$Args.lambda$getRunnable$0$LoadedApk$ReceiverDispatcher$Args(LoadedApk.java:1679)",
+            "  at android.app.LoadedApk$ReceiverDispatcher$Args$$ExternalSyntheticLambda0.run(unavailable:-1)",
+            "  at android.os.Handler.handleCallback(Handler.java:938)",
+            "  at android.os.Handler.dispatchMessage(Handler.java:99)",
+            "  at android.os.Looper.loopOnce(Looper.java:201)",
+            "  at android.os.Looper.loop(Looper.java:288)",
+            "  at com.android.server.SystemServer.run(SystemServer.java:904)",
+            "  at com.android.server.SystemServer.main(SystemServer.java:611)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)",
+            "  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:981)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at dev.kreijstal.aosppocket.guest.ZygoteBootstrap32.main(ZygoteBootstrap32.java:32)"
+          ]
+        },
+        {
+          "thread": "\"Binder:5826_9\" prio=5 tid=114 TimedWaiting",
+          "managedFrames": [
+            "  at java.lang.Object.wait(Native method)",
+            "  - waiting on <0x05082549> (a java.lang.Object)",
+            "  at java.lang.Object.wait(Object.java:442)",
+            "  at com.android.server.am.LmkdConnection.waitForConnection(LmkdConnection.java:241)",
+            "  - locked <0x05082549> (a java.lang.Object)",
+            "  at com.android.server.am.ProcessList.writeLmkd(ProcessList.java:1538)",
+            "  at com.android.server.am.ProcessList.setOomAdj(ProcessList.java:1458)",
+            "  at com.android.server.am.OomAdjuster.applyOomAdjLSP(OomAdjuster.java:2629)",
+            "  at com.android.server.am.OomAdjuster.performUpdateOomAdjLSP(OomAdjuster.java:554)",
+            "  at com.android.server.am.OomAdjuster.performUpdateOomAdjLSP(OomAdjuster.java:651)",
+            "  at com.android.server.am.OomAdjuster.updateOomAdjLSP(OomAdjuster.java:621)",
+            "  at com.android.server.am.OomAdjuster.updateOomAdjLocked(OomAdjuster.java:603)",
+            "  - locked <0x048e4477> (a com.android.server.am.ActivityManagerProcLock)",
+            "  at com.android.server.am.ActivityManagerService.updateOomAdjLocked(ActivityManagerService.java:14748)",
+            "  at com.android.server.am.ActiveServices.realStartServiceLocked(ActiveServices.java:3930)",
+            "  at com.android.server.am.ActiveServices.attachApplicationLocked(ActiveServices.java:4670)",
+            "  at com.android.server.am.ActivityManagerService.attachApplicationLocked(ActivityManagerService.java:4649)",
+            "  at com.android.server.am.ActivityManagerService.attachApplication(ActivityManagerService.java:4720)",
+            "  - locked <0x077ead33> (a com.android.server.am.ActivityManagerService)",
+            "  at android.app.IActivityManager$Stub.onTransact(IActivityManager.java:2404)",
+            "  at com.android.server.am.ActivityManagerService.onTransact(ActivityManagerService.java:2517)",
+            "  at android.os.Binder.execTransactInternal(Binder.java:1179)",
+            "  at android.os.Binder.execTransact(Binder.java:1143)"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "root/tmp/art-traces/anr_5826_40579_638194627",
+      "bytes": 268535,
+      "truncated": false,
+      "process": "system_server",
+      "contentSha256": "3fd35e17dd7af18dd58e28e22a9c388d4f87850df220551105082e57afd28eb4",
+      "selectedThreads": [
+        {
+          "thread": "\"main\" prio=5 tid=1 Blocked",
+          "managedFrames": [
+            "  at com.android.server.am.ActivityManagerService.registerReceiverWithFeature(ActivityManagerService.java:12477)",
+            "  - waiting to lock <0x077ead33> (a com.android.server.am.ActivityManagerService) held by thread 13",
+            "  at android.app.ContextImpl.registerReceiverInternal(ContextImpl.java:1778)",
+            "  at android.app.ContextImpl.registerReceiverAsUser(ContextImpl.java:1753)",
+            "  at com.android.server.media.RemoteDisplayProviderWatcher.start(RemoteDisplayProviderWatcher.java:85)",
+            "  at com.android.server.media.MediaRouterService$UserHandler.start(MediaRouterService.java:1213)",
+            "  at com.android.server.media.MediaRouterService$UserHandler.handleMessage(MediaRouterService.java:1144)",
+            "  at android.os.Handler.dispatchMessage(Handler.java:106)",
+            "  at android.os.Looper.loopOnce(Looper.java:201)",
+            "  at android.os.Looper.loop(Looper.java:288)",
+            "  at com.android.server.SystemServer.run(SystemServer.java:904)",
+            "  at com.android.server.SystemServer.main(SystemServer.java:611)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)",
+            "  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:981)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at dev.kreijstal.aosppocket.guest.ZygoteBootstrap32.main(ZygoteBootstrap32.java:32)"
+          ]
+        },
+        {
+          "thread": "\"Binder:5826_3\" prio=5 tid=13 TimedWaiting",
+          "managedFrames": [
+            "  at java.lang.Object.wait(Native method)",
+            "  - waiting on <0x05082549> (a java.lang.Object)",
+            "  at java.lang.Object.wait(Object.java:442)",
+            "  at com.android.server.am.LmkdConnection.waitForConnection(LmkdConnection.java:241)",
+            "  - locked <0x05082549> (a java.lang.Object)",
+            "  at com.android.server.am.ProcessList.writeLmkd(ProcessList.java:1538)",
+            "  at com.android.server.am.ProcessList.remove(ProcessList.java:1477)",
+            "  at com.android.server.am.ActivityManagerService.cleanUpApplicationRecordLocked(ActivityManagerService.java:11893)",
+            "  at com.android.server.am.ActivityManagerService.handleAppDiedLocked(ActivityManagerService.java:3056)",
+            "  at com.android.server.am.ActivityManagerService.appDiedLocked(ActivityManagerService.java:3163)",
+            "  at com.android.server.am.ActivityManagerService$AppDeathRecipient.binderDied(ActivityManagerService.java:1439)",
+            "  - locked <0x077ead33> (a com.android.server.am.ActivityManagerService)",
+            "  at android.os.IBinder$DeathRecipient.binderDied(IBinder.java:314)",
+            "  at android.os.BinderProxy.sendDeathNotice(BinderProxy.java:685)"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "root/tmp/art-traces/anr_6186_40574_730363852",
+      "bytes": 25336,
+      "truncated": false,
+      "process": "com.android.networkstack.process",
+      "contentSha256": "df03f07dff9dc8ddaf1acb84265855fb9680a6df1788cf6fe1658e4f12fe975e",
+      "selectedThreads": [
+        {
+          "thread": "\"main\" prio=5 tid=1 Native",
+          "managedFrames": [
+            "  at android.os.BinderProxy.transactNative(Native method)",
+            "  at android.os.BinderProxy.transact(BinderProxy.java:571)",
+            "  at android.app.IActivityManager$Stub$Proxy.publishService(IActivityManager.java:6214)",
+            "  at android.app.ActivityThread.handleBindService(ActivityThread.java:4585)",
+            "  at android.app.ActivityThread.access$1800(ActivityThread.java:256)",
+            "  at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2115)",
+            "  at android.os.Handler.dispatchMessage(Handler.java:106)",
+            "  at android.os.Looper.loopOnce(Looper.java:201)",
+            "  at android.os.Looper.loop(Looper.java:288)",
+            "  at android.app.ActivityThread.main(ActivityThread.java:7870)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)",
+            "  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1003)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at dev.kreijstal.aosppocket.guest.ZygoteBootstrap32.main(ZygoteBootstrap32.java:32)"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "root/tmp/art-traces/anr_6186_40564_328377191",
+      "bytes": 22533,
+      "truncated": false,
+      "process": "com.android.networkstack.process",
+      "contentSha256": "bd878b755ca0f261db45b211ed5a7b3ce7aa80e57b68985993122e052d70badd",
+      "selectedThreads": [
+        {
+          "thread": "\"main\" prio=5 tid=1 Native",
+          "managedFrames": [
+            "  at android.os.BinderProxy.transactNative(Native method)",
+            "  at android.os.BinderProxy.transact(BinderProxy.java:571)",
+            "  at android.app.IActivityManager$Stub$Proxy.publishContentProviders(IActivityManager.java:5934)",
+            "  at android.app.ActivityThread.installContentProviders(ActivityThread.java:6985)",
+            "  at android.app.ActivityThread.handleBindApplication(ActivityThread.java:6747)",
+            "  at android.app.ActivityThread.access$1500(ActivityThread.java:256)",
+            "  at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2091)",
+            "  at android.os.Handler.dispatchMessage(Handler.java:106)",
+            "  at android.os.Looper.loopOnce(Looper.java:201)",
+            "  at android.os.Looper.loop(Looper.java:288)",
+            "  at android.app.ActivityThread.main(ActivityThread.java:7870)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)",
+            "  at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1003)",
+            "  at java.lang.reflect.Method.invoke(Native method)",
+            "  at dev.kreijstal.aosppocket.guest.ZygoteBootstrap32.main(ZygoteBootstrap32.java:32)"
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_native.py --zygote --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --reuse-native --delta-from out/api32/art-trace-ready-image-manifest.json",
+      "result": "PASS; 7607251-byte signed delta APK. Embedded guest asset set/hash comparison against baseline: PASS."
+    },
+    {
+      "command": "ssh -o BatchMode=yes pi@juanraspberry 'python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server'",
+      "result": "PARTIAL / exit 1 from test driver, guest exit 4. ART trace and all keystore markers passed. NetworkStack ANR restarted system-server. Init remaining=0 failed=0."
+    },
+    {
+      "command": "python3 out/api32/read_live_anr.py",
+      "result": "PASS; full actual Java/Binder stacks retrieved without adb root or guest restart."
+    }
+  ]
+}

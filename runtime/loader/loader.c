@@ -35,7 +35,9 @@ __attribute__((section(".pocket_config"),used))
 struct PocketLoaderConfig pocket_loader_config={.magic="PCKELF01"};
 static size_t root_size;
 static size_t page_size;
-static int guest_identity,data_alias,module_view,denylist_view;
+static int guest_identity,data_alias,module_view,denylist_view,readonly_view;
+// Android12L IVold REMOUNT_MODE_*; selected by zygote before dropping UID0.
+static unsigned external_storage_mode;
 static unsigned guest_groups[64],guest_group_count;
 static unsigned guest_uid[3],guest_gid[3];
 // Set when this loader runs as the program itself for an unprepared ELF.
@@ -109,37 +111,7 @@ static void module_view_check(void) {
 static long map_path(const char*,char[PATH_LIMIT]);
 static const char* visible_path(char*);
 #include "denylist_view.h"
-static long map_path(const char* path,char out[PATH_LIMIT]) {
-    if(denylist_view && denylist_hidden(path))return -ENOENT;
-    if(equal(path,"/dev/hwbinder",14))path="/dev/binder";
-    size_t n=length(path,PATH_LIMIT);
-    if(n==PATH_LIMIT)return -ENAMETOOLONG;
-    if(path[0]!='/' || prefix(path,pocket_loader_config.root,root_size) ||
-       prefix(path,"/proc",5) || prefix(path,"/sys",4) ||
-       (prefix(path,"/dev",4) && !prefix(path,"/dev/socket",11) &&
-        !prefix(path,"/dev/__properties__",19) && !prefix(path,"/dev/input",10) &&
-        // Recovery/Magisk installer scratch space is guest-private, not a device.
-        !prefix(path,"/dev/tmp",8))) {
-        memcpy(out,path,n+1);return 0;
-    }
-    // Lexical escape rejection only. Symlink containment is not provided.
-    for(size_t i=0;i<n;i++)if(path[i]=='/' && path[i+1]=='.' && path[i+2]=='.' &&
-        (!path[i+3] || path[i+3]=='/'))return -EPERM;
-    if(data_alias && prefix(path,"/data",5)) {
-        if(root_size+12+n-5>=PATH_LIMIT)return -ENAMETOOLONG;
-        memcpy(out,pocket_loader_config.root,root_size);memcpy(out+root_size,"/system-data",12);
-        memcpy(out+root_size+12,path+5,n-5+1);return 0;
-    }
-    // Magic Mount compatibility: Magisk publishes a fully merged private tree.
-    // It supplies enumeration as well as open/stat/exec/dlopen semantics.
-    if(module_view && !denylist_view && (prefix(path,"/system",7) || prefix(path,"/vendor",7))) {
-        if(root_size+20+n>=PATH_LIMIT)return -ENAMETOOLONG;
-        memcpy(out,pocket_loader_config.root,root_size);memcpy(out+root_size,"/.pocket-module-view",20);
-        memcpy(out+root_size+20,path,n+1);return 0;
-    }
-    if(root_size+n>=PATH_LIMIT)return -ENAMETOOLONG;
-    memcpy(out,pocket_loader_config.root,root_size);memcpy(out+root_size,path,n+1);return 0;
-}
+#include "path_map.h"
 // Bounded kernel-mediated copies: never dereference an application pointer in
 // the handler. Small records stay below PIPE_BUF so a pipe cannot deadlock.
 static long copy_from_user(void* out,uintptr_t source,size_t size) {
@@ -152,7 +124,9 @@ static long copy_from_user(void* out,uintptr_t source,size_t size) {
     raw(__NR_close,pipes[0],0,0,0,0,0);raw(__NR_close,pipes[1],0,0,0,0,0);
     return result==(long)size?0:result;
 }
+#include "external_visible_path.h"
 static const char* visible_path(char* value) {
+    const char* external=external_lower_visible_path(value);if(external)return external;
     if(prefix(value,pocket_loader_config.root,root_size)) {
         if(!value[root_size])return "/";
         if(data_alias && prefix(value+root_size,"/system-data",12)) {
@@ -250,6 +224,7 @@ static void identity_encode(char state[STATE_LIMIT]) {
     state[at++]=state_hex(guest_group_count>>4);state[at++]=state_hex(guest_group_count);
     for(unsigned i=0;i<guest_group_count;i++)for(int j=7;j>=0;j--)state[at++]=state_hex(guest_groups[i]>>(j*4));
     state[at++]=denylist_view?'1':'0';
+    if(external_storage_mode)state[at++]=(char)('0'+external_storage_mode);
     state[at]=0;
 }
 static unsigned hex_value(char c) {return c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:16;}
@@ -259,8 +234,9 @@ static void identity_decode(const char* state) {
     if(size<key+51 || !equal(state,STATE_KEY,key))return;
     unsigned count=(hex_value(state[key+49])<<4)|hex_value(state[key+50]);
     size_t expected=key+51+count*8;
-    if(count>64 || (size!=expected && size!=expected+1))return;
-    if(size==expected+1 && state[expected]!='0' && state[expected]!='1')return;
+    if(count>64 || (size!=expected && size!=expected+1 && size!=expected+2))return;
+    if(size>=expected+1 && state[expected]!='0' && state[expected]!='1')return;
+    if(size==expected+2 && (state[expected+1]<'0' || state[expected+1]>'4'))return;
     unsigned ids[6];
     for(unsigned i=0;i<6;i++) {unsigned n=0;for(unsigned j=0;j<8;j++) {
         unsigned d=hex_value(state[key+1+i*8+j]);
@@ -269,7 +245,8 @@ static void identity_decode(const char* state) {
         unsigned d=hex_value(state[key+51+i*8+j]);if(d==16)return;n=(n<<4)|d;}guest_groups[i]=n;}
     guest_group_count=count;
     guest_identity=state[key]=='1';for(unsigned i=0;i<3;i++) {guest_uid[i]=ids[i];guest_gid[i]=ids[i+3];}
-    if(size==expected+1 && state[expected]=='1')denylist_view=1;
+    if(size>=expected+1 && state[expected]=='1')denylist_view=1;
+    if(size==expected+2)external_storage_mode=(unsigned)(state[expected+1]-'0');
 }
 static void identity_start(uintptr_t* stack,uintptr_t argc) {
     uintptr_t first=argc+2,end=first;
@@ -324,14 +301,56 @@ struct KernelAction {void (*handler)(int,siginfo_t*,void*);unsigned long flags;v
 #include "binder_runtime.h"
 __attribute__((noinline)) static void path_dispatch(long,__u64*,ucontext_t*,char*);
 #include "ce_runtime.h"
+#include "readonly_view.h"
+#include "external_runtime.h"
+#include "external_kernel_scope.h"
+#include "external_namespace_runtime.h"
+// Filesystem UNIX destinations occur outside bind/connect too. In particular,
+// 12L zygote sends SIGCHLD notifications to /data/system/unsolzygotesocket.
+// Payload/iovec/control pointers retain their kernel ABI, including SCM_RIGHTS.
+static int unix_send_path(long nr,__u64* r) {
+    if(nr!=__NR_sendto && nr!=__NR_sendmsg)return 0;
+    struct msghdr message;uintptr_t pointer;size_t size;
+    if(nr==__NR_sendmsg) {
+        long rc=copy_from_user(&message,r[1],sizeof(message));if(rc<0){r[0]=rc;return 1;}
+        pointer=(uintptr_t)message.msg_name;size=message.msg_namelen;
+    }else {pointer=r[4];size=r[5];}
+    if(!pointer || !size || size>sizeof(struct sockaddr_un) || size<sizeof(sa_family_t))return 0;
+    struct sockaddr_un address;memset(&address,0,sizeof(address));
+    long rc=copy_from_user(&address,pointer,size);if(rc<0){r[0]=rc;return 1;}
+    size_t offset=offsetof(struct sockaddr_un,sun_path);
+    if(address.sun_family!=AF_UNIX || size<=offset || !address.sun_path[0])return 0;
+    if(length(address.sun_path,size-offset)==size-offset){r[0]=(uint64_t)-ENAMETOOLONG;return 1;}
+    long memory=raw(__NR_mmap,0,PATH_LIMIT,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+    if(memory<0){r[0]=memory;return 1;}
+    char* mapped=(char*)memory;rc=map_path(address.sun_path,mapped);
+    size_t count=rc<0?0:length(mapped,PATH_LIMIT);
+    if(!rc && count>=sizeof(address.sun_path))rc=-ENAMETOOLONG;
+    if(!rc) {
+        memcpy(address.sun_path,mapped,count+1);size=offset+count+1;
+        if(nr==__NR_sendmsg){message.msg_name=&address;message.msg_namelen=size;rc=raw(nr,r[0],(long)&message,r[2],0,0,0);}
+        else rc=raw(nr,r[0],r[1],r[2],r[3],(long)&address,size);
+    }
+    raw(__NR_munmap,memory,PATH_LIMIT,0,0,0,0);r[0]=rc;return 1;
+}
 static void path_call(long,__u64*,ucontext_t*);
 static void trapped(int signal,siginfo_t* info,void* opaque) {
     (void)signal;ucontext_t* context=opaque;__u64* r=context->uc_mcontext.regs;
     if(info->si_code!=SYS_SECCOMP || info->si_errno!=FILTER_MARKER || info->si_arch!=AUDIT_ARCH_AARCH64)
         fail("unexpected SIGSYS",info->si_syscall);
     long nr=info->si_syscall;
+    if(readonly_fd_dispatch(nr,r))return;
     if(ce_dispatch(nr,r,context))return;
     if(proc_fd_dispatch(nr,r))return;
+    if(external_directory_fd_dispatch(nr,r))return;
+    if(external_namespace_fd_dispatch(nr,r))return;
+    // These are additionally trapped only for the directory VFS. Every other
+    // FD retains the kernel fast path instead of entering pathname mapping.
+    if(nr==__NR_read || nr==__NR_readv || nr==__NR_pread64 || nr==__NR_preadv || nr==__NR_preadv2 || nr==__NR_lseek ||
+       nr==__NR_getsockopt || nr==__NR_setsockopt || nr==__NR_listen || nr==__NR_accept || nr==__NR_accept4 ||
+       nr==__NR_shutdown || nr==__NR_recvfrom || nr==__NR_recvmsg || nr==__NR_recvmmsg) {
+        r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
+    }
     if(nr==__NR_pwrite64 || nr==__NR_pwritev || nr==__NR_pwritev2 || nr==__NR_ftruncate) {
         r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
     }
@@ -341,10 +360,12 @@ static void trapped(int signal,siginfo_t* info,void* opaque) {
         else r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);
         return;
     }
+    if(unix_send_path(nr,r))return;
     if(firewall_dispatch(nr,r))return;
     if(binder_dispatch(nr,r))return;
+    if(external_statfs_dispatch(nr,r))return;
     if(nr==__NR_getdents64 && denylist_view){r[0]=denylist_getdents((int)r[0],r[1],r[2]);return;}
-    if(nr==__NR_ioctl || nr==__NR_close || nr==__NR_dup || nr==__NR_dup3 || nr==__NR_fcntl ||
+    if(nr==__NR_fchdir || nr==__NR_ioctl || nr==__NR_close || nr==__NR_dup || nr==__NR_dup3 || nr==__NR_fcntl ||
        nr==__NR_getdents64 || nr==__NR_fchmod || nr==__NR_fsync || nr==__NR_fdatasync || nr==__NR_fstatfs ||
        nr==__NR_fgetxattr || nr==__NR_fsetxattr || nr==__NR_flistxattr || nr==__NR_fremovexattr){
         r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
@@ -352,6 +373,14 @@ static void trapped(int signal,siginfo_t* info,void* opaque) {
     if(nr==__NR_getpid) {
         if(r[0]==PROBE_INPUT) {r[0]=PROBE_OUTPUT;return;}
         if(r[0]==CONTROL_INPUT) {
+            if(r[1]==8){r[0]=external_kernel_scope((unsigned)r[2]);return;}
+            if(r[1]==7){r[0]=external_storage_mode;return;}
+            if(r[1]==6){
+                if(!guest_identity || guest_uid[1]){r[0]=(uint64_t)-EPERM;return;}
+                if(r[2]>4){r[0]=(uint64_t)-EINVAL;return;}
+                external_storage_mode=(unsigned)r[2];r[0]=0;return;
+            }
+            if(r[1]==5){r[0]=ce_vendor_enabled?0x504c3202UL:0;return;}
             if(r[1]==4){r[0]=denylist_view;return;}
             if(r[1]==3){
                 if(!guest_identity || guest_uid[1]){r[0]=(uint64_t)-EPERM;return;}
@@ -405,13 +434,16 @@ static void trapped(int signal,siginfo_t* info,void* opaque) {
     }
     if(identity_number(nr)) {
         r[0]=guest_identity?(uint64_t)identity_call(nr,r):(uint64_t)raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);
-        if(guest_identity && !r[0] && (nr==__NR_setuid || nr==__NR_setresuid || nr==__NR_setreuid))binder_publish_identity();return;
+        if(guest_identity && !r[0] && (nr==__NR_setuid || nr==__NR_setresuid || nr==__NR_setreuid ||
+            nr==__NR_setgid || nr==__NR_setresgid || nr==__NR_setregid))binder_publish_identity();
+        return;
     }
     if(nr==__NR_getcwd) {
         long memory=raw(__NR_mmap,0,PATH_LIMIT,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
         if(memory<0) {r[0]=memory;return;}
         char* cwd=(char*)memory;long rc=raw(nr,memory,PATH_LIMIT,0,0,0,0);
-        if(rc>0) {const char* value=visible_path(cwd);size_t size=length(value,PATH_LIMIT)+1;
+        if(rc>0) {const char* value=external_lower_view(cwd,external_namespace_enabled);
+            if(!value)value=visible_path(cwd);size_t size=length(value,PATH_LIMIT)+1;
             rc=size>r[1]?-ERANGE:copy_to_user(r[0],value,size);}
         raw(__NR_munmap,memory,PATH_LIMIT,0,0,0,0);r[0]=rc;return;
     }
@@ -482,14 +514,19 @@ __attribute__((noinline)) static void path_call(long nr,__u64* r,ucontext_t* con
     raw(__NR_munmap,memory,size,0,0,0,0);
 }
 __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t* context,char* scratch) {
+    if(nr==__NR_utimensat && !r[1]) {
+        if(readonly_view && readonly_fd((int)r[0],scratch))r[0]=(uint64_t)-EROFS;
+        else r[0]=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);return;
+    }
     unsigned argument=nr==__NR_symlinkat?2:(nr==__NR_execve || nr==__NR_chdir || nr==__NR_truncate || nr==__NR_statfs ||
         nr==__NR_getxattr || nr==__NR_lgetxattr || nr==__NR_setxattr || nr==__NR_lsetxattr ||
         nr==__NR_listxattr || nr==__NR_llistxattr || nr==__NR_removexattr || nr==__NR_lremovexattr)?0:1;
     char* original=scratch;char* mapped=scratch+PATH_LIMIT;
     // Long-lived init execs services after Magisk publishes the view.
     if(nr==__NR_execve || nr==__NR_execveat)module_view_check();
+    unsigned parentProbe=0;
     long status=copy_path(original,r[argument]);
-    if(status>=0)status=denylist_view?denylist_at(argument?(int)r[argument-1]:AT_FDCWD,original,mapped,scratch+3*PATH_LIMIT):map_path(original,mapped);
+    if(status>=0)status=denylist_view?denylist_at(argument?(int)r[argument-1]:AT_FDCWD,original,mapped,scratch+3*PATH_LIMIT):map_path_parent_probe(original,mapped,external_namespace_enabled,&parentProbe);
     if(status<0) {r[0]=status;return;}
     if(denylist_view && denylist_resolved(argument?(int)r[argument-1]:AT_FDCWD,mapped,scratch+3*PATH_LIMIT)){r[0]=(uint64_t)-ENOENT;return;}
 #ifdef POCKET_LOADER_DIAGNOSTICS
@@ -502,7 +539,7 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
     long a[6];for(unsigned i=0;i<6;i++)a[i]=r[i];a[argument]=(long)mapped;
     char* second=scratch+2*PATH_LIMIT;
     if(nr==__NR_renameat || nr==__NR_renameat2 || nr==__NR_linkat) {
-        char* path=scratch+3*PATH_LIMIT;status=copy_path(path,r[3]);if(status>=0)status=denylist_view?denylist_at((int)r[2],path,second,scratch+5*PATH_LIMIT):map_path(path,second);
+        char* path=scratch+3*PATH_LIMIT;status=copy_path(path,r[3]);if(status>=0)status=denylist_view?denylist_at((int)r[2],path,second,scratch+5*PATH_LIMIT):map_path_parent_probe(path,second,external_namespace_enabled,&parentProbe);
         if(status<0) {r[0]=status;return;}a[3]=(long)second;
     }
     if(nr==__NR_symlinkat) {
@@ -513,6 +550,13 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
         if(status<0) {r[0]=status;return;}
         a[0]=(long)second;
     }
+    if(readonly_view) {
+        status=readonly_path_check(nr,a,scratch+3*PATH_LIMIT);
+        if(status<0){r[0]=status;return;}
+    }
+    if(external_namespace_path_dispatch(nr,r,original,mapped,second,scratch+3*PATH_LIMIT))return;
+    if(external_open_dispatch(nr,r,original,mapped,scratch+3*PATH_LIMIT))return;
+    if(parentProbe){r[0]=(uint64_t)-EPERM;return;}
     if(nr==__NR_fchownat && guest_identity) {
         if(a[4] & ~(AT_SYMLINK_NOFOLLOW|AT_EMPTY_PATH)) {r[0]=(uint64_t)-EINVAL;return;}
         struct stat st;status=raw(__NR_newfstatat,a[0],a[1],(long)&st,a[4],0,0);
@@ -605,7 +649,10 @@ __attribute__((noinline)) static void path_dispatch(long nr,__u64* r,ucontext_t*
     r[0]=result;
 }
 static void install_handler(void) {
-    struct KernelAction action={trapped,SA_SIGINFO|0x04000000UL,pocket_restore_rt,0};
+    // Application handlers (notably zygote's SIGCHLD handler) can interrupt a
+    // blocking syscall below and perform intercepted I/O themselves. Leaving
+    // SIGSYS auto-blocked would make that nested seccomp trap fatal.
+    struct KernelAction action={trapped,SA_SIGINFO|SA_NODEFER|0x04000000UL,pocket_restore_rt,0};
     long result=raw(__NR_rt_sigaction,SIGSYS,(long)&action,0,8,0,0);
     if(result<0)fail("sigaction",result);
 }
@@ -629,11 +676,19 @@ static void install_filter(void) {
     JUMP(BPF_JMP|BPF_JEQ|BPF_K,CONTROL_INPUT,1,0);
     STMT(BPF_RET|BPF_K,SECCOMP_RET_ALLOW);
     STMT(BPF_RET|BPF_K,SECCOMP_RET_TRAP|FILTER_MARKER);
+    // INTERNET permission gates IP socket creation. Other socket families
+    // retain their existing fast path, including private UNIX IPC.
+    JUMP(BPF_JMP|BPF_JEQ|BPF_K,__NR_socket,0,5);
+    STMT(BPF_LD|BPF_W|BPF_ABS,offsetof(struct seccomp_data,args));
+    JUMP(BPF_JMP|BPF_JEQ|BPF_K,AF_INET,2,0);
+    JUMP(BPF_JMP|BPF_JEQ|BPF_K,AF_INET6,1,0);
+    STMT(BPF_RET|BPF_K,SECCOMP_RET_ALLOW);
+    STMT(BPF_RET|BPF_K,SECCOMP_RET_TRAP|FILTER_MARKER);
     const unsigned numbers[]={__NR_mmap,__NR_ioctl,__NR_close,__NR_dup,__NR_dup3,__NR_fcntl,__NR_openat,__NR_newfstatat,__NR_faccessat,__NR_readlinkat,
         __NR_getdents64,__NR_fchmod,__NR_fsync,__NR_fdatasync,
         __NR_fstatfs,__NR_fgetxattr,__NR_fsetxattr,__NR_flistxattr,__NR_fremovexattr,
         __NR_sendto,__NR_sendmsg,__NR_sendmmsg,__NR_write,__NR_writev,__NR_pwrite64,__NR_pwritev,__NR_pwritev2,__NR_ftruncate,__NR_sendfile,__NR_splice,__NR_copy_file_range,
-        __NR_execve,__NR_execveat,__NR_rt_sigaction,__NR_rt_sigprocmask,__NR_getcwd,__NR_chdir,
+        __NR_execve,__NR_execveat,__NR_rt_sigaction,__NR_rt_sigprocmask,__NR_getcwd,__NR_chdir,__NR_fchdir,
         __NR_mkdirat,__NR_unlinkat,__NR_renameat,__NR_renameat2,__NR_linkat,__NR_symlinkat,
         __NR_fchmodat,__NR_fchownat,__NR_utimensat,__NR_truncate,__NR_mknodat,
         __NR_statfs,__NR_inotify_add_watch,__NR_getxattr,__NR_lgetxattr,__NR_setxattr,__NR_lsetxattr,
@@ -644,6 +699,14 @@ static void install_filter(void) {
     for(unsigned i=0;i<sizeof(numbers)/sizeof(numbers[0]);i++) {
         JUMP(BPF_JMP|BPF_JEQ|BPF_K,numbers[i],0,1);
         STMT(BPF_RET|BPF_K,SECCOMP_RET_TRAP|FILTER_MARKER);
+    }
+    if(external_namespace_enabled) {
+        const unsigned directoryNumbers[]={__NR_read,__NR_readv,__NR_pread64,__NR_preadv,__NR_preadv2,__NR_lseek,
+            __NR_getsockopt,__NR_setsockopt,__NR_listen,__NR_accept,__NR_accept4,__NR_shutdown,__NR_recvfrom,__NR_recvmsg,__NR_recvmmsg};
+        for(unsigned i=0;i<sizeof(directoryNumbers)/sizeof(directoryNumbers[0]);i++) {
+            JUMP(BPF_JMP|BPF_JEQ|BPF_K,directoryNumbers[i],0,1);
+            STMT(BPF_RET|BPF_K,SECCOMP_RET_TRAP|FILTER_MARKER);
+        }
     }
     STMT(BPF_RET|BPF_K,SECCOMP_RET_ALLOW);
     struct sock_fprog program={(unsigned short)used,code};
@@ -732,14 +795,18 @@ uintptr_t pocket_loader_start(uintptr_t* stack) {
     char data_path[1280];memcpy(data_path,pocket_loader_config.root,root_size);
     memcpy(data_path+root_size,"/system-data",13);struct stat data_stat;
     data_alias=raw(__NR_newfstatat,AT_FDCWD,(long)data_path,(long)&data_stat,0,0,0)==0 && S_ISDIR(data_stat.st_mode);
+    memcpy(data_path+root_size,"/.pocket-readonly-system",sizeof("/.pocket-readonly-system"));
+    readonly_view=guest_identity && raw(__NR_newfstatat,AT_FDCWD,(long)data_path,(long)&data_stat,AT_SYMLINK_NOFOLLOW,0,0)==0 && S_ISREG(data_stat.st_mode);
     memcpy(data_path+root_size,"/.pocket-ce-enabled",sizeof("/.pocket-ce-enabled"));
     ce_enabled=raw(__NR_newfstatat,AT_FDCWD,(long)data_path,(long)&data_stat,0,0,0)==0;
     if(ce_enabled) {
+        memcpy(data_path+root_size,"/.pocket-ce-layout-12l",sizeof("/.pocket-ce-layout-12l"));
+        ce_vendor_enabled=raw(__NR_newfstatat,AT_FDCWD,(long)data_path,(long)&data_stat,AT_SYMLINK_NOFOLLOW,0,0)==0 && S_ISREG(data_stat.st_mode);
         memcpy(data_path+root_size,"/.pocket-ce-device",sizeof("/.pocket-ce-device"));
         long config=raw(__NR_openat,AT_FDCWD,(long)data_path,O_RDONLY|O_CLOEXEC,0,0,0);
         if(config>=0){if(raw(__NR_read,config,(long)&ce_fuse_device,sizeof(ce_fuse_device),0,0,0)!=(long)sizeof(ce_fuse_device))ce_fuse_device=0;raw(__NR_close,config,0,0,0,0,0);}
     }
-    module_view_check();
+    module_view_check();external_files_start();
     binder_publish_identity();
     install_handler();
     if(pocket_filter_probe(PROBE_INPUT)!=PROBE_OUTPUT)install_filter();

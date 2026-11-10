@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pocketmediasession32">
+  <uses-sdk android:minSdkVersion="32" android:targetSdkVersion="32" />
+  <uses-permission android:name="android.permission.BIND_EXTERNAL_STORAGE_SERVICE" />
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+  <application android:label="Pocket Media session test" android:allowBackup="false">
+    <activity android:name=".MainActivity" android:exported="true" android:launchMode="2" android:configChanges="1184">
+      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+    </activity>
+  </application>
+</manifest>

@@ -1,0 +1,178 @@
+{
+  "schema": 1,
+  "status": "TOMBSTONED_JAVA_AND_PERSISTENCE_PASS_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Private stock 12L tombstoned protocol, requested Java backtraces, role/profile validation and completed trace persistence. No stable startup, native-fatal capture or complete Manager claim.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "hostVmMemoryMb": 1536,
+  "runId": "790619a76b10432295abe0fb0653c580",
+  "apkSha256": "e2d22ea5df2ffe556d50cbd1199df7d57e6d77577a864ec1028433d7c84848b7",
+  "apkBytes": 7685269,
+  "imageManifestSha256": "c9b86b5d53299cdb8751b18d2da007f7394b4117f71dc8cf5960b8b4789f5cff",
+  "imageVerifiedFiles": 2649,
+  "reportPath": "out/api32/tombstoned-persistence-report.json",
+  "reportSha256": "228505c6faf3f0ec9389fc2d7466c6e0c9cee2e6cbde95270c4bf195d114b3ac",
+  "sourceSha256": {
+    "runtime/api32/tombstoned_scope.cpp": "a5f288f3dfa8a776d381113c8233044f2ed8f2f91557811e8e69b43dbcc2c163",
+    "runtime/api32/tombstoned_probe.cpp": "38195a17f7e7d7dfa8ae3e55b660292de0e25708b21498bf8771645a48676506",
+    "runtime/api32/TombstonedProbe32.java": "2ce56b51bf5715d274962d4196e5db60b8d4c720bd880f92d54bfafd4ab86511",
+    "runtime/api32/art_trace.c": "bbe8c5156b7454d3f9b90866b44f87c11db2a47049f3399862f9eb3af5f554cd",
+    "runtime/tests/api32/MainActivity.java": "6d96476d300dce93ab52d49123326331a13165b75d622d865550d6ee1534ba99",
+    "tools/build_api32_tombstoned.py": "1b5c779117383ea2feeb70fd1c24e98d7ebfd01602c824ab3185450ffc73bc11",
+    "tools/build_api32_native.py": "d3c253b8128a4153372000380ccbb563cafed197cc20aa424a1339c2635c87c6",
+    "tools/build_api32_probe.py": "badb4bb6cea687de65473116174635c4dc9a3bf66f629f24f896b2f1211a5fc8",
+    "tools/test_api32_on_pi.py": "e583e9fc76271a8fcfea56fe50f3fc298b5373cda7b62150a5f10554897649eb"
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_tombstoned.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS / exit 0; scope DSO and negative native client built with -Wall -Wextra -Werror."
+    },
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/tombstoned-java-classes runtime/api32/TombstonedProbe32.java",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/tombstoned-persistence-baseline-manifest.json",
+      "result": "PASS / exit 0; signed 7685269-byte APK. All 2649 staged inputs verified; four guest files differ from the deployed baseline."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component markers and later UI/input passed; strict startup FAIL / driver exit 1, guest exit 0. Actual SystemUI and Bluetooth ANRs remain."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --reuse-fixture --thin-update",
+      "result": "PASS / exit 0; final diagnostic-only host APK is 7623443 bytes. All 2649 staged inputs verified and guest image manifest byte-identical. No guest files embedded or changed."
+    },
+    {
+      "command": "python3 out/api32/install_tombstoned_diagnostics.py",
+      "result": "PASS / exit 0 after confirming the terminal run and 30 services reaped. Final non-debuggable APK installed on VM73 and started only in probe_diagnostics_only mode; no guest extraction or restart."
+    },
+    {
+      "command": "python3 out/api32/read_tombstoned_detail.py",
+      "result": "PASS / exit 0; actual 334848-byte ANR file retrieved untruncated via host-mediated DUMP. Saved report identity matches the full test run."
+    },
+    {
+      "command": "python3 out/api32/replay_tombstoned_gates.py",
+      "result": "PASS / exit 0; all required markers present, actual strict gate rejects startup, removing the new persistence marker is rejected. Original report unchanged."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_native.py tools/build_api32_probe.py tools/build_api32_tombstoned.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0."
+    }
+  ],
+  "componentMarkers": [
+    "API32_TOMBSTONED_ROLE_DENIED_PASS uid=39999 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12",
+    "API32_TOMBSTONED_OUTSIDE_PROFILE_DENIED_PASS uid=0 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12",
+    "API32_TOMBSTONED_JAVA_PASS requester_uid=1000 target_uid=39999 target_pid=13087 stock_Debug=1 intercept_fd=real ART_frames=verified target_alive=1 elapsed_ms=164",
+    "API32_TOMBSTONED_PERSIST_PASS target_pid=13087 path=/data/anr/trace_00 bytes=17863 ART_frames=verified target_alive=1 elapsed_ms=440"
+  ],
+  "stockBinaryTextIntegrity": {
+    "system/bin/tombstoned": {
+      "textSha256": "ce26ff1457e2b4ebcd3277b04603df7e389220db24d779caae510b5249dccaa3",
+      "stockTextUnchanged": true
+    },
+    "apex/com.android.runtime/bin/crash_dump64": {
+      "textSha256": "fad6a4e60998c6d76c721b4da76bf6486f6682094f8c318d19df8bc0410ef7ee",
+      "stockTextUnchanged": true
+    }
+  },
+  "implementation": {
+    "daemonVirtualUid": 1058,
+    "interceptVirtualRoles": [
+      0,
+      1000,
+      2000
+    ],
+    "peerValidation": "Actual SO_PEERCRED kernel UID plus guest PID/start-time metadata. Unprivileged native requests must target their own virtual UID; Java target uses the kernel peer PID.",
+    "completionValidation": "Kernel UID still checked; stock per-connection state machine accepts completion only after the authenticated initial request. Completed writer may already have exited.",
+    "rejectedScmRights": "All received descriptors closed before rejection; daemon FD count 12 before/after each 24-request denial test, plus one readiness warm-up each.",
+    "persistence": "Try real linkat first. EACCES/EPERM fallback accepts only the stock proc-FD source, matching private anr/tombstones directory inode and artifact name. Reopen matching regular-file inode; copy <=64MiB to exclusive same-directory temp, verify size, chmod/fsync, close and atomic rename. Errors remove temporary output and propagate failure.",
+    "artWriter": "Explicit POCKET_API32_USE_TOMBSTONED=1 delegates to stock libartpalette-system writer; no silent fallback. Manual private sink remains available for its separate probe.",
+    "periodicStartupProfilingEnabled": false,
+    "rootlessGuestMetadataIsKernelIsolation": false,
+    "diagnosticReader": "Fixed profile directories, regular files, symlink/canonical-path checks, stock trace/tombstone names. Binary proto files excluded. Optional detail mode reads only the newest accepted file per directory, capped at 512KiB. Native 2MiB log cap unchanged."
+  },
+  "priorRun": {
+    "runId": "3a53c0ed60ff4925a46b35b09efd8968",
+    "apkSha256": "f089d4ca72d37b198dabbffbdb832f8bb93163bb8f68b6cd27e291a0d368f2c8",
+    "reportPath": "out/api32/tombstoned-report.json",
+    "observation": "Requested Java/denial probes passed; completed un-intercepted traces failed linkat with EACCES. That finding motivated actual persistence fallback."
+  },
+  "requestedFrameworkTraces": {
+    "systemUiPid": 13518,
+    "systemServerPid": 13262,
+    "path": "root/data/anr/anr_2026-11-02-19-12-32-890",
+    "bytes": 334848,
+    "truncated": false,
+    "contentSha256": "e475964c6131fe1d36da81b159cc6bb5efb377a9d415c0e1cb693d5064ae76cd",
+    "evidencePath": "out/api32/tombstoned-saved-detail-traces.json",
+    "evidenceSha256": "5b8cb477c1074741b7ec723c35cfa46b9d24f5bbc137d03e6462202e5de86cd8",
+    "systemUiMain": "BinderProxy.transact -> ISliceManager.pinSlice -> SliceViewManager -> KeyguardSliceViewController.onViewAttached",
+    "systemUiTraceTimeUtc": "2026-11-02 19:12:33.121926781",
+    "systemServerTraceTimeUtc": "2026-11-02 19:12:38.436019351",
+    "limitation": "Sequential snapshots, about five seconds apart. Later system_server main loop is idle; no pinSlice callee stack was captured. This does not prove a persistent Binder deadlock or its cause."
+  },
+  "diagnosticOnlyHostUpdate": {
+    "apkSha256": "15df80f805957bf0d8e5206efe317cfa09c7ff3de25984dce28db4fb50dad2fd",
+    "apkBytes": 7623443,
+    "guestImageManifestUnchanged": true,
+    "guestStarted": false,
+    "fullStartupRetested": false,
+    "savedReportRunId": "790619a76b10432295abe0fb0653c580",
+    "diagnosticRunId": "saved-tombstoned-diagnostics"
+  },
+  "startupAnrs": [
+    {
+      "process": "com.android.bluetooth",
+      "pid": 13487,
+      "reason": "executing service com.android.bluetooth/.btservice.AdapterService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 13518,
+      "reason": "executing service com.android.systemui/.SystemUIService"
+    }
+  ],
+  "uiStartupCrashes": [],
+  "laterUiSystemUiPid": 14408,
+  "laterUiStableSeconds": 40,
+  "nativeLogChars": 1394635,
+  "nativeLogWithinCaptureLimit": true,
+  "cleanup": {
+    "reaped": 30,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "requestedJavaBacktraceVerified": true,
+  "standaloneTracePersistenceVerified": true,
+  "nativeFatalCaptureVerified": false,
+  "remaining": [
+    "Fix actual startup ANRs; new requested Java stacks identify the SystemUI pinSlice wait but not its callee delay.",
+    "Bluetooth aborts in alarm.cc after clock-7 timer initialization returns EPERM; its requested SIGEV_THREAD attributes include SCHED_FIFO. Distinguish thread scheduling denial from timer syscall denial before implementing a rootless policy.",
+    "Native crash requests are observed but completed fatal tombstone persistence is unverified.",
+    "Complete 12L storage/credentials and production Manager/on-demand-image integration plus end-to-end app/restart validation. Phone remains offline."
+  ],
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "managerApi32Supported": false
+}

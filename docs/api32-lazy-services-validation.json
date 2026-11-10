@@ -1,0 +1,347 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "status": "STOCK_HIDL_WAIT_COLD_BINDER_WAV_AND_STORAGE_STRICT_PASS_PROCESS_BUDGET_PENDING",
+  "runtimeVerifiedForCurrentSources": true,
+  "productionReleaseReady": false,
+  "design": {
+    "activation": "An immutable guest property enables an exact Binder/HIDL service-to-init allowlist. Registry requests init outside service-map locks; aliases share a bounded retry window. checkService does not start a daemon. Daemons retain their declared guest credentials.",
+    "nativeLookup": "The API32 preload forwards a known lazy service lookup through the typed getService method, then retains the stock bounded native wait. Its private ServiceManagerShim declaration is generated from the pinned 12L source with the upstream license.",
+    "extractor": "Only the logical media.extractor role with lazy mode enabled moves its original plugin scan to a thread. CreateFromService and getSupportedTypes wait for the real original factory load; no synthetic extractors or file data are introduced.",
+    "notifications": "Hardware registry watches are keyed by Binder identity, bounded, linked to callback death, and removed on unsubscribe. It sends actual existing/publication notifications outside its mutex, including interface aliases. Current runtime validation uses the stock HIDL getRawServiceInternal waiter."
+  },
+  "hostValidation": {
+    "path": "out/api32/lazy-media-host-validation.json",
+    "sha256": "d81eb2939d78f3981a47c7ba2d8cb2882ed2e94285c803782c9ff4dc7278bc40"
+  },
+  "nativeBuilds": "Binder, hardware registry, combined core, matching media policy and native probe all compile with strict warnings; see candidate artifact hashes.",
+  "firstTrial": {
+    "report": {
+      "path": "out/api32/lazy-media-first-report.json",
+      "sha256": "b493c1dafb173038c37ba4289d759d0ba6e2bafc2d7bccff55bfb610d6d99081"
+    },
+    "runId": "dace5aba0bc3427abc0280d68269b4c5",
+    "strictPassed": false,
+    "observedPeakChildren": 33,
+    "originalCodeRestored": true,
+    "reason": "Init accepts the cold extractor start request, but the stock native five-second lookup times out while the service constructor scans plugins."
+  },
+  "extractorTrial": {
+    "report": {
+      "path": "out/api32/lazy-media-extractor-report.json",
+      "sha256": "1481afbbc9a9f1af49b61ea38645f0a614fd4a0fda12efc6a68fb58f2f1de03e"
+    },
+    "processCensus": {
+      "path": "out/api32/lazy-media-extractor-process-budget.json",
+      "sha256": "4cf919f312c50d9a7da2eb3a7974cd8b9df56720d09cc51335a47921e78cc88c"
+    },
+    "runId": "ca45b17d81184ed7817b228eddd7b6ae",
+    "strictPassed": true,
+    "dataProof": {
+      "lazyExtractorRead": true,
+      "extractorSampleBytes": 320,
+      "hostRpcImpersonationDenied": true,
+      "attachPeerImpersonationDenied": true,
+      "statfs": true,
+      "filesystemBlocks": 2096640,
+      "filesystemBlockSize": 4096,
+      "mainTid": 1115,
+      "workerTid": 1281,
+      "ordinaryPathOpen": true,
+      "openFlagsPreserved": true,
+      "aliasRead": true,
+      "crossPackageDenied": true,
+      "backingAliasDenied": true,
+      "uid": 10109,
+      "readWrite": true,
+      "sharedMmap": true,
+      "readOnlyDenied": true
+    },
+    "activation": {
+      "exit": 0,
+      "log": "DIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=32528\nAPI32_LAZY_BINDER_REQUEST name=media.extractor cold=1\nAPI32_LAZY_BINDER_READY name=media.extractor cold=1 descriptor=android.IMediaExtractorService\nAPI32_LAZY_BINDER_REQUEST name=media.player cold=1\nAPI32_LAZY_BINDER_READY name=media.player cold=1 descriptor=android.media.IMediaPlayerService\nAPI32_LAZY_BINDER_REQUEST name=media.metrics cold=0\nAPI32_LAZY_BINDER_READY name=media.metrics cold=0 descriptor=android.media.IMediaMetricsService\nAPI32_LAZY_MEDIA_PASS native_binder_get=1 hardware_get=1 cold_services=3\n"
+    },
+    "initStop": [
+      [
+        "17",
+        "0",
+        "0"
+      ]
+    ],
+    "originalCodeRestored": true,
+    "scope": "Cold native Binder get, polling HIDL lookup, real WAV extraction and existing ordinary-file/AppFuse regression; the subsequent notification changes are not covered by this trial."
+  },
+  "currentTrial": {
+    "runId": "2e583e534c8347068b1fcb9356c9e741",
+    "report": {
+      "path": "out/api32/lazy-media-atomic-report.json",
+      "sha256": "47f49444e41c7613973b01d04bf69124bcfad3fe5500f0027a672049fc67fcca"
+    },
+    "candidate": {
+      "path": "out/api32/lazy-media-atomic-candidate.json",
+      "sha256": "f147e787f7d6eec1698e5365fee5d60c85b905c2f0904f4dcac823aa6cfa7dc5"
+    },
+    "job": "out/api32/lazy-media-atomic-job.json",
+    "sourceSnapshot": "out/api32/lazy-media-atomic-source-snapshot",
+    "sourceCount": 187,
+    "allPinnedSourcesMatchedAfterRun": true,
+    "cleanup": {
+      "path": "out/api32/lazy-media-atomic-cleanup.json",
+      "sha256": "331ad8a811d9b600461e95d13fb95ae01d87be42e5ea51804b53bededd2bd70f"
+    },
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/lazy-media-atomic-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "aa46bd657aa74185047b24df4c89df11b6e86d5630d66baaecf4cb8c5fcdfc46",
+      "bytes": 3435806,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "a747792247cc46758f70805fcc7ad854726c0e1d9b282ef097d4ba1c3b8f0ff3",
+        "system/bin/pocket-core-api32": "fadeb244e6e75570c1fff73cf3b8c90483d8a5e59bc5d1e4872acfc7cdcafb75",
+        "system/etc/pocket-runtime-boot.sh": "70de8b02c3e5181360cc37cc93dd43ff2491d67a9702638085a93d5504d92bc7",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "3389632b8474113b535b977b6869ba078c92f7f730a1bf670c38403bbb9dfbbf",
+        "system/lib64/libpocket_media_api32.so": "9adc2c1144a17b9b666678fb32156b32969522abf29057e8241319222dd908d8",
+        "system/etc/init/pocket-runtime.rc": "50ab9e8fefb6fdc70c779207669adb5159604b7b1f8e1d84dd49b7c798f74d09"
+      },
+      "lazyMediaProbeSha256": "11b54b39562c86d569d0392f3d951a629af7cc441818d27517a6afe42262dfb6"
+    },
+    "activation": {
+      "exit": 0,
+      "log": "DIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=8242\nDIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=8242\nAPI32_LAZY_HIDL_NOTIFICATIONS_PASS cold=1 preexisting=0 deduplicated=1 unregistered=1 warm_callback=1 stock_waiter=1\nAPI32_LAZY_BINDER_REQUEST name=media.extractor cold=1\nAPI32_LAZY_BINDER_READY name=media.extractor cold=1 descriptor=android.IMediaExtractorService\nAPI32_LAZY_BINDER_REQUEST name=media.player cold=1\nAPI32_LAZY_BINDER_READY name=media.player cold=1 descriptor=android.media.IMediaPlayerService\nAPI32_LAZY_BINDER_REQUEST name=media.metrics cold=0\nAPI32_LAZY_BINDER_READY name=media.metrics cold=0 descriptor=android.media.IMediaMetricsService\nAPI32_LAZY_MEDIA_PASS native_binder_get=1 hardware_get=1 notifications=1 cold_services=3\n"
+    },
+    "dataProof": {
+      "lazyExtractorRead": true,
+      "extractorSampleBytes": 320,
+      "hostRpcImpersonationDenied": true,
+      "attachPeerImpersonationDenied": true,
+      "statfs": true,
+      "filesystemBlocks": 2096640,
+      "filesystemBlockSize": 4096,
+      "mainTid": 8985,
+      "workerTid": 9118,
+      "ordinaryPathOpen": true,
+      "openFlagsPreserved": true,
+      "aliasRead": true,
+      "crossPackageDenied": true,
+      "backingAliasDenied": true,
+      "uid": 10109,
+      "readWrite": true,
+      "sharedMmap": true,
+      "readOnlyDenied": true
+    },
+    "hostCallbacks": {
+      "readTids": [
+        8985,
+        9118
+      ],
+      "callerUids": [
+        10109
+      ],
+      "capabilityFallbackCalls": 1,
+      "releasedFiles": 3,
+      "remainingSlots": 0,
+      "openRequests": 3,
+      "openPeerDenials": 1,
+      "acceptThreadStopped": true,
+      "attachWorkersStopped": true
+    },
+    "appPathDoneBytes": 32,
+    "initStop": [
+      [
+        "17",
+        "0",
+        "0"
+      ]
+    ],
+    "systemUiStarts": [
+      "7197"
+    ],
+    "anrs": [],
+    "javaFatals": [],
+    "nativeFatals": [],
+    "pollErrors": 0,
+    "runtimeCommand": "python3 /home/pi/pocket-api32-vm/lazy-media-atomic-validation/test_api32_media_session_on_pi.py --work-dir /home/pi/pocket-api32-vm/lazy-media-atomic-validation --require-external-files --require-external-paths --baseline-report /home/pi/pocket-api32-vm/bfix-validation/manager-app-report.json"
+  },
+  "remaining": [
+    "Keep sampled/repeated startup and active service workloads within the unchanged default host process limit; existing observed peaks remain above32.",
+    "Verify actual codec decode/encode/camera use, credential/CE operations and API28/29 regressions with the final image.",
+    "Integrate and validate the final downloadable image and complete the remaining production storage lifecycle/directory operations.",
+    "Verify callback death cleanup and service restart/unregistration under actual client workloads; service idle teardown is not claimed."
+  ],
+  "notificationTrial": {
+    "report": {
+      "path": "out/api32/lazy-media-notify-report.json",
+      "sha256": "d6074fc3114d500185c970fd0eea397a778f0b49da4b14d0ca8e387f517d4314"
+    },
+    "processCensus": {
+      "path": "out/api32/lazy-media-notify-process-budget.json",
+      "sha256": "35606efcfa9981349a8f3d5ab2f37e0fed2c2a756fc9cd94fb87d21a367436ba"
+    },
+    "runId": "340b15d6f5b04a6ebcf13a3bffe646d9",
+    "strictPassed": false,
+    "originalCodeRestored": true,
+    "initStop": [
+      [
+        "15",
+        "0",
+        "0"
+      ]
+    ],
+    "reason": "The ordinary generated-HIDL entry point was still overridden by a Pocket shim that ignored retry and returned after its first absent lookup. Explicit subscriptions succeed, but getRawServiceInternal returns null before readiness. The shim now delegates declared lazy services to the matching stock wait path through the private manager."
+  },
+  "waiterTrial": {
+    "report": {
+      "path": "out/api32/lazy-media-waiter-report.json",
+      "sha256": "00414bbabaa201546a723b1f410c62449ebecbf6440f2d82ce6cfa4301c748c8"
+    },
+    "runId": "743a2c224f8b4a6aa807f3071e33dfd2",
+    "activation": {
+      "exit": 0,
+      "log": "DIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=5312\nDIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=5312\nAPI32_LAZY_HIDL_NOTIFICATIONS_PASS cold=1 preexisting=0 deduplicated=1 unregistered=1 warm_callback=1 stock_waiter=1\nAPI32_LAZY_BINDER_REQUEST name=media.extractor cold=1\nAPI32_LAZY_BINDER_READY name=media.extractor cold=1 descriptor=android.IMediaExtractorService\nAPI32_LAZY_BINDER_REQUEST name=media.player cold=1\nAPI32_LAZY_BINDER_READY name=media.player cold=1 descriptor=android.media.IMediaPlayerService\nAPI32_LAZY_BINDER_REQUEST name=media.metrics cold=0\nAPI32_LAZY_BINDER_READY name=media.metrics cold=0 descriptor=android.media.IMediaMetricsService\nAPI32_LAZY_MEDIA_PASS native_binder_get=1 hardware_get=1 notifications=1 cold_services=3\n"
+    },
+    "strictPassed": false,
+    "originalCodeRestored": true,
+    "reason": "Cold stock HIDL waiter, duplicate/publication/existing-service notifications and unsubscribe all pass. A later completion-nonce check fails. The old writer created the marker before writing its contents; the following trial publishes the fully written nonce by atomic rename without weakening validation."
+  },
+  "processBudget": {
+    "unresolved": true,
+    "hostLimit": 32,
+    "hostLimitAndMonitoringChanged": false,
+    "processCensus": {
+      "path": "out/api32/lazy-media-atomic-process-budget.json",
+      "sha256": "92dee00e0668a27240c3e0037f733cb660ea662e23d46c1af82dcd6a25eb7cb3"
+    },
+    "observedPeakChildren": 34,
+    "observedPeakBeforeProbeFirstSeen": 33,
+    "sampleIntervalSeconds": 3,
+    "observedPeakIsNotAnUpperBound": true,
+    "samples": 59,
+    "errors": [],
+    "finalChildren": 0,
+    "baselineObservedPeak": 37,
+    "baselineEvidence": "docs/api32-emulated-storage-validation.json:ordinaryAppOpen.startupProcessBudget",
+    "conclusion": "On-demand media is functionally verified, but this sampled workload still exceeds the unchanged default limit; neither repeated-start reliability nor a safe steady-state bound is established."
+  },
+  "generatedAbiDeclarations": [
+    {
+      "path": "out/api32/native/generated/pocket_service_manager_shim32.h",
+      "sha256": "7b75b39aa7a5cad2308cbf35373ae13aa552abc13c3398fef01f79b3e0975789"
+    },
+    {
+      "path": "out/api32/frameworks-av/media/libstagefright/include/media/stagefright/MediaExtractorFactory.h",
+      "sha256": "85a2b769418d7f284076655693205550da71dfd7388b51403361f6b251fc1453"
+    }
+  ],
+  "latestCombinedIntegrationEvidence": "docs/api32-system-server-bridge-validation.json#warmExtractorTrial",
+  "latestCombinedIntegrationScope": "Embedded input/network and extractor boot publication/first-demand plugin load, plus strict media/file-data/input/network checks; process peak33 and production integration remain open.",
+  "completeSourceImageRuntime": {
+    "evidence": "docs/api32-source-image-validation.json",
+    "imageVersion": "0.78.25",
+    "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "signalRunId": "3484900f8f9442739fe7bc4671eda639",
+    "combinedRunId": "045487726dfd49548b02a2d8cf687f51",
+    "signalReport": "out/api32/warm-player-app-manager-app-report.json",
+    "combinedReport": "out/api32/warm-player-media-media-session-report.json",
+    "runtimeCodeReplaced": false,
+    "strictPassed": true,
+    "microgAndEmbeddedBridgeTogether": true,
+    "earlyPlayerAndExtractorVerified": true,
+    "sampledPeakChildren": 32,
+    "hostSettingsUnchanged": true,
+    "scope": "Complete source-packaged runtime; real regular-file AppFuse/WAV/input/validated network. No production external mount, fresh-profile reliability or hard process-bound claim."
+  },
+  "sourceHostBudgetFollowup": {
+    "runId": "f9aa3a730c2448d0ab35b6c9e799f64e",
+    "report": "out/api32/source-host-app-manager-app-report.json",
+    "census": "out/api32/source-host-app-process-budget.json",
+    "functionalPassed": true,
+    "sampledPeakChildren": 34,
+    "hostLimitUnchanged": true,
+    "safeProcessBoundVerified": false,
+    "scope": "Later source-host run reaches 34; earlier peaks of32 do not close the process-budget gate."
+  },
+  "sharedCoreMetricsRuntime": {
+    "evidence": "docs/api32-core-metrics-validation.json",
+    "imageVersion": "0.78.26",
+    "imageSha256": "1036140a7d14a31e43e5c837bed5bff2643e909a96e5c0a06eef51559909450f",
+    "appRuntime": {
+      "report": "out/api32/core-metrics-app-manager-app-report.json",
+      "reportSha256": "7534797c2b5b529063c57e4f05f85a12ca110c81dae66683f069711fad6b02da",
+      "runId": "38411e935fbd477cbc4458eb0a29825d",
+      "validation": "PASS",
+      "sharedMetricsAndCorePid": 3566,
+      "supervisedLifetimesReaped": 16,
+      "reapAccounting": true,
+      "singleSystemUi": true,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 234,
+      "observerErrors": [],
+      "hardProcessBoundProven": false,
+      "typedMetricsPolicyVerified": false
+    },
+    "combinedRuntime": {
+      "report": "out/api32/core-metrics-media-media-session-report.json",
+      "reportSha256": "7eb87dd2df4e6e7fda23c94cb3cddc56c00f7e09f22f0324b7ed64f78d2ae0d9",
+      "runId": "8eb2d6401c33443eabafac0fc7123d50",
+      "validation": "PASS",
+      "strictPassed": true,
+      "gates": {
+        "packagedImageVerified": true,
+        "playerBootStartVerified": true,
+        "externalFilesVerified": true,
+        "ordinaryPathsVerified": true,
+        "lazyMediaVerified": true,
+        "extractorFirstDemandVerified": true,
+        "extractorBootStartVerified": true,
+        "supervisedBootstrapVerified": true,
+        "memoryProfileVerified": true,
+        "systemServerBridgeVerified": true,
+        "coreMediaMetricsVerified": true,
+        "reapAccounting": true
+      },
+      "supervisedLifetimesReaped": 16,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "8225"
+      ],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 52,
+      "censusErrors": [],
+      "hardProcessBoundProven": false,
+      "codeHashesPreserved": 13,
+      "metricsProbe": [
+        {
+          "mode": "submit",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_SUBMITTED uid=10021 claimed_uid=1000 oneway=1\n"
+        },
+        {
+          "mode": "verify",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_VERIFIED stock_record=1 caller_uid=10021 forged_identity_replaced=1 forbidden_key_absent=1\n"
+        }
+      ]
+    },
+    "defaultHostProcessSettingsUnchanged": true,
+    "hardProcessBoundProven": false,
+    "scope": "Fully source-built host JNI; complete packaged runtime with stock media.metrics in existing native core; no runtime replacement or guest data reset; repeated fresh starts and complete mounted storage remain open"
+  }
+}

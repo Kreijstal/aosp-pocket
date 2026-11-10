@@ -1,0 +1,38 @@
+{
+  "runId": "4cf836e7fe3b486abd6db1cfc21ebb71",
+  "hostDatagramSocket": true,
+  "extractedFiles": 3,
+  "imageVerifiedFiles": 1240,
+  "hostUid": 10154,
+  "exitCode": 0,
+  "log": "API32_SHELL_STARTED\nro.build.version.sdk=32\nlibc: Access denied finding property \"debug.fdsan\"\nlibc: Access denied finding property \"libc.debug.malloc.options\"\nlibc: Access denied finding property \"libc.debug.hooks.enable\"\nlibc: Access denied finding property \"heapprofd.enable\"\nlibc: Access denied finding property \"ro.vendor.redirect_socket_calls\"\nlibc: Access denied finding property \"ro.vendor.redirect_socket_calls\"\nlibc: Access denied finding property \"ro.vendor.redirect_socket_calls\"\nlibc: Unable to set property \"ro.build.fingerprint\" to \"tamper\": error code: 0xb\nAPI32_PRODUCT_PROPERTIES_PASS brand=Android fingerprint=Android/sdk_phone64_arm64/emulator64_arm64:12/SE1B.240122.005/11418786:userdebug/test-keys\nlibc: Unable to set property \"ro.build.version.sdk\" to \"999\": error code: 0xb\nlibc: Unable to set property \"ctl.start\" to \"zygote\": error code: 0x18\nlibc: Unable to set property \"pocket..invalid\" to \"no\": error code: 0x10\nAPI32_PROPERTIES_CHECK sdk=32 uid=0 readonly=passed control=denied invalid_name=denied\nAPI32_LINKER_CONFIG_GENERATED\nREAL_ANDROID12L_ART_PASS frameworkClass=android.media.Spatializer vm=Dalvik version=2.1.0\nAPI32_START mode=client pid=5546 uid=0 sdk=32\nAPI32_REGISTRY_TYPED_RESULTS_PASS\nAPI32_WORKSOURCE thread_uid=32018 parcel_uid=32018\nAPI32_ONEWAY_CALLER uid=0 pid=5546 worksource=32019 strict=0\nAPI32_ONEWAY_CALLER_PASS\nAPI32_RESULT status=0 answer=32 server_pid=5540 client_pid=5546 server_uid=0 client_uid=0 fd=api32fd caller_uid=0 caller_pid=5546\nAPI32_START mode=client-virtual pid=5549 uid=0 sdk=32\nAPI32_REGISTRY_TYPED_RESULTS_PASS\nAPI32_WORKSOURCE thread_uid=32018 parcel_uid=32018\nAPI32_ONEWAY_CALLER uid=39999 pid=5549 worksource=32019 strict=0\nAPI32_ONEWAY_CALLER_PASS\nAPI32_RESULT status=0 answer=32 server_pid=5540 client_pid=5549 server_uid=0 client_uid=39999 fd=api32fd caller_uid=39999 caller_pid=5549\nAPI32_BINDER_PASS\nAPI32_NATIVE_RUNTIME_PASS\nAPI32_START mode=manager pid=5540 uid=0 sdk=32\nAPI32_PUBLISH status=0\nAPI32_READY\nlibc: fsetxattr failed to set context (u:object_r:default_prop:s0) for \"/dev/__properties__/u:object_r:default_prop:s0\"\nlibc: fsetxattr failed to set context (u:object_r:properties_serial:s0) for \"/dev/__properties__/properties_serial\"\nAPI32_PROPERTIES_READY pid=5518 uid=0 kernel_uid=10154 sdk=32 area_init=-1\nPROPERTY_WRITE name=ro.build.fingerprint result=11 peer_uid=10154\nPROPERTY_WRITE name=ro.build.version.sdk result=11 peer_uid=10154\nPROPERTY_WRITE name=ctl.start result=24 peer_uid=10154\nPROPERTY_WRITE name=pocket..invalid result=16 peer_uid=10154\nPROPERTY_WRITE name=pocket.test.sequence result=0 peer_uid=10154\nAPI32_PROPERTIES_STOPPED\nAPI32_PROPERTY_WAIT_READY\nAPI32_PROPERTY_WAIT value=updated serial_changed=1 uid=0\n",
+  "passed": true,
+  "androidAppSandboxVerified": true,
+  "fullGuestBootVerified": false,
+  "scope": "API 32 native/ART foundation in a non-debuggable Android app; no framework or Manager boot claim",
+  "guestSdk": 32,
+  "binderRequested": true,
+  "debuggable": false,
+  "apkSha256": "c312ad6d0a3cd12815a497d606ee0ff463d485fa9ae0b05f05479d9b3bfd222b",
+  "hostVmInstance": 73,
+  "hostSdk": 36,
+  "command": "ssh pi@juanraspberry python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder",
+  "buildCommand": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder",
+  "verifiedComponents": [
+    "API 32 Bionic and shell",
+    "stock ART and API 32 framework class",
+    "stock linkerconfig with explicit ART namespace export",
+    "properties and serial wakeup",
+    "host Binder stability conversion",
+    "private API 32 AIDL registry",
+    "cross-process file descriptors",
+    "synchronous and one-way logical guest caller roles",
+    "WorkSource and one-way StrictMode handling"
+  ],
+  "remaining": [
+    "zygote and app specialization",
+    "rootless init and hardware/service adapters",
+    "system_server and real APK/UI launch",
+    "on-demand image packaging and Manager integration"
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "schema": 1,
+  "status": "COMPONENT_PASS_STARTUP_FAILED",
+  "component": "stock_primary_zygote_preload",
+  "previousGoalTurnClassification": "progress",
+  "guestSdk": 32,
+  "hostVmInstance": 73,
+  "scope": "Use stock eager primary-zygote class/resource preload before system_server; verify the real zygote preload-complete protocol and positive stock class/resource counts. Full Android12L/Manager support remains unverified.",
+  "apkSha256": "0655927a2bc878b431200f0fe5091caf6df6a74c8cc4670456445613c9fae5d8",
+  "apkBytes": 7652560,
+  "preloadStageTimeoutSeconds": 240,
+  "existingSmokeClientTimeoutsUnchanged": true,
+  "existingFrameworkAndUiTimeoutsUnchanged": true,
+  "zygoteBootstrapJarUnchanged": true,
+  "normalPrimaryPreloadVerified": true,
+  "systemUiStartupVerified": false,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "sourceSha256": {
+    "runtime/api32/zygote_client.cpp": "b71bdf6fdac698f39d30bab92bc2cee60a87a75dbd101898b5702d688aa73ce5",
+    "tools/build_api32_probe.py": "0b4d7f3a90973ed3bd6ef0538fb2b820831bb21dd53d82805bb5fe201ce3f363",
+    "tools/test_api32_on_pi.py": "b24c1a0ef2267e43d24edb990f5d9c12f2ca333623158a8b5d3e4b5d5df16e56"
+  },
+  "checks": [
+    {
+      "command": "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android32-clang++ -O2 -Wall -Wextra -Werror -nostdlib++ runtime/api32/zygote_client.cpp -Wl,-z,max-page-size=16384 -o out/api32/native/pocket-zygote-client-api32",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/primary-preload-baseline-image-manifest.json",
+      "result": "PASS / exit 0; five embedded delta assets match manifest diff/hashes; bootstrap JAR unchanged; only the full-framework primary switches to eager preload"
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component PASS: stock primary zygote PID 2890 completed preload before protocol query; 13903 classes, 64+41 resources, total stock preload 5844ms, no resource errors. All six service artifacts reused unchanged across a fresh boot; trusted services.odex mapping and Home/Settings/input passed. Overall FAIL / driver exit 1, guest exit 0 due two SystemUI startup ANRs. All 28 services reaped, no remaining/failed; host SELinux Enforcing, phantom limit restored, native log below capture limit."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "runId": "cc432835f95e4b15a8c1a33c0490860c",
+  "androidSandboxVerified": true,
+  "zygotePid": 2890,
+  "readinessMarker": "API32_PRIMARY_ZYGOTE_PRELOAD_PASS protocol=stock preload_was_complete=1 abi=arm64-v8a pid=2890",
+  "preload": {
+    "classes": [
+      {
+        "count": 13903,
+        "millis": 4877
+      }
+    ],
+    "resources": [
+      {
+        "count": 64,
+        "millis": 158
+      },
+      {
+        "count": 41,
+        "millis": 24
+      }
+    ],
+    "beginDebugObserved": true,
+    "endDebugObserved": true,
+    "resourceFailureObserved": false
+  },
+  "stockReportedTotalPreloadMillis": 5844,
+  "preloadTimingScope": "Stock zygote preload stage only; not a general boot-performance benchmark.",
+  "resourceCount": 105,
+  "resourceErrorsObserved": false,
+  "combinedFixturePassed": false,
+  "guestExitCode": 0,
+  "driverExitCode": 1,
+  "imageVerifiedFiles": 2644,
+  "warmServiceArtifactReuseAcrossFreshBootVerified": true,
+  "warmServiceArtifactItems": [
+    {
+      "path": "/system/framework/com.android.location.provider.jar",
+      "before": "speed",
+      "after": "speed",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "0",
+      "artifact": "/system/framework/oat/arm64/com.android.location.provider.odex",
+      "artifact_bytes": "48592",
+      "artifact_sha256": "21d155b932f5b771ea5646ec91c39507824cd28939e249307314c575acb82758",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/system/framework/services.jar",
+      "before": "speed",
+      "after": "speed",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "0",
+      "artifact": "/system/framework/oat/arm64/services.odex",
+      "artifact_bytes": "39763952",
+      "artifact_sha256": "534815dac7cccb8203132632109aa4eae8beba63d114a90efb7ebdab3fd14962",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/system/framework/ethernet-service.jar",
+      "before": "speed",
+      "after": "speed",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "0",
+      "artifact": "/system/framework/oat/arm64/ethernet-service.odex",
+      "artifact_bytes": "87168",
+      "artifact_sha256": "5d5a5c2348cc9cd5c7635dc468a5fa4b8c9917c7f80ecb8fdaf1305ff2f5a5c1",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/apex/com.android.appsearch/javalib/service-appsearch.jar",
+      "before": "verify",
+      "after": "verify",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "0",
+      "artifact": "/data/dalvik-cache/arm64/apex@com.android.appsearch@javalib@service-appsearch.jar@classes.dex",
+      "artifact_bytes": "21344",
+      "artifact_sha256": "f282a327a66c2a8b6a7cfa4a569ec265e8789c0c2518689c039117ff4028069f",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/apex/com.android.media/javalib/service-media-s.jar",
+      "before": "verify",
+      "after": "verify",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "0",
+      "artifact": "/data/dalvik-cache/arm64/apex@com.android.media@javalib@service-media-s.jar@classes.dex",
+      "artifact_bytes": "17248",
+      "artifact_sha256": "54d44fe2fe5517070d317368f1d77c2dbf7c8af4d975b53d5fe12d6de580e38e",
+      "artifact_reused": "true"
+    },
+    {
+      "path": "/apex/com.android.permission/javalib/service-permission.jar",
+      "before": "verify",
+      "after": "verify",
+      "needed_before": "0",
+      "needed_after": "0",
+      "invalidated_cache_files": "0",
+      "artifact": "/data/dalvik-cache/arm64/apex@com.android.permission@javalib@service-permission.jar@classes.dex",
+      "artifact_bytes": "17248",
+      "artifact_sha256": "d5258b204e0a178ccd1375ec2502bd0e6a3ad717e0892a921ad342fcd9d4559d",
+      "artifact_reused": "true"
+    }
+  ],
+  "startupAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 3408,
+      "reason": "executing service com.android.systemui/.ImageWallpaper"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 4018,
+      "reason": "executing service com.android.systemui/.SystemUIService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 5158,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "uiRuntimePhasePassed": true,
+  "systemUiStablePhasePid": 4627,
+  "systemUiStablePhaseSeconds": 40,
+  "screenshots": {
+    "home": {
+      "path": "out/api32/primary-preload-home.png",
+      "sha256": "a2b3db66d5a12b27481ad105357d74aa1d95cecb0022b6d6e5b271e06d45d7fe",
+      "phase": {
+        "runId": "cc432835f95e4b15a8c1a33c0490860c",
+        "phase": "home",
+        "package": "com.android.launcher3",
+        "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+        "systemUiPid": 4627,
+        "windowDrawn": true
+      },
+      "visuallyInspected": true
+    },
+    "settings": {
+      "path": "out/api32/primary-preload-settings.png",
+      "sha256": "fae62e795c816c55bdfeb81026fde92cbd10fbb3af23c79777ccfb175eef005e",
+      "phase": {
+        "runId": "cc432835f95e4b15a8c1a33c0490860c",
+        "phase": "settings",
+        "package": "com.android.settings",
+        "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+        "systemUiPid": 4627,
+        "windowDrawn": true
+      },
+      "visuallyInspected": true
+    }
+  },
+  "input": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "inputEventsRejected": 0,
+    "clicks": 3,
+    "typedText": "a129",
+    "keyUps": 6
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "nativeLogChars": 1623005,
+  "nativeLogWithinCaptureLimit": true,
+  "currentDriverMissingMarkers": [],
+  "currentDriverMissingNativeMarkers": [],
+  "runtimeReport": "out/api32/primary-preload-report.json",
+  "nextInvestigation": "Correlate the remaining SystemUI ImageWallpaper/SystemUIService startup traces with server locks, renderer load and rootless scheduling. Normal full primary preload is verified and is insufficient by itself to establish ANR-free startup."
+}

@@ -23,7 +23,7 @@ status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32
         thread->getCallingUid()==kernelUid) {
         PocketBinderToken header={};
         const bool credentialHeader=pocket_binder_token(data.data(),data.dataSize(),&header) &&
-            (header.format==3 || header.format==4);
+            (header.format==3 || header.format==4 || header.format==5);
         const uint64_t claimed=header.identity;
         // The kernel reports PID zero for one-way calls. Their claimed PID is
         // guest metadata; only synchronous sender PIDs can be kernel-checked.
@@ -40,9 +40,12 @@ status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32
     }
     bool identityByPid=code>=FIRST_CALL_TRANSACTION && code<=LAST_CALL_TRANSACTION;
 #if POCKET_GUEST_API == 32
-    // Shell commands ("cmd", pm, wm, settings, adb shell) are tokenless
-    // synchronous transactions. Attribute their kernel sender through the
-    // PID/start-time-checked guest identity record; without it they ran as the
+    // Native DUMP has no interface token. Attribute its synchronous kernel
+    // sender through the same PID/start-time-checked guest identity record.
+    // Do not interpret arbitrary DUMP payload bytes as credential headers.
+    identityByPid=identityByPid || code==DUMP_TRANSACTION;
+    // Shell commands ("cmd", pm, wm, settings, adb shell) are likewise
+    // tokenless synchronous transactions. Without attribution they ran as the
     // host app UID and failed shell-granted checks such as CONTROL_KEYGUARD.
     identityByPid=identityByPid || code==SHELL_COMMAND_TRANSACTION;
 #endif

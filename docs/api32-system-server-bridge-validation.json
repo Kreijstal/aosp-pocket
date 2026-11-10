@@ -1,0 +1,612 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "status": "LATEST_COMBINED_STRICT_GATE_PASS_PROCESS_PEAK33_RELEASE_PENDING",
+  "runtimeVerified": true,
+  "productionReleaseReady": false,
+  "design": {
+    "fork": "The version-matched zygote native fork marks only the system-server child. No JNI, allocations or threads run in the ART fork region.",
+    "initialization": "The replacement nativeZygoteInit first performs the original AndroidRuntime::onZygoteInit virtual call. Only the marked child, with the explicit service environment flag, starts the bridge.",
+    "context": "A daemon waits for the existing ActivityThread system context and sys.boot_completed; it never calls systemMain again. The existing InputManager and host NetworkAgent implementation are reused.",
+    "endpoint": "The system role binds its filesystem socket after fork, avoiding inheritance in zygote/app children. Unexpected non-socket entries are rejected; stale socket entries are removed.",
+    "authentication": "Original kernel PID/UID and open host proc-stat descriptor/start-time checks remain. Logical guest roles are metadata and do not provide kernel isolation.",
+    "readiness": "The bridge publishes readiness into the inherited boot console as well as Java logging, since ZygoteInit routes Java streams to liblog.",
+    "failure": "Failure of the critical embedded input bridge requests a clean whole-guest stop. Network bootstrap errors retain their previous input-independent handling."
+  },
+  "currentTrial": {
+    "candidate": {
+      "path": "out/api32/system-server-bridge-candidate.json",
+      "sha256": "4bd6bc9dacfc68739f17437bcc4dce28ff3ec3b1d902100203d070c4d8bef843"
+    },
+    "job": "out/api32/system-server-bridge-job.json",
+    "sourceSnapshot": "out/api32/system-server-bridge-source-snapshot",
+    "sourceCount": 199,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/system-server-bridge-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "f07f9f2f4e98d9e1c4a90ac763bab564f5bccc9e407088644e60b822e626de25",
+      "bytes": 3632949,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "50a2144201560c0d24563840858d845c423b89a793b9df61f05957d3a1e5c020",
+        "product/overlay/PocketMemory/PocketMemory.apk": "0f1e27bdfb2b4cfe7f76eaa5fc2e8c17e5e0caef9685d65bfeb62fdcae9f75e3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "fadeb244e6e75570c1fff73cf3b8c90483d8a5e59bc5d1e4872acfc7cdcafb75",
+        "system/etc/pocket-profile.prop": "d083bb8c141d628b9cb76cfead09b6575cc052f746606c12a4ffa0d61280b0c5",
+        "system/etc/pocket-runtime-boot.sh": "732d24f2e0c2d8d04e791c9b5a7a961efe5b68530c6a3eb217db1c6630b4a29a",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "3389632b8474113b535b977b6869ba078c92f7f730a1bf670c38403bbb9dfbbf",
+        "system/lib64/libpocket_media_api32.so": "9adc2c1144a17b9b666678fb32156b32969522abf29057e8241319222dd908d8",
+        "system/framework/pocket-zygote.jar": "ee5d04bc5105c7b7e8f0b5fb587272529b2149844ba65302eb5f7f5313dc2240",
+        "system/framework/pocket-tools.jar": "6cb48936639031bd29f9e25b75a8fa82ee16c4a40a9ffec57048aa5c88b9ef48",
+        "system/etc/init/pocket-runtime.rc": "60c91745597d19d94b5c0014b9bcbc386af4e2e048c62cd45de24a95dc383eba"
+      },
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6"
+    },
+    "guestFixture": {
+      "package": "dev.kreijstal.pocketmediasession32",
+      "minSdk": 32,
+      "targetSdk": 32,
+      "platformTestCertificateSha256": "c8a2e9bccf597c2fb6dc66bee293fc13f2fc47ec77bc6b2b0d52c11f51192ab8",
+      "scope": "Ordinary existing regular-file openat through loader/AppFiles/host AppFuse, real provider statfs and cross-app denial; directory metadata, create/mutation, private lower views, cache coherence and production vold integration remain pending",
+      "apkSha256": "e6fe849b10a1f4ec9069d5f19bd2b5b009de7a2ac828772062e0c92f29f28a02",
+      "nativeSha256": "6737e5c51a434c34897a4f769e2246e099749ac9b6180259b87a5d5283de910c",
+      "loaderSha256": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+      "externalProxy": true,
+      "externalPaths": true,
+      "externalJniSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f"
+    },
+    "result": {
+      "runId": "633e66fed3984593804594f36fdff5e4",
+      "apkSha256": "f07f9f2f4e98d9e1c4a90ac763bab564f5bccc9e407088644e60b822e626de25",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "strictPassed": true,
+      "functionalPassed": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "systemServerBridgeVerified": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "systemUiStarts": [
+        "19675"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "selinuxBefore": "Enforcing",
+      "selinuxAfter": "Enforcing",
+      "phantomLimitBefore": "null",
+      "phantomLimitAfter": "null"
+    },
+    "report": {
+      "path": "out/api32/system-server-bridge-report.json",
+      "sha256": "057caeb546633cfd4f86ddb60c4a10f52e0089bb6db6d4f2c7ef5fda29f5705e"
+    },
+    "cleanup": {
+      "path": "out/api32/system-server-bridge-cleanup.json",
+      "sha256": "b1fdd7fd9ff0994f923a0d3764ba5a1a128160633f6d74880fa23b0b7a325b1b"
+    },
+    "sourcesMatchedAfterTrial": 199,
+    "bridgeInput": {
+      "keyDelivered": true,
+      "touchDelivered": true,
+      "input": {
+        "touchEventsAccepted": 2,
+        "keyEventsAccepted": 6,
+        "inputEventsAccepted": 8,
+        "inputEventsRejected": 0
+      }
+    },
+    "bridgeNetwork": {
+      "validated": true,
+      "networkBound": true,
+      "httpStatus": 200,
+      "inputPeerDenied": true
+    }
+  },
+  "commands": {
+    "native": "python3 tools/build_api32_native.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --zygote",
+    "javaTools": "python3 tools/build_api32_runtime_tools.py --out out/api32/system-server-bridge-tools",
+    "bootstrap": "python3 tools/build_api32_bootstrap.py --out out/api32/system-server-bridge-bootstrap",
+    "patch": "python3 tools/build_api32_lazy_media_patch.py --image out/api32/abb-image/pocket-api32-arm64-0.78.20.zip --sha256 aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8 --core out/api32/core/pocket-core-api32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --defer-extractor --supervised-bootstrap --memory-profile --system-server-bridge --out out/api32/system-server-bridge-patch",
+    "guestApp": "python3 tools/build_api32_media_session_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --external-paths --out out/api32/system-server-bridge-app",
+    "manager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/media-path-current-image-app/catalog-api32.json --media-session-probe32 out/api32/system-server-bridge-app --media-session-patch32 out/api32/system-server-bridge-patch --out out/api32/system-server-bridge-manager-probe"
+  },
+  "buildResult": "PASS",
+  "remaining": [
+    "Reduce/reliably bound startup and active/install workload process peaks within the unchanged host default; latest sampled maximum remains33.",
+    "Integrate the complete media service/configuration/native build, including the verified early extractor startup, into the final downloadable image. Current source-image bridge staging is verified, but a complete fresh image has not been rebuilt/booted.",
+    "Complete mounted storage/private lower views/cache coherence, CE/legacy regressions and fresh-profile/release validation."
+  ],
+  "processBudget": {
+    "census": {
+      "path": "out/api32/system-server-bridge-process-budget.json",
+      "sha256": "16d48677f1ea640186422b16abd94aeb8942d5d03877dfad7a84b2ec4cbb4f6e"
+    },
+    "sampleCount": 57,
+    "observedPeakChildren": 33,
+    "observedPeakBeforeActivationProbe": 29,
+    "errors": [],
+    "systemServerBridgeOwnerPid": 19423,
+    "standaloneInputServiceAbsent": true,
+    "unchangedHostDefault": 32,
+    "withinDefaultBudgetVerified": false,
+    "sampledMaximaAreNotUpperBounds": true,
+    "peakIncludes": [
+      "PackageInstaller helper",
+      "test-app update broadcast recipients",
+      "dex2oat64 at one peak sample"
+    ]
+  },
+  "requiredRuntimeChecksCompleted": [
+    "Strict full framework, MediaProvider file-data and WAV extraction regression.",
+    "Ordinary app key/touch delivery and input-client impersonation rejection.",
+    "Stock guest NetworkMonitor validation and app HTTPS bound to the actual network.",
+    "Actual process parentage/no standalone input ART and census under unchanged host settings.",
+    "Byte-exact restoration of thirteen original patch targets and no guest data reset."
+  ],
+  "sourceImageIntegration": {
+    "normalStaging": "Embedded bridge is now selected by stage_runtime_boot and the standalone service/start command are removed. Matching native/boot/tools artifacts are required.",
+    "packaging": "Normal image builder requires runtimeSystemServerBridge metadata, the exact service set and one bridge environment flag, and rebuilds the matching boot shim.",
+    "stageCheck": {
+      "path": "out/api32/system-server-bridge-stage-check.json",
+      "sha256": "de62fc2b7cac059da8206d09538fa5c9bda21b3321bc14b9418ec630682a786c"
+    },
+    "stageResult": {
+      "normalSourceStaging": "PASS",
+      "serviceCount": 15,
+      "standaloneInputRemoved": true,
+      "readyMarkerRetained": true,
+      "invalidZygoteRejected": true,
+      "duplicateServicesRejected": true,
+      "fullImageBuilt": false
+    },
+    "fullImageRebuilt": false,
+    "compatibility": "The standalone fixture entry preserves its previous behavior: a context/network bootstrap failure does not remove the input channel. Embedded mode still requires the actual system-server context.",
+    "validatorConsoleFix": "The independent runtime validator now truncates once, then opens the inherited boot console in append mode, matching Manager. This prevents its writers from overwriting the embedded bridge readiness line.",
+    "validatorSyntax": {
+      "command": "sh -n runtime/api32/runtime-validate.sh",
+      "result": "PASS"
+    },
+    "staleFixtureGuard": {
+      "path": "out/api32/system-server-bridge-image-guard.json",
+      "sha256": "9ce502d70030ebdc0693491d755f29943d4386f665c11a7616ba68f0828a4167",
+      "result": "PASS; expected CLI exit2 before creating output. Fresh image build remains unverified."
+    }
+  },
+  "repeatTrial": {
+    "status": "FAILED_COLD_EXTRACTOR_LOOKUP_ORIGINALS_RESTORED",
+    "candidate": {
+      "path": "out/api32/system-server-bridge-v2-candidate.json",
+      "sha256": "6ced609d2ec04aeca06104c79035973b826380b3ac65fe75cae66e6339538a29"
+    },
+    "job": "out/api32/system-server-bridge-v2-job.json",
+    "sourceSnapshot": "out/api32/system-server-bridge-v2-source-snapshot",
+    "sourceCount": 200,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/system-server-bridge-v2-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "03b398e80247de06392a52e92971cd9e4a1580ac7b67cbc0993595a945c2f0e6",
+      "bytes": 3632949,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "50a2144201560c0d24563840858d845c423b89a793b9df61f05957d3a1e5c020",
+        "product/overlay/PocketMemory/PocketMemory.apk": "0f1e27bdfb2b4cfe7f76eaa5fc2e8c17e5e0caef9685d65bfeb62fdcae9f75e3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "fadeb244e6e75570c1fff73cf3b8c90483d8a5e59bc5d1e4872acfc7cdcafb75",
+        "system/etc/pocket-profile.prop": "d083bb8c141d628b9cb76cfead09b6575cc052f746606c12a4ffa0d61280b0c5",
+        "system/etc/pocket-runtime-boot.sh": "732d24f2e0c2d8d04e791c9b5a7a961efe5b68530c6a3eb217db1c6630b4a29a",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "3389632b8474113b535b977b6869ba078c92f7f730a1bf670c38403bbb9dfbbf",
+        "system/lib64/libpocket_media_api32.so": "9adc2c1144a17b9b666678fb32156b32969522abf29057e8241319222dd908d8",
+        "system/framework/pocket-zygote.jar": "ee5d04bc5105c7b7e8f0b5fb587272529b2149844ba65302eb5f7f5313dc2240",
+        "system/framework/pocket-tools.jar": "e655bc3f46b40c5fcebcc5bb9e9dd6d710bde3a596b83611a245aa0ed18c6467",
+        "system/etc/init/pocket-runtime.rc": "60c91745597d19d94b5c0014b9bcbc386af4e2e048c62cd45de24a95dc383eba"
+      },
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6"
+    },
+    "commands": {
+      "javaTools": "python3 tools/build_api32_runtime_tools.py --out out/api32/system-server-bridge-v2-tools",
+      "patch": "python3 tools/build_api32_lazy_media_patch.py --image out/api32/abb-image/pocket-api32-arm64-0.78.20.zip --sha256 aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8 --core out/api32/core/pocket-core-api32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --defer-extractor --supervised-bootstrap --memory-profile --system-server-bridge --out out/api32/system-server-bridge-v2-patch",
+      "manager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/media-path-current-image-app/catalog-api32.json --media-session-probe32 out/api32/system-server-bridge-app --media-session-patch32 out/api32/system-server-bridge-v2-patch --out out/api32/system-server-bridge-v2-manager-probe"
+    },
+    "buildResult": "PASS",
+    "result": {
+      "runId": "e9ff6dc5c6d843ce8bd88591427557ff",
+      "strictPassed": false,
+      "validation": "FAIL",
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "systemUiStarts": [
+        "22557"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": []
+    },
+    "error": "java.io.IOException: Lazy media activation failed: DIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=23272\nAPI32_GUEST_MEMORY_EARLY_DEFAULT_PASS constructor_limit=2 current_limit=2 override=-1 source=stock_ActivityManager_settings\nDIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=23272\nAPI32_LAZY_HIDL_NOTIFICATIONS_PASS cold=1 preexisting=0 deduplicated=1 unregistered=1 warm_callback=1 stock_waiter=1\nAPI32_LAZY_BINDER_REQUEST name=media.extractor cold=1\nAPI32_LAZY_BINDER_FAILED name=media.extractor present=0\n",
+    "sourcesMatchedAfterTrial": 200,
+    "originalCodeRestored": true,
+    "report": {
+      "path": "out/api32/system-server-bridge-v2-report.json",
+      "sha256": "99c6789cce2e544466e0e4c174bcad78b2b438dd77a72921a454eb2efc8417e8"
+    },
+    "processBudget": {
+      "samples": 45,
+      "observedPeak": 32,
+      "runtimeFunctionalVerified": false
+    },
+    "nextAction": "Move the real extractor plugin scan to first data/type demand rather than a constructor-started worker; add publication/wait timestamps and retain the stock five-second client wait.",
+    "cleanup": {
+      "path": "out/api32/system-server-bridge-v2-cleanup.json",
+      "sha256": "c6643efada6440b1aa0a2074c711e9403c924b557b2cc5c33d547e1309c738b4"
+    }
+  },
+  "latestCandidateRuntimeVerified": true,
+  "extractorDemandTrial": {
+    "status": "FAILED_BEFORE_FIRST_DATA_REQUEST_COLD_EXTRACTOR_PUBLICATION_LATE",
+    "candidate": {
+      "path": "out/api32/extractor-demand-candidate.json",
+      "sha256": "39d63a4187c07887bc0eb36ed8bfff4e9895436abd092e2601e084cf03ef2fe2"
+    },
+    "job": "out/api32/extractor-demand-job.json",
+    "sourceSnapshot": "out/api32/extractor-demand-source-snapshot",
+    "sourceCount": 200,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/extractor-demand-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "8d02322c646bd0a1b3553d73941eb9307360c3238c8d1ae1656ae841a6bc0977",
+      "bytes": 3632949,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "50a2144201560c0d24563840858d845c423b89a793b9df61f05957d3a1e5c020",
+        "product/overlay/PocketMemory/PocketMemory.apk": "0f1e27bdfb2b4cfe7f76eaa5fc2e8c17e5e0caef9685d65bfeb62fdcae9f75e3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "1dceab97ac0597f5083270414ca62c1ec70f096a73b43c60e08475216f1394b3",
+        "system/etc/pocket-profile.prop": "d083bb8c141d628b9cb76cfead09b6575cc052f746606c12a4ffa0d61280b0c5",
+        "system/etc/pocket-runtime-boot.sh": "732d24f2e0c2d8d04e791c9b5a7a961efe5b68530c6a3eb217db1c6630b4a29a",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "efd8c8201c0994c263493c1523c6a89710c7f1cd7e5396ee0f71eccaebeae8c3",
+        "system/lib64/libpocket_media_api32.so": "330d5ec32e63956b432f8c00bee17ddfe87049c6a538a49d5f14b3b754926d9b",
+        "system/framework/pocket-zygote.jar": "ee5d04bc5105c7b7e8f0b5fb587272529b2149844ba65302eb5f7f5313dc2240",
+        "system/framework/pocket-tools.jar": "e655bc3f46b40c5fcebcc5bb9e9dd6d710bde3a596b83611a245aa0ed18c6467",
+        "system/etc/init/pocket-runtime.rc": "60c91745597d19d94b5c0014b9bcbc386af4e2e048c62cd45de24a95dc383eba"
+      },
+      "extractorFirstDemand32": true,
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6"
+    },
+    "design": "Constructor LoadExtractors returns without starting a worker. First CreateFromService/getSupportedTypes performs the stock mutex-protected plugin load, guarded by call_once. The original bounded ServiceManager getService wait remains unchanged.",
+    "diagnostics": "Registry records lazy Binder publication timestamps; client records bounded-wait elapsed time; factory records first-demand load elapsed time.",
+    "sourceContract": {
+      "path": "out/api32/extractor-demand-source-contract.json",
+      "sha256": "2b59516ae19c7fee3bf4e83b48b9a8cc39aa98116fb1a0b297ec58aa4881c0a4"
+    },
+    "sourceFiles": [
+      {
+        "upstreamPath": "services/mediaextractor/MediaExtractorService.cpp",
+        "commit": "38ed956405fbc061c0aec2c986ded3ff4d486fa5",
+        "path": "out/api32/extractor-demand-source-contract/services/mediaextractor/MediaExtractorService.cpp",
+        "sha256": "1f974677ed96b79308da6e463a6c74f0f895367f99e571442e00363ffdcb6c1d"
+      },
+      {
+        "upstreamPath": "services/mediaextractor/main_extractorservice.cpp",
+        "commit": "38ed956405fbc061c0aec2c986ded3ff4d486fa5",
+        "path": "out/api32/extractor-demand-source-contract/services/mediaextractor/main_extractorservice.cpp",
+        "sha256": "909f82961eb51af11f6901925fd9661dcdc1786a7875273e69c6d38360ac29b8"
+      },
+      {
+        "upstreamPath": "media/libstagefright/MediaExtractorFactory.cpp",
+        "commit": "38ed956405fbc061c0aec2c986ded3ff4d486fa5",
+        "path": "out/api32/extractor-demand-source-contract/media/libstagefright/MediaExtractorFactory.cpp",
+        "sha256": "fba747593b645bcab39ceb3cd91572529a10a310ba3002b8cfda46566cc1c897"
+      }
+    ],
+    "commands": {
+      "binder": "python3 tools/build_api32_native.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder",
+      "core": "python3 tools/build_api32_core.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated",
+      "patch": "python3 tools/build_api32_lazy_media_patch.py --image out/api32/abb-image/pocket-api32-arm64-0.78.20.zip --sha256 aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8 --core out/api32/core/pocket-core-api32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --defer-extractor --supervised-bootstrap --memory-profile --system-server-bridge --out out/api32/extractor-demand-patch",
+      "manager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/media-path-current-image-app/catalog-api32.json --media-session-probe32 out/api32/system-server-bridge-app --media-session-patch32 out/api32/extractor-demand-patch --out out/api32/extractor-demand-manager-probe"
+    },
+    "buildResult": "PASS",
+    "gate": "Constructor-deferred marker, then real Binder publication, then first-demand plugin completion, plus full WAV/media/storage/input/network and strict lifecycle checks.",
+    "result": {
+      "runId": "4775fdedb755454babf608674d164943",
+      "validation": "FAIL",
+      "strictPassed": false,
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": []
+    },
+    "error": "java.io.IOException: Lazy media activation failed: DIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=25163\nAPI32_GUEST_MEMORY_EARLY_DEFAULT_PASS constructor_limit=2 current_limit=2 override=-1 source=stock_ActivityManager_settings\nDIRECT_HWB_SERVICE descriptor=android.hidl.manager@1.2::IServiceManager remote=1 client_pid=25163\nAPI32_LAZY_HIDL_NOTIFICATIONS_PASS cold=1 preexisting=0 deduplicated=1 unregistered=1 warm_callback=1 stock_waiter=1\nAPI32_LAZY_BINDER_REQUEST name=media.extractor cold=1\nAPI32_LAZY_BINDER_WAIT name=media.extractor ready=0 elapsed_ms=5144\nAPI32_LAZY_BINDER_FAILED name=media.extractor present=0\n",
+    "sourcesMatchedAfterTrial": 200,
+    "originalCodeRestored": true,
+    "observedPeak": 32,
+    "nextAction": "Start the extractor and wait for its real Binder before framework boot; keep plugin loading on first data/type request, and retain demand startup for codec/player.",
+    "report": {
+      "path": "out/api32/extractor-demand-report.json",
+      "sha256": "d79471735dab58575ab75e4b1fe844381f515b65736012485268ee179c2c2604"
+    },
+    "cleanup": {
+      "path": "out/api32/extractor-demand-cleanup.json",
+      "sha256": "7f31fc49f449f394bfbf84b0a41a7234f8525b583a2b18b9963889ef2fc629bf"
+    }
+  },
+  "warmExtractorTrial": {
+    "status": "STRICT_FRAMEWORK_INPUT_NETWORK_STORAGE_WAV_AND_EXTRACTOR_START_PASS",
+    "candidate": {
+      "path": "out/api32/warm-extractor-candidate.json",
+      "sha256": "3b1e5ebcaf3876d10202df8f2e5c29b40031bfc3715c77fa8f3c06c871d73f0d"
+    },
+    "job": "out/api32/warm-extractor-job.json",
+    "sourceSnapshot": "out/api32/warm-extractor-source-snapshot",
+    "sourceCount": 200,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/warm-extractor-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "3ce4e692a70e798dd624320bf6621c2f4bb8f7120e99d2811a2f36ec4e0555fc",
+      "bytes": 3632949,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "50a2144201560c0d24563840858d845c423b89a793b9df61f05957d3a1e5c020",
+        "product/overlay/PocketMemory/PocketMemory.apk": "0f1e27bdfb2b4cfe7f76eaa5fc2e8c17e5e0caef9685d65bfeb62fdcae9f75e3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "1dceab97ac0597f5083270414ca62c1ec70f096a73b43c60e08475216f1394b3",
+        "system/etc/pocket-profile.prop": "d083bb8c141d628b9cb76cfead09b6575cc052f746606c12a4ffa0d61280b0c5",
+        "system/etc/pocket-runtime-boot.sh": "a54badf8b42c782c1bf0e8a2e96eaad1ca4c750d3dc993174b756274a828ff72",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "efd8c8201c0994c263493c1523c6a89710c7f1cd7e5396ee0f71eccaebeae8c3",
+        "system/lib64/libpocket_media_api32.so": "330d5ec32e63956b432f8c00bee17ddfe87049c6a538a49d5f14b3b754926d9b",
+        "system/framework/pocket-zygote.jar": "ee5d04bc5105c7b7e8f0b5fb587272529b2149844ba65302eb5f7f5313dc2240",
+        "system/framework/pocket-tools.jar": "e655bc3f46b40c5fcebcc5bb9e9dd6d710bde3a596b83611a245aa0ed18c6467",
+        "system/etc/init/pocket-runtime.rc": "60c91745597d19d94b5c0014b9bcbc386af4e2e048c62cd45de24a95dc383eba"
+      },
+      "extractorFirstDemand32": true,
+      "extractorBootStart32": true,
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6"
+    },
+    "reason": "The fully deferred constructor trial still misses the unmodified five-second client wait before any data/type request. Start the common extractor daemon and wait for its real Binder before framework boot. Keep plugins on first demand and codec/player activation on demand.",
+    "commands": {
+      "patch": "python3 tools/build_api32_lazy_media_patch.py --image out/api32/abb-image/pocket-api32-arm64-0.78.20.zip --sha256 aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8 --core out/api32/core/pocket-core-api32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --defer-extractor --supervised-bootstrap --memory-profile --system-server-bridge --warm-extractor --out out/api32/warm-extractor-patch",
+      "manager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/media-path-current-image-app/catalog-api32.json --media-session-probe32 out/api32/system-server-bridge-app --media-session-patch32 out/api32/warm-extractor-patch --out out/api32/warm-extractor-manager-probe"
+    },
+    "buildResult": "PASS",
+    "gate": "Actual extractor publication before the framework child, warm extractor lookup, first-demand plugin completion and WAV samples; other cold services and the complete input/network/storage/strict lifecycle gates remain required.",
+    "runtimeVerified": true,
+    "result": {
+      "runId": "2b36e670ca4e4f1c8b0c21551010f80a",
+      "apkSha256": "3ce4e692a70e798dd624320bf6621c2f4bb8f7120e99d2811a2f36ec4e0555fc",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "strictPassed": true,
+      "functionalPassed": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "extractorFirstDemandVerified": true,
+      "extractorBootStartVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "systemServerBridgeVerified": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "systemUiStarts": [
+        "26415"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "selinuxBefore": "Enforcing",
+      "selinuxAfter": "Enforcing",
+      "phantomLimitBefore": "null",
+      "phantomLimitAfter": "null"
+    },
+    "report": {
+      "path": "out/api32/warm-extractor-report.json",
+      "sha256": "891b44d89119d5c98b9436c5a621fec586fbe434ad2240efd861c55542536cc6"
+    },
+    "cleanup": {
+      "path": "out/api32/warm-extractor-cleanup.json",
+      "sha256": "07c8f9c12cb873acc2af85409bffca9c2a2d128654ccf12d14c3bd56c7ba7ab5"
+    },
+    "sourcesMatchedAfterTrial": 200,
+    "cachedGuestAppVerified": true,
+    "input": {
+      "keyDelivered": true,
+      "touchDelivered": true,
+      "input": {
+        "touchEventsAccepted": 2,
+        "keyEventsAccepted": 6,
+        "inputEventsAccepted": 8,
+        "inputEventsRejected": 0
+      }
+    },
+    "network": {
+      "validated": true,
+      "networkBound": true,
+      "httpStatus": 200,
+      "inputPeerDenied": true
+    },
+    "pluginLoadElapsedMs": 823,
+    "processBudget": {
+      "census": {
+        "path": "out/api32/warm-extractor-process-budget.json",
+        "sha256": "d9d4bfcf342ce5344fd77fc19de66c2041ff499f2ee3d27d69c76ce0e5ba9729"
+      },
+      "sampleCount": 55,
+      "observedPeakChildren": 33,
+      "observedPeakBeforeActivationProbe": 27,
+      "errors": [],
+      "unchangedHostDefault": 32,
+      "withinDefaultBudgetVerified": false,
+      "sampledMaximaAreNotUpperBounds": true,
+      "peakIncludes": [
+        "cold codec probe and Traceur sh/perfetto helpers in one sample",
+        "ordinary app native media test client and late broadcast recipients in another"
+      ]
+    }
+  },
+  "completeSourceImageRuntime": {
+    "evidence": "docs/api32-source-image-validation.json",
+    "imageVersion": "0.78.25",
+    "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "signalRunId": "3484900f8f9442739fe7bc4671eda639",
+    "combinedRunId": "045487726dfd49548b02a2d8cf687f51",
+    "signalReport": "out/api32/warm-player-app-manager-app-report.json",
+    "combinedReport": "out/api32/warm-player-media-media-session-report.json",
+    "runtimeCodeReplaced": false,
+    "strictPassed": true,
+    "microgAndEmbeddedBridgeTogether": true,
+    "earlyPlayerAndExtractorVerified": true,
+    "sampledPeakChildren": 32,
+    "hostSettingsUnchanged": true,
+    "scope": "Complete source-packaged runtime; real regular-file AppFuse/WAV/input/validated network. No production external mount, fresh-profile reliability or hard process-bound claim."
+  },
+  "sourceHostBudgetFollowup": {
+    "runId": "f9aa3a730c2448d0ab35b6c9e799f64e",
+    "report": "out/api32/source-host-app-manager-app-report.json",
+    "census": "out/api32/source-host-app-process-budget.json",
+    "functionalPassed": true,
+    "sampledPeakChildren": 34,
+    "hostLimitUnchanged": true,
+    "safeProcessBoundVerified": false,
+    "scope": "Later source-host run reaches 34; earlier peaks of32 do not close the process-budget gate."
+  },
+  "sharedCoreMetricsRuntime": {
+    "evidence": "docs/api32-core-metrics-validation.json",
+    "imageVersion": "0.78.26",
+    "imageSha256": "1036140a7d14a31e43e5c837bed5bff2643e909a96e5c0a06eef51559909450f",
+    "appRuntime": {
+      "report": "out/api32/core-metrics-app-manager-app-report.json",
+      "reportSha256": "7534797c2b5b529063c57e4f05f85a12ca110c81dae66683f069711fad6b02da",
+      "runId": "38411e935fbd477cbc4458eb0a29825d",
+      "validation": "PASS",
+      "sharedMetricsAndCorePid": 3566,
+      "supervisedLifetimesReaped": 16,
+      "reapAccounting": true,
+      "singleSystemUi": true,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 234,
+      "observerErrors": [],
+      "hardProcessBoundProven": false,
+      "typedMetricsPolicyVerified": false
+    },
+    "combinedRuntime": {
+      "report": "out/api32/core-metrics-media-media-session-report.json",
+      "reportSha256": "7eb87dd2df4e6e7fda23c94cb3cddc56c00f7e09f22f0324b7ed64f78d2ae0d9",
+      "runId": "8eb2d6401c33443eabafac0fc7123d50",
+      "validation": "PASS",
+      "strictPassed": true,
+      "gates": {
+        "packagedImageVerified": true,
+        "playerBootStartVerified": true,
+        "externalFilesVerified": true,
+        "ordinaryPathsVerified": true,
+        "lazyMediaVerified": true,
+        "extractorFirstDemandVerified": true,
+        "extractorBootStartVerified": true,
+        "supervisedBootstrapVerified": true,
+        "memoryProfileVerified": true,
+        "systemServerBridgeVerified": true,
+        "coreMediaMetricsVerified": true,
+        "reapAccounting": true
+      },
+      "supervisedLifetimesReaped": 16,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "8225"
+      ],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 52,
+      "censusErrors": [],
+      "hardProcessBoundProven": false,
+      "codeHashesPreserved": 13,
+      "metricsProbe": [
+        {
+          "mode": "submit",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_SUBMITTED uid=10021 claimed_uid=1000 oneway=1\n"
+        },
+        {
+          "mode": "verify",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_VERIFIED stock_record=1 caller_uid=10021 forged_identity_replaced=1 forbidden_key_absent=1\n"
+        }
+      ]
+    },
+    "defaultHostProcessSettingsUnchanged": true,
+    "hardProcessBoundProven": false,
+    "scope": "Fully source-built host JNI; complete packaged runtime with stock media.metrics in existing native core; no runtime replacement or guest data reset; repeated fresh starts and complete mounted storage remain open"
+  }
+}

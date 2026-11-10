@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<!-- Host camera provider; facing-specific capabilities are not claimed. -->
+<permissions>
+    <feature name="android.hardware.camera" />
+    <feature name="android.hardware.camera.any" />
+</permissions>

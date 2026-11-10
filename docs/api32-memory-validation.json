@@ -1,0 +1,94 @@
+{
+  "runId": "244269738a674bfbb088864b28720c60",
+  "passed": true,
+  "exitCode": 0,
+  "hostUid": 10154,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "apkSha256": "6a7aa51584917c2a40ed89d31eae176bfd6da7cb3dd6b111934c3aff84965653",
+  "imageManifestSha256": "fc01b9941c392652fb00d49bf3997eb7152985a7b721a50c9d0aec608590f0fd",
+  "imageVerifiedFiles": 2547,
+  "extractedFiles": 4,
+  "deltaUpdate": true,
+  "deltaBaselineManifestSha256": "d3e936a0a35eed551a0a513ce70ee00a394480dd64384da574e6fc0a10435d64",
+  "debuggable": false,
+  "androidAppSandboxVerified": true,
+  "fullGuestBootVerified": false,
+  "schema": 1,
+  "scope": "API 32 rootless guest memory policy, framework boot/user unlock and stock Settings provider via an external system tool; no usable launcher, ordinary app install or Manager image claim",
+  "memoryProtocolSource": {
+    "project": "platform/system/memory/lmkd",
+    "commit": "25d2b74cfcc9052a8e0ea04e977ec36221257eef",
+    "header": "include/lmkd.h"
+  },
+  "memoryPolicy": {
+    "pressureInput": "actual /proc/meminfo MemAvailable",
+    "selection": "current 12L framework thresholds and app importance; only live authenticated processes in this profile; logical system roles excluded",
+    "signalling": "pidfd_open + pidfd_send_signal(SIGKILL), PID/start-time/UID revalidated",
+    "kernelOomPolicy": "unchanged; probe read the lower-priority child kernel oom_score_adj before/after priority registration",
+    "testPressure": "Threshold deliberately raised above observed MemAvailable; no claim of actual host memory shortage",
+    "testVerified": [
+      "ordinary UID 39998 connection denied",
+      "wrong claimed target UID rejected",
+      "12L four- and five-word priority updates accepted",
+      "eligible owned UID 39999 child actually terminated by SIGKILL",
+      "correct unsolicited kill notification and priority-range count",
+      "stock total-count sentinel 1001 and empty range",
+      "child below kill threshold and system-role child survived",
+      "malformed packet rejected"
+    ],
+    "limitations": [
+      "No host OOM-score/cgroup/PSI modifications",
+      "No kernel LMK or per-UID host memory accounting claim",
+      "No fabricated kernel statsd kill telemetry; the STAT subscription does not establish complete kernel telemetry",
+      "No PID-reuse stress test or host memory callback validation"
+    ]
+  },
+  "frameworkBootCompletedVerified": true,
+  "frameworkUserUnlockVerified": true,
+  "settingsProviderRoundTripVerified": true,
+  "settingsProbeClient": "SDK 32 external-provider reference, as used by platform content tools; ContentProviderClient performs real PUT_global/GET_global and cursor query, then deletes and verifies absence; external reference released",
+  "settingsOrdinaryAppClientVerified": false,
+  "usableLauncherVerified": false,
+  "managerApi32Supported": false,
+  "observedNativeLogCounts": {
+    "SLOW OOM ADJ": 0,
+    "Failed to connect to lmkd": 0,
+    "Lost network stack": 0,
+    "ANR in com.android.networkstack": 0,
+    "ANR in com.android.systemui": 1,
+    "ANR in com.android.bluetooth": 1
+  },
+  "verifiedMarkers": [
+    "API32_MEMORY_ROLE_DENIED_PASS uid=39998 connection=closed",
+    "API32_MEMORY_POLICY_PASS protocol=12L peer_roles=verified target_uid=verified thresholds=test_raised victim=owned_guest pidfd_sigkill=real kill_notification=real kill_count=real lower_priority=alive system_role=alive malformed_packet=rejected host_oom=unchanged",
+    "API32_FRAMEWORK_BOOT_PASS stock_system_server=1 boot_completed=1 activity_package_window=live",
+    "API32_FRAMEWORK_USER_UNLOCKED user=0 source=UserManager",
+    "API32_SETTINGS_PROVIDER_PASS stock_provider=1 client=external_tool call=real query=real nonce=verified cleanup=1",
+    "API32_INIT_STOPPED reaped=25 remaining=0 failed=0"
+  ],
+  "remainingIssues": "SystemUI ImageWallpaper and Bluetooth AdapterService ANRs remain in this run. Native suspend_control/stats services are still absent. Host display/input, installed-app lifecycle/network/restart, external/CE storage and Manager on-demand delivery remain unverified.",
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_memory.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; both C++ binaries built with -Wall -Wextra -Werror"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --reuse-native --delta-from out/api32/memory-first-image-manifest.json",
+      "result": "PASS; signed APK 7623722 bytes, changed assets and hashes matched the baseline diff exactly"
+    },
+    {
+      "command": "ssh -o BatchMode=yes pi@juanraspberry 'python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server'",
+      "result": "PASS / exit 0; actual guest boot, user unlock and Settings round trip passed with all foundation markers. Init reaped=25 remaining=0 failed=0. fullGuestBootVerified remains false because usable UI/Manager and app lifecycle gates are not covered."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_memory.py tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ]
+}

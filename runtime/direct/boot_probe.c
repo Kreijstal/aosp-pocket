@@ -73,11 +73,17 @@ static int prepare_data(uid_t kernel_uid) {
     if(!encrypted)CHECK(symlink("user/0","/data/data")==0 || errno==EEXIST);
     CHECK(mkdir("/storage",0755)==0 || errno==EEXIST);
     CHECK(mkdir("/storage/self",0755)==0 || errno==EEXIST);
+    // These links establish the runtime's lower path view before a volume
+    // exists. The explicitly scoped UID0 bootstrap must not send their setup
+    // to an unmounted provider namespace. Ordinary guest paths retain routing.
+    int namespace_setup=syscall_backend && access("/.pocket-external-namespace-enabled",F_OK)==0;
+    if(namespace_setup)CHECK(syscall(SYS_getpid,0x504c2001UL,8UL,1UL)==0);
     CHECK(symlink("/data/media","/storage/emulated")==0 || errno==EEXIST);
     if(!encrypted) {
         CHECK(symlink("../emulated/0","/storage/self/primary")==0 || errno==EEXIST);
         CHECK(symlink("/storage/emulated/0","/sdcard")==0 || errno==EEXIST);
     }
+    if(namespace_setup)CHECK(syscall(SYS_getpid,0x504c2001UL,8UL,0UL)==0);
     CHECK(symlink("/data/cache","/cache")==0 || errno==EEXIST);
     struct statvfs cache;CHECK(statvfs("/data/cache",&cache)==0 && cache.f_bsize>0);
     CHECK(__system_property_set("pocket.data.ready","1")==0);

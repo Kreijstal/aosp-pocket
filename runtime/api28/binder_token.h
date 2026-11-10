@@ -19,6 +19,10 @@ static inline int pocket_binder_token(const void* bytes,size_t size,struct Pocke
  if(size>=16 && pocket_token_word(d,8)==0x53595354 && pocket_token_string(d,size,12)){
   out->string_offset=12;out->format=2;out->work_source=(int32_t)pocket_token_word(d,4);return 1;
  }
+ if(size>=24 && pocket_token_word(d,16)==0x53595354 && pocket_token_string(d,size,20)){
+  memcpy(&out->identity,d,8);out->policy=pocket_token_word(d,8);out->string_offset=20;out->format=5;
+  out->work_source=(int32_t)pocket_token_word(d,12);return 1;
+ }
  if(size>=20 && (pocket_token_word(d,8)&0x00400000u) && pocket_token_string(d,size,16)){
   memcpy(&out->identity,d,8);out->policy=pocket_token_word(d,8);out->string_offset=16;out->format=4;
   out->work_source=(int32_t)pocket_token_word(d,12);return 1;

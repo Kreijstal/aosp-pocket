@@ -1,0 +1,486 @@
+{
+  "schema": 1,
+  "status": "NORMAL_SERVICE_BOOT_AND_ORDERLY_STOP_VERIFIED_STARTUP_UNSTABLE_DEFAULT_HOST_LIMIT_KILLS_GUEST",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Normal API 32 service startup separated from the native component suite, with post-boot acceptance checks in the dedicated non-debuggable test host. Not production Manager integration, fresh-image/factory-boot validation, reliable startup or default-limit support.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "runs": [
+    {
+      "name": "runtime-boot-first",
+      "runId": "fc6156223a794786a44161f2679f0b33",
+      "apkSha256": "22ae9a2816865ab47c8a3edcb46432547c7fbcbabb5b7eebbca87b3e1151a6d0",
+      "reportPath": "out/api32/runtime-boot-first-report.json",
+      "reportSha256": "c31f77944ad023c2333099c8aa8489d225c1878ea2b5821a94a72a645c8aee69",
+      "imageVerifiedFiles": 2664,
+      "driverExitCode": 1,
+      "guestExitCode": 1,
+      "passed": false,
+      "runtimeBootVerified": false,
+      "componentSuiteExecuted": false,
+      "missingMarkers": [
+        "POCKET_RUNTIME_BOOT_READY sdk=32 component_checks=0",
+        "POCKET_RUNTIME_VALIDATION_PASS sdk=32 component_checks=0",
+        "POCKET_SERVICEMANAGER_READY sdk=32 private_registry=1",
+        "API32_FRAMEWORK_BOOT_PASS",
+        "API32_SYSTEMSERVER_DEXOPT_PASS stock_zygote_dexopt=1 system_prebuilt_speed=3 apex_verify=3",
+        "API32_FRAMEWORK_USER_UNLOCKED",
+        "API32_SETTINGS_PROVIDER_PASS",
+        "API32_GUEST_MEMORY_EARLY_DEFAULT_PASS constructor_limit=4 current_limit=4 override=-1",
+        "API32_BLUETOOTH_ABSENT_PASS",
+        "API32_HARDWARE_FEATURES_PASS",
+        "API32_CAMERA_SERVICE_PASS",
+        "API32_SOFTWARE_DISPLAY_PASS",
+        "API32_INPUT_CONTROL_READY",
+        "API32_APP_INSTALL_PASS",
+        "API32_APP_INSTALL_READY_PASS",
+        "API32_APP_ACTIVITY_PASS",
+        "API32_APP_SETTINGS_PASS",
+        "API32_APP_KEYSTORE_PASS",
+        "API32_APP_HTTPS_PASS",
+        "API32_APP_RESTART_PASS",
+        "API32_HOST_INPUT_PASS ordinary_app_clicks=3",
+        "API32_HOST_KEYBOARD_PASS text=a129",
+        "API32_UI_DEXOPT_PASS package=com.android.systemui source_parent_writable=false compiler=stock_dex2oat filter=speed",
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn",
+        "API32_SYSTEMSERVER_CODE_LOADED_PASS",
+        "API32_SYSTEMUI_CODE_LOADED_PASS stage=before",
+        "API32_SYSTEMUI_CODE_LOADED_PASS stage=after"
+      ],
+      "uiAnrs": [],
+      "namedJavaCrashes": [],
+      "allJavaFatalHeaderCount": 0,
+      "nativeFatals": [],
+      "nativeLogWithinCaptureLimit": true,
+      "runtimeUiProcesses": null,
+      "uiMarkers": [],
+      "cleanupMarkers": [
+        "API32_INIT_STOPPED reaped=0 remaining=0 failed=0"
+      ],
+      "bootReady": false,
+      "postBootValidationCompleted": false,
+      "hostSelinuxAfter": "Enforcing",
+      "input": {
+        "touchEventsAccepted": null,
+        "keyEventsAccepted": null,
+        "inputEventsRejected": null
+      }
+    },
+    {
+      "name": "runtime-boot-property-client",
+      "runId": "dafa543f8cbf49e2a982a36c1e7880c9",
+      "apkSha256": "e0d821bdbff1366f87a4db6adc6228353765b7bf024a68a726cdc95d183b3b3f",
+      "reportPath": "out/api32/runtime-boot-property-client-report.json",
+      "reportSha256": "7c724b35b0ec5a9562172f2d8ace632a6132897227cfb20b87ec34c0aab59fc8",
+      "imageVerifiedFiles": 2665,
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "passed": false,
+      "runtimeBootVerified": false,
+      "componentSuiteExecuted": false,
+      "missingMarkers": [],
+      "uiAnrs": [],
+      "namedJavaCrashes": [],
+      "allJavaFatalHeaderCount": 0,
+      "nativeFatals": [],
+      "nativeLogWithinCaptureLimit": true,
+      "runtimeUiProcesses": null,
+      "uiMarkers": [
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=23574 stable_seconds=40"
+      ],
+      "cleanupMarkers": [],
+      "bootReady": true,
+      "postBootValidationCompleted": true,
+      "hostSelinuxAfter": "Enforcing",
+      "input": {
+        "touchEventsAccepted": 8,
+        "keyEventsAccepted": 12,
+        "inputEventsRejected": 0
+      }
+    },
+    {
+      "name": "runtime-boot-graceful-stop",
+      "runId": "5a409c457658457f9e757b8cc30688f5",
+      "apkSha256": "14a5e6d24130c54ad93c258dc5290df1a46a355cba2b2f8f9c50c98bc943116a",
+      "reportPath": "out/api32/runtime-boot-graceful-stop-report.json",
+      "reportSha256": "4f57db34146af5fcd5e594977abff1313059de8cb3db9388c6425f999a079efe",
+      "imageVerifiedFiles": 2665,
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "passed": false,
+      "runtimeBootVerified": false,
+      "componentSuiteExecuted": false,
+      "missingMarkers": [],
+      "uiAnrs": [
+        [
+          "com.android.systemui",
+          "27411",
+          "executing service com.android.systemui/.ImageWallpaper"
+        ],
+        [
+          "com.android.settings (com.android.settings/.FallbackHome)",
+          "27588",
+          "Input dispatching timed out (b88c99 com.android.settings/com.android.settings.FallbackHome (server) is not responding. Waited 5002ms for FocusEvent(hasFocus=false))"
+        ]
+      ],
+      "namedJavaCrashes": [],
+      "allJavaFatalHeaderCount": 0,
+      "nativeFatals": [],
+      "nativeLogWithinCaptureLimit": true,
+      "runtimeUiProcesses": {
+        "com.android.systemui": [
+          27411,
+          28172
+        ],
+        "com.android.launcher3": [
+          27843
+        ]
+      },
+      "uiMarkers": [
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=28172 stable_seconds=40"
+      ],
+      "cleanupMarkers": [
+        "API32_INIT_STOPPED reaped=23 remaining=0 failed=0"
+      ],
+      "bootReady": true,
+      "postBootValidationCompleted": true,
+      "hostSelinuxAfter": "Enforcing",
+      "input": {
+        "touchEventsAccepted": 8,
+        "keyEventsAccepted": 12,
+        "inputEventsRejected": 0
+      }
+    },
+    {
+      "name": "runtime-boot-default-phantom",
+      "runId": "a1188e1b698e42689e9a9d3f24906b54",
+      "apkSha256": "14a5e6d24130c54ad93c258dc5290df1a46a355cba2b2f8f9c50c98bc943116a",
+      "reportPath": "out/api32/runtime-boot-default-phantom-report.json",
+      "reportSha256": "83aef76b9f6035e6ccd91969a7ba794e0ddf8971d4b27f2c527a38e34e735c51",
+      "imageVerifiedFiles": 2665,
+      "driverExitCode": 1,
+      "guestExitCode": 137,
+      "passed": false,
+      "runtimeBootVerified": false,
+      "componentSuiteExecuted": false,
+      "missingMarkers": [
+        "POCKET_RUNTIME_VALIDATION_PASS sdk=32 component_checks=0",
+        "API32_APP_INSTALL_PASS",
+        "API32_APP_INSTALL_READY_PASS",
+        "API32_APP_ACTIVITY_PASS",
+        "API32_APP_SETTINGS_PASS",
+        "API32_APP_KEYSTORE_PASS",
+        "API32_APP_HTTPS_PASS",
+        "API32_APP_RESTART_PASS",
+        "API32_HOST_INPUT_PASS ordinary_app_clicks=3",
+        "API32_HOST_KEYBOARD_PASS text=a129",
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn",
+        "API32_SYSTEMSERVER_CODE_LOADED_PASS",
+        "API32_SYSTEMUI_CODE_LOADED_PASS stage=before",
+        "API32_SYSTEMUI_CODE_LOADED_PASS stage=after"
+      ],
+      "uiAnrs": [
+        [
+          "com.android.systemui",
+          "31306",
+          "executing service com.android.systemui/.keyguard.KeyguardService"
+        ]
+      ],
+      "namedJavaCrashes": [
+        {
+          "thread": "main",
+          "process": "com.android.providers.calendar",
+          "pid": 923
+        }
+      ],
+      "allJavaFatalHeaderCount": 2,
+      "nativeFatals": [],
+      "nativeLogWithinCaptureLimit": true,
+      "runtimeUiProcesses": {
+        "com.android.systemui": [
+          31306,
+          32072,
+          32419
+        ],
+        "com.android.launcher3": [
+          31665
+        ]
+      },
+      "uiMarkers": [],
+      "cleanupMarkers": [],
+      "bootReady": true,
+      "postBootValidationCompleted": false,
+      "hostSelinuxAfter": "Enforcing",
+      "input": {
+        "touchEventsAccepted": 0,
+        "keyEventsAccepted": 0,
+        "inputEventsRejected": 0
+      }
+    }
+  ],
+  "runtimeSourceSha256": {
+    "runtime/api32/servicemanager_main.cpp": "2bcce8c6089d3e869a3c5792ee015c93190a9251cd78d83ed682dc1113d69e77",
+    "runtime/api32/runtime-boot.sh": "cb809c71295193e2d1f45f57d9dceb32606c65d418d6e090e1df53383ee21b86",
+    "runtime/api32/runtime-env.sh": "085e66f3e91c2ab1c47f3fd28c6f7e401f621db7ff0fbf19a45e333b58967d13",
+    "runtime/api32/runtime-validate.sh": "8b3aa0765a35f9f04bea2c56b243c87e8894c2476995dbad2e5e77c89a8253e9",
+    "tools/api32_runtime_boot.py": "199dfef0e64e63fff47aad4b5432f6b466fd8b3d8399410960ad69d5e1c801d8",
+    "tools/build_api32_native.py": "5b5f67f72a7074fa1a84496a68b71df4b57176c2ce98efa72df9f9abebf24367",
+    "tools/build_api32_probe.py": "2ff8b4c3f51d295ea9fc46aebd181d86ac479663f6005f529fb38f269be0e7a7",
+    "tools/build_api32_android_probe.py": "6afff81ea93b36c4fcfcc1815d889ed457e91f3e0d75992a7be643db1c4b568a",
+    "runtime/tests/api32/MainActivity.java": "f41eff5d8babece5857834d1ba0c4effc4dc69ff1d19330daeeafa8cb882733a",
+    "runtime/api32/property_set.cpp": "afcfddab1f46d23ef6d05d17a5921a0b1d6329ca049c0428a7dc8e5dd4408a2c"
+  },
+  "testedDriverSha256": "800006c81df17dc75c92abe3aed52c0b6c7005993c14ead0fd377a2dc511bddd",
+  "currentValidatorSha256": "2bc03db0d802ed95dbf5374f65fca6d8ba77d9af2674e0522885c5d0e0475b6a",
+  "currentValidatorReplayedAgainstAllReports": true,
+  "nativeBinderDsoAndFrameworkBootstrapUnchanged": true,
+  "normalInitConfiguredServices": 23,
+  "normalInitHasNoComponentTestServices": true,
+  "normalRegistryPublishesTestEchoService": false,
+  "entrypoint": "/system/etc/pocket-runtime-boot.sh",
+  "postBootValidator": "/system/etc/pocket-runtime-validate.sh",
+  "initConfiguration": "/system/etc/init/pocket-runtime.rc",
+  "shutdownProtocol": "Private property pocket.control.stop=1; wait for init and the boot wrapper before owner exit",
+  "normalServiceReadinessVerified": true,
+  "normalOrderlyStopVerified": true,
+  "normalStableRuntimeBootVerified": false,
+  "dataScope": "Existing isolated API32 guest data reused; no API28/API29 or ticket VM data changed",
+  "defaultHostLimitEvidence": {
+    "instance": 73,
+    "before": "null",
+    "phantomSettings": [
+      "max_phantom_processes=32"
+    ],
+    "hostSettingMutated": false,
+    "testExitCode": 1,
+    "after": "null",
+    "unchanged": true
+  },
+  "defaultHostLimitHistory": {
+    "path": "out/api32/runtime-default-host-phantom-history.json",
+    "sha256": "78630181931fb80a7a960b15b3782a2f13b78295f45e1b90db4eb031c650a27d",
+    "ownerHostPid": 30208,
+    "trimKillLines": [
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {b343d56 30548:30208:sh/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {67281d7 30553:30208:sh/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {59afac4 30580:30208:pocket-init-api32/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {2fcadad 30590:30208:pocket-servicemanager-api32/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {34ed8e2 30609:30208:installd/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {f736473 30617:30208:pocket-netd-api32/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {aeff30 30627:30208:pocket-memory-api32/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {b6377a9 30631:30208:pocket-mdns-control-api32/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {d85a12e 30637:30208:pocket-dns-api32/u0a154}: Trimming phantom processes",
+      "I/ActivityManager( 1037): Killing PhantomProcessRecord {95d4cf 30646:30208:pocket-apex-service-api32/u0a154}: Trimming phantom processes"
+    ]
+  },
+  "driverRegression": {
+    "legacyComponentMarkersPresent": true,
+    "legacyStrictAnrStillRejected": true,
+    "componentReportCannotPassRuntimeGate": true,
+    "runtimeUnexpectedComponentMarkers": [
+      "API32_INIT_CLIENT_PASS",
+      "API32_BINDER_PASS",
+      "API32_ZYGOTE_PASS",
+      "API32_PERFETTO_SESSION_PASS"
+    ]
+  },
+  "modeReuseGuard": {
+    "command": [
+      "python3",
+      "tools/build_api32_android_probe.py",
+      "--ndk",
+      "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "--binder",
+      "--zygote",
+      "--init",
+      "--hardware",
+      "--apex",
+      "--installd",
+      "--graphics",
+      "--input",
+      "--network",
+      "--dns",
+      "--mdns",
+      "--audio",
+      "--storage",
+      "--keystore",
+      "--system-server",
+      "--apps",
+      "--display",
+      "--compile-ui",
+      "--reuse-native",
+      "--reuse-fixture",
+      "--thin-update"
+    ],
+    "exitCode": 1,
+    "mismatchedRuntimeModeRejected": true,
+    "apkManifestAndMetadataUnchanged": true
+  },
+  "gateReplay": {
+    "validatorSha256": "2bc03db0d802ed95dbf5374f65fca6d8ba77d9af2674e0522885c5d0e0475b6a",
+    "originalReportsUnchanged": true,
+    "unnamedJavaFatalDetected": true,
+    "reports": [
+      {
+        "name": "runtime-boot-first",
+        "runId": "fc6156223a794786a44161f2679f0b33",
+        "originalReportSha256": "c31f77944ad023c2333099c8aa8489d225c1878ea2b5821a94a72a645c8aee69",
+        "strictPassed": false,
+        "missingMarkers": [
+          "POCKET_RUNTIME_BOOT_READY sdk=32 component_checks=0",
+          "POCKET_RUNTIME_VALIDATION_PASS sdk=32 component_checks=0",
+          "POCKET_SERVICEMANAGER_READY sdk=32 private_registry=1",
+          "API32_FRAMEWORK_BOOT_PASS",
+          "API32_SYSTEMSERVER_DEXOPT_PASS stock_zygote_dexopt=1 system_prebuilt_speed=3 apex_verify=3",
+          "API32_FRAMEWORK_USER_UNLOCKED",
+          "API32_SETTINGS_PROVIDER_PASS",
+          "API32_GUEST_MEMORY_EARLY_DEFAULT_PASS constructor_limit=4 current_limit=4 override=-1",
+          "API32_BLUETOOTH_ABSENT_PASS",
+          "API32_HARDWARE_FEATURES_PASS",
+          "API32_CAMERA_SERVICE_PASS",
+          "API32_SOFTWARE_DISPLAY_PASS",
+          "API32_INPUT_CONTROL_READY",
+          "API32_APP_INSTALL_PASS",
+          "API32_APP_INSTALL_READY_PASS",
+          "API32_APP_ACTIVITY_PASS",
+          "API32_APP_SETTINGS_PASS",
+          "API32_APP_KEYSTORE_PASS",
+          "API32_APP_HTTPS_PASS",
+          "API32_APP_RESTART_PASS",
+          "API32_HOST_INPUT_PASS ordinary_app_clicks=3",
+          "API32_HOST_KEYBOARD_PASS text=a129",
+          "API32_UI_DEXOPT_PASS package=com.android.systemui source_parent_writable=false compiler=stock_dex2oat filter=speed",
+          "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn",
+          "API32_SYSTEMSERVER_CODE_LOADED_PASS",
+          "API32_SYSTEMUI_CODE_LOADED_PASS stage=before",
+          "API32_SYSTEMUI_CODE_LOADED_PASS stage=after"
+        ],
+        "uiAnrs": [],
+        "uiProcesses": {
+          "com.android.systemui": [],
+          "com.android.launcher3": []
+        },
+        "javaFatalHeaderCount": 0,
+        "namedJavaCrashCount": 0
+      },
+      {
+        "name": "runtime-boot-property-client",
+        "runId": "dafa543f8cbf49e2a982a36c1e7880c9",
+        "originalReportSha256": "7c724b35b0ec5a9562172f2d8ace632a6132897227cfb20b87ec34c0aab59fc8",
+        "strictPassed": false,
+        "missingMarkers": [],
+        "uiAnrs": [],
+        "uiProcesses": {
+          "com.android.systemui": [
+            23574
+          ],
+          "com.android.launcher3": [
+            23860
+          ]
+        },
+        "javaFatalHeaderCount": 0,
+        "namedJavaCrashCount": 0
+      },
+      {
+        "name": "runtime-boot-graceful-stop",
+        "runId": "5a409c457658457f9e757b8cc30688f5",
+        "originalReportSha256": "4f57db34146af5fcd5e594977abff1313059de8cb3db9388c6425f999a079efe",
+        "strictPassed": false,
+        "missingMarkers": [],
+        "uiAnrs": [
+          "com.android.systemui"
+        ],
+        "uiProcesses": {
+          "com.android.systemui": [
+            27411,
+            28172
+          ],
+          "com.android.launcher3": [
+            27843
+          ]
+        },
+        "javaFatalHeaderCount": 0,
+        "namedJavaCrashCount": 0
+      },
+      {
+        "name": "runtime-boot-default-phantom",
+        "runId": "a1188e1b698e42689e9a9d3f24906b54",
+        "originalReportSha256": "83aef76b9f6035e6ccd91969a7ba794e0ddf8971d4b27f2c527a38e34e735c51",
+        "strictPassed": false,
+        "missingMarkers": [
+          "POCKET_RUNTIME_VALIDATION_PASS sdk=32 component_checks=0",
+          "API32_APP_INSTALL_PASS",
+          "API32_APP_INSTALL_READY_PASS",
+          "API32_APP_ACTIVITY_PASS",
+          "API32_APP_SETTINGS_PASS",
+          "API32_APP_KEYSTORE_PASS",
+          "API32_APP_HTTPS_PASS",
+          "API32_APP_RESTART_PASS",
+          "API32_HOST_INPUT_PASS ordinary_app_clicks=3",
+          "API32_HOST_KEYBOARD_PASS text=a129",
+          "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn",
+          "API32_SYSTEMSERVER_CODE_LOADED_PASS",
+          "API32_SYSTEMUI_CODE_LOADED_PASS stage=before",
+          "API32_SYSTEMUI_CODE_LOADED_PASS stage=after"
+        ],
+        "uiAnrs": [
+          "com.android.systemui"
+        ],
+        "uiProcesses": {
+          "com.android.systemui": [
+            31306,
+            32072,
+            32419
+          ],
+          "com.android.launcher3": [
+            31665
+          ]
+        },
+        "javaFatalHeaderCount": 2,
+        "namedJavaCrashCount": 1
+      }
+    ]
+  },
+  "componentGateBodyUnchangedAfterUnindenting": true,
+  "allInputHashesVerified": 2665,
+  "fullGuestBootVerified": false,
+  "systemuiStartupVerified": false,
+  "usableLauncherVerified": false,
+  "pocketManagerApi32Supported": false,
+  "checks": [
+    {
+      "command": "PYTHONPATH=tools python3 - <<'PY'\nfrom pathlib import Path\nfrom build_api32_native import build_binder\nbuild_binder(Path('/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c'))\nPY",
+      "result": "PASS / exit 0; standalone service manager built; existing Binder DSO unchanged."
+    },
+    {
+      "command": "PYTHONPATH=tools python3 - <<'PY'\nfrom pathlib import Path\nfrom build_api32_native import build_properties\nbuild_properties(Path('/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c'))\nPY",
+      "result": "PASS / exit 0; private-property client built; existing property service binary unchanged."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --runtime-boot --reuse-native --delta-from out/api32/runtime-boot-property-client-baseline/image-manifest.json",
+      "result": "PASS / exit 0; 7,648,400-byte signed APK, all 2,665 staged input hashes and APK hash verified."
+    },
+    {
+      "command": "python3 out/api32/run_runtime_boot_with_vm73_phantom_limit.py --require-ui",
+      "result": "Last controlled run: startup/readiness/app/input/40s UI and orderly shutdown completed, guest exit 0; strict driver exit 1 on an initial ImageWallpaper ANR and SystemUI restart. Temporary limit 256 restored to null."
+    },
+    {
+      "command": "python3 out/api32/run_runtime_boot_default_phantom.py --require-ui --reuse-installed",
+      "result": "FAIL / driver exit 1, guest exit 137. Actual host limit 32 remained unchanged. Host ActivityManager explicitly logged trimming the wrapper, init, registry and other services; app acceptance was incomplete."
+    },
+    {
+      "command": "python3 -m py_compile tools/api32_runtime_boot.py tools/build_api32_native.py tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "bash -n runtime/api32/runtime-boot.sh runtime/api32/runtime-validate.sh runtime/api32/runtime-env.sh",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0."
+    }
+  ]
+}

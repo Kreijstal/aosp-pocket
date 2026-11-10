@@ -1,0 +1,113 @@
+--- a/gatekeeperd.cpp
++++ b/gatekeeperd.cpp
+@@ -34,7 +34,7 @@
+ #include <binder/PermissionCache.h>
+ #include <gatekeeper/password_handle.h>  // for password_handle_t
+ #include <hardware/hw_auth_token.h>
+-#include <libgsi/libgsi.h>
++#include <stdio.h>
+ #include <log/log.h>
+ #include <utils/String16.h>
+ 
+@@ -67,7 +67,7 @@
+     GateKeeperProxy() {
+         clear_state_if_needed_done = false;
+         hw_device = IGatekeeper::getService();
+-        is_running_gsi = android::base::GetBoolProperty(android::gsi::kGsiBootedProp, false);
++        is_running_gsi = android::base::GetBoolProperty("ro.gsid.image_running", false);
+ 
+         if (!hw_device) {
+             LOG(ERROR) << "Could not find Gatekeeper device, which makes me very sad.";
+@@ -77,8 +77,8 @@
+     virtual ~GateKeeperProxy() {}
+ 
+     void store_sid(uint32_t userId, uint64_t sid) {
+-        char filename[21];
+-        snprintf(filename, sizeof(filename), "%u", userId);
++        char filename[64];
++        snprintf(filename, sizeof(filename), "/data/misc/gatekeeper/%u", userId);
+         int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR);
+         if (fd < 0) {
+             ALOGE("could not open file: %s: %s", filename, strerror(errno));
+@@ -104,7 +104,7 @@
+     }
+ 
+     bool mark_cold_boot() {
+-        const char* filename = ".coldboot";
++        const char* filename = "/data/misc/gatekeeper/.coldboot";
+         if (access(filename, F_OK) == -1) {
+             int fd = open(filename, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR);
+             if (fd < 0) {
+@@ -118,17 +118,17 @@
+     }
+ 
+     void maybe_store_sid(uint32_t userId, uint64_t sid) {
+-        char filename[21];
+-        snprintf(filename, sizeof(filename), "%u", userId);
++        char filename[64];
++        snprintf(filename, sizeof(filename), "/data/misc/gatekeeper/%u", userId);
+         if (access(filename, F_OK) == -1) {
+             store_sid(userId, sid);
+         }
+     }
+ 
+     uint64_t read_sid(uint32_t userId) {
+-        char filename[21];
++        char filename[64];
+         uint64_t sid;
+-        snprintf(filename, sizeof(filename), "%u", userId);
++        snprintf(filename, sizeof(filename), "/data/misc/gatekeeper/%u", userId);
+         int fd = open(filename, O_RDONLY);
+         if (fd < 0) return 0;
+         read(fd, &sid, sizeof(sid));
+@@ -137,8 +137,8 @@
+     }
+ 
+     void clear_sid(uint32_t userId) {
+-        char filename[21];
+-        snprintf(filename, sizeof(filename), "%u", userId);
++        char filename[64];
++        snprintf(filename, sizeof(filename), "/data/misc/gatekeeper/%u", userId);
+         if (remove(filename) < 0) {
+             ALOGE("%s: could not remove file [%s], attempting 0 write", __func__, strerror(errno));
+             store_sid(userId, 0);
+@@ -401,16 +401,17 @@
+ };
+ }  // namespace android
+ 
+-int main(int argc, char* argv[]) {
+-    ALOGI("Starting gatekeeperd...");
+-    if (argc < 2) {
+-        ALOGE("A directory must be specified!");
++// Same UID and state directory as standalone gatekeeperd. Never change the
++// process CWD: software HALs now share this address space. The GSI property
++// above is the unchanged kGsiBootedProp from platform/system/gsid 12.1.0_r23.
++int pocket_gatekeeper_frontend_main(void (*ready)()) {
++    ALOGI("Starting shared gatekeeper frontend...");
++    int directory = open("/data/misc/gatekeeper", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
++    if (directory < 0) {
++        ALOGE("gatekeeper state directory: %s", strerror(errno));
+         return 1;
+     }
+-    if (chdir(argv[1]) == -1) {
+-        ALOGE("chdir: %s: %s", argv[1], strerror(errno));
+-        return 1;
+-    }
++    close(directory);
+ 
+     android::sp<android::IServiceManager> sm = android::defaultServiceManager();
+     android::sp<android::GateKeeperProxy> proxy = new android::GateKeeperProxy();
+@@ -421,10 +422,9 @@
+         return -1;
+     }
+ 
+-    /*
+-     * We're the only thread in existence, so we're just going to process
+-     * Binder transaction as a single-threaded program.
+-     */
++    ready();
++    // Retain the frontend's dedicated classic Binder dispatch loop; HALs use
++    // their existing separate HIDL pool.
+     android::IPCThreadState::self()->joinThreadPool();
+     return 0;
+ }

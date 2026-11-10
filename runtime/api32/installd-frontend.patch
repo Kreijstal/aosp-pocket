@@ -1,0 +1,84 @@
+--- a/installd.cpp
++++ b/installd.cpp
+@@ -22,6 +22,8 @@
+ #include <sys/fsuid.h>
+ #include <sys/prctl.h>
+ #include <sys/stat.h>
++#include <unistd.h>
++#include <stdio.h>
+ 
+ #include <android-base/logging.h>
+ #include <cutils/fs.h>
+@@ -192,6 +194,7 @@
+     return 0;
+ }
+ 
++#ifndef POCKET_INSTALLD_COMPONENT
+ static int installd_main(const int argc ATTRIBUTE_UNUSED, char *argv[]) {
+     int ret;
+     int selinux_enabled = (is_selinux_enabled() > 0);
+@@ -232,9 +235,36 @@
+     return 0;
+ }
+ 
++#else
++static bool component_prepared = false;
++int prepare_component() {
++    if (component_prepared || getuid() != 0 || getgid() != 0) return 64;
++    if (!initialize_globals() || initialize_directories() < 0) return 1;
++    component_prepared = true;
++    return 0;
++}
++int serve_component() {
++    if (!component_prepared) return 64;
++    int status = InstalldNativeService::start();
++    if (status != android::OK) return status;
++    printf("POCKET_INSTALLD_FRONTEND_READY pid=%d uid=%u gid=%u components=core\n",
++           getpid(), getuid(), getgid());
++    IPCThreadState::self()->joinThreadPool();
++    return 3;
++}
++#endif
+ }  // namespace installd
+ }  // namespace android
+ 
++#ifndef POCKET_INSTALLD_COMPONENT
+ int main(const int argc, char *argv[]) {
+     return android::installd::installd_main(argc, argv);
+ }
++#else
++extern "C" int pocketPrepareInstalldInCore32() {
++    return android::installd::prepare_component();
++}
++extern "C" int pocketStartInstalldInCore32() {
++    return android::installd::serve_component();
++}
++#endif
+--- a/InstalldNativeService.cpp
++++ b/InstalldNativeService.cpp
+@@ -267,16 +267,25 @@
+ }  // namespace
+ 
+ status_t InstalldNativeService::start() {
++#ifndef POCKET_INSTALLD_COMPONENT
+     IPCThreadState::self()->disableBackgroundScheduling(true);
++#else
++    // The core chooses its system-service Binder policy before starting threads.
++    // Complete installd's own globals before publishing the service.
++    sAppDataIsolationEnabled = android::base::GetBoolProperty(
++            kAppDataIsolationEnabledProperty, true);
++#endif
+     status_t ret = BinderService<InstalldNativeService>::publish();
+     if (ret != android::OK) {
+         return ret;
+     }
++#ifndef POCKET_INSTALLD_COMPONENT
+     sp<ProcessState> ps(ProcessState::self());
+     ps->startThreadPool();
+     ps->giveThreadPoolName();
+     sAppDataIsolationEnabled = android::base::GetBoolProperty(
+             kAppDataIsolationEnabledProperty, true);
++#endif
+     return android::OK;
+ }
+ 

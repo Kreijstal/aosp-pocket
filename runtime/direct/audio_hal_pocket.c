@@ -67,7 +67,11 @@ static int read_all(int fd,void* data,size_t size) {
 static int host_open(uint32_t op,int channels) {
     int fd=socket(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0);if(fd<0)return -errno;
     struct sockaddr_un address={.sun_family=AF_UNIX};
+#if POCKET_GUEST_API == 32
+    strncpy(address.sun_path,"/dev/socket/pocket_audio",sizeof(address.sun_path)-1);
+#else
     strncpy(address.sun_path,"/dev/socket/pocket_host",sizeof(address.sun_path)-1);
+#endif
     int buffer=PERIOD_FRAMES*channels*2*2;setsockopt(fd,SOL_SOCKET,op==HOST_AUDIO_OUT?SO_SNDBUF:SO_RCVBUF,&buffer,sizeof(buffer));
     struct timeval timeout={5,0};setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
     char payload[64];int length=snprintf(payload,sizeof(payload),"{\"sample_rate\":%d,\"channels\":%d}",RATE,channels);

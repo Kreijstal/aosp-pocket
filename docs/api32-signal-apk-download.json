@@ -1,0 +1,86 @@
+{
+  "source": "Google Play via Aurora Store 4.8.4 on Linux Waydroid",
+  "downloadProfile": {
+    "name": "Samsung S20+",
+    "sdk": 33,
+    "abi": "arm64-v8a"
+  },
+  "version": "8.33.2",
+  "versionCode": 177201,
+  "package": "org.thoughtcrime.securesms",
+  "minSdk": 32,
+  "targetSdk": 36,
+  "signatureVerifiedForGuestSdk": 32,
+  "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+  "files": [
+    {
+      "name": "base.apk",
+      "bytes": 85982422,
+      "sha256": "d5acfe87956572030fc762f48e65175d34246ed1a3b941d1cf63ab71d7ba1540"
+    },
+    {
+      "name": "config.arm64_v8a.apk",
+      "bytes": 30184532,
+      "sha256": "e1c3e2ac2fd0d28d963db9b73936014200a21d681e376e71701935496e28a320"
+    },
+    {
+      "name": "config.xxhdpi.apk",
+      "bytes": 187458,
+      "sha256": "c1fb420e1818da0ad7f55e0644bb31fd6eed2c9402edd2f8e9c25be97ee36ef9"
+    }
+  ],
+  "archive": "Signal-8.33.2-play-arm64-api32.apks",
+  "archiveBytes": 116354752,
+  "archiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+  "apkModified": false,
+  "guestInstallValidated": true,
+  "phoneAccessUsedForDownload": false,
+  "installation": "Install all three APKs in one PackageInstaller session; base alone is incomplete.",
+  "checks": [
+    "apksigner verify --print-certs --min-sdk-version 32 --max-sdk-version 32 <each-apk>: PASS",
+    "aapt dump badging <each-apk>: package/version match and minSdk 32: PASS"
+  ],
+  "schema": 1,
+  "auroraDeviceProfileRestored": "Waydroid WayDroid x86_64 Device",
+  "existingWaydroidSignalUnchanged": true,
+  "guestInstallEvidence": "docs/api32-manager-signal-validation.json",
+  "latestCurrentImageValidation": {
+    "imageVersion": "0.78.44",
+    "runId": "f3d6b07367354615a026d803814ff121",
+    "validation": "PASS",
+    "evidence": "docs/api32-manager-signal-validation.json#currentEmbeddedManager07844Trial",
+    "scope": "Unmodified Aurora Play ARM64 Signal8.33.2 minSDK32, retained UID/certificate, actual registration focus/Home/reopen, mounted provider and validated network/DNS/HTTPS/fwmark recovery. Finite owner commands use authenticated existing system_server. Full cleanup and unchanged host policy/permissions pass. Sampled peak33 keeps resource gate open; no account operations/physical phone/release claim."
+  },
+  "sharedInstalld48SignalTrial": {
+    "status": "PASS_INSTALLD_CORE48_SIGNAL_HOME_REOPEN_NETWORK",
+    "runId": "530366892b7b4edda5ae19d0813460ea",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "28eaa87904a47dce86da40660a13b322e129c89e16151af0b0a5cf81ce8b71f2",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json",
+    "independentCheckSha256": "8afa71e75fedf9187ec76312477025688e5c20149662a2f7f373fa930708424f",
+    "validationCommand": "python3 out/api32/verify_installd_core48_signal_result.py --run-id 530366892b7b4edda5ae19d0813460ea",
+    "validationResult": "PASS",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "guestMinSdk": 32,
+    "retainedAppUid": 10107,
+    "actualRegistrationFocusHomeReopenVerified": true,
+    "publicDnsAndNxDomainVerified": true,
+    "networkBoundHttpsStatus": 200,
+    "fwmarkErrorRecoveryVerified": true,
+    "sharedInstalldCorePid": 22641,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 29,
+    "observerSamples": 132,
+    "sampledPeakWithinDefault32": true,
+    "accountRegistrationMessagesCallsVerified": false,
+    "ce48RepeatVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-signal-terminal-state.json"
+  }
+}

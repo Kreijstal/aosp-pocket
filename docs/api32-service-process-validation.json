@@ -1,0 +1,342 @@
+{
+  "schema": 1,
+  "status": "SHARED_HARDWARE_AND_CRYPTO_CHECKS_PASS_DEFAULT_LIMIT_RUN_COMPLETES_STARTUP_ANRS_REMAIN",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Eight UID-0 native services share a core, and software Keymaster/Gatekeeper HALs share one UID-1000 process. Dedicated non-debuggable VM73 test host, existing guest data. Reliable startup, process headroom, production Manager and fresh downloaded images remain unverified.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "normalServiceDeclarationsBefore": 23,
+  "previousNativeCoreServiceDeclarations": 17,
+  "normalServiceDeclarationsWithLayout2": 15,
+  "rootCoreComponents": 8,
+  "cryptoComponents": 2,
+  "coreServicesLayout": 2,
+  "credentialChanges": [
+    {
+      "component": "mDNS control",
+      "primaryGidBefore": 1000,
+      "primaryGidAfter": 0,
+      "introducedByPreviousLayout": true,
+      "socketOwnerGroupMode": "0:1000 0660"
+    },
+    {
+      "component": "software Keymaster",
+      "uidBefore": 1000,
+      "uidAfter": 1000,
+      "primaryGidBefore": 1000,
+      "primaryGidAfter": 1000,
+      "supplementalGroupsBefore": [
+        1000,
+        1026
+      ],
+      "supplementalGroupsAfter": [
+        1000
+      ],
+      "reason": "Use the common UID/GID-1000 software HAL identity; no DRM device access is used."
+    }
+  ],
+  "otherServiceCredentialsUnchanged": true,
+  "keymasterBackend": "Unmodified reference libkeymaster41.so factory, explicitly SOFTWARE.",
+  "gatekeeperBackend": "Unmodified pinned AOSP SoftGateKeeperDevice.cpp/SoftGateKeeper.h, stock libgatekeeper.so, matching pinned ARM64 NEON scrypt implementation.",
+  "scryptSource": {
+    "cache": "scrypt",
+    "url": "https://android.googlesource.com/platform/external/scrypt",
+    "tag": "android-platform-12.1.0_r23",
+    "commit": "4d7d2122ac94c19cd9f49066f36eceddf1680949",
+    "paths": [
+      "*"
+    ]
+  },
+  "scryptNoticeInImage": "system/etc/pocket-notices/scrypt.NOTICE",
+  "scryptKnownAnswerVectors": 3,
+  "hardwareBackedSecurity": false,
+  "gatekeeperTokenMacSecure": false,
+  "requiredComponentMarkersPresent": [
+    "API32_SCRYPT_KAT_PASS vectors=3 backend=pinned_aosp_arm64",
+    "API32_GATEKEEPER_PASS",
+    "API32_GATEKEEPER_ROLE_DENIED_PASS",
+    "API32_KEYSTORE_CRYPTO_PASS",
+    "API32_KEYSTORE_ROLE_DENIED_PASS",
+    "API32_HARDWARE_PASS",
+    "API32_BINDER_ENDPOINTS_COEXIST_PASS",
+    "API32_SUSPEND_CONTROL_PASS",
+    "API32_FRAMEWORK_HIDL_ROLE_DENIED_PASS",
+    "API32_NETD_POLICY_PASS",
+    "API32_MEMORY_POLICY_PASS",
+    "API32_DNS_RESOLVE_PASS",
+    "API32_APEX_DATA_PASS",
+    "API32_STORAGE_ROLE_DENIED_PASS",
+    "API32_MDNS_PASS",
+    "API32_NATIVE_RUNTIME_PASS"
+  ],
+  "runs": [
+    {
+      "mode": "components",
+      "runId": "62eb6efe565f467c82a4f84b2ce6fb5b",
+      "apkSha256": "35bd3facd72288afadf6d24d5d4bbb54a1ac032416ea52b429ecc260a75cdc2b",
+      "reportPath": "out/api32/core8-components-report.json",
+      "reportSha256": "52d86dda598efcc524543df01fe7285edf82db9cab1c6259383a2c76978c86ad",
+      "candidatePath": "out/api32/core8-components-candidate.json",
+      "candidateSha256": "dbfac8d9708b8851e3a01698d826efa8a88bc90e325d205e4b39815526483bae",
+      "testDriverSha256": "07fc6578f666b4741132f60576829448cad511d4fbd5024db60ecabc7f526258",
+      "imageVerifiedFiles": 2670,
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "strictPassed": false,
+      "runtimeBootVerified": false,
+      "nativeCoreStarts": [
+        {
+          "pid": 10703,
+          "uid": 0,
+          "components": 8,
+          "testEcho": 1
+        }
+      ],
+      "nativeHardwareRegistryPids": [
+        10703
+      ],
+      "nativeCryptoStarts": [
+        {
+          "pid": 11188,
+          "uid": 1000,
+          "gid": 1000,
+          "components": 2
+        }
+      ],
+      "nativeCryptoRegistrationPids": {
+        "android.hardware.keymaster@4.1::IKeymasterDevice": [
+          11188
+        ],
+        "android.hardware.gatekeeper@1.0::IGatekeeper": [
+          11188
+        ]
+      },
+      "allAnrs": [
+        "com.android.systemui"
+      ],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "uiProcesses": {
+        "com.android.systemui": [
+          11763,
+          12400
+        ],
+        "com.android.launcher3": [
+          12088
+        ]
+      },
+      "cleanupMarkers": [
+        "API32_INIT_STOPPED reaped=24 remaining=0 failed=0"
+      ],
+      "uiMarkers": [
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=12400 stable_seconds=40"
+      ],
+      "appMarkers": [
+        "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=975015214",
+        "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+        "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+        "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+        "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified"
+      ],
+      "input": {
+        "touchEventsAccepted": 8,
+        "keyEventsAccepted": 12,
+        "inputEventsRejected": 0
+      },
+      "normalValidationCompleted": false,
+      "nativeLogWithinCaptureLimit": true,
+      "hostSelinuxBefore": "Enforcing",
+      "hostSelinuxAfter": "Enforcing",
+      "cleanupError": null
+    },
+    {
+      "mode": "normal-default-limit",
+      "runId": "13fa32a118a24fe49d31c1d35f9f418a",
+      "apkSha256": "291bfd24525e7bc1779b3589004d95754a1f8ca308133cad7fabde3ac7aa5ef2",
+      "reportPath": "out/api32/core8-runtime-default-report.json",
+      "reportSha256": "9dbcf52a27bed61bd99dc7d8a5d8bb22e09687f7227a579c008df82da9f43d86",
+      "candidatePath": "out/api32/core8-runtime-candidate.json",
+      "candidateSha256": "4df90ba9e576e064f6718cff9f1ea52d7168a8ca1fcc24842f26d7319dcd191e",
+      "testDriverSha256": "07fc6578f666b4741132f60576829448cad511d4fbd5024db60ecabc7f526258",
+      "imageVerifiedFiles": 2670,
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "strictPassed": false,
+      "runtimeBootVerified": false,
+      "nativeCoreStarts": [
+        {
+          "pid": 14838,
+          "uid": 0,
+          "components": 8,
+          "testEcho": 0
+        }
+      ],
+      "nativeHardwareRegistryPids": [
+        14838
+      ],
+      "nativeCryptoStarts": [
+        {
+          "pid": 14894,
+          "uid": 1000,
+          "gid": 1000,
+          "components": 2
+        }
+      ],
+      "nativeCryptoRegistrationPids": {
+        "android.hardware.keymaster@4.1::IKeymasterDevice": [
+          14894
+        ],
+        "android.hardware.gatekeeper@1.0::IGatekeeper": [
+          14894
+        ]
+      },
+      "allAnrs": [
+        "com.android.systemui",
+        "com.android.settings (com.android.settings/.FallbackHome)"
+      ],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "uiProcesses": {
+        "com.android.systemui": [
+          15523,
+          16297,
+          16613
+        ],
+        "com.android.launcher3": [
+          15886
+        ]
+      },
+      "cleanupMarkers": [
+        "API32_INIT_STOPPED reaped=16 remaining=0 failed=0"
+      ],
+      "uiMarkers": [
+        "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=16613 stable_seconds=40"
+      ],
+      "appMarkers": [
+        "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=1343512389",
+        "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+        "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+        "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+        "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified"
+      ],
+      "input": {
+        "touchEventsAccepted": 8,
+        "keyEventsAccepted": 12,
+        "inputEventsRejected": 0
+      },
+      "normalValidationCompleted": true,
+      "nativeLogWithinCaptureLimit": true,
+      "hostSelinuxBefore": "Enforcing",
+      "hostSelinuxAfter": "Enforcing",
+      "cleanupError": null
+    }
+  ],
+  "componentHostLimit": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "normalDefaultHostLimit": {
+    "instance": 73,
+    "before": "null",
+    "phantomSettings": [
+      "max_phantom_processes=32"
+    ],
+    "hostSettingMutated": false,
+    "testExitCode": 1,
+    "after": "null",
+    "unchanged": true
+  },
+  "normalHostTrimHistory": {
+    "observedUnix": 1793664200.3343952,
+    "hostVmInstance": 73,
+    "hostParentPid": 14398,
+    "hostUid": 10154,
+    "phantomKillLines": []
+  },
+  "processSamples": {
+    "uiGuestProcessCount": 32,
+    "uiHostTrackedPhantomRecords": 21,
+    "earlierBootGuestProcessCount": 36,
+    "continuousPeakVerified": false,
+    "headroomVerified": false,
+    "notes": "A transient boot snapshot contained 36 app-owned guest processes. A later sample contained 32, with 21 tracked phantom records. The completed default-limit run had no observed host trimming; these samples do not prove a hard process ceiling or reliable headroom."
+  },
+  "layoutReuseGuard": {
+    "oldLayoutRejected": true,
+    "exitCode": 1,
+    "apkAndMetadataUnchanged": true,
+    "apkSha256": "6b88940e2c6bebbb7163e84991ab5dfef29dd59f2c74c09d4b021651e0a67629"
+  },
+  "commands": [
+    {
+      "command": "python3 tools/build_api32_framework.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "exit 0",
+      "log": "out/api32/core8-hardware-build.log"
+    },
+    {
+      "command": "python3 tools/build_api32_core.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated",
+      "result": "exit 0",
+      "log": "out/api32/core8-native-build.log"
+    },
+    {
+      "command": "python3 tools/build_api32_crypto.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated",
+      "result": "exit 0",
+      "log": "out/api32/crypto-native-build.log"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --core-services --reuse-native --delta-from out/api32/core8-prebuild-baseline/image-manifest.json",
+      "result": "exit 0",
+      "log": "out/api32/core8-components-apk-build.log"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --core-services --runtime-boot --reuse-native --delta-from out/api32/core8-components-baseline/image-manifest.json",
+      "result": "exit 0",
+      "log": "out/api32/core8-runtime-apk-build.log"
+    },
+    {
+      "command": "python3 out/api32/start_core8_components_job.py",
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "job": {
+        "pid": 7536,
+        "script": "/home/pi/pocket-api32-test/api32-core8-components-2bb4abdb5d414870a4d6136598fbda67.py",
+        "log": "/home/pi/pocket-api32-test/api32-core8-components-2bb4abdb5d414870a4d6136598fbda67.log",
+        "exit": "/home/pi/pocket-api32-test/api32-core8-components-2bb4abdb5d414870a4d6136598fbda67.exit.json",
+        "token": "2bb4abdb5d414870a4d6136598fbda67",
+        "instance": 73
+      }
+    },
+    {
+      "command": "python3 out/api32/start_core8_runtime_default_job.py",
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "job": {
+        "pid": 10905,
+        "script": "/home/pi/pocket-api32-test/api32-core8-runtime-default-5577b4ab3a7548c6a2fbfdf17b6f3bd5.py",
+        "log": "/home/pi/pocket-api32-test/api32-core8-runtime-default-5577b4ab3a7548c6a2fbfdf17b6f3bd5.log",
+        "exit": "/home/pi/pocket-api32-test/api32-core8-runtime-default-5577b4ab3a7548c6a2fbfdf17b6f3bd5.exit.json",
+        "token": "5577b4ab3a7548c6a2fbfdf17b6f3bd5",
+        "instance": 73
+      }
+    }
+  ],
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "defaultHostProcessHeadroomVerified": false,
+  "normalDefaultLimitRunCompleted": true,
+  "managerApi32Supported": false,
+  "remaining": [
+    "Resolve SystemUI and Settings startup ANRs without relaxing the gates.",
+    "Establish reliable process headroom and a stable cold startup.",
+    "Finish storage/CE credential and network integration and run a real unmodified API32 application.",
+    "Package the on-demand image and integrate/factory-test production Manager while preserving API28/29 profiles."
+  ]
+}

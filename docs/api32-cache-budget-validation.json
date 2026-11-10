@@ -1,0 +1,3400 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "status": "CURRENT48_FULL_WORKLOAD_AND_NORMAL_CRASH_SAMPLED_DEFAULT32_PASS_OTHER_GATES_OPEN",
+  "runtimeVerified": true,
+  "productionReleaseReady": false,
+  "design": {
+    "cachedProcesses": 2,
+    "previousCachedProcesses": 4,
+    "scope": "Stock immutable ActivityManager resource default; active apps and services remain available. No host limit/monitoring changes.",
+    "assertion": "Probe reads the actual ActivityManager settings dump and verifies constructor/current limits and absence of a process-limit override."
+  },
+  "currentTrial": {
+    "status": "FAIL_CURRENT47_CE_SAMPLED_PROCESS_BUDGET_PEAK33",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "runId": "b7625ee6ca134398a9fd7f8451931b01",
+    "allGuestFunctionalAndCleanupChecksPassed": true,
+    "originalHostDriverFailurePreserved": true,
+    "distinctGuestStarts": 6,
+    "totalSamples": 536,
+    "sampledPeakChildren": 33,
+    "defaultHostPhantomMax": 32,
+    "allNativeGuestHelperAndTracingProcessesCounted": true,
+    "firstFiveSampledPeakChildren": 33,
+    "outerRestartSampledPeakChildren": 30,
+    "processBudgetPassed": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "independentCheck": "out/api32/readiness47-ce3-outer-resume-result/independent-check.json",
+    "peakCensus": "out/api32/readiness47-ce3-live-peak-census.json",
+    "scope": "The current encrypted workload exceeds32 despite full functional/strict-cleanup success. The separate media/Signal baseline peaks30/32 do not close this gate. Preserve all process rows and all prior failures; no subtraction or policy relaxation."
+  },
+  "commands": {
+    "patch": "python3 tools/build_api32_lazy_media_patch.py --image out/api32/abb-image/pocket-api32-arm64-0.78.20.zip --sha256 aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8 --core out/api32/core/pocket-core-api32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --defer-extractor --supervised-bootstrap --memory-profile --out out/api32/cache-budget-patch-v3",
+    "manager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/media-path-current-image-app/catalog-api32.json --media-session-probe32 out/api32/lazy-media-atomic-app --media-session-patch32 out/api32/cache-budget-patch-v3 --out out/api32/cache-budget-v2-manager-probe",
+    "syntax": "python3 -m py_compile tools/build_api32_lazy_media_patch.py tools/build_api29_manager.py tools/test_api32_media_session_on_pi.py"
+  },
+  "buildResult": "PASS",
+  "remaining": [
+    "Bound startup helper/broadcast peaks and repeat the strict workload within the unchanged host default process budget.",
+    "Final downloadable image, production mounted-storage integration and required CE/legacy regressions."
+  ],
+  "processBudget": {
+    "census": {
+      "path": "out/api32/cache-budget-process-budget.json",
+      "sha256": "088cecb646dbf94807f520a85a82680c8b5c98c6174e33f7730771e3088f721b"
+    },
+    "sampleCount": 57,
+    "observedPeakChildren": 34,
+    "observedPeakFromFirstActivationProbe": 32,
+    "errors": [],
+    "unchangedHostDefault": 32,
+    "withinDefaultBudgetVerified": false,
+    "sampledMaximaAreNotUpperBounds": true,
+    "peakIncludes": [
+      "temporary boot shell",
+      "external printf for readiness",
+      "Traceur subprocesses"
+    ],
+    "limits": "Cache reduction improves the sampled active workload but does not bound startup helper/broadcast process peaks."
+  },
+  "builtinReadinessTrial": {
+    "status": "STRICT_FRAMEWORK_MEDIA_STORAGE_MEMORY_AND_BUILTIN_PASS_BOOT_PEAK33",
+    "reason": "The prior boot peak contains external printf. Android mksh builtin print preserves option-like nonce arguments without spawning that helper. Both preboot failure fixtures also exercise the builtin.",
+    "candidate": {
+      "path": "out/api32/builtin-ready-candidate.json",
+      "sha256": "ca79623386f1b8e466de23373b2d2450d90c0443a3b15fae622d4d8797d86242"
+    },
+    "job": "out/api32/builtin-ready-job.json",
+    "sourceSnapshot": "out/api32/builtin-ready-source-snapshot",
+    "sourceCount": 196,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/builtin-ready-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "afc4d2e957a6e4acd9a1805c2233815256d4806dfea4cb50dfbae78bf7691523",
+      "bytes": 3579488,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "a747792247cc46758f70805fcc7ad854726c0e1d9b282ef097d4ba1c3b8f0ff3",
+        "product/overlay/PocketMemory/PocketMemory.apk": "0f1e27bdfb2b4cfe7f76eaa5fc2e8c17e5e0caef9685d65bfeb62fdcae9f75e3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "fadeb244e6e75570c1fff73cf3b8c90483d8a5e59bc5d1e4872acfc7cdcafb75",
+        "system/etc/pocket-profile.prop": "d083bb8c141d628b9cb76cfead09b6575cc052f746606c12a4ffa0d61280b0c5",
+        "system/etc/pocket-runtime-boot.sh": "976b1613136d3c87d26767741f3318498db1ce530f809dd515fdc0c1f0b9e4e9",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "3389632b8474113b535b977b6869ba078c92f7f730a1bf670c38403bbb9dfbbf",
+        "system/lib64/libpocket_media_api32.so": "9adc2c1144a17b9b666678fb32156b32969522abf29057e8241319222dd908d8",
+        "system/etc/init/pocket-runtime.rc": "1c1bc49ed9421747d23b409b8c27ef50d445105a0a32f8a66ba0c1b9de44408a"
+      },
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6"
+    },
+    "syntaxCommand": "sh -n runtime/api32/runtime-boot.sh",
+    "syntaxResult": "PASS",
+    "buildCommands": [
+      "python3 tools/build_api32_lazy_media_patch.py --image out/api32/abb-image/pocket-api32-arm64-0.78.20.zip --sha256 aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8 --core out/api32/core/pocket-core-api32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --defer-extractor --supervised-bootstrap --memory-profile --out out/api32/builtin-ready-patch",
+      "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/media-path-current-image-app/catalog-api32.json --media-session-probe32 out/api32/lazy-media-atomic-app --media-session-patch32 out/api32/builtin-ready-patch --out out/api32/builtin-ready-manager-probe"
+    ],
+    "runtimeVerified": true,
+    "report": {
+      "path": "out/api32/builtin-ready-report.json",
+      "sha256": "f9161c973a8b40515edc46d44ff7801495cf83c258b89baa6b16752403805853"
+    },
+    "cleanup": {
+      "path": "out/api32/builtin-ready-cleanup.json",
+      "sha256": "6bb03439aeb540f6c90bb3cc9b8a91a2f2b8602a7d59146f7f6dedd3c14218a4"
+    },
+    "sourcesMatchedAfterTrial": 196,
+    "result": {
+      "runId": "d732bfc5c91e46c3bc588b6168e5a469",
+      "apkSha256": "afc4d2e957a6e4acd9a1805c2233815256d4806dfea4cb50dfbae78bf7691523",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "strictPassed": true,
+      "functionalPassed": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "systemUiStarts": [
+        "16693"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "selinuxBefore": "Enforcing",
+      "selinuxAfter": "Enforcing",
+      "phantomLimitBefore": "null",
+      "phantomLimitAfter": "null"
+    },
+    "processBudget": {
+      "census": {
+        "path": "out/api32/builtin-ready-process-budget.json",
+        "sha256": "e11acc5e46fe7596d7c9d4d2ca6aca33749212e35e3fc046b0d7c7dc974d1347"
+      },
+      "sampleCount": 56,
+      "observedPeakChildren": 33,
+      "observedPeakFromFirstActivationProbe": 32,
+      "errors": [],
+      "unchangedHostDefault": 32,
+      "withinDefaultBudgetVerified": false,
+      "sampledMaximaAreNotUpperBounds": true,
+      "peakContains": [
+        "temporary startup shell and toybox child",
+        "standalone input bridge ART process and its idmap2 child"
+      ]
+    },
+    "standaloneOverlayValidation": {
+      "command": "python3 tools/build_api32_memory_overlay.py",
+      "result": "PASS"
+    }
+  },
+  "latestCombinedIntegrationEvidence": "docs/api32-system-server-bridge-validation.json#warmExtractorTrial",
+  "latestCombinedIntegrationScope": "Embedded input/network and extractor boot publication/first-demand plugin load, plus strict media/file-data/input/network checks; process peak33 and production integration remain open.",
+  "completeSourceImageRuntime": {
+    "evidence": "docs/api32-source-image-validation.json",
+    "imageVersion": "0.78.25",
+    "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "signalRunId": "3484900f8f9442739fe7bc4671eda639",
+    "combinedRunId": "045487726dfd49548b02a2d8cf687f51",
+    "signalReport": "out/api32/warm-player-app-manager-app-report.json",
+    "combinedReport": "out/api32/warm-player-media-media-session-report.json",
+    "runtimeCodeReplaced": false,
+    "strictPassed": true,
+    "microgAndEmbeddedBridgeTogether": true,
+    "earlyPlayerAndExtractorVerified": true,
+    "sampledPeakChildren": 32,
+    "hostSettingsUnchanged": true,
+    "scope": "Complete source-packaged runtime; real regular-file AppFuse/WAV/input/validated network. No production external mount, fresh-profile reliability or hard process-bound claim."
+  },
+  "sourceHostBudgetFollowup": {
+    "runId": "f9aa3a730c2448d0ab35b6c9e799f64e",
+    "report": "out/api32/source-host-app-manager-app-report.json",
+    "census": "out/api32/source-host-app-process-budget.json",
+    "functionalPassed": true,
+    "sampledPeakChildren": 34,
+    "hostLimitUnchanged": true,
+    "safeProcessBoundVerified": false,
+    "scope": "Later source-host run reaches 34; earlier peaks of32 do not close the process-budget gate."
+  },
+  "sharedCoreMetricsRuntime": {
+    "evidence": "docs/api32-core-metrics-validation.json",
+    "imageVersion": "0.78.26",
+    "imageSha256": "1036140a7d14a31e43e5c837bed5bff2643e909a96e5c0a06eef51559909450f",
+    "appRuntime": {
+      "report": "out/api32/core-metrics-app-manager-app-report.json",
+      "reportSha256": "7534797c2b5b529063c57e4f05f85a12ca110c81dae66683f069711fad6b02da",
+      "runId": "38411e935fbd477cbc4458eb0a29825d",
+      "validation": "PASS",
+      "sharedMetricsAndCorePid": 3566,
+      "supervisedLifetimesReaped": 16,
+      "reapAccounting": true,
+      "singleSystemUi": true,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 234,
+      "observerErrors": [],
+      "hardProcessBoundProven": false,
+      "typedMetricsPolicyVerified": false
+    },
+    "combinedRuntime": {
+      "report": "out/api32/core-metrics-media-media-session-report.json",
+      "reportSha256": "7eb87dd2df4e6e7fda23c94cb3cddc56c00f7e09f22f0324b7ed64f78d2ae0d9",
+      "runId": "8eb2d6401c33443eabafac0fc7123d50",
+      "validation": "PASS",
+      "strictPassed": true,
+      "gates": {
+        "packagedImageVerified": true,
+        "playerBootStartVerified": true,
+        "externalFilesVerified": true,
+        "ordinaryPathsVerified": true,
+        "lazyMediaVerified": true,
+        "extractorFirstDemandVerified": true,
+        "extractorBootStartVerified": true,
+        "supervisedBootstrapVerified": true,
+        "memoryProfileVerified": true,
+        "systemServerBridgeVerified": true,
+        "coreMediaMetricsVerified": true,
+        "reapAccounting": true
+      },
+      "supervisedLifetimesReaped": 16,
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "8225"
+      ],
+      "pollErrors": 0,
+      "sampledPeakChildren": 32,
+      "censusSamples": 52,
+      "censusErrors": [],
+      "hardProcessBoundProven": false,
+      "codeHashesPreserved": 13,
+      "metricsProbe": [
+        {
+          "mode": "submit",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_SUBMITTED uid=10021 claimed_uid=1000 oneway=1\n"
+        },
+        {
+          "mode": "verify",
+          "exit": 0,
+          "log": "API32_CORE_METRICS_VERIFIED stock_record=1 caller_uid=10021 forged_identity_replaced=1 forbidden_key_absent=1\n"
+        }
+      ]
+    },
+    "defaultHostProcessSettingsUnchanged": true,
+    "hardProcessBoundProven": false,
+    "scope": "Fully source-built host JNI; complete packaged runtime with stock media.metrics in existing native core; no runtime replacement or guest data reset; repeated fresh starts and complete mounted storage remain open"
+  },
+  "mountedBackend07837PeakAttribution": {
+    "status": "OBSERVED_PEAK34_NORMAL_PERSISTENCE_FUNCTIONAL_PASS",
+    "source": "out/api32/volume-live-proc-retry-persistence-result/process-budget.json",
+    "sourceSha256": "c9096c58105b80702e0af0a91ba019eb9b6d9f662ca6679805f66576c055966b",
+    "runId": "dac399bfa7da40b5bd26319dbff99bad",
+    "samples": 170,
+    "peakChildren": 34,
+    "peakTime": 1794201318.4298139,
+    "hostUid": 10157,
+    "peakRows": [
+      [
+        "22127",
+        "26584",
+        "10157",
+        "dev.kreijstal.aosppocket.api32managerimage"
+      ],
+      [
+        "22464",
+        "22127",
+        "10157",
+        "pocket-init-api32"
+      ],
+      [
+        "22497",
+        "22464",
+        "10157",
+        "pocket-core-api32"
+      ],
+      [
+        "22529",
+        "22464",
+        "10157",
+        "installd"
+      ],
+      [
+        "22548",
+        "22464",
+        "10157",
+        "audioserver"
+      ],
+      [
+        "22550",
+        "22464",
+        "10157",
+        "pocket-crypto-api32"
+      ],
+      [
+        "22554",
+        "22464",
+        "10157",
+        "keystore2"
+      ],
+      [
+        "22574",
+        "22464",
+        "10157",
+        "gatekeeperd"
+      ],
+      [
+        "22576",
+        "22464",
+        "10157",
+        "tombstoned"
+      ],
+      [
+        "22585",
+        "22464",
+        "10157",
+        "traced"
+      ],
+      [
+        "22596",
+        "22464",
+        "10157",
+        "surfaceflinger"
+      ],
+      [
+        "22598",
+        "22464",
+        "10157",
+        "media.extractor"
+      ],
+      [
+        "22622",
+        "22464",
+        "10157",
+        "mediaserver"
+      ],
+      [
+        "22737",
+        "22464",
+        "10157",
+        "zygote64"
+      ],
+      [
+        "22804",
+        "22737",
+        "10157",
+        "system_server"
+      ],
+      [
+        "23060",
+        "22737",
+        "10157",
+        "com.android.systemui"
+      ],
+      [
+        "23118",
+        "22737",
+        "10157",
+        "webview_zygote"
+      ],
+      [
+        "23167",
+        "22737",
+        "10157",
+        "com.android.networkstack.process"
+      ],
+      [
+        "23190",
+        "22737",
+        "10157",
+        "com.android.se"
+      ],
+      [
+        "23222",
+        "22737",
+        "10157",
+        "com.android.phone"
+      ],
+      [
+        "23243",
+        "22737",
+        "10157",
+        "com.android.settings"
+      ],
+      [
+        "23255",
+        "22737",
+        "10157",
+        "android.ext.services"
+      ],
+      [
+        "23304",
+        "22737",
+        "10157",
+        "com.android.launcher3"
+      ],
+      [
+        "23533",
+        "22737",
+        "10157",
+        "com.android.deskclock"
+      ],
+      [
+        "23653",
+        "22737",
+        "10157",
+        "com.android.inputmethod.latin"
+      ],
+      [
+        "23661",
+        "22127",
+        "10157",
+        "pocket-app-process-api32"
+      ],
+      [
+        "23773",
+        "22737",
+        "10157",
+        "com.android.providers.media.module"
+      ],
+      [
+        "23781",
+        "22464",
+        "10157",
+        "idmap2d"
+      ],
+      [
+        "23819",
+        "22737",
+        "10157",
+        "com.android.emulator.multidisplay"
+      ],
+      [
+        "23855",
+        "22737",
+        "10157",
+        "com.android.traceur"
+      ],
+      [
+        "23881",
+        "22737",
+        "10157",
+        "com.android.permissioncontroller"
+      ],
+      [
+        "23897",
+        "22737",
+        "10157",
+        "com.android.printspooler"
+      ],
+      [
+        "24016",
+        "22737",
+        "10157",
+        "com.android.localtransport"
+      ],
+      [
+        "24042",
+        "22737",
+        "10157",
+        "com.android.keychain"
+      ],
+      [
+        "24075",
+        "22737",
+        "10157",
+        "dev.kreijstal.aosppocket.guestbridge"
+      ]
+    ],
+    "observerErrors": [],
+    "scope": "Actual sample counts34 children beyond the outer Manager. Includes idmap2d, the command-side pocket-app-process-api32, package observer guestbridge, and the listed stock startup apps. No AMS adj/state evidence was captured, so these rows alone do not identify which are cached or prove why the peak occurs. The normal0.78.37 framework and persistence strict gates pass, but no hard/repeated default-budget proof is established."
+  },
+  "rootless43ThreeAvStarts": {
+    "status": "FUNCTIONAL_PASS_DEFAULT_BUDGET_SAMPLE_EXCEEDED",
+    "evidence": "out/api32/rootless-device-av-three-starts-check.json",
+    "verificationCommand": "python3 out/api32/verify_rootless_device_budget_repeats.py",
+    "verificationResult": "FAIL_SAMPLED_BUDGET33",
+    "sampledPeaks": [
+      32,
+      32,
+      33
+    ],
+    "observerSamples": 391,
+    "sourceImageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+    "scope": "One43 upgrade and two cached-image fresh starts in retained normal profile; six full ordinary AV workloads and clean stops pass. Default actual host max32 unchanged; no arbitrary/concurrent-app bound."
+  },
+  "rootless43Signal": {
+    "runId": "3a9c762dd81c4f568aba5d8732d54110",
+    "report": "out/api32/rootless-device-signal-result/manager-app-report.json",
+    "independentCheck": "out/api32/rootless-device-signal-result/independent-check.json",
+    "sampledPeakChildren": 33,
+    "observerSamples": 130,
+    "amsSamples": 10,
+    "maxObservedAmsRecords": 24
+  },
+  "embeddedManager44FourStarts": {
+    "status": "FUNCTIONAL_PASS_DEFAULT_BUDGET_SAMPLE_EXCEEDED",
+    "trials": [
+      {
+        "trial": "embedded-manager-av",
+        "runId": "839ca0255c47479fabb844653b44eaf4",
+        "guestSessionRunId": "9eb61eab160a4c56828e7171b3052db5",
+        "sampledPeakChildren": 32,
+        "samples": 180,
+        "reportSha256": "cb8f1e786f86e6d6eeed6569eb119ea23a65c70358a92200128108322dc37b58",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": true
+      },
+      {
+        "trial": "embedded-manager-av-repeat1",
+        "runId": "e57c03fb653e46df8859f546d85b1b42",
+        "guestSessionRunId": "488a7e6534594952b427a7c2747d8a16",
+        "sampledPeakChildren": 32,
+        "samples": 108,
+        "reportSha256": "cd3401b33283d875afd7172fd1306d15f64ed9c6ce25232c557884ad18105712",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": true
+      },
+      {
+        "trial": "embedded-manager-av-repeat2",
+        "runId": "3b111b15d9e54402be9b23ccaa4b4fb3",
+        "guestSessionRunId": "e340dfc29906475bab1ffb153f6ca85e",
+        "sampledPeakChildren": 31,
+        "samples": 109,
+        "reportSha256": "6c3aa84a72e86f699f223a84a3b8c0d8429880f32571924ae598b54774594541",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": true
+      },
+      {
+        "trial": "embedded-manager-signal",
+        "runId": "f3d6b07367354615a026d803814ff121",
+        "guestSessionRunId": "72f4be9058a0424991606aa38eca316c",
+        "sampledPeakChildren": 33,
+        "samples": 131,
+        "reportSha256": "1d6d201f07aca619d6e329e61d0845d93d1567b01c21d2de9e0ccd5d964bbda1",
+        "embeddedManagerControlVerified": true,
+        "sampledPeakWithinDefault32": false
+      }
+    ],
+    "samples": 528,
+    "peakChildren": 33,
+    "distinctFrameworkStarts": 4,
+    "distinctAvWorkloads": 6,
+    "hostPolicyUnchanged": true,
+    "externalManagerCommandVmObserved": false,
+    "sampledBudgetWithinDefault32": false,
+    "hardProcessBoundVerified": false,
+    "scope": "Three complete ordinary all-camera/audio/Home/reopen starts plus unchanged Play Signal Home/reopen/network start on44. Includes all observed test helpers; no process subtractions or host-limit changes. Finite sampled workload evidence, not a universal concurrency bound or phone/release claim.",
+    "productionReleaseReady": false,
+    "evidence": "docs/api32-embedded-manager-validation.json",
+    "commandVmRemovalVerified": true,
+    "peakCensus": "out/api32/embedded-manager-signal-result/peak-census.json"
+  },
+  "latestMediaTrials": {
+    "decoderSurface": {
+      "runId": "30a03b7e1aa24194b024ee6df332a4a4",
+      "validation": "PASS",
+      "samples": 105,
+      "peak": 33,
+      "sourcePins": 751
+    },
+    "videoOnlyRecorder": {
+      "runId": "966e530c378d460dac80efcb3832621b",
+      "validation": "PASS",
+      "samples": 106,
+      "peak": 32,
+      "sourcePins": 752
+    },
+    "firstMuxedRecorder": {
+      "runId": "06aff3f006c24591941a9cb850d502ee",
+      "validation": "FAIL_FIXTURE_INTENTIONAL_FLUSH",
+      "samples": 107,
+      "peak": 32,
+      "sourcePins": 753,
+      "evidence": "out/api32/camera-recorder-audio-result/failure-audit.json"
+    },
+    "correctedMuxedRecorder": {
+      "runId": "354adf097c8f4aa6acbeaf8248b0f239",
+      "validation": "PASS",
+      "samples": 110,
+      "peak": 35,
+      "sourcePins": 753,
+      "evidence": "out/api32/camera-recorder-audio-drain-result/independent-check.json",
+      "peakCensus": "out/api32/camera-recorder-audio-drain-result/peak-census.json"
+    },
+    "scope": "Identical full44 runtime/production host Java/five JNI, with distinct documented test-only source/spec changes. All observed processes remain counted. Functional pass cannot erase old sampled-budget failures; latest maximum35 remains open."
+  },
+  "full44EightStartBudgetAudit": {
+    "status": "FAIL_FULL44_SAMPLED_PROCESS_BUDGET_PEAK35",
+    "imageVersion": "0.78.44",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "trials": [
+      {
+        "trial": "embedded-manager-av",
+        "runId": "839ca0255c47479fabb844653b44eaf4",
+        "guestSessionRunId": "9eb61eab160a4c56828e7171b3052db5",
+        "strictFunctionalPass": true,
+        "peak": 32,
+        "samples": 180,
+        "reportSha256": "cb8f1e786f86e6d6eeed6569eb119ea23a65c70358a92200128108322dc37b58",
+        "sourcePins": 750
+      },
+      {
+        "trial": "embedded-manager-av-repeat1",
+        "runId": "e57c03fb653e46df8859f546d85b1b42",
+        "guestSessionRunId": "488a7e6534594952b427a7c2747d8a16",
+        "strictFunctionalPass": true,
+        "peak": 32,
+        "samples": 108,
+        "reportSha256": "cd3401b33283d875afd7172fd1306d15f64ed9c6ce25232c557884ad18105712",
+        "sourcePins": 750
+      },
+      {
+        "trial": "embedded-manager-av-repeat2",
+        "runId": "3b111b15d9e54402be9b23ccaa4b4fb3",
+        "guestSessionRunId": "e340dfc29906475bab1ffb153f6ca85e",
+        "strictFunctionalPass": true,
+        "peak": 31,
+        "samples": 109,
+        "reportSha256": "6c3aa84a72e86f699f223a84a3b8c0d8429880f32571924ae598b54774594541",
+        "sourcePins": 750
+      },
+      {
+        "trial": "embedded-manager-signal",
+        "runId": "f3d6b07367354615a026d803814ff121",
+        "guestSessionRunId": "72f4be9058a0424991606aa38eca316c",
+        "strictFunctionalPass": true,
+        "peak": 33,
+        "samples": 131,
+        "reportSha256": "1d6d201f07aca619d6e329e61d0845d93d1567b01c21d2de9e0ccd5d964bbda1",
+        "sourcePins": 750
+      },
+      {
+        "trial": "decoder-surface",
+        "runId": "30a03b7e1aa24194b024ee6df332a4a4",
+        "guestSessionRunId": "4ba8ffc35665411d8e27ae83cd1eb01e",
+        "strictFunctionalPass": true,
+        "peak": 33,
+        "samples": 105,
+        "reportSha256": "a7cd69ff40e765f99f9bb2faa343f9a2e910b3cc3e2eb754f3dbb55be9f20f44",
+        "sourcePins": 751
+      },
+      {
+        "trial": "camera-recorder",
+        "runId": "966e530c378d460dac80efcb3832621b",
+        "guestSessionRunId": "374895b374de464ca94fd15eadda94a4",
+        "strictFunctionalPass": true,
+        "peak": 32,
+        "samples": 106,
+        "reportSha256": "4f60a6b686c33cb8bd0d6635c74abe0f08dc0b3d2c5c56c9f34d32ad3ab9611b",
+        "sourcePins": 752
+      },
+      {
+        "trial": "camera-recorder-audio",
+        "runId": "06aff3f006c24591941a9cb850d502ee",
+        "guestSessionRunId": "7ee978294b3348229a53683bff8e30a1",
+        "strictFunctionalPass": false,
+        "peak": 32,
+        "samples": 107,
+        "reportSha256": "cd2eb3adb58c15a30f1ca7b3ce43058a72a3fc1fabfaa28e680d3918287efdc5",
+        "sourcePins": 753
+      },
+      {
+        "trial": "camera-recorder-audio-drain",
+        "runId": "354adf097c8f4aa6acbeaf8248b0f239",
+        "guestSessionRunId": "781b4810b06e4d18bd1c2a0c2c9aa831",
+        "strictFunctionalPass": true,
+        "peak": 35,
+        "samples": 110,
+        "reportSha256": "86774fa449edbd53340b35ff1656b8ef1f229150b12f6835d846ffeb561a7050",
+        "sourcePins": 753
+      }
+    ],
+    "samples": 956,
+    "peak": 35,
+    "distinctFrameworkStarts": 8,
+    "strictFunctionalPasses": 7,
+    "preservedFailedFixtures": 1,
+    "sameRuntimeProductionHostJavaAndFiveJniVerified": true,
+    "testAndRunnerSourceDeltasDocumented": true,
+    "noExternalManagerCommandVmObserved": true,
+    "hostDefault32Unchanged": true,
+    "allObservedProcessesCounted": true,
+    "sampledBudgetWithinDefault32": false,
+    "hardProcessBoundVerified": false,
+    "scope": "Three identical original AV starts, Signal/network, decoder Surface, video-only recorder, preserved failed muxed fixture and corrected all-camera AAC/AVC recorder. Runtime/production host code identical, fixture source/specs differ as archived; seven strict passes and one explicit fixture failure are not eight functional passes. No subtraction of inspectors/tracing/boot apps or erasure of older33 failures. Not phone/CE migration/legacy/release proof.",
+    "productionReleaseReady": false,
+    "evidence": "out/api32/full44-media-budget-check.json",
+    "command": "python3 out/api32/verify_full44_media_budget.py",
+    "returnCode": 1
+  },
+  "liveActivityPolicy44Trial": {
+    "status": "PASS_LIVE_GUEST_CACHED_POLICY2_OBSERVED",
+    "candidate": "out/api32/activity-policy-candidate.json",
+    "candidateSha256": "92333611ac56c68efb7682360f2fe33fcf4d8842e43e16b58e7027a5de7f6d8c",
+    "sourcePins": 753,
+    "runnerSource": {
+      "sha256": "be01ced3367fe1b108f95fe42e5b36f9d6c8217b2ff2632192e5ed9970d962ad",
+      "frozenPath": "diagnostic-runner.py"
+    },
+    "job": {
+      "pid": 10383,
+      "token": "3d34413cdb6a4ee1a9906a7c61d402fa",
+      "script": "/home/pi/pocket-api32-vm/activity-policy-validation/run-3d34413cdb6a4ee1a9906a7c61d402fa.py",
+      "log": "/home/pi/pocket-api32-vm/activity-policy-validation/run-3d34413cdb6a4ee1a9906a7c61d402fa.log",
+      "exit": "/home/pi/pocket-api32-vm/activity-policy-validation/run-3d34413cdb6a4ee1a9906a7c61d402fa.exit.json"
+    },
+    "scope": "Actual normal Manager boot with offline cached image and read-only system-role ActivityManager policy/OOM snapshots; no app install/foreground/network/media compatibility claim. All test processes count. Does not replace earlier media/Signal evidence or erase budget35 failure.",
+    "productionReleaseReady": false,
+    "runId": "002a8cf4b46c4ab8845cab3412703419",
+    "reportSha256": "91a9c9c3393db9c10829844170d4f156c7a2845f64084f12d2d397dfc956ff63",
+    "sourcePinsVerified": 753,
+    "diagnosticRunnerPinVerified": true,
+    "imageVersion": "0.78.44",
+    "imageSha256": "b198c412188daf11819d61b6681ee463b94c2a1dafd967e9fc1f8a20817ef87c",
+    "managerSha256": "9328b47496a838754183c950dea441cc7441a85252cab9379174f374578e7b8f",
+    "guestPolicy": [
+      {
+        "phase": "booted",
+        "pid": 15288,
+        "uptimeMillis": 25372082,
+        "declaredLimit": 2,
+        "resourceLimit": 2,
+        "processLimitOverride": -1,
+        "constructorLimit": 2,
+        "currentLimit": 2,
+        "currentEmptyLimit": 1
+      },
+      {
+        "phase": "settled",
+        "pid": 16020,
+        "uptimeMillis": 25404067,
+        "declaredLimit": 2,
+        "resourceLimit": 2,
+        "processLimitOverride": -1,
+        "constructorLimit": 2,
+        "currentLimit": 2,
+        "currentEmptyLimit": 1
+      }
+    ],
+    "declaredPolicyEffective": true,
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "14500"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "12",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 32,
+    "observerSamples": 78,
+    "amsSamples": 4,
+    "hostDefault32AndPermissionsUnchanged": true,
+    "processBudgetVerified": false,
+    "physicalPhoneVerified": false,
+    "evidence": "out/api32/activity-policy-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_activity_policy_result.py --run-id 002a8cf4b46c4ab8845cab3412703419",
+    "terminalStateEvidence": "out/api32/activity-policy-terminal-state.json",
+    "conclusion": "Guest constructor/current cached limit2 and empty limit1 already apply. Native/active/bound process overhead remains; the broader eight-start peak35 budget failure is unchanged."
+  },
+  "sharedGatekeeper45Trial": {
+    "status": "FAIL_NATIVE_CLIENT_INTERPRETER_UNPATCHED",
+    "candidate": "out/api32/crypto-frontend-candidate.json",
+    "candidateSha256": "66e0bca1403f6847e44b14e65af697cf48b594a52cdae9539d9d0f213126c7a4",
+    "sourcePins": 756,
+    "imagePackageCheck": {
+      "status": "PASS_SHARED_GATEKEEPER45_IMAGE_PACKAGE",
+      "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+      "imageBytes": 590922803,
+      "imageVersion": "0.78.45",
+      "changedEntriesSince44": [
+        "system/bin/pocket-crypto-api32",
+        "system/etc/init/pocket-runtime.rc",
+        "system/etc/pocket-runtime-boot.sh",
+        "pocket-image.json"
+      ],
+      "entriesVerified": 2649,
+      "services": [
+        "idmap2d",
+        "mdnsd",
+        "pocket-adbd",
+        "pocket-audio",
+        "pocket-cameraserver",
+        "pocket-framework",
+        "pocket-installd",
+        "pocket-keymaster",
+        "pocket-keystore",
+        "pocket-mediaextractor",
+        "pocket-mediaserver",
+        "pocket-mediaswcodec",
+        "pocket-registry",
+        "pocket-runtime-bootstrap",
+        "pocket-surfaceflinger",
+        "pocket-tombstoned",
+        "pocket-traced"
+      ],
+      "cryptoSha256": "6ba76c063b561f769360af109536a75fe3c89ece1574cd205fce4137a8b8c049",
+      "allOtherPayloadsUnchanged": true,
+      "runtimeVerified": false,
+      "credentialLifecycleVerified": false,
+      "processBudgetVerified": false,
+      "productionReleaseReady": false
+    },
+    "sourceBuild": "out/api32/crypto-frontend-image/native-crypto/build.json",
+    "diagnosticRunner": {
+      "sha256": "ef7bb6094d856dfd89b3a20357c359924c753187d32594d07992fd44cb94a845",
+      "frozenPath": "diagnostic-runner.py"
+    },
+    "commands": [
+      {
+        "command": "python3 tools/build_api32_crypto.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated --frontend --out out/api32/crypto-frontend45",
+        "result": "PASS"
+      },
+      {
+        "command": "python3 -m unittest tools.tests.test_api32_crypto_layout -v",
+        "result": "PASS: 3 tests, with mismatched identity/preload/duplicate/startup rejection cases"
+      },
+      {
+        "command": "python3 tools/validate_download_manager.py out/api32/crypto-frontend-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+        "result": "PASS"
+      }
+    ],
+    "relativeTo44ProcessSaving": 1,
+    "runtimeVerified": false,
+    "credentialLifecycleVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Normal full45 Manager startup: only image crypto executable and its paired startup differ from44. Temporary Gatekeeper identity enrollment/verify/challenge/re-enrollment/SID cleanup and ordinary UID39999 denial via compiled pinned-interface client. No real user0 lock or CE changes. All processes counted; host max32/SELinux/permissions unchanged; no media, account, CE, hard budget or phone claim.",
+    "stockSoftwareHalLimitation": "The unchanged SDK software HAL fast password cache is keyed by SID rather than handle. Re-enrollment checks new authentication first, then old-password rejection. This does not prove immediate stale-cache invalidation or hardware-backed security.",
+    "job": {
+      "pid": 18897,
+      "token": "f83ff808677141c89d2817fbddc5d835",
+      "script": "/home/pi/pocket-api32-vm/crypto-frontend-validation/run-f83ff808677141c89d2817fbddc5d835.py",
+      "log": "/home/pi/pocket-api32-vm/crypto-frontend-validation/run-f83ff808677141c89d2817fbddc5d835.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto-frontend-validation/run-f83ff808677141c89d2817fbddc5d835.exit.json"
+    },
+    "runId": "5cdf3c36f21743439f272ba21dd07667",
+    "failureAudit": "out/api32/crypto-frontend-result/failure-audit.json",
+    "sameUidFrontendRegistrationObserved": true
+  },
+  "sharedGatekeeper45LoaderTrial": {
+    "status": "CREDENTIAL_CLIENT_PASS_STRICT_VOLUME_NOT_READY_FAIL",
+    "candidate": "out/api32/crypto-frontend-loader-candidate.json",
+    "sourcePins": 756,
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "changedSinceFailedTrial": [
+      "runtime/tests/api32/ManagerAppProbe32.java"
+    ],
+    "scope": "Bind the copied credential client to the real instance Pocket loader, as existing native clients already do. Only test DEX/signatures change; image/native client/host production Java/five JNI stay unchanged. Cached45 offline reuse; preserve initial failed evidence. Init lifetime counts may include valid idmap2d idle restarts; require all actual starts/reaps and mandatory/declared service set, without assuming one fixed count.",
+    "runtimeVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "job": {
+      "pid": 22378,
+      "token": "0082363abadf412da5ad1d856de0352b",
+      "script": "/home/pi/pocket-api32-vm/crypto-frontend-loader-validation/run-0082363abadf412da5ad1d856de0352b.py",
+      "log": "/home/pi/pocket-api32-vm/crypto-frontend-loader-validation/run-0082363abadf412da5ad1d856de0352b.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto-frontend-loader-validation/run-0082363abadf412da5ad1d856de0352b.exit.json"
+    },
+    "runId": "246c0d97382d43fab51df62d6628e61c",
+    "failureAudit": "out/api32/crypto-frontend-loader-result/failure-audit.json",
+    "temporaryCredentialClientValidation": "PASS"
+  },
+  "sharedGatekeeper45MountedTrial": {
+    "status": "PASS_SAME_UID_GATEKEEPER45_CREDENTIAL_LIFECYCLE",
+    "candidate": "out/api32/crypto-frontend-mounted-candidate.json",
+    "sourcePins": 756,
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "changedSincePriorTrial": [
+      "runtime/tests/api32/ManagerAppProbe32.java"
+    ],
+    "scope": "Actual normal Manager boot on full45, pinned Gatekeeper frontend and software HALs in one UID1000 PID, real temporary-identity credential lifecycle and ordinary-role denial; strict cleanup/default host policy unchanged. Stock SID-only fast-cache semantics retained; old password rejection measured after new authentication. No user0 lock changes, CE preservation, media, hard resource bound or physical phone claim.",
+    "runtimeVerified": true,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "job": {
+      "pid": 24872,
+      "token": "5012304daf494c50ae59de492781b303",
+      "script": "/home/pi/pocket-api32-vm/crypto-frontend-mounted-validation/run-5012304daf494c50ae59de492781b303.py",
+      "log": "/home/pi/pocket-api32-vm/crypto-frontend-mounted-validation/run-5012304daf494c50ae59de492781b303.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto-frontend-mounted-validation/run-5012304daf494c50ae59de492781b303.exit.json"
+    },
+    "runId": "dda26cc330424d2e86fdd983409fd2aa",
+    "reportSha256": "dfecbb805064d45df7b3c68a4a6003cfcc254e0112f969c6b421faa0c78c45ce",
+    "sourcePinsVerified": 756,
+    "diagnosticRunnerPinVerified": true,
+    "managerSha256": "9819ed4926b29d81a1b00e43b095b90ed68c2fbd96037cc9d34ebb3126b0d30a",
+    "cryptoPid": 21978,
+    "sameUidFrontendVerified": true,
+    "temporaryCredentialLifecycleVerified": true,
+    "realUser0CredentialChanged": false,
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "22400"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "16",
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 16,
+    "sampledPeakChildren": 31,
+    "observerSamples": 67,
+    "amsSamples": 2,
+    "hostDefault32AndPermissionsUnchanged": true,
+    "relativeTo44ProcessSaving": 1,
+    "stockSidOnlyFastCachePreserved": true,
+    "currentImageCePreservationVerified": false,
+    "mediaCompatibilityVerified": false,
+    "physicalPhoneVerified": false,
+    "evidence": "out/api32/crypto-frontend-mounted-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_crypto_frontend_mounted_result.py --run-id dda26cc330424d2e86fdd983409fd2aa",
+    "terminalStateEvidence": "out/api32/crypto-frontend-mounted-terminal-state.json",
+    "externalVolumeReadyBeforeCrypto": true
+  },
+  "sharedGatekeeper45CompleteAvTrial": {
+    "status": "PASS_CRYPTO45_CAMERA2_MUXED_AAC_AVC_AND_FULL_AV_REPEAT",
+    "job": {
+      "pid": 27890,
+      "token": "8915b200e6c84507bf02a473eb2503d1",
+      "script": "/home/pi/pocket-api32-vm/crypto45-av-validation/run-8915b200e6c84507bf02a473eb2503d1.py",
+      "log": "/home/pi/pocket-api32-vm/crypto45-av-validation/run-8915b200e6c84507bf02a473eb2503d1.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto45-av-validation/run-8915b200e6c84507bf02a473eb2503d1.exit.json"
+    },
+    "candidate": "out/api32/crypto45-av-candidate.json",
+    "candidateSha256": "b60609d1d81aafa082a6e10276a129c184ed19f545ba557f34127d5e93ee6d8f",
+    "sourcePins": 756,
+    "managerSha256": "9819ed4926b29d81a1b00e43b095b90ed68c2fbd96037cc9d34ebb3126b0d30a",
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "appArchiveSha256": "d432a10ce0619a76f1d377aa8e900244d25d6964284d3d9e8e69629693f48d41",
+    "scope": "Full45 shared-Gatekeeper image, unchanged ordinary muxed both-camera AAC/AVC recording plus decoded pixels/PCM/PTS/EOS/overlap, preview/JPEG, AudioTrack/direct microphone and actual Home/reopen. Source756, exact APK/production Java/five JNI from credential pass. All process samples count helper/tracing/boot services;112 samples peak34, so resource gate remains open despite full functionality and cleanup PASS. Prior full44 peak35 and all failures preserved. No current CE migration/legacy/physical-phone/release claim.",
+    "productionReleaseReady": false,
+    "processBudgetVerified": false,
+    "runId": "e7d65fbf812c4800b0b99a6f66f30842",
+    "reportSha256": "b2c7e27c9ff2d6b5b45f00b2304309bf3e9bcc28e4b8b00ed3a4b8a1ccc373bd",
+    "sourcePinsVerified": 756,
+    "phases": [
+      {
+        "phase": "firstLaunch",
+        "uid": 10112,
+        "pid": 26435,
+        "nonce": "0bcf7885-f9b2-4618-881c-818098de9edf",
+        "generation": 1,
+        "deviceProfile": {
+          "profile": "rootless-v1",
+          "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+          "multidisplayInstalled": false,
+          "dynamicSystemPackagePresent": true,
+          "dynamicSystemUid": 1000,
+          "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+          "dynamicSystemBootReceiverEnabled": false,
+          "runningUnsupportedPackages": []
+        },
+        "playback": {
+          "sampleRate": 48000,
+          "channels": 2,
+          "writtenFrames": 96000,
+          "playedFrames": 96000,
+          "elapsedMillis": 5032,
+          "underruns": 0,
+          "validation": "PASS"
+        },
+        "microphone": {
+          "sampleRate": 48000,
+          "channels": 1,
+          "samples": 96000,
+          "reads": 36,
+          "rms": 18925.26829080937,
+          "timestampFrame": 97920,
+          "timestampNanos": 29131573547747,
+          "elapsedMillis": 2845,
+          "validation": "PASS"
+        },
+        "cameras": [
+          {
+            "cameraId": "0",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 160,
+            "previewHeight": 120,
+            "previewFrames": [
+              {
+                "timestampNanos": 29138508615113,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 277134
+              },
+              {
+                "timestampNanos": 29138568967872,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 277856
+              },
+              {
+                "timestampNanos": 29138606100113,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 275362
+              }
+            ],
+            "captureCompletions": 5,
+            "jpeg": {
+              "bytes": 7596,
+              "width": 160,
+              "height": 120,
+              "sampledColors": 94,
+              "timestampNanos": 29138806420964,
+              "sha256": "900dfaede0462ba47fb615f9c4e22c9886c926959e8cc5eab1cb295c3848a5b6"
+            },
+            "validation": "PASS"
+          },
+          {
+            "cameraId": "1",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 320,
+            "previewHeight": 240,
+            "previewFrames": [
+              {
+                "timestampNanos": 29140230125112,
+                "minLuma": 30,
+                "maxLuma": 251,
+                "sampleSum": 1072086
+              },
+              {
+                "timestampNanos": 29140293314575,
+                "minLuma": 27,
+                "maxLuma": 251,
+                "sampleSum": 1068495
+              },
+              {
+                "timestampNanos": 29140336858204,
+                "minLuma": 23,
+                "maxLuma": 251,
+                "sampleSum": 1012794
+              }
+            ],
+            "captureCompletions": 5,
+            "jpeg": {
+              "bytes": 10172,
+              "width": 320,
+              "height": 240,
+              "sampledColors": 144,
+              "timestampNanos": 29140516245612,
+              "sha256": "1939cf31fd01a8d4c2f36cc973f00fee1506d748246c9281fc4f0cd6e039076b"
+            },
+            "validation": "PASS"
+          }
+        ],
+        "recordings": [
+          {
+            "bytes": 59918,
+            "sha256": "1a456ef2e81ae8459ddfe4dd0d953a4e75c2dd3d893b79ca3d71176729109e5e",
+            "container": "mp4",
+            "mime": "video/avc",
+            "width": 160,
+            "height": 120,
+            "durationUs": 4034166,
+            "packets": 38,
+            "initialSync": true,
+            "firstPresentationTimeUs": 0,
+            "lastPresentationTimeUs": 3923688,
+            "decoder": "c2.android.avc.decoder",
+            "decodedFrames": 12,
+            "pixels": [
+              {
+                "presentationTimeUs": 0,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 228.5175,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 83477,
+                "minLuma": 35,
+                "maxLuma": 253,
+                "meanLuma": 229.1875,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 133466,
+                "minLuma": 35,
+                "maxLuma": 255,
+                "meanLuma": 230.99666666666667,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 174200,
+                "minLuma": 35,
+                "maxLuma": 255,
+                "meanLuma": 230.61,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 480233,
+                "minLuma": 35,
+                "maxLuma": 253,
+                "meanLuma": 229.30916666666667,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 607566,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 229.385,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 655777,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 228.81083333333333,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 683455,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 231.38333333333333,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 716255,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 231.3925,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 749866,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 228.66333333333333,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 784722,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 229.6175,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 830422,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 231.31,
+                "sampledPixels": 1200
+              }
+            ],
+            "endOfStream": true,
+            "audio": {
+              "mime": "audio/mp4a-latm",
+              "sampleRate": 48000,
+              "channels": 1,
+              "durationUs": 3488333,
+              "packets": 144,
+              "encodedBytes": 24761,
+              "firstPresentationTimeUs": 416291,
+              "lastPresentationTimeUs": 3466958,
+              "decoder": "c2.android.aac.decoder",
+              "decodedSamples": 12288,
+              "decoderOutputs": 12,
+              "decodedPresentationTimesUs": [
+                416291,
+                437625,
+                458958,
+                480291,
+                501625,
+                522958,
+                544291,
+                565625,
+                586958,
+                608291,
+                629625,
+                650958
+              ],
+              "minPcm": -32767,
+              "maxPcm": 27768,
+              "rms": 6065.954838323966,
+              "endOfStream": true,
+              "videoOverlapUs": 3050667
+            },
+            "cameraId": "0",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "captureCompletions": 38,
+            "requestedFrameRate": 30,
+            "shutdownFlushedFrames": 0,
+            "validation": "PASS"
+          },
+          {
+            "bytes": 84080,
+            "sha256": "6c52021dab69d5d1ad8769fb18ca3d988ab6b37f02a6360fb48723769b1b6dab",
+            "container": "mp4",
+            "mime": "video/avc",
+            "width": 320,
+            "height": 240,
+            "durationUs": 4353344,
+            "packets": 49,
+            "initialSync": true,
+            "firstPresentationTimeUs": 0,
+            "lastPresentationTimeUs": 4264911,
+            "decoder": "c2.android.avc.decoder",
+            "decodedFrames": 12,
+            "pixels": [
+              {
+                "presentationTimeUs": 0,
+                "minLuma": 29,
+                "maxLuma": 251,
+                "meanLuma": 224.70416666666668,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 181488,
+                "minLuma": 26,
+                "maxLuma": 252,
+                "meanLuma": 220.07416666666666,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 317477,
+                "minLuma": 22,
+                "maxLuma": 253,
+                "meanLuma": 213.073125,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 348300,
+                "minLuma": 21,
+                "maxLuma": 252,
+                "meanLuma": 211.04166666666666,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 460477,
+                "minLuma": 20,
+                "maxLuma": 252,
+                "meanLuma": 204.67479166666666,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 628933,
+                "minLuma": 19,
+                "maxLuma": 252,
+                "meanLuma": 204.26958333333334,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 690466,
+                "minLuma": 16,
+                "maxLuma": 252,
+                "meanLuma": 202.325625,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 713122,
+                "minLuma": 16,
+                "maxLuma": 252,
+                "meanLuma": 201.49291666666667,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 746000,
+                "minLuma": 16,
+                "maxLuma": 253,
+                "meanLuma": 202.02895833333332,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 822133,
+                "minLuma": 15,
+                "maxLuma": 253,
+                "meanLuma": 200.316875,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 912622,
+                "minLuma": 16,
+                "maxLuma": 252,
+                "meanLuma": 197.48666666666668,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 996466,
+                "minLuma": 16,
+                "maxLuma": 252,
+                "meanLuma": 196.42479166666666,
+                "sampledPixels": 4800
+              }
+            ],
+            "endOfStream": true,
+            "audio": {
+              "mime": "audio/mp4a-latm",
+              "sampleRate": 48000,
+              "channels": 1,
+              "durationUs": 3891000,
+              "packets": 153,
+              "encodedBytes": 26301,
+              "firstPresentationTimeUs": 627000,
+              "lastPresentationTimeUs": 3869666,
+              "decoder": "c2.android.aac.decoder",
+              "decodedSamples": 12288,
+              "decoderOutputs": 12,
+              "decodedPresentationTimesUs": [
+                627000,
+                648333,
+                669666,
+                691000,
+                712333,
+                733666,
+                755000,
+                776333,
+                797666,
+                819000,
+                840333,
+                861666
+              ],
+              "minPcm": -32767,
+              "maxPcm": 31580,
+              "rms": 6590.471311818131,
+              "endOfStream": true,
+              "videoOverlapUs": 3242666
+            },
+            "cameraId": "1",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "captureCompletions": 49,
+            "requestedFrameRate": 30,
+            "shutdownFlushedFrames": 0,
+            "validation": "PASS"
+          }
+        ]
+      },
+      {
+        "phase": "reopened",
+        "uid": 10112,
+        "pid": 26435,
+        "nonce": "46e20132-45ef-470a-b5a3-0f39254757fb",
+        "generation": 2,
+        "deviceProfile": {
+          "profile": "rootless-v1",
+          "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+          "multidisplayInstalled": false,
+          "dynamicSystemPackagePresent": true,
+          "dynamicSystemUid": 1000,
+          "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+          "dynamicSystemBootReceiverEnabled": false,
+          "runningUnsupportedPackages": []
+        },
+        "playback": {
+          "sampleRate": 48000,
+          "channels": 2,
+          "writtenFrames": 96000,
+          "playedFrames": 96000,
+          "elapsedMillis": 2566,
+          "underruns": 0,
+          "validation": "PASS"
+        },
+        "microphone": {
+          "sampleRate": 48000,
+          "channels": 1,
+          "samples": 96000,
+          "reads": 37,
+          "rms": 18912.679954490024,
+          "timestampFrame": 97920,
+          "timestampNanos": 29192623809951,
+          "elapsedMillis": 2389,
+          "validation": "PASS"
+        },
+        "cameras": [
+          {
+            "cameraId": "0",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 160,
+            "previewHeight": 120,
+            "previewFrames": [
+              {
+                "timestampNanos": 29193513096765,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 277134
+              },
+              {
+                "timestampNanos": 29193632223784,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 275554
+              },
+              {
+                "timestampNanos": 29193655024543,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 274328
+              }
+            ],
+            "captureCompletions": 4,
+            "jpeg": {
+              "bytes": 7287,
+              "width": 160,
+              "height": 120,
+              "sampledColors": 94,
+              "timestampNanos": 29193820956561,
+              "sha256": "a70864ff4f9cfea0f91c4f9e34f4c0fe25048a89c8ad38dc104177835c6432d7"
+            },
+            "validation": "PASS"
+          },
+          {
+            "cameraId": "1",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 320,
+            "previewHeight": 240,
+            "previewFrames": [
+              {
+                "timestampNanos": 29194633824783,
+                "minLuma": 30,
+                "maxLuma": 251,
+                "sampleSum": 1081950
+              },
+              {
+                "timestampNanos": 29194675004727,
+                "minLuma": 27,
+                "maxLuma": 251,
+                "sampleSum": 1064535
+              },
+              {
+                "timestampNanos": 29194715409913,
+                "minLuma": 25,
+                "maxLuma": 251,
+                "sampleSum": 1039053
+              }
+            ],
+            "captureCompletions": 4,
+            "jpeg": {
+              "bytes": 10357,
+              "width": 320,
+              "height": 240,
+              "sampledColors": 127,
+              "timestampNanos": 29195094112709,
+              "sha256": "075dc081568de2477046be8de8403207993056ba15c06f62cd629772b5cd1063"
+            },
+            "validation": "PASS"
+          }
+        ],
+        "recordings": [
+          {
+            "bytes": 58884,
+            "sha256": "b5d86ad90712a9a38f89485b8f2d29f9973b2efb6cbcb611d2f0fe5c83ab05cb",
+            "container": "mp4",
+            "mime": "video/avc",
+            "width": 160,
+            "height": 120,
+            "durationUs": 4118733,
+            "packets": 35,
+            "initialSync": true,
+            "firstPresentationTimeUs": 0,
+            "lastPresentationTimeUs": 4008666,
+            "decoder": "c2.android.avc.decoder",
+            "decodedFrames": 12,
+            "pixels": [
+              {
+                "presentationTimeUs": 0,
+                "minLuma": 34,
+                "maxLuma": 252,
+                "meanLuma": 229.16416666666666,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 104955,
+                "minLuma": 34,
+                "maxLuma": 254,
+                "meanLuma": 231.10583333333332,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 220522,
+                "minLuma": 34,
+                "maxLuma": 255,
+                "meanLuma": 230.57916666666668,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 337900,
+                "minLuma": 34,
+                "maxLuma": 252,
+                "meanLuma": 229.40166666666667,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 454377,
+                "minLuma": 34,
+                "maxLuma": 254,
+                "meanLuma": 229.16583333333332,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 575800,
+                "minLuma": 34,
+                "maxLuma": 253,
+                "meanLuma": 230.62166666666667,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 693811,
+                "minLuma": 34,
+                "maxLuma": 253,
+                "meanLuma": 231.11166666666668,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 809500,
+                "minLuma": 34,
+                "maxLuma": 253,
+                "meanLuma": 229.57916666666668,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 924455,
+                "minLuma": 34,
+                "maxLuma": 252,
+                "meanLuma": 228.66166666666666,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 1042333,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 229.38,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 1165355,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 231.3225,
+                "sampledPixels": 1200
+              },
+              {
+                "presentationTimeUs": 1291422,
+                "minLuma": 35,
+                "maxLuma": 252,
+                "meanLuma": 228.76083333333332,
+                "sampledPixels": 1200
+              }
+            ],
+            "endOfStream": true,
+            "audio": {
+              "mime": "audio/mp4a-latm",
+              "sampleRate": 48000,
+              "channels": 1,
+              "durationUs": 3319791,
+              "packets": 155,
+              "encodedBytes": 26652,
+              "firstPresentationTimeUs": 13104,
+              "lastPresentationTimeUs": 3298437,
+              "decoder": "c2.android.aac.decoder",
+              "decodedSamples": 12288,
+              "decoderOutputs": 12,
+              "decodedPresentationTimesUs": [
+                13104,
+                34437,
+                55770,
+                77104,
+                98437,
+                119770,
+                141104,
+                162437,
+                183770,
+                205104,
+                226437,
+                247770
+              ],
+              "minPcm": -26990,
+              "maxPcm": 32767,
+              "rms": 6217.660389277463,
+              "endOfStream": true,
+              "videoOverlapUs": 3285333
+            },
+            "cameraId": "0",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "captureCompletions": 36,
+            "requestedFrameRate": 30,
+            "shutdownFlushedFrames": 0,
+            "validation": "PASS"
+          },
+          {
+            "bytes": 79845,
+            "sha256": "544e52efc2c27adf06b774ecbccaa852521b06f1b1a9d431269feea37d29f0d7",
+            "container": "mp4",
+            "mime": "video/avc",
+            "width": 320,
+            "height": 240,
+            "durationUs": 4033422,
+            "packets": 47,
+            "initialSync": true,
+            "firstPresentationTimeUs": 0,
+            "lastPresentationTimeUs": 3941633,
+            "decoder": "c2.android.avc.decoder",
+            "decodedFrames": 12,
+            "pixels": [
+              {
+                "presentationTimeUs": 0,
+                "minLuma": 27,
+                "maxLuma": 251,
+                "meanLuma": 217.70708333333334,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 41488,
+                "minLuma": 25,
+                "maxLuma": 252,
+                "meanLuma": 217.10583333333332,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 72811,
+                "minLuma": 23,
+                "maxLuma": 254,
+                "meanLuma": 215.84270833333332,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 131077,
+                "minLuma": 22,
+                "maxLuma": 254,
+                "meanLuma": 213.26645833333333,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 204755,
+                "minLuma": 19,
+                "maxLuma": 254,
+                "meanLuma": 206.53104166666665,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 324544,
+                "minLuma": 19,
+                "maxLuma": 254,
+                "meanLuma": 205.984375,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 383177,
+                "minLuma": 18,
+                "maxLuma": 254,
+                "meanLuma": 204.69229166666668,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 479700,
+                "minLuma": 18,
+                "maxLuma": 254,
+                "meanLuma": 206.04958333333335,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 572866,
+                "minLuma": 17,
+                "maxLuma": 254,
+                "meanLuma": 203.07791666666665,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 712633,
+                "minLuma": 16,
+                "maxLuma": 253,
+                "meanLuma": 202.65354166666665,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 783788,
+                "minLuma": 16,
+                "maxLuma": 253,
+                "meanLuma": 199.58541666666667,
+                "sampledPixels": 4800
+              },
+              {
+                "presentationTimeUs": 832966,
+                "minLuma": 15,
+                "maxLuma": 252,
+                "meanLuma": 197.96854166666665,
+                "sampledPixels": 4800
+              }
+            ],
+            "endOfStream": true,
+            "audio": {
+              "mime": "audio/mp4a-latm",
+              "sampleRate": 48000,
+              "channels": 1,
+              "durationUs": 3549312,
+              "packets": 154,
+              "encodedBytes": 26470,
+              "firstPresentationTimeUs": 264000,
+              "lastPresentationTimeUs": 3528000,
+              "decoder": "c2.android.aac.decoder",
+              "decodedSamples": 12288,
+              "decoderOutputs": 12,
+              "decodedPresentationTimesUs": [
+                264000,
+                285333,
+                306666,
+                328000,
+                349333,
+                370666,
+                392000,
+                413333,
+                434666,
+                456000,
+                477333,
+                498666
+              ],
+              "minPcm": -32768,
+              "maxPcm": 29990,
+              "rms": 6004.675003524272,
+              "endOfStream": true,
+              "videoOverlapUs": 3264000
+            },
+            "cameraId": "1",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "captureCompletions": 48,
+            "requestedFrameRate": 30,
+            "shutdownFlushedFrames": 1,
+            "validation": "PASS"
+          }
+        ]
+      }
+    ],
+    "hostAudio": {
+      "hostPcmBytesWritten": 1946880,
+      "completedStreams": 8,
+      "streamErrors": 0,
+      "microphoneRequested": true,
+      "microphoneStreams": 6,
+      "microphoneDenied": 0,
+      "microphonePeerClosures": 6,
+      "lastStreamErrorClass": null
+    },
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "24936"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "12",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 16,
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+      "reusedFiles": 2595,
+      "replacedFiles": 54,
+      "reusedBytes": 1286082078,
+      "writtenBytes": 18320177,
+      "durationMillis": 138934
+    },
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostMediaPermissionsRestored": true,
+    "sampledPeakChildren": 34,
+    "observerSamples": 112,
+    "amsSamples": 6,
+    "maxObservedAmsRecords": 12,
+    "unsupportedPackagesAbsentFromSamples": true,
+    "sampledPeakWithinDefault32": false,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "actualCameraMediaRecorderWithAudioVerified": true,
+    "actualCameraMediaRecorderVerified": true,
+    "decodedAacSamples": 49152,
+    "adoptedDescendantsReaped": 12,
+    "classifiedHelpers": [
+      {
+        "entrypoint": null,
+        "operation": null
+      },
+      {
+        "entrypoint": "dev.kreijstal.aosppocket.guest.AppInspector32",
+        "operation": null
+      },
+      {
+        "entrypoint": "dev.kreijstal.aosppocket.guest.MediaPermissions32",
+        "operation": null
+      },
+      {
+        "entrypoint": "dev.kreijstal.aosppocket.guest.SystemServerDexopt32",
+        "operation": null
+      }
+    ],
+    "externalManagerCliObserved": false,
+    "embeddedManagerControlVerified": true,
+    "systemServerPid": 24671,
+    "completedOwnerOperations": [
+      "install",
+      "open"
+    ],
+    "negativeAuthorizationChecks": {
+      "guestPeerPid": 25689,
+      "guestPeerDenied": true,
+      "unknownOperationRejected": true,
+      "badInstallArgumentsRejected": true
+    },
+    "evidence": "out/api32/crypto45-av-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_crypto45_av_result.py --run-id e7d65fbf812c4800b0b99a6f66f30842",
+    "peakCensus": "out/api32/crypto45-av-result/peak-census.json"
+  },
+  "sharedGatekeeper45SignalTrial": {
+    "status": "PASS_SHARED_GATEKEEPER45_SIGNAL_HOME_REOPEN_NETWORK",
+    "job": {
+      "pid": 31355,
+      "token": "a4b9471e39fd4b418164a5baa7e19474",
+      "script": "/home/pi/pocket-api32-vm/crypto45-signal-validation/run-a4b9471e39fd4b418164a5baa7e19474.py",
+      "log": "/home/pi/pocket-api32-vm/crypto45-signal-validation/run-a4b9471e39fd4b418164a5baa7e19474.log",
+      "exit": "/home/pi/pocket-api32-vm/crypto45-signal-validation/run-a4b9471e39fd4b418164a5baa7e19474.exit.json"
+    },
+    "candidate": "out/api32/crypto45-signal-candidate.json",
+    "candidateSha256": "40b3900712b7f6afb1cd64a91a97e88a251b3b0ff2b2bfc8881aedf14813cd2a",
+    "sourcePins": 756,
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "managerSha256": "a0fbcb1fa90b48b55d62f8360eb578f20e7a34c970838a12833ae898aed9e712",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "scope": "Unmodified Aurora Play Signal8.33.2 requiring API32 in complete45 shared-Gatekeeper image with freshly source-built host runtime. Exact Java/manifest/five JNI/image identical to the source756 full45 AV trial, only test download specification changes. Preserve retained app/profile data, require actual foreground, Home/reopen, validated network/public DNS/network-bound HTTPS and fwmark error recovery, mounted source-built provider and strict native cleanup. No registration/messages/calls/phone/legacy-PRoot or fresh-profile claim.",
+    "productionReleaseReady": false,
+    "processBudgetVerified": false,
+    "runId": "5b2468ca630a4ee58e861f5df7423065",
+    "reportSha256": "7d486b92682f1a6917dc84b1d8cc726e44e068c17ebdebb3e2c9ee0d87392900",
+    "sourcePinsVerified": 756,
+    "apkModified": false,
+    "phases": [
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "firstLaunch",
+        "focus": "mCurrentFocus=Window{72753ed u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      },
+      {
+        "sdk": 32,
+        "package": "org.thoughtcrime.securesms",
+        "uid": 10107,
+        "minSdk": 32,
+        "targetSdk": 36,
+        "versionCode": 177201,
+        "splitCount": 2,
+        "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+        "phase": "reopened",
+        "focus": "mCurrentFocus=Window{72753ed u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+      }
+    ],
+    "guestNetwork": {
+      "connected": true,
+      "validated": true,
+      "networkBoundHttpsStatus": 200,
+      "publicAsyncDns": {
+        "uid": 10108,
+        "network": "100",
+        "addresses": [
+          "172.66.147.243",
+          "104.20.23.154"
+        ],
+        "rawBytes": 61,
+        "rawRcode": 0,
+        "negativeRcode": 3,
+        "publicAsyncApi": true
+      },
+      "fwmarkErrorRecoveryVerified": true
+    },
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "29693"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "12",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 16,
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostSensitivePermissionsAllDenied": true,
+    "sampledPeakChildren": 31,
+    "observerSamples": 121,
+    "amsSamples": 8,
+    "maxObservedAmsRecords": 23,
+    "freshHostNativeApi32RuntimeVerified": true,
+    "legacyProotExecutionVerified": false,
+    "hardProcessBoundVerified": false,
+    "accountRegistrationMessagesCallsVerified": false,
+    "physicalPhoneVerified": false,
+    "embeddedManagerControlVerified": true,
+    "negativeAuthorizationChecks": {
+      "guestPeerPid": 30844,
+      "guestPeerDenied": true,
+      "unknownOperationRejected": true,
+      "badInstallArgumentsRejected": true
+    },
+    "completedOwnerOperations": [
+      {
+        "operation": "network",
+        "pid": 29436
+      },
+      {
+        "operation": "install",
+        "pid": 29436
+      },
+      {
+        "operation": "open",
+        "pid": 29436
+      }
+    ],
+    "externalManagerCliObserved": false,
+    "rootlessDeviceProfileVerified": true,
+    "deviceProfileSnapshots": [
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      },
+      {
+        "profile": "rootless-v1",
+        "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+        "multidisplayInstalled": false,
+        "dynamicSystemPackagePresent": true,
+        "dynamicSystemUid": 1000,
+        "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+        "dynamicSystemBootReceiverEnabled": false,
+        "runningUnsupportedPackages": []
+      }
+    ],
+    "cachedImageNoDownloadVerified": true,
+    "sampledPeakWithinDefault32": true,
+    "evidence": "out/api32/crypto45-signal-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_crypto45_signal_result.py --run-id 5b2468ca630a4ee58e861f5df7423065",
+    "terminalStateEvidence": "out/api32/full45-terminal-state.json"
+  },
+  "currentFull45BudgetAudit": {
+    "status": "FAIL_CURRENT_FULL45_SAMPLED_PROCESS_BUDGET_PEAK34",
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "sourcePinsVerified": 756,
+    "distinctFullWorkloadStarts": 2,
+    "totalSamples": 233,
+    "sampledPeakChildren": 34,
+    "defaultHostPhantomMax": 32,
+    "allProcessesCounted": true,
+    "trials": [
+      {
+        "trial": "crypto45-av",
+        "runId": "e7d65fbf812c4800b0b99a6f66f30842",
+        "functionalValidation": "PASS",
+        "reportSha256": "b2c7e27c9ff2d6b5b45f00b2304309bf3e9bcc28e4b8b00ed3a4b8a1ccc373bd",
+        "independentCheckSha256": "69d27dca733628deaab798973b5d41df67050419debfe6eaf5fa5ffd9be36e23",
+        "samples": 112,
+        "sampledPeakChildren": 34,
+        "withinDefault32": false
+      },
+      {
+        "trial": "crypto45-signal",
+        "runId": "5b2468ca630a4ee58e861f5df7423065",
+        "functionalValidation": "PASS",
+        "reportSha256": "7d486b92682f1a6917dc84b1d8cc726e44e068c17ebdebb3e2c9ee0d87392900",
+        "independentCheckSha256": "ebc2feac44dbe6adcbdcff3a2bfe1d6cbf0b6567c16746b300ba365d804712b0",
+        "samples": 121,
+        "sampledPeakChildren": 31,
+        "withinDefault32": true
+      }
+    ],
+    "allFunctionalAndCleanupChecksPassed": true,
+    "processBudgetPassed": false,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Current45 both-camera muxed media and unmodified Signal with real foreground/Home/reopen and strict native cleanup, identical source756/production host Java/five JNI/image. Count every guest/native/helper/tracing process in each host-UID sample; only registered outer Manager is excluded. The separate67-sample credential diagnostic peak31 is scoped evidence and does not replace these full workloads. Prior44 peak35 evidence remains intact.",
+    "evidence": "out/api32/full45-budget-check.json",
+    "command": "python3 out/api32/verify_full45_budget.py",
+    "returnCode": 1
+  },
+  "bootReadinessReview": "out/api32/boot-readiness-review/evidence.json",
+  "installdCoreReview": "out/api32/installd-core-consolidation-review.json",
+  "previousCurrentTrialBeforeFull45": {
+    "candidate": {
+      "path": "out/api32/cache-budget-candidate.json",
+      "sha256": "38ac044dee12410028d01a418236ed6ab20c0ecc8a5c75d0641afdc9db8d561d"
+    },
+    "job": "out/api32/cache-budget-job.json",
+    "sourceSnapshot": "out/api32/cache-budget-source-snapshot",
+    "sourceCount": 196,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/cache-budget-v2-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "a00001acb11b1ff721e3cfffa6b39eb60e8c850296b5551c16440dcc637592ff",
+      "bytes": 3579488,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "a747792247cc46758f70805fcc7ad854726c0e1d9b282ef097d4ba1c3b8f0ff3",
+        "product/overlay/PocketMemory/PocketMemory.apk": "0f1e27bdfb2b4cfe7f76eaa5fc2e8c17e5e0caef9685d65bfeb62fdcae9f75e3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "fadeb244e6e75570c1fff73cf3b8c90483d8a5e59bc5d1e4872acfc7cdcafb75",
+        "system/etc/pocket-profile.prop": "d083bb8c141d628b9cb76cfead09b6575cc052f746606c12a4ffa0d61280b0c5",
+        "system/etc/pocket-runtime-boot.sh": "a21f6e55dc28ec278f8ab8b2f6241ddd804adc2ae92088a63b452e99c14ec250",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "3389632b8474113b535b977b6869ba078c92f7f730a1bf670c38403bbb9dfbbf",
+        "system/lib64/libpocket_media_api32.so": "9adc2c1144a17b9b666678fb32156b32969522abf29057e8241319222dd908d8",
+        "system/etc/init/pocket-runtime.rc": "1c1bc49ed9421747d23b409b8c27ef50d445105a0a32f8a66ba0c1b9de44408a"
+      },
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6"
+    },
+    "result": {
+      "runId": "d143e15ac7b1474d82c4279f0c515e6f",
+      "apkSha256": "a00001acb11b1ff721e3cfffa6b39eb60e8c850296b5551c16440dcc637592ff",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "strictPassed": true,
+      "functionalPassed": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "systemUiStarts": [
+        "13862"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "selinuxBefore": "Enforcing",
+      "selinuxAfter": "Enforcing",
+      "phantomLimitBefore": "null",
+      "phantomLimitAfter": "null"
+    },
+    "report": {
+      "path": "out/api32/cache-budget-report.json",
+      "sha256": "a90ab8df1885f5351d0b8e304fbaeab5ce299013eac95d6adffe58a680362a75"
+    },
+    "cleanup": {
+      "path": "out/api32/cache-budget-cleanup.json",
+      "sha256": "2fb220c723a4b84546b29267683551712713f60e5338650ee1047525475c10d1"
+    },
+    "sourcesMatchedAfterTrial": 196
+  },
+  "bootReadiness46Trial": {
+    "status": "PASS_ACTUAL_BOOT_READINESS46_EARLY_INPUT_AND_TEMPORARY_CREDENTIALS",
+    "candidate": "out/api32/startup-readiness-candidate.json",
+    "candidateSha256": "43c42a5f8fc2d3cdf8cb11a93235e0bf07298844b59124a5b2e9479344b59de1",
+    "sourcePins": 757,
+    "job": {
+      "pid": 10412,
+      "token": "4ede798500d24862b4dec2a3a7139ee5",
+      "script": "/home/pi/pocket-api32-vm/startup-readiness-validation/run-4ede798500d24862b4dec2a3a7139ee5.py",
+      "log": "/home/pi/pocket-api32-vm/startup-readiness-validation/run-4ede798500d24862b4dec2a3a7139ee5.log",
+      "exit": "/home/pi/pocket-api32-vm/startup-readiness-validation/run-4ede798500d24862b4dec2a3a7139ee5.exit.json"
+    },
+    "imageVersion": "0.78.46",
+    "imageSha256": "b5f4be5a1179aec73fb63af5314c7e55679cd5ef73d3f5a1ddc6fb8aedc10d29",
+    "managerSha256": "443f7c1c440ee89513fe49584d20beabb598ecc38a2d4be6ffae5701767ecfd7",
+    "packageCheck": {
+      "status": "PASS_BOOT_READINESS46_IMAGE_PACKAGE",
+      "imageVersion": "0.78.46",
+      "imageSha256": "b5f4be5a1179aec73fb63af5314c7e55679cd5ef73d3f5a1ddc6fb8aedc10d29",
+      "imageBytes": 590925256,
+      "entriesVerified": 2650,
+      "addedEntries": [
+        "system/etc/pocket-app-readiness32"
+      ],
+      "changedEntriesSince45": [
+        "system/bin/pocket-crypto-api32",
+        "system/framework/pocket-manager.jar",
+        "pocket-image.json"
+      ],
+      "allOtherNativeAndPlatformPayloadsUnchanged": true,
+      "cryptoAlgorithmAndPatchedSourceUnchanged": true,
+      "cryptoMatchesFreshOutputDirectoryReproBuild": true,
+      "cryptoReproCheck": "out/api32/readiness-crypto-repro-check.json",
+      "guestManagerJarSha256": "ca6a92e55840715ebaa6cb826a2c2f4ca9b1ac66f04f7d841364877ea7ef7ad0",
+      "runtimeVerified": false,
+      "processBudgetVerified": false,
+      "productionReleaseReady": false
+    },
+    "cryptoOutputDirectoryReproCheck": "out/api32/readiness-crypto-repro-check.json",
+    "scope": "Actual new full46 Manager boot, same-process volatile boot-completion/user/mount readiness transition, real early HOME key acceptance before readyForApps, temporary Gatekeeper credential lifecycle and ordinary-role denial. Complete external mount/native descendant teardown and default host policy unchanged. No real user0 password change, locked-CE, media/account, process-bound or physical-phone claim.",
+    "appOperationWaitPathRuntimeVerified": false,
+    "lockedCeKeyguardVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "70975967c8b0439f9607a007ced89428",
+    "reportSha256": "12ef4b9be9b11fc0eeeb7961792e1141fe5ed37b8876556e63452bcce6c2b73b",
+    "sourcePinsVerified": 757,
+    "diagnosticRunnerPinVerified": true,
+    "cryptoPid": 3399,
+    "sameUidFrontendVerified": true,
+    "temporaryCredentialLifecycleVerified": true,
+    "realUser0CredentialChanged": false,
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "3802"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "16",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "7",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 16,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 30,
+    "observerSamples": 117,
+    "amsSamples": 3,
+    "hostDefault32AndPermissionsUnchanged": true,
+    "startupOwnerPid": 3581,
+    "startupReadiness": [
+      {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31965401,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": false,
+        "readyForApps": false
+      },
+      {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31969480,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": true,
+        "readyForApps": false
+      },
+      {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 32012171,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": true,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": true,
+        "readyForApps": true
+      }
+    ],
+    "startupInput": {
+      "keyCode": 3,
+      "acceptedBefore": 0,
+      "acceptedAfter": 4,
+      "stateBeforeSend": {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31965401,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": false,
+        "readyForApps": false
+      },
+      "stateAfterAccepted": {
+        "schema": 1,
+        "sdk": 32,
+        "uid": 1000,
+        "pid": 3581,
+        "source": "LocalServices.UserController.mBootCompleted",
+        "uptimeMillis": 31966562,
+        "classLoaderSource": "ZygoteInit.sCachedSystemServerClassLoader",
+        "bootBroadcastComplete": false,
+        "userUnlocked": true,
+        "externalVolumeRequired": true,
+        "primaryVolumeMounted": false,
+        "readyForApps": false
+      },
+      "source": "GuestInput32.injectInputEventReply"
+    },
+    "actualBootReadinessTransitionVerified": true,
+    "earlyInputBeforeAppReadyVerified": true,
+    "stockSidOnlyFastCachePreserved": true,
+    "currentImageCePreservationVerified": false,
+    "mediaCompatibilityVerified": false,
+    "physicalPhoneVerified": false,
+    "evidence": "out/api32/startup-readiness-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_startup_readiness_result.py --run-id 70975967c8b0439f9607a007ced89428"
+  },
+  "bootReadiness46CompleteAvTrial": {
+    "status": "FAIL_BEFORE_INSTALL_TRANSIENT_USER_UNLOCK_REJECTED",
+    "job": {
+      "pid": 15630,
+      "token": "baf47aed7fa942a3ba9fe19e2d9566e6",
+      "script": "/home/pi/pocket-api32-vm/readiness46-av-validation/run-baf47aed7fa942a3ba9fe19e2d9566e6.py",
+      "log": "/home/pi/pocket-api32-vm/readiness46-av-validation/run-baf47aed7fa942a3ba9fe19e2d9566e6.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness46-av-validation/run-baf47aed7fa942a3ba9fe19e2d9566e6.exit.json"
+    },
+    "candidate": "out/api32/readiness46-av-candidate.json",
+    "candidateSha256": "3c716cf0fa0b6f37cc8735faf7e84218c6d6c0c1083caee31abab5ba7403cd81",
+    "sourcePins": 757,
+    "imageVersion": "0.78.46",
+    "imageSha256": "b5f4be5a1179aec73fb63af5314c7e55679cd5ef73d3f5a1ddc6fb8aedc10d29",
+    "managerSha256": "443f7c1c440ee89513fe49584d20beabb598ecc38a2d4be6ffae5701767ecfd7",
+    "appArchiveSha256": "d432a10ce0619a76f1d377aa8e900244d25d6964284d3d9e8e69629693f48d41",
+    "scope": "Complete unchanged muxed Camera2/MediaRecorder microphone AAC+AVC MP4, decoded video/PCM/PTS/EOS/overlapping timelines, preview/JPEG, AudioTrack/direct microphone and verified Home/reopen, on full46 shared-frontend image. Exact same APK/source757/host production Java/five JNI as mounted-credential pass; diagnostic flags absent. No test workload disabled, clients/tracing subtracted or host policy relaxed. Preserve retained profiles and all failures; require complete strict native cleanup, mounted provider/device policy and restored media grants. Scope excludes hard process bound, real phone/hardware media, CE and legacy regressions.",
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "1e45e33f8b2b4a19ba8ad9072d9992ef",
+    "failureAudit": "out/api32/readiness46-av-result/failure-audit.json",
+    "fullMediaVerified": false
+  },
+  "automaticUnlock47CompleteAvTrial": {
+    "status": "PASS_READINESS47_CAMERA2_MUXED_AAC_AVC_AND_FULL_AV_REPEAT",
+    "job": {
+      "pid": 21851,
+      "token": "34aab6f0d90e467aa5dd6f7838a9342c",
+      "script": "/home/pi/pocket-api32-vm/readiness47-av-validation/run-34aab6f0d90e467aa5dd6f7838a9342c.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-av-validation/run-34aab6f0d90e467aa5dd6f7838a9342c.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-av-validation/run-34aab6f0d90e467aa5dd6f7838a9342c.exit.json"
+    },
+    "candidate": "out/api32/readiness47-av-candidate.json",
+    "candidateSha256": "c9dae7ea64b7cfcca57b94696125678f8837c5ed819711774689024cb0123403",
+    "sourcePins": 757,
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "managerSha256": "ef63cd52e6cd921e6193e097adfe98e97e514d374ec26dda21791d38fbaf1e16",
+    "packageCheck": {
+      "status": "PASS_AUTOMATIC_UNLOCK_READINESS47_IMAGE_PACKAGE",
+      "imageVersion": "0.78.47",
+      "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+      "imageBytes": 590925365,
+      "entriesVerified": 2650,
+      "changedEntriesSince46": [
+        "system/framework/pocket-manager.jar",
+        "pocket-image.json"
+      ],
+      "allNativeAndPlatformPayloadsUnchangedSince46": true,
+      "cryptoReproCheck": "out/api32/readiness-crypto-repro-check.json",
+      "runtimeVerified": false,
+      "processBudgetVerified": false,
+      "productionReleaseReady": false
+    },
+    "scope": "Distinguish automatic user-unlock-in-progress from actual secure credential lock. Complete unchanged muxed Camera2/MediaRecorder microphone AAC+AVC MP4, decoded video/PCM/PTS/EOS/overlapping timelines, preview/JPEG, AudioTrack/direct microphone and verified Home/reopen, on full47 shared-frontend image. Source757 with unchanged production host Java/five JNI and ordinary AV APK. Readiness predicate and fixture DEX now distinguish automatic user unlock from secure credential lock; diagnostic flags absent. No test workload disabled, clients/tracing subtracted or host policy relaxed. Preserve retained profiles and all failures; require complete strict native cleanup, mounted provider/device policy and restored media grants. Scope excludes hard process bound, real phone/hardware media, CE and legacy regressions.",
+    "secureLockBranchVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "bf335cfed1f24ee6afb35a99a327eb69",
+    "independentCheck": "out/api32/readiness47-av-result/independent-check.json",
+    "independentCheckSha256": "c2e237b663d202eb0ee2d233096eb560b5067df53b539e32cccd86a281bc4979",
+    "validationCommand": "python3 out/api32/verify_readiness47_av_result.py --run-id bf335cfed1f24ee6afb35a99a327eb69",
+    "validationResult": "PASS",
+    "sampledPeakChildren": 30,
+    "observerSamples": 172,
+    "sampledPeakWithinDefault32": true,
+    "automaticUserUnlockTransitionObserved": true,
+    "appOperationReadinessChecksVerified": true,
+    "pendingAppOperationWaitVerified": false,
+    "fullMediaVerified": true
+  },
+  "bootReadiness47SignalTrial": {
+    "status": "PASS_BOOT_READINESS47_SIGNAL_HOME_REOPEN_NETWORK",
+    "job": {
+      "pid": 28106,
+      "token": "30a24d12839846f9ad20922a92c0d199",
+      "script": "/home/pi/pocket-api32-vm/readiness47-signal-validation/run-30a24d12839846f9ad20922a92c0d199.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-signal-validation/run-30a24d12839846f9ad20922a92c0d199.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-signal-validation/run-30a24d12839846f9ad20922a92c0d199.exit.json"
+    },
+    "candidate": "out/api32/readiness47-signal-candidate.json",
+    "candidateSha256": "846f368f77f2e189a1dd9c359d0460c690e8c21cbdb3973d7307cd2767000ad8",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "sourcePins": 757,
+    "managerSha256": "48ef96f620a85585ef1c53dedfda629cda392e9f166911d934d694ca0dd5ef8c",
+    "scope": "Unmodified Aurora Play Signal8.33.2 requiring API32 in complete47 boot-readiness image with freshly source-built host runtime. Exact Java/manifest/five JNI/image identical to the source757 full47 AV trial, only test download specification changes. Preserve retained app/profile data, require actual foreground, Home/reopen, validated network/public DNS/network-bound HTTPS and fwmark error recovery, mounted source-built provider and strict native cleanup. No registration/messages/calls/phone/legacy-PRoot or fresh-profile claim.",
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "4eb874f210d54f169a5c20920b3408a1",
+    "independentCheck": "out/api32/readiness47-signal-result/independent-check.json",
+    "independentCheckSha256": "55f1fb263429298c90e947c467e6ce1ee26303860d55579f521e908b92dc7db6",
+    "validationCommand": "python3 out/api32/verify_readiness47_signal_result.py --run-id 4eb874f210d54f169a5c20920b3408a1",
+    "validationResult": "PASS",
+    "sampledPeakChildren": 32,
+    "observerSamples": 130,
+    "sampledPeakWithinDefault32": true,
+    "cachedImageNoDownloadVerified": true,
+    "appOperationReadinessChecksVerified": true,
+    "pendingAppOperationWaitVerified": false,
+    "accountRegistrationMessagesCallsVerified": false
+  },
+  "currentFull47BudgetAudit": {
+    "status": "PASS_CURRENT_FULL47_SAMPLED_WORKLOAD_BUDGET",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "sourcePinsVerified": 757,
+    "distinctFullWorkloadStarts": 2,
+    "totalSamples": 302,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allProcessesCounted": true,
+    "trials": [
+      {
+        "trial": "readiness47-av",
+        "runId": "bf335cfed1f24ee6afb35a99a327eb69",
+        "functionalValidation": "PASS",
+        "reportSha256": "a99f3689cf494e3d69a849acf2f8fc16ca7b7f6595cb0c716516c8eac6886157",
+        "independentCheckSha256": "c2e237b663d202eb0ee2d233096eb560b5067df53b539e32cccd86a281bc4979",
+        "samples": 172,
+        "sampledPeakChildren": 30,
+        "withinDefault32": true
+      },
+      {
+        "trial": "readiness47-signal",
+        "runId": "4eb874f210d54f169a5c20920b3408a1",
+        "functionalValidation": "PASS",
+        "reportSha256": "77c84d0530f0fce39952e8c3a36f4a188ce8e084be24fc6d99e5122d2c744eb0",
+        "independentCheckSha256": "55f1fb263429298c90e947c467e6ce1ee26303860d55579f521e908b92dc7db6",
+        "samples": 130,
+        "sampledPeakChildren": 32,
+        "withinDefault32": true
+      }
+    ],
+    "allFunctionalAndCleanupChecksPassed": true,
+    "processBudgetPassed": true,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Frozen full47 baseline both-camera muxed AV and unmodified Aurora Signal, actual foreground/Home/reopen/network as applicable and strict cleanup. Same source757/image/host Java/five JNI. All guest/native/helper/tracing children counted, excluding only the registered outer Manager. Two sampled full starts do not prove repeated stability or a hard bound; pending-install timeout candidate is a separate build. Earlier full45 peak34 and full44 peak35 remain preserved.",
+    "evidence": "out/api32/full47-budget-check.json",
+    "command": "python3 out/api32/verify_full47_budget.py",
+    "returnCode": 0
+  },
+  "previousCurrentTrialBeforeFull47": {
+    "status": "FAIL_CURRENT_FULL45_SAMPLED_PROCESS_BUDGET_PEAK34",
+    "imageVersion": "0.78.45",
+    "imageSha256": "dc227b523271f61284ff7f9502cd821fc86e952c868706a4461ae394a97cf813",
+    "sourcePinsVerified": 756,
+    "distinctFullWorkloadStarts": 2,
+    "totalSamples": 233,
+    "sampledPeakChildren": 34,
+    "defaultHostPhantomMax": 32,
+    "allProcessesCounted": true,
+    "trials": [
+      {
+        "trial": "crypto45-av",
+        "runId": "e7d65fbf812c4800b0b99a6f66f30842",
+        "functionalValidation": "PASS",
+        "reportSha256": "b2c7e27c9ff2d6b5b45f00b2304309bf3e9bcc28e4b8b00ed3a4b8a1ccc373bd",
+        "independentCheckSha256": "69d27dca733628deaab798973b5d41df67050419debfe6eaf5fa5ffd9be36e23",
+        "samples": 112,
+        "sampledPeakChildren": 34,
+        "withinDefault32": false
+      },
+      {
+        "trial": "crypto45-signal",
+        "runId": "5b2468ca630a4ee58e861f5df7423065",
+        "functionalValidation": "PASS",
+        "reportSha256": "7d486b92682f1a6917dc84b1d8cc726e44e068c17ebdebb3e2c9ee0d87392900",
+        "independentCheckSha256": "ebc2feac44dbe6adcbdcff3a2bfe1d6cbf0b6567c16746b300ba365d804712b0",
+        "samples": 121,
+        "sampledPeakChildren": 31,
+        "withinDefault32": true
+      }
+    ],
+    "allFunctionalAndCleanupChecksPassed": true,
+    "processBudgetPassed": false,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Current45 both-camera muxed media and unmodified Signal with real foreground/Home/reopen and strict native cleanup, identical source756/production host Java/five JNI/image. Count every guest/native/helper/tracing process in each host-UID sample; only registered outer Manager is excluded. The separate67-sample credential diagnostic peak31 is scoped evidence and does not replace these full workloads. Prior44 peak35 evidence remains intact.",
+    "evidence": "out/api32/full45-budget-check.json",
+    "command": "python3 out/api32/verify_full45_budget.py",
+    "returnCode": 1
+  },
+  "pendingInstall47CompleteAvTrial": {
+    "status": "PASS_READINESS47_PENDING_INSTALL_INPUT_AND_FULL_AV_REPEAT",
+    "job": {
+      "pid": 32226,
+      "token": "4423749fbf6148b98320593dd77d5612",
+      "script": "/home/pi/pocket-api32-vm/readiness47-pending-av-validation/run-4423749fbf6148b98320593dd77d5612.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-pending-av-validation/run-4423749fbf6148b98320593dd77d5612.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-pending-av-validation/run-4423749fbf6148b98320593dd77d5612.exit.json"
+    },
+    "candidate": "out/api32/readiness47-pending-av-candidate.json",
+    "candidateSha256": "90c719193a95809084a00cefa86719b9c7a78d07897b404169330b808d8ebf0e",
+    "sourcePins": 757,
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "managerSha256": "92ef01d63dd086c1feca94a476fb046978631518a9b5fa3dc902476751a17cce",
+    "packageCheck": "out/api32/readiness47-pending-package-check.json",
+    "scope": "Submit a real install before app readiness and require the actual pending-to-ready operation receipt, independent accepted HOME input during that wait, and then the complete ordinary AV workload. Host Manager response timeout now covers readiness plus PackageInstaller/broadcast deadlines. Complete unchanged muxed Camera2/MediaRecorder microphone AAC+AVC MP4, decoded video/PCM/PTS/EOS/overlapping timelines, preview/JPEG, AudioTrack/direct microphone and verified Home/reopen, on full47 shared-frontend image. Source757 with only the Manager response timeout changed in production host Java; five JNI/image/ordinary AV APK unchanged. Readiness predicate and fixture DEX now distinguish automatic user unlock from secure credential lock; diagnostic flags absent. No test workload disabled, clients/tracing subtracted or host policy relaxed. Preserve retained profiles and all failures; require complete strict native cleanup, mounted provider/device policy and restored media grants. Scope excludes hard process bound, real phone/hardware media, CE and legacy regressions.",
+    "pendingAppOperationWaitVerified": true,
+    "inputDuringPendingInstallVerified": true,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "runId": "fdaee20791244ba6907def0b6f0a1094",
+    "independentCheck": "out/api32/readiness47-pending-av-result/independent-check.json",
+    "independentCheckSha256": "a06909ea117a31794e36e6b52224232c2cd58287dbb015fc8f05d56b754db481",
+    "validationCommand": "python3 out/api32/verify_readiness47_pending_av_result.py --run-id fdaee20791244ba6907def0b6f0a1094",
+    "validationResult": "PASS",
+    "automaticUserUnlockTransitionObserved": true,
+    "actualReadinessWaitMillis": 46011,
+    "inputAcceptedAfterWaitStartMillis": 1806,
+    "hostManagerResponseTimeoutMillis": 300000,
+    "responseOver150SecondsRuntimeVerified": false,
+    "sampledPeakChildren": 30,
+    "observerSamples": 120,
+    "sampledPeakWithinDefault32": true,
+    "fullMediaVerified": true,
+    "serviceLifetimesReaped": 16,
+    "adoptedDescendantsReaped": 12,
+    "secureLockBranchVerified": false,
+    "terminalStateEvidence": "out/api32/readiness47-terminal-state.json"
+  },
+  "secureReadiness47CombinedSixCycleTrial": {
+    "status": "PASS_COMBINED_CE47_SIX_GUEST_CYCLES_RECOVERED_HOST_VERIFIER",
+    "runId": "b7625ee6ca134398a9fd7f8451931b01",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "managerSha256": "f151cc67c26475627aa9f70ad5cab37845baf4ccd1a83effcf33c7ca26d12a57",
+    "runtimeSourcePinsVerified": 757,
+    "resumeSourcePinsVerified": 758,
+    "independentCheck": "out/api32/readiness47-ce3-outer-resume-result/independent-check.json",
+    "independentCheckSha256": "2021d2c605a143146493ccd9350d3dc51e214f1d5f70ca4d796ace699dde2068",
+    "validationCommand": "python3 out/api32/verify_readiness47_ce3_outer_resume_result.py",
+    "validationResult": "PASS",
+    "job": {
+      "pid": 20656,
+      "token": "b367c46c5a3d4ad5a58f4bdb357b4751",
+      "script": "/home/pi/pocket-api32-vm/readiness47-ce3-outer-resume-validation/run-b367c46c5a3d4ad5a58f4bdb357b4751.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-ce3-outer-resume-validation/run-b367c46c5a3d4ad5a58f4bdb357b4751.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-ce3-outer-resume-validation/run-b367c46c5a3d4ad5a58f4bdb357b4751.exit.json"
+    },
+    "originalHostVerifierFailurePreserved": true,
+    "failureAudit": "out/api32/readiness47-ce3-continuation-result/failure-audit.json",
+    "completedGuestCycles": 6,
+    "twoPhysicalKeyguardUnlocksVerified": true,
+    "secureLockedAppOperationRejectionVerified": true,
+    "actualPreservedAuthlessBootVerified": true,
+    "encryptedImageUpgradeVerified": true,
+    "sameOriginalAppKeyUidPath": true,
+    "originalPasswordFreeStateRestored": true,
+    "newTestCredentialFileRemoved": true,
+    "plaintextMigrationRepeated": false,
+    "sampledPeakChildren": 33,
+    "observerSamples": 536,
+    "processBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/readiness47-ce3-terminal-state.json",
+    "scope": "Complete current47 preserved encrypted upgrade with five strict guest boots, followed by independently replaying corrected host checks and actually resuming outer Manager restart with the exact same APK. Full data/key/UID/canary/mounted-volume persistence, wrong-password rejection, password change/removal/restoration, three secure boots plus locked owner-operation denial after actual outer restart, two focused password-input unlocks, six strict native/descendant teardowns. Original failed host NameError report and checkpoint rejection remain unchanged. Corrected helpers validate all recorded five-boot states; original successful cycle hashes are retained exactly in the resumed report. The used recovery file is removed only after real password-free restoration. No fresh plaintext migration, process-bound or phone/release claim."
+  },
+  "currentCe47BudgetAudit": {
+    "status": "FAIL_CURRENT47_CE_SAMPLED_PROCESS_BUDGET_PEAK33",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "runId": "b7625ee6ca134398a9fd7f8451931b01",
+    "allGuestFunctionalAndCleanupChecksPassed": true,
+    "originalHostDriverFailurePreserved": true,
+    "distinctGuestStarts": 6,
+    "totalSamples": 536,
+    "sampledPeakChildren": 33,
+    "defaultHostPhantomMax": 32,
+    "allNativeGuestHelperAndTracingProcessesCounted": true,
+    "firstFiveSampledPeakChildren": 33,
+    "outerRestartSampledPeakChildren": 30,
+    "processBudgetPassed": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "independentCheck": "out/api32/readiness47-ce3-outer-resume-result/independent-check.json",
+    "peakCensus": "out/api32/readiness47-ce3-live-peak-census.json",
+    "scope": "The current encrypted workload exceeds32 despite full functional/strict-cleanup success. The separate media/Signal baseline peaks30/32 do not close this gate. Preserve all process rows and all prior failures; no subtraction or policy relaxation."
+  },
+  "installdSourceBuildPreparation": {
+    "status": "PASS_FULL_INSTALLD_PINNED_SOURCE_ARM64_16K_BUILD",
+    "evidence": "out/api32/installd-source48/independent-build-check.json",
+    "runtimeVerified": false,
+    "sharedCoreIntegrationImplemented": false,
+    "processBudgetVerified": false
+  },
+  "previousCurrentTrialBeforeCe47": {
+    "status": "PASS_CURRENT_FULL47_SAMPLED_WORKLOAD_BUDGET",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "sourcePinsVerified": 757,
+    "distinctFullWorkloadStarts": 2,
+    "totalSamples": 302,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allProcessesCounted": true,
+    "trials": [
+      {
+        "trial": "readiness47-av",
+        "runId": "bf335cfed1f24ee6afb35a99a327eb69",
+        "functionalValidation": "PASS",
+        "reportSha256": "a99f3689cf494e3d69a849acf2f8fc16ca7b7f6595cb0c716516c8eac6886157",
+        "independentCheckSha256": "c2e237b663d202eb0ee2d233096eb560b5067df53b539e32cccd86a281bc4979",
+        "samples": 172,
+        "sampledPeakChildren": 30,
+        "withinDefault32": true
+      },
+      {
+        "trial": "readiness47-signal",
+        "runId": "4eb874f210d54f169a5c20920b3408a1",
+        "functionalValidation": "PASS",
+        "reportSha256": "77c84d0530f0fce39952e8c3a36f4a188ce8e084be24fc6d99e5122d2c744eb0",
+        "independentCheckSha256": "55f1fb263429298c90e947c467e6ce1ee26303860d55579f521e908b92dc7db6",
+        "samples": 130,
+        "sampledPeakChildren": 32,
+        "withinDefault32": true
+      }
+    ],
+    "allFunctionalAndCleanupChecksPassed": true,
+    "processBudgetPassed": true,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "scope": "Frozen full47 baseline both-camera muxed AV and unmodified Aurora Signal, actual foreground/Home/reopen/network as applicable and strict cleanup. Same source757/image/host Java/five JNI. All guest/native/helper/tracing children counted, excluding only the registered outer Manager. Two sampled full starts do not prove repeated stability or a hard bound; pending-install timeout candidate is a separate build. Earlier full45 peak34 and full44 peak35 remain preserved.",
+    "evidence": "out/api32/full47-budget-check.json",
+    "command": "python3 out/api32/verify_full47_budget.py",
+    "returnCode": 0
+  },
+  "sharedInstalld48FullMediaTrial": {
+    "status": "PASS_INSTALLD_CORE48_TYPED_DATA_DEXOPT_AND_FULL_AV_REPEAT",
+    "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "985a62bc997a1a590ad7ad1c6ad31154074597e0723e28cf7e2078fbb05bb986",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-av-result/independent-check.json",
+    "independentCheckSha256": "8a9770591341c2887f2504ebae7ae069c8f081105a1b337e5a3dc83b15bf8fd4",
+    "validationCommand": "python3 out/api32/verify_installd_core48_av_result.py --run-id 7778cd944b35417e9d7c89d2ba0dfb81",
+    "validationResult": "PASS",
+    "sameLiveInstalldCorePid": 17388,
+    "installdLogicalUid": 0,
+    "installdLogicalGid": 0,
+    "typedAppDataAndCallerDenialVerified": true,
+    "actualBootTimeDexoptVerified": true,
+    "fullMediaRepeatedVerified": true,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 32,
+    "observerSamples": 200,
+    "sampledPeakWithinDefault32": true,
+    "distinctGuestStarts": 1,
+    "sharedCoreBinderDefaultMinNice": 0,
+    "signal48RepeatVerified": false,
+    "ce48RepeatVerified": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-terminal-state.json"
+  },
+  "sharedInstalld48SignalTrial": {
+    "status": "PASS_INSTALLD_CORE48_SIGNAL_HOME_REOPEN_NETWORK",
+    "runId": "530366892b7b4edda5ae19d0813460ea",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "28eaa87904a47dce86da40660a13b322e129c89e16151af0b0a5cf81ce8b71f2",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json",
+    "independentCheckSha256": "8afa71e75fedf9187ec76312477025688e5c20149662a2f7f373fa930708424f",
+    "validationCommand": "python3 out/api32/verify_installd_core48_signal_result.py --run-id 530366892b7b4edda5ae19d0813460ea",
+    "validationResult": "PASS",
+    "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+    "apkModified": false,
+    "guestMinSdk": 32,
+    "retainedAppUid": 10107,
+    "actualRegistrationFocusHomeReopenVerified": true,
+    "publicDnsAndNxDomainVerified": true,
+    "networkBoundHttpsStatus": 200,
+    "fwmarkErrorRecoveryVerified": true,
+    "sharedInstalldCorePid": 22641,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 29,
+    "observerSamples": 132,
+    "sampledPeakWithinDefault32": true,
+    "accountRegistrationMessagesCallsVerified": false,
+    "ce48RepeatVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-signal-terminal-state.json"
+  },
+  "currentImage48MediaSignalSampledBudget": {
+    "status": "PASS_CORE48_MEDIA_SIGNAL_SAMPLED_DEFAULT32_CE_REPEAT_OPEN",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "imageVersion": "0.78.48",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      }
+    ],
+    "distinctStarts": 2,
+    "totalSamples": 332,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "ce48RepeatVerified": false,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false
+  },
+  "sharedInstalld48SecureSixCycleTrial": {
+    "status": "PASS_CORE48_CE_ENCRYPTED_UPGRADE_NATIVE_INSTALLD_SIX_CYCLES",
+    "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "1f9e52e99d725b14d5c9b374339c169666494ab77740eb5cb352dcad59f27cdc",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json",
+    "independentCheckSha256": "3222560fbbfd378b054f77108ff265191d54f8e7bf18c0b686a38d150266ae71",
+    "validationCommand": "python3 out/api32/verify_installd_core48_ce3_result.py --run-id b0111ff7db22438ea3fb0d3e122803cf",
+    "validationResult": "PASS",
+    "cycles": [
+      {
+        "index": 0,
+        "sha256": "ae9a6c9af568663df24137153d2e737e83b70e031d936519407d2effe0b8df7a",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 28640,
+        "cryptoFrontendPid": 28717
+      },
+      {
+        "index": 1,
+        "sha256": "8331e62973b2dcfaac532771fd5a3fb1d95a4dd983223b66cdd5ff92ad1b64ba",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 31863,
+        "cryptoFrontendPid": 31919
+      },
+      {
+        "index": 2,
+        "sha256": "6e0d87e92e887de1814de95b045414274128939aa96bec9822aeb7daa0cea385",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 3304,
+        "cryptoFrontendPid": 3354
+      },
+      {
+        "index": 3,
+        "sha256": "5101dd4ef9dd81b1c933c1200b1abe461567bc53ac8e9b885ba13f8870c342b5",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 6088,
+        "cryptoFrontendPid": 6138
+      },
+      {
+        "index": 4,
+        "sha256": "536ff44cf6db10b18ffc5d6499ff56e0817ed508b17b944a04678beaffbdece5",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 9226,
+        "cryptoFrontendPid": 9280
+      },
+      {
+        "index": 5,
+        "sha256": "51d533d0f1a1201292c818e213390f43876705c14c22553ed728996940df8ed9",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 12672,
+        "cryptoFrontendPid": 12722
+      }
+    ],
+    "adoptedDescendantsReapedPerCycle": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      12
+    ],
+    "twoPhysicalKeyguardUnlocksVerified": true,
+    "sameOriginalAppKeyUidPath": true,
+    "fiveRootCanariesAndPublicMediaVerified": true,
+    "secureLockedAppOperationRejectionVerified": true,
+    "passwordSetChangeRemovalRestoreVerified": true,
+    "originalPasswordFreeStateRestored": true,
+    "thisRunRecoveryFileRemoved": true,
+    "encryptedNativeAppDataCallerDenialAndBootDexoptVerified": true,
+    "imageSourceOfflineOuterRestart": true,
+    "oldPredecessorReportUnchanged": true,
+    "completedPredecessorCheckpointArchiveSha256": "1e2d335754c0f76e6c48ced5ddf5706a2889557a1810bed5405181ce36613813",
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+      "reusedFiles": 2596,
+      "replacedFiles": 54,
+      "reusedBytes": 1286084404,
+      "writtenBytes": 18823858,
+      "durationMillis": 143131
+    },
+    "distinctGuestStarts": 6,
+    "sampledPeakChildren": 29,
+    "observerSamples": 562,
+    "sampledPeakWithinDefault32": true,
+    "freshPlaintextMigrationRepeated": false,
+    "postBootCompilerVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-ce3-terminal-state.json"
+  },
+  "currentImage48FullWorkloadSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_AND_SIX_CE_CYCLES_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      }
+    ],
+    "distinctStarts": 8,
+    "totalSamples": 894,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "previousStatusBeforeCore48Ce": "FULL47_MEDIA_SIGNAL_CE_FUNCTIONAL_PASS_CE_SAMPLED33_RESOURCE_GATE_OPEN",
+  "ordinaryUidPostBoot48Trial": {
+    "status": "PASS_POSTBOOT48_ORDINARY_UID_DEXOPT_KERNEL_PRIORITY_AND_FULL_AV_REPEAT",
+    "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "a46bc5d29f0e0160e91823b4ffcaefbbba6915d17a52451b4e65304000e5824a",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+    "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7",
+    "validationCommand": "python3 out/api32/verify_installd_postboot_proc48_av_result.py --run-id 6f6983eb987148c2acacfd0f8c1eab0d",
+    "validationResult": "PASS",
+    "packageCheck": "out/api32/installd-postboot-proc48-package-check.json",
+    "terminalState": "out/api32/installd-postboot-proc48-terminal-state.json",
+    "postBootRequestFlags": 10,
+    "ordinaryTargetUid": 12347,
+    "actualHostKernelWorkerNice": 10,
+    "coreNiceBefore": 0,
+    "coreNiceAfter": 0,
+    "workerObservations": [
+      {
+        "pid": 32704,
+        "parentPid": 29913,
+        "logicalUid": 12347,
+        "executable": "/data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/api32/apex/com.android.art/bin/dex2oat64",
+        "realKernelNice": 10,
+        "observedUptimeMillis": 48067575,
+        "timerSlackReadError": "IOException",
+        "kernelCgroup": "3:cpuset:/top-app\n2:cpu:/top-app\n1:blkio:/\n0::/apps/uid_10157/pid_29430\n",
+        "livePeerVerified": true
+      }
+    ],
+    "compilerArtifactOwnershipVerified": true,
+    "fullMediaRepeatVerified": true,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 12,
+    "sampledPeakChildren": 30,
+    "observerSamples": 121,
+    "runtimeImageChanged": false,
+    "kernelCgroupApplicationVerified": false,
+    "timerSlackVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndPostBootSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_CYCLES_AND_POSTBOOT_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      }
+    ],
+    "distinctStarts": 10,
+    "totalSamples": 1143,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/installd-core48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ]
+  },
+  "frameworkReset48Trial": {
+    "status": "PASS_FRAMEWORK_RESET48_NAMESPACE_NETWORK_HOME_REOPEN",
+    "runId": "53ef421a11b24f10960c6848b6595e16",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "d6486500736df3125efb77f23c51ab77bf35c87cc429b0f970084dd102c85e73",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+    "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90",
+    "validationCommand": "python3 out/api32/verify_framework_reset_contract48_app_result.py --run-id 53ef421a11b24f10960c6848b6595e16",
+    "validationResult": "PASS",
+    "terminalState": "out/api32/framework-reset-contract48-terminal-state.json",
+    "packageCheck": "out/api32/framework-reset-contract48-package-check.json",
+    "callbackContractReview": "out/api32/framework-reset48-callback-contract-review.json",
+    "resetDurationMillis": 2663,
+    "frameworkVolumeResetVerified": true,
+    "oldEpoch": 851379328537255093,
+    "newEpoch": 7028363496576650002,
+    "retiredHolderPid": 12172,
+    "restoredOwnerPid": 13246,
+    "canaryInodesAndContentPreserved": true,
+    "crossUidPrivateStorageVerified": true,
+    "freshProviderWorkloadsAfterResetVerified": true,
+    "guestStoragePropertyUnchanged": true,
+    "networkDnsAndFwmarkRecoveryVerified": true,
+    "homeReopenVerified": true,
+    "serviceLifetimesReaped": 15,
+    "adoptedDescendantsReaped": 14,
+    "sampledPeakChildren": 30,
+    "observerSamples": 138,
+    "runtimeImageChanged": false,
+    "productionJavaChanged": false,
+    "abruptManagerDeathVerified": false,
+    "freshPlaintextMigrationVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndFrameworkResetSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_POSTBOOT_AND_FRAMEWORK_RESET_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      },
+      {
+        "workload": "actual_framework_reset_mounted_provider_private40_network_home_reopen",
+        "runId": "53ef421a11b24f10960c6848b6595e16",
+        "starts": 1,
+        "samples": 138,
+        "peak": 30,
+        "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+        "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90"
+      }
+    ],
+    "distinctStarts": 11,
+    "totalSamples": 1281,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/installd-postboot48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ],
+    "frameworkStorageResetVerified": true,
+    "scope": "Same unchanged production image48/five JNI/production Java, across separately pinned test APKs. Full CE six-cycle trial remains its original frozen test/source scope; later test helper changes do not imply that exact latest test APK has repeated those cycles.",
+    "failedCallbackTrialExcludedFromFullWorkloadAggregate": "bad1cd36c8ad43ab9148493212b41db5"
+  },
+  "ordinaryManagerCrash48Trial": {
+    "status": "PASS_MANAGER_CRASH48_STALE_ENDPOINT_FILES_KEYSTORE_NETWORK_RECOVERY",
+    "runId": "160b1ac256b84225894020ebe4ebecc3",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "3769afe44a9996f7cff653bfa5936862109d618c132efb9efbce58395dad7d7f",
+    "sourcePinsVerified": 763,
+    "sourceSnapshot": "out/api32/manager-crash-ack48-app-source-snapshot",
+    "independentCheck": "out/api32/manager-crash-ack48-app-result/independent-check.json",
+    "independentCheckSha256": "e6a5ddc9499096ec4e9cf816d9a8816fa2011ddda0124437e504bb2bb5ac8807",
+    "validationCommand": "python3 out/api32/verify_manager_crash_ack48_app_result.py --run-id 160b1ac256b84225894020ebe4ebecc3",
+    "validationResult": "PASS",
+    "terminalState": "out/api32/manager-crash-ack48-terminal-state.json",
+    "packageCheck": "out/api32/manager-crash-ack48-package-check.json",
+    "crashedHostPid": 3374,
+    "resumedHostPid": 7741,
+    "guestStarts": 2,
+    "oldKernelProcessIdentitiesGone": 26,
+    "preStartLiveOldProcesses": 0,
+    "oldEpoch": -1109557664130948602,
+    "newEpoch": 3966043662980268260,
+    "originalCanaryInodesAndContentsPreserved": true,
+    "originalNonExportableKeyAndCiphertextPreserved": true,
+    "ownTestKeyRemovedAfterSuccess": true,
+    "noInstallOrForceStopAfterCrash": true,
+    "fixtureServerOfflineBeforeCrash": true,
+    "activityAcknowledgmentVerified": true,
+    "supplementalLauncherUsed": false,
+    "freshProviderPrivate40PerBootVerified": true,
+    "networkDnsFwmarkHomeReopenPerBootVerified": true,
+    "serviceLifetimesReapedAfterRecovery": 15,
+    "adoptedDescendantsReapedAfterRecovery": 13,
+    "sampledPeakChildren": 31,
+    "observerSamples": 241,
+    "amsSamples": 16,
+    "productionJavaChanged": false,
+    "runtimeImageChanged": false,
+    "liveOrphanCleanupPathObserved": false,
+    "freshPlaintextMigrationVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "currentImage48FullWorkloadAndNormalCrashSampledBudget": {
+    "status": "PASS_CURRENT48_MEDIA_SIGNAL_SIX_CE_POSTBOOT_RESET_AND_NORMAL_CRASH_SAMPLED_DEFAULT32",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "runs": [
+      {
+        "workload": "native_and_full_av",
+        "runId": "7778cd944b35417e9d7c89d2ba0dfb81",
+        "starts": 1,
+        "samples": 200,
+        "peak": 32,
+        "independentCheck": "out/api32/installd-core48-av-result/independent-check.json"
+      },
+      {
+        "workload": "signal_and_network",
+        "runId": "530366892b7b4edda5ae19d0813460ea",
+        "starts": 1,
+        "samples": 132,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-signal-result/independent-check.json"
+      },
+      {
+        "workload": "preserved_encrypted_lifecycle",
+        "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+        "starts": 6,
+        "samples": 562,
+        "peak": 29,
+        "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json"
+      },
+      {
+        "workload": "system_uid_postboot_and_full_av",
+        "runId": "b9673d0d1fd946f4acf18082c9bd3d08",
+        "starts": 1,
+        "samples": 128,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot48-av-result/independent-check.json",
+        "independentCheckSha256": "50390b2e18b9ac2e97881bca9598d2ac1c33d658b80c39802d263b0273100e29"
+      },
+      {
+        "workload": "ordinary_uid_postboot_kernel_priority_and_full_av",
+        "runId": "6f6983eb987148c2acacfd0f8c1eab0d",
+        "starts": 1,
+        "samples": 121,
+        "peak": 30,
+        "independentCheck": "out/api32/installd-postboot-proc48-av-result/independent-check.json",
+        "independentCheckSha256": "ab0db17d09b564ec1b23bd80924c4e185dca5a76e81a3355a0447dc56f060ec7"
+      },
+      {
+        "workload": "actual_framework_reset_mounted_provider_private40_network_home_reopen",
+        "runId": "53ef421a11b24f10960c6848b6595e16",
+        "starts": 1,
+        "samples": 138,
+        "peak": 30,
+        "independentCheck": "out/api32/framework-reset-contract48-app-result/independent-check.json",
+        "independentCheckSha256": "c71873395303da1a46097b08ca13cbaa7bf159f466f7c51d54653cbd8bd83a90"
+      },
+      {
+        "workload": "actual_manager_sigkill_stale_endpoint_file_keystore_offline_recovery",
+        "runId": "160b1ac256b84225894020ebe4ebecc3",
+        "starts": 2,
+        "samples": 241,
+        "peak": 31,
+        "independentCheck": "out/api32/manager-crash-ack48-app-result/independent-check.json",
+        "independentCheckSha256": "e6a5ddc9499096ec4e9cf816d9a8816fa2011ddda0124437e504bb2bb5ac8807"
+      }
+    ],
+    "distinctStarts": 13,
+    "totalSamples": 1522,
+    "sampledPeakChildren": 32,
+    "defaultHostPhantomMax": 32,
+    "allGuestHelperAndTracingProcessesCounted": true,
+    "sampledBudgetPassed": true,
+    "currentEncryptedRepeatVerified": true,
+    "priorFull47CeSampledPeak": 33,
+    "priorFailureEvidence": "out/api32/readiness47-ce-budget-check.json",
+    "priorFailurePreserved": true,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "priorFullWorkloadReceipt": "out/api32/framework-reset48-full-workload-budget-check.json",
+    "ordinaryPostBootCompilerVerified": true,
+    "actualHostKernelCompilerNice": 10,
+    "kernelCgroupApplicationVerified": false,
+    "failedObserverTrialsExcludedFromFullWorkloadAggregate": [
+      "44cbd06f8e54447bb1dc9b3c18064ff3",
+      "9fbd1969baff4e238b9ea9f3378b3b59"
+    ],
+    "frameworkStorageResetVerified": true,
+    "scope": "Same unchanged production image48/five JNI/production Java, across separately pinned test APKs. Full CE six-cycle trial remains its original frozen test/source scope; later test helper changes do not imply that exact latest test APK has repeated those cycles.",
+    "failedCallbackTrialExcludedFromFullWorkloadAggregate": "bad1cd36c8ad43ab9148493212b41db5",
+    "normalProfileManagerSigkillAndStaleEndpointRecoveryVerified": true,
+    "standaloneActivityAcknowledgmentDriverVerified": true,
+    "notStandaloneCrashTrialsExcludedFromPassingAggregate": [
+      "d13c1008247840948eae45ef92204199",
+      "12a75d2eb1d9422e8078f0699a5b90b7"
+    ],
+    "additionalPreservedScopedTrials": [
+      {
+        "scope": "observer_stop_timeout",
+        "runId": "44cbd06f8e54447bb1dc9b3c18064ff3",
+        "starts": 1,
+        "samples": 89,
+        "peak": 30,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/installd-postboot-app48-av-result/manager-app-report.json"
+      },
+      {
+        "scope": "observer_missing_proc_children",
+        "runId": "9fbd1969baff4e238b9ea9f3378b3b59",
+        "starts": 1,
+        "samples": 86,
+        "peak": 29,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/installd-postboot-children48-av-result/manager-app-report.json"
+      },
+      {
+        "scope": "old_callback_expectation",
+        "runId": "bad1cd36c8ad43ab9148493212b41db5",
+        "starts": 1,
+        "samples": 145,
+        "peak": 29,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/framework-reset48-app-result/manager-app-report.json"
+      },
+      {
+        "scope": "failed_driver_acceptance_and_manual_resume",
+        "runId": "d13c1008247840948eae45ef92204199",
+        "starts": 2,
+        "samples": 322,
+        "peak": 31,
+        "rawStatus": "FAIL",
+        "rawReport": "out/api32/manager-crash48-app-result/manager-app-report.json"
+      },
+      {
+        "scope": "assisted_launcher_scope",
+        "runId": "12a75d2eb1d9422e8078f0699a5b90b7",
+        "starts": 2,
+        "samples": 392,
+        "peak": 30,
+        "rawStatus": "PASS",
+        "rawReport": "out/api32/manager-crash-owner48-app-result/manager-app-report.json"
+      }
+    ],
+    "listedAllScopeSamples": 2556,
+    "listedAllScopeSampledPeak": 32,
+    "listedAllScopeStarts": 20
+  }
+}

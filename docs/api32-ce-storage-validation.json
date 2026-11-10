@@ -1,0 +1,2404 @@
+{
+  "schema": 1,
+  "status": "MANAGER12L_CREDENTIAL_ENCRYPTION_LIFECYCLE_PASS_VM73",
+  "scope": "Actual Android12L Manager/LockSettings/vold credential-encryption lifecycle verified on dedicated VM73: SP disk-secret capture, five-root migration, locked and wrong/old password denial, password change/removal/restoration, automatic unlock only while password-free, and ordinary min/target32 app private data plus nonexportable AndroidKeyStore key across five guest boots. Each complete cycle log and15-service shutdown passed. This does not establish encrypted persistence across an outer Manager process restart, complete external storage, full12L support or phone compatibility.",
+  "foundationCandidate": {
+    "path": "out/api32/ce-foundation-candidate.json",
+    "sha256": "c1a6dc85ee953ed88a8c588cd10ca5e8ff617f0d41ea7f01a27f043a3d0a5941",
+    "sourceSnapshot": "out/api32/ce-foundation-source-snapshot",
+    "artifacts": {
+      "out/api32/ce-core/pocket-core-api32": {
+        "bytes": 650384,
+        "sha256": "dbd0973efe26c644598e1278748e03f4167e204e8c0be5508900804ee9f7609d"
+      },
+      "out/api32/storage/pocket-storage-api32": {
+        "bytes": 333000,
+        "sha256": "5f5823a193f1fd59ee6014638db9db79f1a5bf8d03111ef80f969d9b2ddf3eef"
+      },
+      "out/api32/ce-loader/pocket-loader": {
+        "bytes": 427904,
+        "sha256": "743653337d0dcf513a51346e5040cfad4cebc307bc09c543d06522bc193cb2ff"
+      }
+    }
+  },
+  "transportCandidate": {
+    "path": "out/api32/ce-transport-candidate.json",
+    "sha256": "042dc667c8e5fd956a986051914518a77d7f225556b2fd1c386072a29c95cf98",
+    "sourceSnapshot": "out/api32/ce-transport-source-snapshot",
+    "apkSha256": "10843f30682360fe05ab2b5374792e5c0db3ab71b7cc228f280aaa660e205fb7",
+    "apkBytes": 13125378
+  },
+  "primarySources": {
+    "repository": "https://android.googlesource.com/platform/system/vold",
+    "commit": "56ecaa03aa8bc2be47f1d610cd901f2e57c27bef",
+    "files": {
+      "FsCrypt.cpp": {
+        "path": "out/api32/storage-reference/FsCrypt.cpp",
+        "sha256": "308d697bc8cfacffbd5f059d5137a695e745b6afdaa6688da03365fe43befaa8"
+      },
+      "VoldNativeService.cpp": {
+        "path": "out/api32/storage-reference/VoldNativeService.cpp",
+        "sha256": "e494a4dc7e25dc21aa45f942328b2382a1c54d324ce1874c2be5f6a4fd987e6c"
+      }
+    }
+  },
+  "credentialApiSources": "out/api32/storage-reference/credential-sources.json",
+  "results": {
+    "32": {
+      "path": "out/api32/ce-transport32-first-report.json",
+      "sha256": "ca8fc3448b30176371a23d2f7625f86af7512a8db6966fa6e3f84ffed6378e85",
+      "report": {
+        "runId": "1d40a1a99c7a46fdb5cbebe2a6b17784",
+        "vmInstance": 73,
+        "apkSha256": "10843f30682360fe05ab2b5374792e5c0db3ab71b7cc228f280aaa660e205fb7",
+        "legacyLayout": false,
+        "selinuxBefore": "Enforcing",
+        "phantomLimitBefore": "null",
+        "phantomMonitoringBefore": "null",
+        "fixture": {
+          "readDuringBlockedSync": "PASS: real AppFuse bridge permits reads before fsync finishes",
+          "migration": "verified ciphertext; plaintext source removed",
+          "locked": "CE_LOCKED_PASS additional_users_fail_closed=1\n",
+          "vendorLocked": "CE_VENDOR_LOCKED_PASS loader_layout=12L additional_users_fail_closed=1\n",
+          "native": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_FILESYSTEM_PASS mmap=1 truncation=1 locks=1 directories=1 links=1 executable_memory=1\n",
+          "vendorNative": "CE_VENDOR_FILESYSTEM_PASS migration=1 read_write=1 fsync=1 cwd=virtual app_access=denied\n",
+          "reopened": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_REOPEN_PASS buffered_shutdown_flush=1\n",
+          "vendorReopened": "CE_VENDOR_REOPEN_PASS persistence=1 owner=0 private_mode=0600 app_access=denied\n",
+          "credentialRemovalAndRestoration": "PASS: host-keystore-wrapped default slot removed after restoring credential",
+          "vendorPlaintextRemoved": true,
+          "ceRoots": 5,
+          "layoutMarker": true,
+          "uid": 10158,
+          "validation": "PASS",
+          "runId": "1d40a1a99c7a46fdb5cbebe2a6b17784",
+          "api32Layout": true,
+          "scope": "Encrypted VFS, migration and native ARM64 file transport; not Android12L framework credential lifecycle"
+        },
+        "selinuxAfter": "Enforcing",
+        "phantomLimitAfter": "null",
+        "phantomMonitoringAfter": "null",
+        "validation": "PASS"
+      },
+      "completedJob": {
+        "pid": 27285,
+        "token": "c283743ca4704ef083de86e5160b61e3",
+        "script": "/home/pi/pocket-api32-vm/ce-transport-validation/run-c283743ca4704ef083de86e5160b61e3.py",
+        "log": "/home/pi/pocket-api32-vm/ce-transport-validation/run-c283743ca4704ef083de86e5160b61e3.log",
+        "exit": "/home/pi/pocket-api32-vm/ce-transport-validation/run-c283743ca4704ef083de86e5160b61e3.exit.json"
+      }
+    },
+    "legacy": {
+      "path": "out/api32/ce-transportlegacy-first-report.json",
+      "sha256": "c12fe6c920d41eb4719b36645fd6855f31d42285f305f0224fc956dc7f52c190",
+      "report": {
+        "runId": "5787ca1d985b4ce588733669e484cd47",
+        "vmInstance": 73,
+        "apkSha256": "10843f30682360fe05ab2b5374792e5c0db3ab71b7cc228f280aaa660e205fb7",
+        "legacyLayout": true,
+        "selinuxBefore": "Enforcing",
+        "phantomLimitBefore": "null",
+        "phantomMonitoringBefore": "null",
+        "fixture": {
+          "readDuringBlockedSync": "PASS: real AppFuse bridge permits reads before fsync finishes",
+          "migration": "verified ciphertext; plaintext source removed",
+          "locked": "CE_LOCKED_PASS additional_users_fail_closed=1\n",
+          "native": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_FILESYSTEM_PASS mmap=1 truncation=1 locks=1 directories=1 links=1 executable_memory=1\n",
+          "reopened": "CE_SQLITE_PASS WAL=1 FULL=1 cross_process_writer_exclusion=1\nCE_REOPEN_PASS buffered_shutdown_flush=1\n",
+          "credentialRemovalAndRestoration": "PASS: host-keystore-wrapped default slot removed after restoring credential",
+          "uid": 10158,
+          "validation": "PASS",
+          "runId": "5787ca1d985b4ce588733669e484cd47",
+          "api32Layout": false,
+          "scope": "Encrypted VFS, migration and native ARM64 file transport; not Android12L framework credential lifecycle"
+        },
+        "selinuxAfter": "Enforcing",
+        "phantomLimitAfter": "null",
+        "phantomMonitoringAfter": "null",
+        "validation": "PASS"
+      },
+      "completedJob": {
+        "pid": 27849,
+        "token": "b4902c78fa804b619463f5434659199f",
+        "script": "/home/pi/pocket-api32-vm/ce-transport-validation/run-b4902c78fa804b619463f5434659199f.py",
+        "log": "/home/pi/pocket-api32-vm/ce-transport-validation/run-b4902c78fa804b619463f5434659199f.log",
+        "exit": "/home/pi/pocket-api32-vm/ce-transport-validation/run-b4902c78fa804b619463f5434659199f.exit.json"
+      }
+    }
+  },
+  "namespaceTests": {
+    "newFiveRoot": "PASS format3 vendor files persist encrypted, ordinary app denied, parent traversal correct",
+    "legacy": "PASS format2 inode7 preserved as ordinary file; persistence, metadata buffering, failed commit recovery, permissions, links and traversal"
+  },
+  "hostCeJniIdenticalToManager076": true,
+  "hostCeJniSha256": "0e847ac9a82155dce5983b20fa59bf9178df45e92eddd7fbb7491a6f8a04b647",
+  "productionImageLoaderIdenticalToTestedTransportLoader": true,
+  "loaderTemplateSha256": "9ed49cb53e8b4fb3d08b1934b9fddfd10148bb41077e7a6f08eedc0c71a2493b",
+  "managerIntegrationEnabled": true,
+  "typedVoldRuntimeVerified": true,
+  "frameworkCredentialLifecycleVerified": true,
+  "notEstablished": [
+    "Encrypted ordinary API32 app/keystore persistence across an outer Manager process restart",
+    "Additional modern native filesystem syscalls beyond operations exercised by namespace/native fixtures and ordinary SDK32 app",
+    "Scoped emulated external storage and actual MediaProvider/FUSE sessions",
+    "Real keyguard UI password entry through host input",
+    "Repeated fresh-profile startup reliability, supported production image hosting and phone validation",
+    "Full12L support"
+  ],
+  "checks": [
+    {
+      "command": "javac --release 8 -Xlint:all -d out/api32/ce-namespace-classes runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java runtime/storage/src/dev/kreijstal/aosppocket/storage/CeNamespace.java runtime/tests/CeNamespaceTest.java runtime/tests/CeNamespace32Test.java",
+      "result": "PASS"
+    },
+    {
+      "command": "java -cp out/api32/ce-namespace-classes dev.kreijstal.aosppocket.storage.CeNamespace32Test",
+      "result": "PASS"
+    },
+    {
+      "command": "java -cp out/api32/ce-namespace-classes dev.kreijstal.aosppocket.storage.CeNamespaceTest",
+      "result": "PASS"
+    },
+    {
+      "command": "out/api32/ce-secret-fixture",
+      "result": "PASS ASan/UBSan"
+    },
+    {
+      "command": "python3 tools/build_api32_storage.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS typed86-method adapter and probe"
+    },
+    {
+      "command": "python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/api28/aosp-pocket-api28-probe.apk --out out/api32/ce-transport-fixture",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/ce-transport-validation/test_api32_ce_transport_on_pi.py --apk /home/pi/pocket-api32-vm/ce-transport-validation/ce-fixture.apk",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/ce-transport-validation/test_api32_ce_transport_on_pi.py --apk /home/pi/pocket-api32-vm/ce-transport-validation/ce-fixture.apk --legacy-layout",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/api32/ce-legacy-manager-regression",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/ce-legacy-manager-regression/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 -m py_compile tools/test_api32_ce_manager_on_pi.py tools/test_api32_persistence_on_pi.py",
+      "result": "PASS after user0-safe reinstall handling"
+    },
+    {
+      "command": "javac --release 8 -Xlint:all -d out/api32/ce-namespace-classes runtime/storage/src/dev/kreijstal/aosppocket/storage/EncryptedStore.java runtime/storage/src/dev/kreijstal/aosppocket/storage/CeNamespace.java runtime/tests/CeNamespaceTest.java runtime/tests/CeNamespace32Test.java",
+      "result": "PASS after label and namespace-path changes"
+    },
+    {
+      "command": "java -cp out/api32/ce-namespace-classes dev.kreijstal.aosppocket.storage.CeNamespace32Test",
+      "result": "PASS label inheritance and encrypted-index reopen; five-root layout and legacy inode7"
+    },
+    {
+      "command": "java -cp out/api32/ce-namespace-classes dev.kreijstal.aosppocket.storage.CeNamespaceTest",
+      "result": "PASS legacy namespace regressions"
+    },
+    {
+      "command": "python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/api28/aosp-pocket-api28-probe.apk --out out/api32/ce-metadata-fixture-v2",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/ce-metadata-v2-validation/test_api32_ce_transport_on_pi.py --apk /home/pi/pocket-api32-vm/ce-metadata-v2-validation/ce-fixture.apk",
+      "result": "PASS five-root native transport and metadata"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/ce-metadata-v2-validation/test_api32_ce_transport_on_pi.py --apk /home/pi/pocket-api32-vm/ce-metadata-v2-validation/ce-fixture.apk --legacy-layout",
+      "result": "PASS legacy native transport and metadata"
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --out out/api32/ce-metadata-image --version 0.78.10 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.10.zip --probe --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS 2632 files, 589745431 bytes; loader identical to native-tested fixture"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/ce-metadata-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage2 --out out/api32/ce-metadata-manager-probe",
+      "result": "PASS fresh isolated sandbox, SDK28/29/32 inventories; unchanged host JNI"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/ce-metadata-manager-probe/api32-ce-manager-probe.apk --allow-image-probe32 --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 -m py_compile tools/test_api32_ce_manager_on_pi.py tools/test_api32_ce_transport_on_pi.py tools/build_api29_manager.py tools/validate_download_manager.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/ce-metadata-manager-validation/test_api32_ce_manager_on_pi.py --work-dir /home/pi/pocket-api32-vm/ce-metadata-manager-validation --package dev.kreijstal.aosppocket.api32ceimage2",
+      "result": "PASS five guest boots,4encrypted boots; strict reports independently rechecked against119 source pins"
+    },
+    {
+      "command": "python3 out/api32/verify_ce_metadata_manager_report.py",
+      "result": "PASS: full detailed report/cycles, source pins and actual APK/image hashes independently checked"
+    }
+  ],
+  "legacyManagerBuild": {
+    "apk": "/home/kreijstal/git/aosp-pocket/out/api32/ce-legacy-manager-regression/aosp-pocket-manager-0.77.apk",
+    "sha256": "5b4ea10e87208c6b2e813d6cff8f52ea0d2cf96cbe12b4082aadbcab0d2827cc",
+    "bytes": 1713800,
+    "probe": false,
+    "guestImagesBundled": 0,
+    "hostNativeLibrariesUnchanged": true,
+    "guestSdks": [
+      28,
+      29
+    ],
+    "runtimeValidated": false
+  },
+  "managerCandidate": {
+    "path": "out/api32/ce-manager-retry-candidate.json",
+    "sha256": "f17eb43ddba131991e77288c4cdb01aa1050267398f9bbff2c789ebc0a60adc0",
+    "imageVersion": "0.78.9",
+    "imageSha256": "ab5b165fe3471c0c65e9dd2218362f3b0de16dc59efd04241ef6007f46df747c",
+    "managerSha256": "7db4f4dd88a505eb6068eeb32cbf77c57fd5c2308f8fcd89a0f627e1a983c1ee",
+    "sourceSnapshot": "out/api32/ce-manager-retry-source-snapshot",
+    "job": {
+      "pid": 10377,
+      "token": "0ffdc318c6784723a439fedd5b08e06b",
+      "script": "/home/pi/pocket-api32-vm/ce-manager-validation/run-0ffdc318c6784723a439fedd5b08e06b.py",
+      "log": "/home/pi/pocket-api32-vm/ce-manager-validation/run-0ffdc318c6784723a439fedd5b08e06b.log",
+      "exit": "/home/pi/pocket-api32-vm/ce-manager-validation/run-0ffdc318c6784723a439fedd5b08e06b.exit.json"
+    },
+    "validation": "FAIL",
+    "runId": "e939510f43ef4d27a39e1565b030325d",
+    "report": "out/api32/ce-manager-retry-report.json",
+    "reportSha256": "b774d3b65fec99c5967c532bb4cf7069366d23a3bde701d8bd3d68c3e69dd33a"
+  },
+  "firstManagerAttempt": {
+    "report": "out/api32/ce-manager-first-report.json",
+    "job": "out/api32/ce-manager-first-job.json",
+    "result": "Storage capacity preflight failed before download, init, or credential operations. No runtime encryption result.",
+    "retryPreparation": "Cleared stopped disposable api32test component sandbox; uninstalled empty failed-before-download CE test package for user0. Existing api32managerimage profile retained. Free /data increased from 1754168 to 3355716 KiB."
+  },
+  "managerLifecycleTestScope": [
+    "Real12L LockSettings sets and verifies password; SP disk secret delivered by framework through typed IVold, never exported to reports",
+    "Verified migration of all five CE roots",
+    "Five guest boots: plain, encrypted with password1, encrypted with password2, authless, encrypted with password3",
+    "Wrong and old credentials denied; password changed, removed and restored",
+    "Ordinary min/target32 app retains private data and nonexportable AndroidKeyStore key; verify never recreates missing state",
+    "Each complete stopped-cycle log checked for fatal/ANR; all15 supervised services must be reaped with zero remaining or failed before next boot acknowledgement"
+  ],
+  "managerPartialEvidence": {
+    "completedCycle": 0,
+    "path": "out/api32/ce-manager-retry-cycle-0.json",
+    "sha256": "83a2da20da93f83e810502e750869c06a6a1ed6e3c703d71f2f59b1a0025a0cc",
+    "migration": true,
+    "strictCycleChecks": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "23121"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true
+    },
+    "proved": [
+      "Plain12L boot and ordinary SDK32 app creation of private data and nonexportable AndroidKeyStore key",
+      "RealLockSettings password set/check and synthetic-password32-byte disksecret capture",
+      "Five-root migration verified and plaintext placeholders sealed before next boot",
+      "SingleSystemUI process; no captured ANR/Java/nativefatal; all15services reaped, zero remaining/failed"
+    ],
+    "notYetProved": [
+      "Encrypted boot completion",
+      "Wrong and old credential denial",
+      "Password change/removal/restoration",
+      "Encrypted ordinary app data and keystore continuity across reboot"
+    ],
+    "scope": "Historical0.78.9 plain migration cycle only; full0.78.10 result is recorded in nextManagerCandidate."
+  },
+  "managerRuntimeFailure": {
+    "credentialPasswordSet": true,
+    "spDiskSecretCapturedBytes": 32,
+    "migrationCycleStrictPassed": true,
+    "encryptedBootReached": true,
+    "lockedCanariesAndWrongPasswordChecksReachedBeforeCorrectUnlock": true,
+    "correctCredentialReachedAppVerification": true,
+    "ordinaryAppVerification": "FAIL IllegalStateException; previous app error report did not distinguish missing private data from missing key",
+    "observedErrors": [
+      "installd lgetfilecon returns ENODATA on encrypted app directories; PackageManager attempts destructive app-data recovery",
+      "Launcher canonicalize0 throws EINVAL: CE readlink handler dereferences final /proc/self/fd magic link as if it were an ordinary virtual directory"
+    ],
+    "stoppedGuestOwnerExitCode": 0,
+    "stoppedGuestOwnerAlive": false,
+    "retryPolicy": "Preserve this started CE profile and evidence; no automatic clear/restart"
+  },
+  "foundationLoaderTemplateSha256": "743653337d0dcf513a51346e5040cfad4cebc307bc09c543d06522bc193cb2ff",
+  "nextManagerCandidate": {
+    "path": "out/api32/ce-metadata-manager-candidate.json",
+    "imageVersion": "0.78.10",
+    "managerPackage": "dev.kreijstal.aosppocket.api32ceimage2",
+    "validation": "PASS",
+    "preservedPreviousProfile": "dev.kreijstal.aosppocket.api32ceimage",
+    "sha256": "6eb0c108ef636f8d142d13c2e55cb09cf37c0ae54eb9013bcc8470264073e258",
+    "job": {
+      "pid": 19201,
+      "token": "a07f420c38cb448c8bd35838952403f8",
+      "script": "/home/pi/pocket-api32-vm/ce-metadata-manager-validation/run-a07f420c38cb448c8bd35838952403f8.py",
+      "log": "/home/pi/pocket-api32-vm/ce-metadata-manager-validation/run-a07f420c38cb448c8bd35838952403f8.log",
+      "exit": "/home/pi/pocket-api32-vm/ce-metadata-manager-validation/run-a07f420c38cb448c8bd35838952403f8.exit.json",
+      "freeBytesBeforeInstall": 2111827968,
+      "downloadPreflightBytes": 2092542854
+    },
+    "storagePreparation": "Removed the stopped api32test component APK and completed cefixture package after preserving all reports; retained api32managerimage and failed api32ceimage profiles.",
+    "runId": "d2cf3f83999442a3be7f61274766c641",
+    "completedCycles": [
+      {
+        "index": 0,
+        "path": "out/api32/ce-metadata-manager-cycle-0.json",
+        "sha256": "5c398530e4dfc94ce0a0af506724279b8ddbb3df733e27ab8afd1421ef202b6d",
+        "check": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "29791"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true
+        }
+      },
+      {
+        "index": 1,
+        "path": "out/api32/ce-metadata-manager-cycle-1.json",
+        "sha256": "00e529fc26000700e9acbf941346dcba4a7398725a3b1471848f2dbc2d8bd9d5",
+        "check": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "32480"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true
+        }
+      },
+      {
+        "index": 2,
+        "path": "out/api32/ce-metadata-manager-cycle-2.json",
+        "sha256": "6b1b7e5cf72e4c62098b1f286e39d233faa741e936edc1dee352611fb9955303",
+        "check": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "3111"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true
+        }
+      },
+      {
+        "index": 3,
+        "path": "out/api32/ce-metadata-manager-cycle-3.json",
+        "sha256": "5d244cc8c7e86f4ef5f588fa9e3418ad9c97beefa0e35d437bb9eaeec85a2643",
+        "check": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "5132"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true
+        }
+      },
+      {
+        "index": 4,
+        "path": "out/api32/ce-metadata-manager-cycle-4.json",
+        "sha256": "39fc7d37310ee7607204b1efee1aaa0dbabfde58a2dabbf99fc862d67ba835d2",
+        "check": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "6882"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true
+        }
+      }
+    ],
+    "metadataRuntimeRegressionComparison": {
+      "installdMissingLabel": {
+        "0.78.9FailedEncryptedBoot": 278,
+        "0.78.10FirstEncryptedBoot": 0
+      },
+      "appDataRecovery": {
+        "0.78.9FailedEncryptedBoot": 139,
+        "0.78.10FirstEncryptedBoot": 0
+      },
+      "launcherCanonicalFailure": {
+        "0.78.9FailedEncryptedBoot": 4,
+        "0.78.10FirstEncryptedBoot": 0
+      },
+      "javaFatal": {
+        "0.78.9FailedEncryptedBoot": 2,
+        "0.78.10FirstEncryptedBoot": 0
+      }
+    },
+    "strictPassed": true,
+    "report": "out/api32/ce-metadata-manager-report.json",
+    "reportSha256": "8cbd68f8aed473d4e3d6173904f02150056e7466212fa758ed7b0e673fa44f21",
+    "verifiedGuestBoots": 5,
+    "verifiedEncryptedBoots": 4,
+    "ordinaryAppUid": 10107,
+    "hostSettingsUnchanged": true,
+    "pollErrors": 0,
+    "jobExitCode": 0,
+    "proved": [
+      "Real12L credential set/check and32-byte SP disk-secret handoff through typed vold",
+      "Verified migration and locked denial across all5 CE roots",
+      "Wrong password and old passwords rejected across subsequent boots",
+      "Password changed, removed, restored; password-free boot auto-unlocks; restoration removes default-unlock slot",
+      "Same ordinary min/target32 app UUID/ciphertext and nonexportable AndroidKeyStore key after each of4 encrypted reboots",
+      "Canonical private path stable in plain and encrypted boots",
+      "Every cycle: oneSystemUI, zero captured ANR/Java/nativefatal, native log below2MiB, all15services reaped with0remaining/failed, ownerexit0"
+    ],
+    "postValidationCleanup": {
+      "completedHostTestProcessStopped": true,
+      "nativeGuestOwnersAbsent": true,
+      "encryptedProfileDataPreserved": true,
+      "freeDataKiBAfterTest": 719376,
+      "scope": "Only stopped completed api32ceimage2 host process; no profile reset or data clear"
+    }
+  },
+  "managerIntegrationRuntimeVerified": true,
+  "metadataFixValidation": {
+    "hostLabel": "Capture actual inherited security.selinux in offline migration; persist read-only and inherit on virtual child creation; no guest policy or host relabel",
+    "procFd": "Readlink of own CE fd returns namespace path, so Bionic realpath O_PATH/fstat/readlink/stat identity check succeeds",
+    "bionicPrimarySource": "https://android.googlesource.com/platform/bionic/+/68898e5a86416e3f5f8bfd1c8119cfc95ed46946/libc/bionic/realpath.cpp",
+    "fixture": "out/api32/ce-metadata-fixture-v2/ce-fixture.apk",
+    "runtimeVerified": true,
+    "namespace32Regression": "PASS: captured label inheritance, copy isolation and encrypted-index reopening; file namespace paths",
+    "namespaceLegacyRegression": "PASS: persistence, sync, traversal, links, rename/unlink and directory cycle checks",
+    "buildCommand": "python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/api28/aosp-pocket-api28-probe.apk --out out/api32/ce-metadata-fixture-v2",
+    "buildResult": "PASS native loader/CE JNI/probe, Java/D8/APK and signature verification",
+    "candidate": "out/api32/ce-metadata-v2-candidate.json",
+    "candidateSha256": "969a95036610419d6641ce3fde042c5c0055a05ef234ee46e383aa0eac93add2",
+    "firstFocusedRuntime": {
+      "report": "out/api32/ce-metadata-first-report.json",
+      "validation": "FAIL",
+      "reason": "Read-only inherited label checks passed; proc-fd path check failed. The new parser used a slash-boundary prefix helper with already trailing-slash prefixes; corrected to byte-prefix comparisons.",
+      "job": {
+        "pid": 16370,
+        "token": "1af83c2ba4f047f096e20a0f371ac6e9",
+        "script": "/home/pi/pocket-api32-vm/ce-metadata-validation/run-1af83c2ba4f047f096e20a0f371ac6e9.py",
+        "log": "/home/pi/pocket-api32-vm/ce-metadata-validation/run-1af83c2ba4f047f096e20a0f371ac6e9.log",
+        "exit": "/home/pi/pocket-api32-vm/ce-metadata-validation/run-1af83c2ba4f047f096e20a0f371ac6e9.exit.json"
+      }
+    },
+    "nativeScope": "RealARM64 AppFuse transport with API28 Bionic; explicit self-fd readlink and realpath checks; not full12L framework lifecycle",
+    "reports": {
+      "32": {
+        "path": "out/api32/ce-metadata32-report.json",
+        "sha256": "120649c701e60a1fe13798fa75f5e9db099aaa1f24fa69ad372a40c8371e00d3",
+        "runId": "b7594f6e37c54db0a1cbd4d0562e8009",
+        "apkSha256": "ab9f50209cb162c2c89f9f16214815ad343cb4ab3b27a6d3bdcb4bd370ee5f9a",
+        "metadata": "CE_METADATA_PASS inherited_host_label=persistent_readonly proc_fd=virtual canonical_path=correct\n",
+        "metadataReopened": "CE_METADATA_PASS inherited_host_label=persistent_readonly proc_fd=virtual canonical_path=correct\n",
+        "job": {
+          "pid": 17208,
+          "token": "ca6636c879994087a3d573bdf2be8a71",
+          "script": "/home/pi/pocket-api32-vm/ce-metadata-v2-validation/run-ca6636c879994087a3d573bdf2be8a71.py",
+          "log": "/home/pi/pocket-api32-vm/ce-metadata-v2-validation/run-ca6636c879994087a3d573bdf2be8a71.log",
+          "exit": "/home/pi/pocket-api32-vm/ce-metadata-v2-validation/run-ca6636c879994087a3d573bdf2be8a71.exit.json"
+        }
+      },
+      "legacy": {
+        "path": "out/api32/ce-metadata-legacy-report.json",
+        "sha256": "bf606a4f96165dea53aeb0a9be46e22ae92a6b35dbb2d4c21659763c5c255f13",
+        "runId": "64fdf5320da7437ab303633104f30cb2",
+        "apkSha256": "ab9f50209cb162c2c89f9f16214815ad343cb4ab3b27a6d3bdcb4bd370ee5f9a",
+        "metadata": "CE_METADATA_PASS inherited_host_label=persistent_readonly proc_fd=virtual canonical_path=correct\n",
+        "metadataReopened": "CE_METADATA_PASS inherited_host_label=persistent_readonly proc_fd=virtual canonical_path=correct\n",
+        "job": {
+          "pid": 17635,
+          "token": "531fa57a89c147fb8d5951ee9c0919d0",
+          "script": "/home/pi/pocket-api32-vm/ce-metadata-v2-validation/run-531fa57a89c147fb8d5951ee9c0919d0.py",
+          "log": "/home/pi/pocket-api32-vm/ce-metadata-v2-validation/run-531fa57a89c147fb8d5951ee9c0919d0.log",
+          "exit": "/home/pi/pocket-api32-vm/ce-metadata-v2-validation/run-531fa57a89c147fb8d5951ee9c0919d0.exit.json"
+        }
+      }
+    },
+    "full12LFirstEncryptedCycleRegressionVerified": true
+  },
+  "sourceFollowupsAfterSuccessful07810": {
+    "sourceChanges": [
+      "External-storage mode fork/exec handoff and zygote forwarding",
+      "FUSE peer/thread identity helper",
+      "GID-only loader identity record refresh"
+    ],
+    "scope": "Successful0.78.10 framework CE evidence remains pinned to its original image/APK/source snapshot. New source followups have native probes; another full framework/CE regression is required for the next integrated image."
+  },
+  "sourceHost07825CeRegression": {
+    "runId": "dc632c57ab9e46fc8b62e2be9bd10786",
+    "report": "out/api32/source-host-ce-result/ce-manager-report.json",
+    "reportSha256": "3adfdae2628d378e38011c4af2bf8e5f326d739999437b06a4906f017731353d",
+    "result": "FAIL",
+    "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+    "managerSha256": "969f270f94e91cb667edca479d1e9ef556ffccf380e97b18dc218b020c9ec609",
+    "strictPassedCycles": [
+      0,
+      1,
+      2
+    ],
+    "failedEncryptedPhase": 2,
+    "scope": "Fully source-built host libraries; plaintext migration, password-protected boot, password change, password removal, then authless encrypted boot before keyguard/outer restart checks",
+    "filesystemAuthlessUnlockVerified": true,
+    "providerCheckFailure": "java.io.IOException: Ordinary CE app failed: POCKET_CE32_APP_ERROR java.io.IOException: Ordinary CE app provider unavailable\njava.io.IOException: Ordinary CE app provider unavailable\n\tat dev.kreijstal.aosppocket.guest.CeAppInspector32.main(CeAppInspector32.java:25)\n\tat com.android.internal.os.RuntimeInit.nativeFinishInit(Native Method)\n\tat com.android.internal.os.RuntimeInit.main(RuntimeInit.java:355)\n",
+    "frameworkStateEvidence": [
+      "ActivityManager:User 0 state changed from BOOTING to RUNNING_LOCKED",
+      "ActivityManager:Started unlocking user 0",
+      "ActivityManager:Unlocking user 0 progress 0",
+      "ActivityManager:Unlocking user 0 progress 5",
+      "UserDataPreparer:Setting property: sys.user.0.ce_available=true"
+    ],
+    "correction": "Read-only CE provider inspector waits up to 60 seconds for UserManager.isUserUnlocked before requesting the CE provider. Readable decrypted bytes alone do not establish completion of Android user unlock. Pending runtime verification.",
+    "realKeyguardVerified": false,
+    "outerManagerRestartVerified": false,
+    "profilePreserved": true,
+    "sampledPeakChildren": 32,
+    "hardProcessBoundProven": false,
+    "readinessFixCandidate": {
+      "build": {
+        "apk": "/home/kreijstal/git/aosp-pocket/out/api32/ce-authless-resume-manager-probe/api32-ce-manager-probe.apk",
+        "sha256": "581d42646308edbb6766d952ec65ef376512716e33e27c8c096f6f1619ee52d6",
+        "bytes": 8394822,
+        "probe": true,
+        "guestImagesBundled": 0,
+        "hostNativeLibrariesUnchanged": false,
+        "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+        "guestSdks": [
+          28,
+          29,
+          32
+        ],
+        "runtimeValidated": false,
+        "hostNativeSourceBuild": {
+          "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+          "libraries": {
+            "libpocket_runtime.so": {
+              "bytes": 22204208,
+              "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+            },
+            "libproot.so": {
+              "bytes": 822352,
+              "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+            },
+            "libpocket_frames.so": {
+              "bytes": 7312,
+              "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+            },
+            "libpocket_ce.so": {
+              "bytes": 14512,
+              "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+            }
+          }
+        }
+      },
+      "driver": "tools/test_api32_ce_authless_on_pi.py",
+      "driverSha256": "4e997925b2890939da9b5d023e6b2e8839f821caf663e3558262d5f885904a27",
+      "sourceObserverSha256": "cac6bd848315b69e983a79b49f525d15331b5e1bd7f49e94e37545c5ae0c033f",
+      "scope": "Resume only authless provider readiness on the retained CE3 encrypted profile with the same 0.78.25 image, validate actual Android user unlock, unchanged ordinary app token/cipher digest/UID and keystore; no reset, password operation, new image download or full-lifecycle claim",
+      "buildAndApkValidation": "PASS",
+      "runtime": "FAIL_SHUTDOWN_GATE_PROVIDER_READINESS_AND_PERSISTENCE_PASS",
+      "runtimeJob": {
+        "pid": 11775,
+        "token": "aa0b0063b49f4857919e35d8b774a120",
+        "script": "/home/pi/pocket-api32-vm/ce-authless-readiness-validation/run-aa0b0063b49f4857919e35d8b774a120.py",
+        "log": "/home/pi/pocket-api32-vm/ce-authless-readiness-validation/run-aa0b0063b49f4857919e35d8b774a120.log",
+        "exit": "/home/pi/pocket-api32-vm/ce-authless-readiness-validation/run-aa0b0063b49f4857919e35d8b774a120.exit.json"
+      },
+      "candidate": "out/api32/ce-authless-resume-candidate.json",
+      "sourceSnapshot": "out/api32/ce-authless-resume-source-snapshot",
+      "runtimeResult": {
+        "report": "out/api32/ce-authless-resume-result/ce-authless-report.json",
+        "reportSha256": "c68d631f72ec224f0f8432c5dfd6fed91335010027fba6f0d51c14b5e0a97937",
+        "runId": "7dad2e51a44d4f6ab8b8b10505145028",
+        "imageSha256": "53a6bd96899596bce0a3626e6a78c2426bc0077b7d85befbadc69a5bfeb316fc",
+        "managerSha256": "581d42646308edbb6766d952ec65ef376512716e33e27c8c096f6f1619ee52d6",
+        "validation": "FAIL",
+        "readinessFixVerified": true,
+        "androidUnlockWaitMs": 5615,
+        "fiveRootCanariesReadable": true,
+        "originalAppTokenCipherDigestUidAndKeyPreserved": true,
+        "secureKeyguard": false,
+        "failure": "java.io.IOException: Guest owner did not exit cleanly",
+        "cleanupFailure": "Guest supervisor left processes requiring cleanup",
+        "initOwnerExitCode": 0,
+        "initReapedServices": 16,
+        "initRemainingServices": 0,
+        "initFailedServices": 0,
+        "sampledPeakChildren": 33,
+        "fullCredentialLifecycleVerified": false,
+        "realKeyguardPasswordVerified": false,
+        "outerManagerRestartVerified": false,
+        "profilePreserved": true,
+        "observation": "Subreaper ownership was absent in the tested 0.78.25 init. Its group-only stop can miss descendants that create their own process groups. This failure log does not identify the exact leftover PID, so the cause remains an inference pending the new supervisor runtime test."
+      },
+      "observerJob": {
+        "pid": 12664,
+        "script": "/home/pi/pocket-api32-vm/ce-authless-readiness-validation/observe-budget.py",
+        "log": "/home/pi/pocket-api32-vm/ce-authless-readiness-validation/process-budget-observer.log",
+        "sourceSha256": "78b640ccdaccc9f9792de6e74379ac6f7bb22a6d9f6b22c700860bf74dec9db0"
+      }
+    }
+  },
+  "childOwnershipFollowup": {
+    "evidence": "docs/api32-child-ownership-validation.json",
+    "status": "ANDROID_ENCRYPTED_PROFILE_KERNEL_DESCENDANT_OWNERSHIP_PASS_PACKAGED_IMAGE_PENDING",
+    "runtime": {
+      "report": "out/api32/subreaper-ce-result/ce-authless-report.json",
+      "reportSha256": "e4ec1940ea6b7d8541f63aae8b0507e4590ffae6346fc60754b50ebfeeb40e83",
+      "cycle": "out/api32/subreaper-ce-result/ce-authless-cycle.json",
+      "cycleSha256": "e9c3c654e6c5dbab11583829de3a11b5bd15de25d54901dbb4042bde297ed2cb",
+      "runId": "fde5db0b580b49fc9719bdecdea0710f",
+      "validation": "PASS",
+      "strictPassed": true,
+      "kernelChildOwnershipVerified": true,
+      "declaredServiceLifetimes": 16,
+      "descendantStop": [
+        [
+          "14",
+          "0",
+          "0",
+          "0"
+        ]
+      ],
+      "noManagerFallbackCleanup": true,
+      "initRestoration": {
+        "assetSha256": "a7e7994b972141eb5f7775b45a1e6e16490bb2c8def83d218d7b9a595a7c9faa",
+        "sourceSha256": "016f25ab577b119606e6ce2db0c951b7a0cf3396af0a8c40171b3d0c91f0a680",
+        "originalSha256": "45709609fa22c3df55e43443fa578f0ae42b657f571b0539fa13000a2b70a6ea",
+        "originalMode": 493,
+        "backup": ".pocket-ce-init-fde5db0b580b49fc9719bdecdea0710f",
+        "guestDataReset": false,
+        "runtimeCodeReplaced": true,
+        "originalCodeRestored": true,
+        "executedSha256": "ece1f217e4942e141660394e935b063995c0562869a8050f47abda59218936a4",
+        "restoredSha256": "45709609fa22c3df55e43443fa578f0ae42b657f571b0539fa13000a2b70a6ea"
+      },
+      "appDataAndKeystorePersisted": true,
+      "androidUnlockWaitMs": 4,
+      "sampledPeakChildren": 33,
+      "samples": 55,
+      "pollErrors": 0,
+      "observerErrors": [],
+      "hardProcessBoundProven": false,
+      "scope": "Init-only reversible trial on0.78.25 encrypted profile; not a complete packaged-image, secure-keyguard or full credential-lifecycle claim"
+    },
+    "fullGoalComplete": false
+  },
+  "preserved07827LifecycleCandidate": {
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/preserved-lifecycle-manager-probe/api32-ce-manager-probe.apk",
+      "sha256": "97675c727e51e6f7902f2e79516fb2549fc9691de35636552664b61aecc1cd10",
+      "bytes": 8398918,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      }
+    },
+    "driver": "tools/test_api32_ce_manager_on_pi.py",
+    "driverSha256": "9a57a33c54cc5e0b0c7ebb4b4ac68fa0101f80b5c58de3841bd6880621d6f810",
+    "sourceSha256": "499518db8b346ae7e0a54908100ca67b73d8d5eb00c0007214fe0bf8b03e012f",
+    "scope": "Preserve encrypted CE3 app data/key while upgrading from0.78.25 to complete0.78.27; test password set/change/removal/restoration, real keyguard unlock and outer Manager process restart, then restore original password-free state. Plaintext migration is not repeated.",
+    "runtime": "FAIL_KEYGUARD_UI",
+    "testCredentialRecovery": "Test-only passwords remain recoverable outside Android in a new owner-only0600 Pi job file, removed after verified successful restoration of the original authless state. Never printed, passed on argv or included in source snapshots.",
+    "runtimeJob": {
+      "pid": 342,
+      "token": "c4c8703aae924858a0ceb93ff9aa9858",
+      "script": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/run-c4c8703aae924858a0ceb93ff9aa9858.py",
+      "log": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/run-c4c8703aae924858a0ceb93ff9aa9858.log",
+      "exit": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/run-c4c8703aae924858a0ceb93ff9aa9858.exit.json"
+    },
+    "candidate": "out/api32/preserved-lifecycle-candidate.json",
+    "sourceSnapshot": "out/api32/preserved-lifecycle-source-snapshot",
+    "observerJob": {
+      "pid": 565,
+      "script": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/process-budget-observer.log",
+      "sourceSha256": "eb884ad84c9f21423864dee83926315b8fcfb9a69b4a01f5f115fd8bc037f736"
+    },
+    "result": {
+      "state": "FAIL_KEYGUARD_BOUNCER_NOT_OPEN",
+      "runId": "ed1b907536e84efdacfc5465eaadab78",
+      "report": "out/api32/preserved-lifecycle-result/ce-manager-report.json",
+      "reportSha256": "84c44342129e5971b26c849bb67e9875124e296b2b454f84a34edf4962903327",
+      "terminalReturncode": 1,
+      "strictPassed": false,
+      "completedStrictCycles": [
+        {
+          "index": 0,
+          "path": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/ce-manager-cycle-ed1b907536e84efdacfc5465eaadab78-0.json",
+          "sha256": "bed2faa9568c8d61caa583daa4e8ee6fbb25b2a42641944e2e031aa6dc56dd02",
+          "check": {
+            "anrs": [],
+            "javaFatalHeaders": [],
+            "nativeFatals": [],
+            "systemUiStarts": [
+              "24488"
+            ],
+            "nativeLogWithinLimit": true,
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "strictPassed": true,
+            "descendantStop": [
+              [
+                "14",
+                "11",
+                "0",
+                "0"
+              ]
+            ],
+            "kernelChildOwnershipVerified": true,
+            "supervisedLifetimeCount": 15,
+            "reapAccounting": true
+          },
+          "migration": false
+        },
+        {
+          "index": 1,
+          "path": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/ce-manager-cycle-ed1b907536e84efdacfc5465eaadab78-1.json",
+          "sha256": "3a7d2e817a609d35210d781d0c42c099682804e9a8aa06d953ef782cd438031d",
+          "check": {
+            "anrs": [],
+            "javaFatalHeaders": [],
+            "nativeFatals": [],
+            "systemUiStarts": [
+              "26436"
+            ],
+            "nativeLogWithinLimit": true,
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "strictPassed": true,
+            "descendantStop": [
+              [
+                "16",
+                "11",
+                "0",
+                "0"
+              ]
+            ],
+            "kernelChildOwnershipVerified": true,
+            "supervisedLifetimeCount": 15,
+            "reapAccounting": true
+          },
+          "migration": false
+        },
+        {
+          "index": 2,
+          "path": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/ce-manager-cycle-ed1b907536e84efdacfc5465eaadab78-2.json",
+          "sha256": "68e699154547278765736fdb3d1d7f313938423d875a9c5c2b5756ef86b7c7e4",
+          "check": {
+            "anrs": [],
+            "javaFatalHeaders": [],
+            "nativeFatals": [],
+            "systemUiStarts": [
+              "29313"
+            ],
+            "nativeLogWithinLimit": true,
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "strictPassed": true,
+            "descendantStop": [
+              [
+                "16",
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "kernelChildOwnershipVerified": true,
+            "supervisedLifetimeCount": 15,
+            "reapAccounting": true
+          },
+          "migration": false
+        },
+        {
+          "index": 3,
+          "path": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/ce-manager-cycle-ed1b907536e84efdacfc5465eaadab78-3.json",
+          "sha256": "48a9acf86653a7dc06dda5d2229b2daf9cc0437c5e74fd028d8a93456d334f76",
+          "check": {
+            "anrs": [],
+            "javaFatalHeaders": [],
+            "nativeFatals": [],
+            "systemUiStarts": [
+              "31549"
+            ],
+            "nativeLogWithinLimit": true,
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "strictPassed": true,
+            "descendantStop": [
+              [
+                "14",
+                "7",
+                "0",
+                "0"
+              ]
+            ],
+            "kernelChildOwnershipVerified": true,
+            "supervisedLifetimeCount": 15,
+            "reapAccounting": true
+          },
+          "migration": false
+        }
+      ],
+      "error": "java.io.IOException: CE did not unlock after credential verification",
+      "failureFrame": "out/api32/preserved-lifecycle-result/keyguard-bouncer.png",
+      "observation": "Saved pre-entry frame is the locked clock screen, not the password bouncer. Input enqueue acceptance alone did not establish focus or delivery to the password field; no successful correct-password UI verification was observed.",
+      "originalApp": {
+        "sdk": 32,
+        "uid": 10106,
+        "pid": 25424,
+        "token": "834fb262-887e-4fd0-9d9d-bd7359ed33e5",
+        "cipherDigest": "9c423ef60c8fc75b524077cecb9175af70bc5d0b2713968f410cffe6fea5e6dd",
+        "nonExportable": true,
+        "cryptoValid": true,
+        "privatePath": "/data/user/0/dev.kreijstal.pocketce32test/shared_prefs/ce-state.xml",
+        "canonicalDataPath": "/data/user/0/dev.kreijstal.pocketce32test",
+        "androidUserUnlocked": true,
+        "androidUnlockWaitMs": 8889
+      },
+      "lastFailedSessionOwnerExit": 0,
+      "lastFailedSessionOwnerAlive": false,
+      "sampledPeakChildren": 31,
+      "censusSamples": 298,
+      "censusErrors": [],
+      "hardProcessBoundProven": false,
+      "managerProcessRestartVerified": false,
+      "originalPasswordFreeStateRestored": false,
+      "recoveryFile": "/home/pi/pocket-api32-vm/preserved-lifecycle-validation/test-credentials.json",
+      "recoveryFileMode": "0600",
+      "recoveryPolicy": "Retained outside Android for deliberate recovery. Do not print credentials or reset/reinstall the guest data. Profile remains encrypted with the phase2 restored test password.",
+      "nextAction": "Add evidence of actual password-bouncer readiness and investigate physical input delivery before a deliberate preserved-profile continuation; keep the terminal failure and all four strict-pass cycles."
+    }
+  },
+  "mounted07837LockedKeyguardRecovery": {
+    "status": "TERMINAL_FAIL_DISPLAY_OFF_BEFORE_FIRST_FRAME",
+    "priorRunId": "ed1b907536e84efdacfc5465eaadab78",
+    "priorReport": "out/api32/preserved-lifecycle-result/ce-manager-report.json",
+    "package": "dev.kreijstal.aosppocket.api32ceimage3",
+    "candidate": "out/api32/volume-keyguard-resume-candidate.json",
+    "sourceSnapshot": "out/api32/volume-keyguard-resume-source-snapshot",
+    "manager": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/volume-keyguard-mounted-resume-ce-manager-probe/api32-ce-manager-probe.apk",
+      "package": "dev.kreijstal.aosppocket.api32ceimage3",
+      "sha256": "c9b4e8b68232bfd909c021e42beaff3eea5099be0b04647776dd59ac644c1888",
+      "bytes": 8382403,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "1a3da2a3d313a178971d000666c46038377ed35348be5bffdffd9d0ad660773f",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "b7077aa8e6b2f2a1e8d1180956a39b197382aa8e7d4a065b4f907ded16dbeb94",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      },
+      "externalHostSourceBuild": {
+        "manifestSha256": "6b574bbe4584db60d7390882b2ba0cdcc6740b9e6476439a069bddb7e38bc0db",
+        "schema": 1,
+        "abi": "arm64-v8a",
+        "minSdk": 28,
+        "library": "libpocket_external32.so",
+        "bytes": 22472,
+        "sha256": "8f3b7970c7bf00e0554d3c5b7e3e171d5944a6c34e88f2ad67e1b0c5cee7b078",
+        "sources": {
+          "runtime/storage/native/external_fuse32.c": "a246bc799e1df58b2ad373b0221310f471da7a2ebbffc0f823b1c49736ae7d96",
+          "runtime/storage/native/external_holders32.h": "218e1296144f27e4407de62c5bd7e36d39183bc8f712249e6c7a7557f5e5ee49",
+          "tools/build_api32_external_host.py": "f7320b7b248a1cd78b53fe5b5853a77c9fd7db65611a2f77c977019ac93954ba"
+        },
+        "command": [
+          "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-fPIC",
+          "-shared",
+          "-pthread",
+          "-Wl,-z,max-page-size=16384",
+          "/home/kreijstal/git/aosp-pocket/runtime/storage/native/external_fuse32.c",
+          "-llog",
+          "-o",
+          "/home/kreijstal/git/aosp-pocket/out/api32/volume-live-proc-host-native/libpocket_external32.so"
+        ],
+        "runtimeValidated": false
+      }
+    },
+    "imageVersion": "0.78.37",
+    "imageSha256": "951197adefd97368213b9e09a17a9b6ae8e7dcb127a13ac2fef13860766dcff9",
+    "job": {
+      "pid": 17840,
+      "token": "05efd7cb35d347f999215d7d38b94a83",
+      "script": "/home/pi/pocket-api32-vm/volume-keyguard-resume-validation/run-05efd7cb35d347f999215d7d38b94a83.py",
+      "log": "/home/pi/pocket-api32-vm/volume-keyguard-resume-validation/run-05efd7cb35d347f999215d7d38b94a83.log",
+      "exit": "/home/pi/pocket-api32-vm/volume-keyguard-resume-validation/run-05efd7cb35d347f999215d7d38b94a83.exit.json"
+    },
+    "observer": {
+      "pid": 17944,
+      "script": "/home/pi/pocket-api32-vm/volume-keyguard-resume-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/volume-keyguard-resume-validation/process-budget-observer.log",
+      "sourceSha256": "a210c64e7d9a1251db316ce4313f04371805900efdeaf4d7f035fc009ab289ea"
+    },
+    "command": "python3 /home/pi/pocket-api32-vm/volume-keyguard-resume-validation/test_api32_ce_keyguard_on_pi.py --work-dir /home/pi/pocket-api32-vm/volume-keyguard-resume-validation --prior-report /home/pi/pocket-api32-vm/preserved-lifecycle-validation/ce-manager-report.json --credential-file /home/pi/pocket-api32-vm/preserved-lifecycle-validation/test-credentials.json --baseline-report /home/pi/pocket-api32-vm/volume-live-proc-signal-app-validation/manager-app-report.json",
+    "scope": "Deliberate recovery of exact stopped locked CE3, upgrading immutable image27 to complete37. Read-only UiAutomation attributes prove actual visible/focused secure password entry before any password keys. Wake/gesture/tap/keys use existing host input; never read password text, perform accessibility input/actions or use correct-password CLI. Both boots require locked5-root/public-media denial, physical unlock, public-media canary read, original ordinary app/UID/software Keystore, mounted/queryable MediaProvider and strict native/reap/no ANR/fatal. Actual outer Manager restart with image source offline second boot. No credential changes/data reset/guest APK reinstall; retained Pi0600 recovery file read-only and never copied locally. No full credential lifecycle or abrupt crash claim. VM72 untouched.",
+    "buildCommand": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-keyguard-mounted-resume-ce-manager-probe",
+    "buildResult": "PASS",
+    "validatorCommand": "python3 tools/validate_download_manager.py out/api32/volume-keyguard-mounted-resume-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+    "validatorResult": "PASS",
+    "pythonCommand": "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py",
+    "pythonResult": "PASS",
+    "ordinaryCeAppAssetUnchanged": true,
+    "preparatoryBuildsNotInstalled": [
+      "out/api32/volume-keyguard-observer-ce-manager-probe",
+      "out/api32/volume-keyguard-resume-ce-manager-probe"
+    ],
+    "runId": "22dcd4d87a3d4218b8e493c13b2c0f19",
+    "reportPath": "out/api32/volume-keyguard-resume-result/ce-keyguard-report.json",
+    "reportSha256": "c41419fc4f763f8d4322f0aa1263b38488702ef3d6a6f2f7177a5bb58221c217",
+    "supervisorReturnCode": 1,
+    "lockedCanariesDenied": 5,
+    "lockedExternalCanaryDenied": true,
+    "inputEventsAccepted": 0,
+    "passwordKeysSent": false,
+    "ownerAlive": false,
+    "ownerExitCode": 0,
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "951197adefd97368213b9e09a17a9b6ae8e7dcb127a13ac2fef13860766dcff9",
+      "reusedFiles": 2596,
+      "replacedFiles": 54,
+      "reusedBytes": 1281212101,
+      "writtenBytes": 23190479,
+      "durationMillis": 131397
+    },
+    "sampledPeakChildren": 27,
+    "observerSamples": 136,
+    "observerErrors": [],
+    "failureEvidence": "SystemUI starts and SurfaceFlinger boot completes, then SurfaceFlinger power mode0 before keyguard observer. Source took initial nontrivial frame before sending WAKEUP. No input was sent; frame waits60s and fails on the sleeping display. No accessibility query/password typing reached.15 service lifetimes and11 descendants stop cleanly, no remaining/failed. No full mounted/unlock/outer-restart success claimed.",
+    "packagedPasswordLayoutEvidence": "out/api32/keyguard-ui-image-reference/receipt.json",
+    "wakeBeforeFirstFrameFollowup": {
+      "status": "TERMINAL_FAIL_ACCEPTED_WAKE_KEY_STILL_ASLEEP",
+      "candidate": "out/api32/volume-keyguard-wake-resume-candidate.json",
+      "manager": {
+        "apk": "/home/kreijstal/git/aosp-pocket/out/api32/volume-keyguard-wake-resume-ce-manager-probe/api32-ce-manager-probe.apk",
+        "package": "dev.kreijstal.aosppocket.api32ceimage3",
+        "sha256": "70e0900598f770aefff04cac39e7707fcdd2ec17d6e84bff630f7d689f3059c6",
+        "bytes": 8382403,
+        "probe": true,
+        "guestImagesBundled": 0,
+        "hostNativeLibrariesUnchanged": false,
+        "hostNativeBaseApkSha256": "1a3da2a3d313a178971d000666c46038377ed35348be5bffdffd9d0ad660773f",
+        "guestSdks": [
+          28,
+          29,
+          32
+        ],
+        "runtimeValidated": false,
+        "hostNativeSourceBuild": {
+          "manifestSha256": "b7077aa8e6b2f2a1e8d1180956a39b197382aa8e7d4a065b4f907ded16dbeb94",
+          "libraries": {
+            "libpocket_runtime.so": {
+              "bytes": 22204208,
+              "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+            },
+            "libproot.so": {
+              "bytes": 822352,
+              "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+            },
+            "libpocket_frames.so": {
+              "bytes": 7312,
+              "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+            },
+            "libpocket_ce.so": {
+              "bytes": 14512,
+              "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+            }
+          }
+        },
+        "externalHostSourceBuild": {
+          "manifestSha256": "6b574bbe4584db60d7390882b2ba0cdcc6740b9e6476439a069bddb7e38bc0db",
+          "schema": 1,
+          "abi": "arm64-v8a",
+          "minSdk": 28,
+          "library": "libpocket_external32.so",
+          "bytes": 22472,
+          "sha256": "8f3b7970c7bf00e0554d3c5b7e3e171d5944a6c34e88f2ad67e1b0c5cee7b078",
+          "sources": {
+            "runtime/storage/native/external_fuse32.c": "a246bc799e1df58b2ad373b0221310f471da7a2ebbffc0f823b1c49736ae7d96",
+            "runtime/storage/native/external_holders32.h": "218e1296144f27e4407de62c5bd7e36d39183bc8f712249e6c7a7557f5e5ee49",
+            "tools/build_api32_external_host.py": "f7320b7b248a1cd78b53fe5b5853a77c9fd7db65611a2f77c977019ac93954ba"
+          },
+          "command": [
+            "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-fPIC",
+            "-shared",
+            "-pthread",
+            "-Wl,-z,max-page-size=16384",
+            "/home/kreijstal/git/aosp-pocket/runtime/storage/native/external_fuse32.c",
+            "-llog",
+            "-o",
+            "/home/kreijstal/git/aosp-pocket/out/api32/volume-live-proc-host-native/libpocket_external32.so"
+          ],
+          "runtimeValidated": false
+        }
+      },
+      "job": {
+        "pid": 22172,
+        "token": "51628f5a06684cf5a3c03da6d5e88683",
+        "script": "/home/pi/pocket-api32-vm/volume-keyguard-wake-resume-validation/run-51628f5a06684cf5a3c03da6d5e88683.py",
+        "log": "/home/pi/pocket-api32-vm/volume-keyguard-wake-resume-validation/run-51628f5a06684cf5a3c03da6d5e88683.log",
+        "exit": "/home/pi/pocket-api32-vm/volume-keyguard-wake-resume-validation/run-51628f5a06684cf5a3c03da6d5e88683.exit.json"
+      },
+      "observer": {
+        "pid": 22229,
+        "script": "/home/pi/pocket-api32-vm/volume-keyguard-wake-resume-validation/observe-budget.py",
+        "log": "/home/pi/pocket-api32-vm/volume-keyguard-wake-resume-validation/process-budget-observer.log",
+        "sourceSha256": "3939a64910ed57701b45b6569318f753176aec14dee384160ec04290755c3b9c"
+      },
+      "scope": "Real host input accepts2 WAKEUP events with0 rejected, but repeated actual PowerManager interactive stays false for15s. No frame/gesture/accessibility/password typing reached. Locked5-root/public-media canaries remain denied; guest stops owner0 and no remaining processes. This is now an actual input/power handoff investigation; no successful wake, physical unlock, mounted CE or outer restart claim.",
+      "runId": "02b729cff9f04ff58380a75f29f9571e",
+      "reportPath": "out/api32/volume-keyguard-wake-resume-result/ce-keyguard-report.json",
+      "reportSha256": "436a3940faa5f1aa62bf7983ddf14955215204c7cffccbaaa8b66ac05dd29cb3",
+      "supervisorReturnCode": 1,
+      "input": {
+        "touchEventsAccepted": 0,
+        "keyEventsAccepted": 2,
+        "inputEventsAccepted": 2,
+        "inputEventsRejected": 0
+      },
+      "keyguardBeforeInput": {
+        "secure": true,
+        "deviceLocked": true,
+        "keyguardLocked": true,
+        "interactive": false,
+        "uptimeMillis": 562015846,
+        "externalStorage": {
+          "primaryEmulatedMounted": false,
+          "volumes": [
+            {
+              "primary": true,
+              "emulated": true,
+              "state": "removed"
+            }
+          ]
+        }
+      },
+      "passwordKeysSent": false,
+      "ownerAlive": false,
+      "ownerExitCode": 0,
+      "sampledPeakChildren": 26,
+      "observerSamples": 56,
+      "observerErrors": [],
+      "inputPolicyDiagnostic": {
+        "status": "TERMINAL_FAIL_DIAGNOSTIC_SETTINGS_ACCESS",
+        "candidate": "out/api32/volume-keyguard-input-diagnostic-candidate.json",
+        "job": {
+          "pid": 27016,
+          "token": "6ff41a8c293d45439a99e72850aac388",
+          "script": "/home/pi/pocket-api32-vm/volume-keyguard-input-diagnostic-validation/run-6ff41a8c293d45439a99e72850aac388.py",
+          "log": "/home/pi/pocket-api32-vm/volume-keyguard-input-diagnostic-validation/run-6ff41a8c293d45439a99e72850aac388.log",
+          "exit": "/home/pi/pocket-api32-vm/volume-keyguard-input-diagnostic-validation/run-6ff41a8c293d45439a99e72850aac388.exit.json"
+        },
+        "observer": {
+          "pid": 27526,
+          "script": "/home/pi/pocket-api32-vm/volume-keyguard-input-diagnostic-validation/observe-budget.py",
+          "log": "/home/pi/pocket-api32-vm/volume-keyguard-input-diagnostic-validation/process-budget-observer.log",
+          "sourceSha256": "a873b4ead5f79e3f8327992cebdf77873ce61c1c6a37ca6ac5864ee74e01173a"
+        },
+        "manager": {
+          "apk": "/home/kreijstal/git/aosp-pocket/out/api32/volume-keyguard-input-diagnostic-ce-manager-probe/api32-ce-manager-probe.apk",
+          "package": "dev.kreijstal.aosppocket.api32ceimage3",
+          "sha256": "a16d0a209adaa5319b7ad5f9d33d64154a1fc40348d2868ba2eea4da909aef8c",
+          "bytes": 8382403,
+          "probe": true,
+          "guestImagesBundled": 0,
+          "hostNativeLibrariesUnchanged": false,
+          "hostNativeBaseApkSha256": "1a3da2a3d313a178971d000666c46038377ed35348be5bffdffd9d0ad660773f",
+          "guestSdks": [
+            28,
+            29,
+            32
+          ],
+          "runtimeValidated": false,
+          "hostNativeSourceBuild": {
+            "manifestSha256": "b7077aa8e6b2f2a1e8d1180956a39b197382aa8e7d4a065b4f907ded16dbeb94",
+            "libraries": {
+              "libpocket_runtime.so": {
+                "bytes": 22204208,
+                "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+              },
+              "libproot.so": {
+                "bytes": 822352,
+                "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+              },
+              "libpocket_frames.so": {
+                "bytes": 7312,
+                "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+              },
+              "libpocket_ce.so": {
+                "bytes": 14512,
+                "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+              }
+            }
+          },
+          "externalHostSourceBuild": {
+            "manifestSha256": "6b574bbe4584db60d7390882b2ba0cdcc6740b9e6476439a069bddb7e38bc0db",
+            "schema": 1,
+            "abi": "arm64-v8a",
+            "minSdk": 28,
+            "library": "libpocket_external32.so",
+            "bytes": 22472,
+            "sha256": "8f3b7970c7bf00e0554d3c5b7e3e171d5944a6c34e88f2ad67e1b0c5cee7b078",
+            "sources": {
+              "runtime/storage/native/external_fuse32.c": "a246bc799e1df58b2ad373b0221310f471da7a2ebbffc0f823b1c49736ae7d96",
+              "runtime/storage/native/external_holders32.h": "218e1296144f27e4407de62c5bd7e36d39183bc8f712249e6c7a7557f5e5ee49",
+              "tools/build_api32_external_host.py": "f7320b7b248a1cd78b53fe5b5853a77c9fd7db65611a2f77c977019ac93954ba"
+            },
+            "command": [
+              "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang",
+              "-O2",
+              "-Wall",
+              "-Wextra",
+              "-Werror",
+              "-fPIC",
+              "-shared",
+              "-pthread",
+              "-Wl,-z,max-page-size=16384",
+              "/home/kreijstal/git/aosp-pocket/runtime/storage/native/external_fuse32.c",
+              "-llog",
+              "-o",
+              "/home/kreijstal/git/aosp-pocket/out/api32/volume-live-proc-host-native/libpocket_external32.so"
+            ],
+            "runtimeValidated": false
+          }
+        },
+        "scope": "Host WAKEUP accepted2, still asleep. Power/input/policy reads execute, but final direct Settings.getInt uses an unregistered app_process IApplicationThread and throws before the combined JSON is emitted. Original dump evidence is unavailable from this attempt. Guest stops cleanly; no password typed and no encrypted unlock claimed.",
+        "runId": "3de54a64a1d64344a2c049bb86b73e8d",
+        "reportPath": "out/api32/volume-keyguard-input-diagnostic-result/ce-keyguard-report.json",
+        "reportSha256": "37b754f36c04def93cf15a2badae6acc71176271d6524c6250f073bf56ef10e6",
+        "supervisorReturnCode": 1,
+        "externalSettingsTokenFollowup": {
+          "status": "TERMINAL_FAIL_WAKE_BEFORE_SLEEP_RACE",
+          "runId": "3b906fb0cb764ecf9d687388f34a8399",
+          "candidate": "out/api32/volume-keyguard-policy-diagnostic-candidate.json",
+          "job": {
+            "pid": 31361,
+            "token": "126863880cda4ad0a8cb895fe3a7e244",
+            "script": "/home/pi/pocket-api32-vm/volume-keyguard-policy-diagnostic-validation/run-126863880cda4ad0a8cb895fe3a7e244.py",
+            "log": "/home/pi/pocket-api32-vm/volume-keyguard-policy-diagnostic-validation/run-126863880cda4ad0a8cb895fe3a7e244.log",
+            "exit": "/home/pi/pocket-api32-vm/volume-keyguard-policy-diagnostic-validation/run-126863880cda4ad0a8cb895fe3a7e244.exit.json"
+          },
+          "observer": {
+            "pid": 31401,
+            "script": "/home/pi/pocket-api32-vm/volume-keyguard-policy-diagnostic-validation/observe-budget.py",
+            "log": "/home/pi/pocket-api32-vm/volume-keyguard-policy-diagnostic-validation/process-budget-observer.log",
+            "sourceSha256": "e1e0753d29217612646ba68bc2745127d9bf78b771bf6fd7d980ce2bf8974704"
+          },
+          "manager": {
+            "apk": "/home/kreijstal/git/aosp-pocket/out/api32/volume-keyguard-policy-diagnostic-ce-manager-probe/api32-ce-manager-probe.apk",
+            "package": "dev.kreijstal.aosppocket.api32ceimage3",
+            "sha256": "3a979942bd8650452a0a2dab5c9966b8ec3350473b9af59468cf5faeeacbbf65",
+            "bytes": 8382403,
+            "probe": true,
+            "guestImagesBundled": 0,
+            "hostNativeLibrariesUnchanged": false,
+            "hostNativeBaseApkSha256": "1a3da2a3d313a178971d000666c46038377ed35348be5bffdffd9d0ad660773f",
+            "guestSdks": [
+              28,
+              29,
+              32
+            ],
+            "runtimeValidated": false,
+            "hostNativeSourceBuild": {
+              "manifestSha256": "b7077aa8e6b2f2a1e8d1180956a39b197382aa8e7d4a065b4f907ded16dbeb94",
+              "libraries": {
+                "libpocket_runtime.so": {
+                  "bytes": 22204208,
+                  "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+                },
+                "libproot.so": {
+                  "bytes": 822352,
+                  "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+                },
+                "libpocket_frames.so": {
+                  "bytes": 7312,
+                  "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+                },
+                "libpocket_ce.so": {
+                  "bytes": 14512,
+                  "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+                }
+              }
+            },
+            "externalHostSourceBuild": {
+              "manifestSha256": "6b574bbe4584db60d7390882b2ba0cdcc6740b9e6476439a069bddb7e38bc0db",
+              "schema": 1,
+              "abi": "arm64-v8a",
+              "minSdk": 28,
+              "library": "libpocket_external32.so",
+              "bytes": 22472,
+              "sha256": "8f3b7970c7bf00e0554d3c5b7e3e171d5944a6c34e88f2ad67e1b0c5cee7b078",
+              "sources": {
+                "runtime/storage/native/external_fuse32.c": "a246bc799e1df58b2ad373b0221310f471da7a2ebbffc0f823b1c49736ae7d96",
+                "runtime/storage/native/external_holders32.h": "218e1296144f27e4407de62c5bd7e36d39183bc8f712249e6c7a7557f5e5ee49",
+                "tools/build_api32_external_host.py": "f7320b7b248a1cd78b53fe5b5853a77c9fd7db65611a2f77c977019ac93954ba"
+              },
+              "command": [
+                "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang",
+                "-O2",
+                "-Wall",
+                "-Wextra",
+                "-Werror",
+                "-fPIC",
+                "-shared",
+                "-pthread",
+                "-Wl,-z,max-page-size=16384",
+                "/home/kreijstal/git/aosp-pocket/runtime/storage/native/external_fuse32.c",
+                "-llog",
+                "-o",
+                "/home/kreijstal/git/aosp-pocket/out/api32/volume-live-proc-host-native/libpocket_external32.so"
+              ],
+              "runtimeValidated": false
+            }
+          },
+          "scope": "Same complete37/native code and locked CE3. Correct optional Settings read through getContentProviderExternal/owner token; each dump/read failure recorded independently without discarding other evidence. Pre-password diagnostic only; original physical keyguard/crypto/mounted/restart gates unchanged. No production input/power override.",
+          "reportPath": "out/api32/volume-keyguard-policy-diagnostic-result/ce-keyguard-report.json",
+          "reportSha256": "5940578907127e9ae0e5fbae0777816f5deb37a6a137446c0c97fd5c4fe6d75b",
+          "supervisorReturnCode": 1,
+          "diagnosticCollection": "PASS",
+          "passwordKeysSent": false,
+          "ownerAlive": false,
+          "ownerExitCode": 0,
+          "sampledPeakChildren": 27,
+          "observerSamples": 52,
+          "observerErrors": [],
+          "rootCause": "Both trusted native WAKEUP events arrived while already interactive: DOWN563876981ms, UP563877141ms; actual PowerManager lastSleep563877637ms. Observer startup spans inactivity timeout. Already-awake wakeUp does not refresh user activity. Clock bases align and theater mode0. Prior input/power-handoff hypothesis superseded; no native wake bug proved.",
+          "stateBasedWakeRetry": {
+            "status": "TERMINAL_FAIL_UI_OBSERVER_INTERACTIVE_WINDOWS_NOT_REQUESTED",
+            "job": {
+              "pid": 4297,
+              "token": "6be4a749bc7a4a9faca8947e586dc501",
+              "script": "/home/pi/pocket-api32-vm/volume-keyguard-retry-resume-validation/run-6be4a749bc7a4a9faca8947e586dc501.py",
+              "log": "/home/pi/pocket-api32-vm/volume-keyguard-retry-resume-validation/run-6be4a749bc7a4a9faca8947e586dc501.log",
+              "exit": "/home/pi/pocket-api32-vm/volume-keyguard-retry-resume-validation/run-6be4a749bc7a4a9faca8947e586dc501.exit.json"
+            },
+            "managerSha256": "961ca7f28fe0d3938a59e824df5b2d59e07176619bd61667097dd7fb2ad9e742",
+            "candidate": "out/api32/volume-keyguard-retry-resume-candidate.json",
+            "scope": "Retry actual host wake when observed asleep; preserve visible focused secure SystemUI field gate before physical password input. Wait actual UserManager and mounted volume before positive media canary. Same complete37 image and original CE3 data/password. Two strict cycles including offline outer Manager restart; no production power override, reset or guest APK reinstall.",
+            "validationCommands": {
+              "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py": "PASS",
+              "python3 tools/validate_download_manager.py out/api32/volume-keyguard-retry-resume-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32": "PASS"
+            },
+            "observer": {
+              "pid": 4357,
+              "script": "/home/pi/pocket-api32-vm/volume-keyguard-retry-resume-validation/observe-budget.py",
+              "log": "/home/pi/pocket-api32-vm/volume-keyguard-retry-resume-validation/process-budget-observer.log",
+              "sourceSha256": "18e79f39d2913f303700bfabc956af80c824ab8c7369f1d87d32f74e2aea9f3d"
+            },
+            "runId": "b27b6bbde8334be0976bdbb5d45fa0cb",
+            "reportPath": "out/api32/volume-keyguard-retry-resume-result/ce-keyguard-report.json",
+            "reportSha256": "9e9b101ed6a76af7409afd0a446f7fd66566152b0910dffd6f77ab7979f10188",
+            "supervisorReturnCode": 1,
+            "ownerAlive": false,
+            "ownerExitCode": 0,
+            "passwordKeysSent": false,
+            "lockedCanariesDenied": 5,
+            "lockedExternalCanaryDenied": true,
+            "input": {
+              "touchEventsAccepted": 39,
+              "keyEventsAccepted": 18,
+              "inputEventsAccepted": 57,
+              "inputEventsRejected": 0
+            },
+            "sampledPeakChildren": 26,
+            "observerSamples": 85,
+            "observerErrors": [],
+            "keyguardFrame": "out/api32/volume-keyguard-retry-resume-result/keyguard-before.png",
+            "result": "State-based wake succeeds after observed sleep and actual nontrivial clock/keyguard frame is captured. Three host swipes and read-only UI observations reach SystemUI stage; all window lists empty. UiAutomation source requires FLAG_RETRIEVE_INTERACTIVE_WINDOWS which observer omitted. No focused entry/password keys; final diagnostic frame waits after sleep and fails. Original data/credentials retained; clean owner stop. Next rebuild opts into interactive windows and checks current interactive after UI query.",
+            "interactiveWindowOptInFollowup": {
+              "status": "TERMINAL_FAIL_OUTER_RESTART_AFTER_FIRST_STRICT_UNLOCK_PASS",
+              "job": {
+                "pid": 7303,
+                "token": "c6952ba2082649448e65c45f21eb1ef9",
+                "script": "/home/pi/pocket-api32-vm/volume-keyguard-windows-resume-validation/run-c6952ba2082649448e65c45f21eb1ef9.py",
+                "log": "/home/pi/pocket-api32-vm/volume-keyguard-windows-resume-validation/run-c6952ba2082649448e65c45f21eb1ef9.log",
+                "exit": "/home/pi/pocket-api32-vm/volume-keyguard-windows-resume-validation/run-c6952ba2082649448e65c45f21eb1ef9.exit.json"
+              },
+              "candidate": "out/api32/volume-keyguard-windows-resume-candidate.json",
+              "managerSha256": "e1b1853f72f29434e7eb0cd3072619a52b77ec72b1041556f58414c6ec18c1e1",
+              "scope": "Explicit opt-in to interactive accessibility windows and current interactive state after UI retrieval. Same complete37/preserved locked CE3, no credential changes/reset or ordinary app reinstall. Physical password input remains gated on exact visible focused secure password entry; actual Android user/mounted MediaProvider/canaries/software Keystore and offline outer Manager restart required.",
+              "buildCommand": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-keyguard-windows-resume-ce-manager-probe",
+              "buildResult": "PASS",
+              "validatorCommand": "python3 tools/validate_download_manager.py out/api32/volume-keyguard-windows-resume-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+              "validatorResult": "PASS",
+              "syntaxCommand": "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py",
+              "syntaxResult": "PASS",
+              "observer": {
+                "pid": 7483,
+                "script": "/home/pi/pocket-api32-vm/volume-keyguard-windows-resume-validation/observe-budget.py",
+                "log": "/home/pi/pocket-api32-vm/volume-keyguard-windows-resume-validation/process-budget-observer.log",
+                "sourceSha256": "b3325abff660f4801b5207b4c99327d6257ebf73e513b75cbdb94bb9f17f003d"
+              },
+              "runId": "968ed68158354944b3c77acdb609e735",
+              "reportPath": "out/api32/volume-keyguard-windows-resume-result/ce-keyguard-report.json",
+              "reportSha256": "41770680fa5ba9485edeb937aaeffe447e5b93e905e59058281a9648663a9ace",
+              "supervisorReturnCode": 1,
+              "firstCycleStrictPass": true,
+              "wholeTrialPass": false,
+              "firstPhysicalKeyguardUnlock": true,
+              "firstMountedQueryableMediaProvider": true,
+              "firstOrdinaryAppKeystorePreserved": true,
+              "firstPublicMediaCanaryVerified": true,
+              "androidUserUnlockWaitMillis": 5844,
+              "firstMountWaitMillis": 101,
+              "strictCycles": [
+                0
+              ],
+              "outerFailure": "java.io.IOException: CE did not unlock after credential verification",
+              "ownerAlive": false,
+              "ownerExitCode": 0,
+              "sampledPeakChildren": 33,
+              "observerSamples": 140,
+              "observerErrors": [],
+              "independentCheck": "out/api32/volume-keyguard-windows-resume-result/independent-check.json",
+              "windowOptInSourceReceipt": "out/api32/keyguard-window-observer-reference/receipt.json",
+              "prePasswordBouncerFrame": "out/api32/volume-keyguard-windows-resume-result/keyguard-bouncer-before-password.png",
+              "followupReason": "Both boots prove visible focused secure entry. First boot physically unlocks, actual Android user waits5844ms, volume mounted/queryable, data/key/media unchanged;15 service lifetimes strictly reaped. Offline outer restart accepts13touch/46key events but CE read times out; logs show sleep and no secret-backed unlock request. Keyboard lacks automatic wake while touch already prepends wake. This evidence points to input/sleep delivery; encrypted restart not passed.",
+              "keyboardWakeFollowup": {
+                "status": "TERMINAL_FAIL_WINDOW_READINESS_BEFORE_PASSWORD",
+                "candidate": "out/api32/volume-keyboard-wake-candidate.json",
+                "managerSha256": "f4d68deb648edbf89616718d4324b1fbb37461d223187c978e99104d4db01431",
+                "buildResult": "PASS",
+                "validatorResult": "PASS",
+                "syntaxResult": "PASS",
+                "scope": "Production API32 host keyboard prepends wake to ordinary DOWN events as touch already does; explicit WAKEUP/POWER/SLEEP/SOFT_SLEEP preserved. Test records typing host uptime and read-only power/lock observation after typing, without input-history/password text dumps. Repeat whole two-boot strict encrypted storage test, retain existing data and credential. Original two-boot attempt remains FAIL.",
+                "job": {
+                  "pid": 12989,
+                  "token": "bc08fe58899c4e1e82cf6ad53db281a0",
+                  "script": "/home/pi/pocket-api32-vm/volume-keyboard-wake-validation/run-bc08fe58899c4e1e82cf6ad53db281a0.py",
+                  "log": "/home/pi/pocket-api32-vm/volume-keyboard-wake-validation/run-bc08fe58899c4e1e82cf6ad53db281a0.log",
+                  "exit": "/home/pi/pocket-api32-vm/volume-keyboard-wake-validation/run-bc08fe58899c4e1e82cf6ad53db281a0.exit.json"
+                },
+                "observer": {
+                  "pid": 13281,
+                  "script": "/home/pi/pocket-api32-vm/volume-keyboard-wake-validation/observe-budget.py",
+                  "log": "/home/pi/pocket-api32-vm/volume-keyboard-wake-validation/process-budget-observer.log",
+                  "sourceSha256": "7da2fe157563521c2063ae79c976e5fe617903d47cbfa02bc42e206114239b90"
+                },
+                "packageDeltaReceipt": "out/api32/volume-keyboard-wake-ce-manager-probe/package-delta.json",
+                "stageRetry": "PASS exact partial stage/current APK/source pin audited; atomic capped transfer completed and all remote hashes verified before launch. No image/profile mutation from transport retries.",
+                "runId": "b0bb2e37101e4fdaa58848c503190753",
+                "reportPath": "out/api32/volume-keyboard-wake-result/ce-keyguard-report.json",
+                "reportSha256": "b112aedeb09d2a715799a85ae705b05b9cfcd28303594bf7a296ad23c37feb28",
+                "supervisorReturnCode": 1,
+                "ownerAlive": false,
+                "ownerExitCode": 0,
+                "passwordKeysSent": false,
+                "keyboardWakeRuntimeEstablished": false,
+                "sampledPeakChildren": 27,
+                "observerSamples": 70,
+                "observerErrors": [],
+                "result": "Three opt-in UI observations return no SystemUI root: empty, IME-only, empty; no password-field gate or password keys reached. Final frame wait on sleep fails. This does not exercise ordinary-key wake or encrypted restart. Profile/password retained.",
+                "windowReadinessFollowup": {
+                  "status": "TERMINAL_FAIL_CE_UNLOCK_BEFORE_UI_RELOCK",
+                  "candidate": "out/api32/volume-keyboard-window-wait-candidate.json",
+                  "managerSha256": "93216c03845ada59b2e88bdb525fae99b0cd7e80bf2b9cd08094a0f360a9eacc",
+                  "buildResult": "PASS",
+                  "validatorResult": "PASS",
+                  "pythonSyntaxResult": "PASS",
+                  "scope": "Bounded3s retry of actual interactive-window/root metadata after observer registration; current power reread, no accessibility actions/text/password-history read. Missing field now fails before diagnostic frame wait. Keep keyboard wake production change and original two-boot physical/CE/media/crypto/strict/offline restart gates.",
+                  "runId": "e3d9857762c84804b610d36e6b2cda2d",
+                  "job": {
+                    "pid": 15644,
+                    "token": "19c3940d308a45729a2ec23eb6d85462",
+                    "script": "/home/pi/pocket-api32-vm/volume-keyboard-window-wait-validation/run-19c3940d308a45729a2ec23eb6d85462.py",
+                    "log": "/home/pi/pocket-api32-vm/volume-keyboard-window-wait-validation/run-19c3940d308a45729a2ec23eb6d85462.log",
+                    "exit": "/home/pi/pocket-api32-vm/volume-keyboard-window-wait-validation/run-19c3940d308a45729a2ec23eb6d85462.exit.json"
+                  },
+                  "observer": {
+                    "pid": 15803,
+                    "script": "/home/pi/pocket-api32-vm/volume-keyboard-window-wait-validation/observe-budget.py",
+                    "log": "/home/pi/pocket-api32-vm/volume-keyboard-window-wait-validation/process-budget-observer.log",
+                    "sourceSha256": "55feca383d10075d2da0070936bed4eec9b1952af04c104669ca7f9741799440"
+                  },
+                  "changes": [
+                    "Ordinary API32 keyboard DOWN prepends wake; explicit wake/power/sleep controls unchanged.",
+                    "Read-only observer requests interactive windows and retries actual root/field metadata for3s.",
+                    "Fresh power state after UI retrieval; fail missing focused secure field before frame wait.",
+                    "Record host typing uptime and read-only keyguard state after input; never dump password input history."
+                  ],
+                  "checks": [
+                    {
+                      "command": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-keyboard-window-wait-ce-manager-probe",
+                      "result": "PASS / exit0"
+                    },
+                    {
+                      "command": "python3 tools/validate_download_manager.py out/api32/volume-keyboard-window-wait-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+                      "result": "PASS / exit0"
+                    },
+                    {
+                      "command": "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py",
+                      "result": "PASS / exit0"
+                    },
+                    {
+                      "command": "git diff --check",
+                      "result": "PASS / exit0"
+                    }
+                  ],
+                  "report": "out/api32/volume-keyboard-window-wait-result/ce-keyguard-report.json",
+                  "reportSha256": "d7d9a4c7d048a00bcfc0ddb3003029296c212ba23dd45404cfbd7b1731ac056c",
+                  "supervisorReturnCode": 1,
+                  "ownerAlive": false,
+                  "ownerExitCode": 0,
+                  "credentialBackedCeUnlockObserved": true,
+                  "fullPhysicalKeyguardUnlockVerified": false,
+                  "wholeTrialPass": false,
+                  "sampledPeakChildren": 27,
+                  "observerSamples": 53,
+                  "observerErrors": [],
+                  "hostTypingUptimeMillis": 566947128,
+                  "postInputState": {
+                    "secure": true,
+                    "deviceLocked": true,
+                    "keyguardLocked": true,
+                    "interactive": false,
+                    "uptimeMillis": 566955173,
+                    "externalStorage": {
+                      "primaryEmulatedMounted": false,
+                      "volumes": [
+                        {
+                          "primary": true,
+                          "emulated": true,
+                          "state": "removed"
+                        }
+                      ],
+                      "mountWaitMillis": 35
+                    }
+                  },
+                  "powerTimingFollowup": {
+                    "status": "TERMINAL_FAIL_PROVIDER_READINESS_PHYSICAL_UI_PASS",
+                    "managerSha256": "596eeb9dadba3509fc106027e9294572671da83902ec625f7637875a5c6f8cd8",
+                    "scope": "Power-service dump only after password, aggregate encoding/event/submission times. Never input history/password text. No timeout/window/permission override or forced wake lock.",
+                    "checks": [
+                      {
+                        "command": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-keyguard-power-after-input-ce-manager-probe",
+                        "result": "PASS / exit0"
+                      },
+                      {
+                        "command": "python3 tools/validate_download_manager.py out/api32/volume-keyguard-power-after-input-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+                        "result": "PASS / exit0"
+                      },
+                      {
+                        "command": "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py",
+                        "result": "PASS / exit0"
+                      }
+                    ],
+                    "job": {
+                      "pid": 19209,
+                      "token": "4ff35ac62be7473cad68da94d466f995",
+                      "script": "/home/pi/pocket-api32-vm/volume-keyguard-power-after-input-validation/run-4ff35ac62be7473cad68da94d466f995.py",
+                      "log": "/home/pi/pocket-api32-vm/volume-keyguard-power-after-input-validation/run-4ff35ac62be7473cad68da94d466f995.log",
+                      "exit": "/home/pi/pocket-api32-vm/volume-keyguard-power-after-input-validation/run-4ff35ac62be7473cad68da94d466f995.exit.json"
+                    },
+                    "observer": {
+                      "pid": 19329,
+                      "script": "/home/pi/pocket-api32-vm/volume-keyguard-power-after-input-validation/observe-budget.py",
+                      "log": "/home/pi/pocket-api32-vm/volume-keyguard-power-after-input-validation/process-budget-observer.log",
+                      "sourceSha256": "02687415d85ce0ebed427d409012c4221ecbe1563f59d962d094e3c52de532b3"
+                    },
+                    "candidate": "out/api32/volume-keyguard-power-after-input-candidate.json",
+                    "runId": "5af4c207e0804b59b2e24c23499af66a",
+                    "report": "out/api32/volume-keyguard-power-after-input-result/ce-keyguard-report.json",
+                    "reportSha256": "f052f30188a67dd2f463454199ad79b4bd411e84a01bd61910a223a96c9115c4",
+                    "supervisorReturnCode": 1,
+                    "ownerAlive": false,
+                    "ownerExitCode": 0,
+                    "powerActivityRefreshVerified": true,
+                    "physicalKeyguardUnlockVerified": true,
+                    "sampledPeakChildren": 31,
+                    "observerSamples": 73,
+                    "observerErrors": [],
+                    "diagnosisReceipt": "out/api32/ce-media-readiness-reference/receipt.json"
+                  },
+                  "readinessFollowup": {
+                    "status": "PASS",
+                    "candidate": "out/api32/volume-ce-readiness-candidate.json",
+                    "managerSha256": "665ea0051a3ad88ac856d69895785eb396b583a44c313b5d7826a91c36031654",
+                    "scope": "Retry only explicit volume-not-attached exception within existing user/volume60s deadline; no provider attach command or power/window/timeout override. Observe actual unlocked/interactive state continuously before slower data checks.",
+                    "checks": [
+                      {
+                        "command": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-ce-readiness-ce-manager-probe",
+                        "result": "PASS / exit0"
+                      },
+                      {
+                        "command": "python3 tools/validate_download_manager.py out/api32/volume-ce-readiness-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+                        "result": "PASS / exit0"
+                      },
+                      {
+                        "command": "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py",
+                        "result": "PASS / exit0"
+                      },
+                      {
+                        "command": "git diff --check",
+                        "result": "PASS / exit0"
+                      }
+                    ],
+                    "job": {
+                      "pid": 22262,
+                      "token": "bf53df3b503f404f95857f39c82d70b8",
+                      "script": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/run-bf53df3b503f404f95857f39c82d70b8.py",
+                      "log": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/run-bf53df3b503f404f95857f39c82d70b8.log",
+                      "exit": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/run-bf53df3b503f404f95857f39c82d70b8.exit.json"
+                    },
+                    "observer": {
+                      "pid": 22444,
+                      "script": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/observe-budget.py",
+                      "log": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/process-budget-observer.log",
+                      "sourceSha256": "5729de3bffe278e9d3a434b65cf516eaafcc0d71231948603a8e61f377300d3a"
+                    },
+                    "runId": "7e7a5d35b53d40178669e05a80425a91",
+                    "report": "out/api32/volume-ce-readiness-result/ce-keyguard-report.json",
+                    "reportSha256": "1078c09bbb79bb6d49be2f7331a6744dd0369c24fd651981a0fd776f6d7493b4",
+                    "independentCheck": "out/api32/volume-ce-readiness-result/independent-check.json",
+                    "sourcePinsVerified": 731,
+                    "supervisorReturnCode": 0,
+                    "strictPassed": true,
+                    "cycles": [
+                      {
+                        "index": 0,
+                        "strictPassed": true,
+                        "lifetimesReaped": 15,
+                        "cycleSha256": "05c62ede441818d6e0ee6689d7730424ded45780f42e381b07e77c1dcabdb203",
+                        "initStop": [
+                          [
+                            "15",
+                            "0",
+                            "0"
+                          ]
+                        ]
+                      },
+                      {
+                        "index": 1,
+                        "strictPassed": true,
+                        "lifetimesReaped": 15,
+                        "cycleSha256": "78f027fa371f71aaf61a89e28eafcb9e0c40c5fcb5b4a618112cb92f8fa22687",
+                        "initStop": [
+                          [
+                            "15",
+                            "0",
+                            "0"
+                          ]
+                        ]
+                      }
+                    ],
+                    "phases": [
+                      {
+                        "phase": "app",
+                        "hostPid": 28139,
+                        "appPid": 30072,
+                        "keyguardWaitMillis": 0,
+                        "keyguardPolls": 1,
+                        "userUnlockWaitMillis": 14387,
+                        "mountWaitMillis": 2048,
+                        "providerQueryWaitMillis": 2792,
+                        "providerNotReadyRetries": 0
+                      },
+                      {
+                        "phase": "outerRestart",
+                        "hostPid": 30411,
+                        "appPid": 32450,
+                        "keyguardWaitMillis": 0,
+                        "keyguardPolls": 1,
+                        "userUnlockWaitMillis": 9087,
+                        "mountWaitMillis": 189,
+                        "providerQueryWaitMillis": 1650,
+                        "providerNotReadyRetries": 0
+                      }
+                    ],
+                    "sampledPeakChildren": 31,
+                    "samples": 139,
+                    "observerErrors": [],
+                    "imageSourceOfflineSecondBoot": true,
+                    "imageRequests": [],
+                    "credentialFileUnchanged": true,
+                    "ordinaryAppAndKeyPreserved": true,
+                    "queryRetryBranchExercised": false,
+                    "queryRetryNote": "Both passing boots found the provider ready at query time; earlier live failure proves the missing-volume race. The specific exception retry branch required no retries in this run."
+                  }
+                }
+              }
+            }
+          },
+          "timingSourceReceipt": "out/api32/keyguard-wake-race-reference/receipt.json"
+        }
+      }
+    }
+  },
+  "goalTurnClassification": "Progress: all six current-image preserved credential lifecycle cycles independently pass, including wrong/old credential denial, two physical unlocks, mounted/public storage and same app/key across changes and offline Manager restart; original password-free state restored and new credentials removed. Default process reliability remains open at sampled33; ordinary codec app/Manager now built for runtime.",
+  "keyguardRecoveryIndex": "docs/api32-keyguard-validation.json",
+  "currentMounted07837PhysicalEncryptedRestart": {
+    "status": "PASS",
+    "candidate": "out/api32/volume-ce-readiness-candidate.json",
+    "managerSha256": "665ea0051a3ad88ac856d69895785eb396b583a44c313b5d7826a91c36031654",
+    "scope": "Retry only explicit volume-not-attached exception within existing user/volume60s deadline; no provider attach command or power/window/timeout override. Observe actual unlocked/interactive state continuously before slower data checks.",
+    "checks": [
+      {
+        "command": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-ce-readiness-ce-manager-probe",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "python3 tools/validate_download_manager.py out/api32/volume-ce-readiness-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "python3 -m py_compile tools/test_api32_ce_keyguard_on_pi.py",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "git diff --check",
+        "result": "PASS / exit0"
+      }
+    ],
+    "job": {
+      "pid": 22262,
+      "token": "bf53df3b503f404f95857f39c82d70b8",
+      "script": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/run-bf53df3b503f404f95857f39c82d70b8.py",
+      "log": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/run-bf53df3b503f404f95857f39c82d70b8.log",
+      "exit": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/run-bf53df3b503f404f95857f39c82d70b8.exit.json"
+    },
+    "observer": {
+      "pid": 22444,
+      "script": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/volume-ce-readiness-validation/process-budget-observer.log",
+      "sourceSha256": "5729de3bffe278e9d3a434b65cf516eaafcc0d71231948603a8e61f377300d3a"
+    },
+    "runId": "7e7a5d35b53d40178669e05a80425a91",
+    "report": "out/api32/volume-ce-readiness-result/ce-keyguard-report.json",
+    "reportSha256": "1078c09bbb79bb6d49be2f7331a6744dd0369c24fd651981a0fd776f6d7493b4",
+    "independentCheck": "out/api32/volume-ce-readiness-result/independent-check.json",
+    "sourcePinsVerified": 731,
+    "supervisorReturnCode": 0,
+    "strictPassed": true,
+    "cycles": [
+      {
+        "index": 0,
+        "strictPassed": true,
+        "lifetimesReaped": 15,
+        "cycleSha256": "05c62ede441818d6e0ee6689d7730424ded45780f42e381b07e77c1dcabdb203",
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "index": 1,
+        "strictPassed": true,
+        "lifetimesReaped": 15,
+        "cycleSha256": "78f027fa371f71aaf61a89e28eafcb9e0c40c5fcb5b4a618112cb92f8fa22687",
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      }
+    ],
+    "phases": [
+      {
+        "phase": "app",
+        "hostPid": 28139,
+        "appPid": 30072,
+        "keyguardWaitMillis": 0,
+        "keyguardPolls": 1,
+        "userUnlockWaitMillis": 14387,
+        "mountWaitMillis": 2048,
+        "providerQueryWaitMillis": 2792,
+        "providerNotReadyRetries": 0
+      },
+      {
+        "phase": "outerRestart",
+        "hostPid": 30411,
+        "appPid": 32450,
+        "keyguardWaitMillis": 0,
+        "keyguardPolls": 1,
+        "userUnlockWaitMillis": 9087,
+        "mountWaitMillis": 189,
+        "providerQueryWaitMillis": 1650,
+        "providerNotReadyRetries": 0
+      }
+    ],
+    "sampledPeakChildren": 31,
+    "samples": 139,
+    "observerErrors": [],
+    "imageSourceOfflineSecondBoot": true,
+    "imageRequests": [],
+    "credentialFileUnchanged": true,
+    "ordinaryAppAndKeyPreserved": true,
+    "queryRetryBranchExercised": false,
+    "queryRetryNote": "Both passing boots found the provider ready at query time; earlier live failure proves the missing-volume race. The specific exception retry branch required no retries in this run."
+  },
+  "mounted07837OriginalAuthlessRestoration": {
+    "status": "PASS",
+    "candidate": "out/api32/volume-ce-restore-authless-candidate.json",
+    "managerSha256": "56b3dfd1d24aebb43bd6e604f1434b093afb3688f16dc30210d96352c6091d5a",
+    "scope": "Restore only the dedicated CE3 test profile original password-free state after exact strict two-boot physical unlock PASS. Physically unlock with existing Pi-only credential, authenticated LockSettings credential removal, five readable encrypted-root canaries, actual offline outer restart with automatic password-free unlock, mounted public media/query and same original app/key/UID. No reset or ordinary guest package replacement. Historical recovery credential file retained unchanged; full repeated credential lifecycle remains unverified.",
+    "checks": [
+      {
+        "command": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-ce-restore-authless-ce-manager-probe",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "python3 tools/validate_download_manager.py out/api32/volume-ce-restore-authless-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "python3 -m py_compile tools/test_api32_ce_restore_on_pi.py",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "git diff --check",
+        "result": "PASS / exit0"
+      }
+    ],
+    "job": {
+      "pid": 27454,
+      "token": "8eae65edc9004bfb9d44142d6638611b",
+      "script": "/home/pi/pocket-api32-vm/volume-ce-restore-authless-validation/run-8eae65edc9004bfb9d44142d6638611b.py",
+      "log": "/home/pi/pocket-api32-vm/volume-ce-restore-authless-validation/run-8eae65edc9004bfb9d44142d6638611b.log",
+      "exit": "/home/pi/pocket-api32-vm/volume-ce-restore-authless-validation/run-8eae65edc9004bfb9d44142d6638611b.exit.json"
+    },
+    "observer": {
+      "pid": 27915,
+      "script": "/home/pi/pocket-api32-vm/volume-ce-restore-authless-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/volume-ce-restore-authless-validation/process-budget-observer.log",
+      "sourceSha256": "dd60016ce3d2787499878f3ead1dabf40dbfe640ee456883f571055e1f8e28a4"
+    },
+    "restoreRunId": "04fe2097ab9747deb4a61426b34a7446",
+    "runId": "04fe2097ab9747deb4a61426b34a7446",
+    "authlessRunId": "8ded86137a9d4284af4693c12a66ac2b",
+    "report": "out/api32/volume-ce-restore-authless-result/ce-restore-report.json",
+    "reportSha256": "c8addffa883dcff7d18b21b0a260f32ebfdad2d10d23570442441fcc2d1c0cb2",
+    "independentCheck": "out/api32/volume-ce-restore-authless-result/independent-check.json",
+    "supervisorReturnCode": 0,
+    "strictPassed": true,
+    "originalPasswordFreeStateRestored": true,
+    "authlessOuterRestartVerified": true,
+    "sourcePinsVerified": 732,
+    "cycles": [
+      {
+        "phase": "restoration",
+        "strictPassed": true,
+        "lifetimesReaped": 15,
+        "sha256": "b79d2318db967fc10f2bf76952fa8a0b24887cd87e5f6be2f465eb19bdc2007c"
+      },
+      {
+        "phase": "authless",
+        "strictPassed": true,
+        "lifetimesReaped": 15,
+        "sha256": "9fd2a9b114c824106bc4331ace254286d81f773c7125a887c1020b52d026739a"
+      }
+    ],
+    "phases": [
+      {
+        "phase": "restoration",
+        "hostPid": 1046,
+        "appPid": 3081,
+        "androidUserUnlockWaitMillis": 13315,
+        "providerQueryWaitMillis": 10759,
+        "volumeNotReadyRetries": 1
+      },
+      {
+        "phase": "authlessRestart",
+        "hostPid": 4072,
+        "appPid": 5710,
+        "androidUserUnlockWaitMillis": 3821,
+        "providerQueryWaitMillis": 785,
+        "volumeNotReadyRetries": 1
+      }
+    ],
+    "sampledPeakChildren": 32,
+    "observerSamples": 128,
+    "observerErrors": [],
+    "providerRetryExercisedBothBoots": true,
+    "imageSourceOfflineForBothBoots": true,
+    "historicalCredentialFileUnchanged": true,
+    "fullCredentialLifecycleVerified": false
+  },
+  "mounted07837FullCredentialLifecycle": {
+    "status": "PASS",
+    "candidate": "out/api32/volume-ce-full-lifecycle-candidate.json",
+    "managerSha256": "b5f432b34ad7e97e9deb34ff0e01e4d7bbf3edf962556b22d2524ca8606fcbfd",
+    "scope": "Preserved current37 encrypted profile: password set/wrong rejection/change/old rejection/removal/automatic authless unlock/restoration/physical focused password entry over five strict stopped boots, then offline outer Manager restart/wrong rejection/physical unlock/original password-free state restored and sixth strict stop. Every phase requires all five readable root canaries, public media read, actual Android user+mounted MediaProvider query and same app/key/UID/path. New Pi-only0600 credentials removed on full success, retained on failure for recovery. No reset, guest APK reinstall, plaintext migration repeat, host setting relaxation or VM72 access.",
+    "checks": [
+      {
+        "command": "python3 tools/build_api29_manager.py --base-apk out/api32/volume-holder-legacy-manager/aosp-pocket-manager-0.77.apk --host-native-dir out/api32/external-volume-host-built --external-native-dir out/api32/volume-live-proc-host-native --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/volume-live-proc-retry-image/pocket-images.json --ce-probe32 --ce-probe32-package dev.kreijstal.aosppocket.api32ceimage3 --out out/api32/volume-ce-full-lifecycle-ce-manager-probe",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "python3 tools/validate_download_manager.py out/api32/volume-ce-full-lifecycle-ce-manager-probe/api32-ce-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "python3 -m py_compile tools/test_api32_ce_manager_on_pi.py",
+        "result": "PASS / exit0"
+      },
+      {
+        "command": "git diff --check",
+        "result": "PASS / exit0"
+      }
+    ],
+    "job": {
+      "pid": 1917,
+      "token": "9fe944bd8bf2454ba0870db36233e3bf",
+      "script": "/home/pi/pocket-api32-vm/volume-ce-full-lifecycle-validation/run-9fe944bd8bf2454ba0870db36233e3bf.py",
+      "log": "/home/pi/pocket-api32-vm/volume-ce-full-lifecycle-validation/run-9fe944bd8bf2454ba0870db36233e3bf.log",
+      "exit": "/home/pi/pocket-api32-vm/volume-ce-full-lifecycle-validation/run-9fe944bd8bf2454ba0870db36233e3bf.exit.json"
+    },
+    "observer": {
+      "pid": 2037,
+      "script": "/home/pi/pocket-api32-vm/volume-ce-full-lifecycle-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/volume-ce-full-lifecycle-validation/process-budget-observer.log",
+      "sourceSha256": "f3a2ca325abf2673306e3449583e54eefc3dae7cb5f417d1e3d18983a7699666"
+    },
+    "runId": "0fe81ba592384d8e88333c9dd0ba1b6a",
+    "credentialRecovery": "If this exact run fails, preserve its encrypted profile and Pi-only0600 /home/pi/pocket-api32-vm/volume-ce-full-lifecycle-validation/test-credentials.json. Never copy values locally or reuse the historical ed1 credential; inspect the terminal phase/current password transition before deliberate recovery.",
+    "report": "out/api32/volume-ce-full-lifecycle-result/ce-manager-report.json",
+    "reportSha256": "275c424679bfd37b00de6589f3253460903269cc4979cf8cf5b9f41f64853440",
+    "independentCheck": "out/api32/volume-ce-full-lifecycle-result/independent-check.json",
+    "independentVerifierCommand": "python3 out/api32/verify_ce_full_lifecycle_result.py",
+    "independentVerifierResult": "PASS_FULL_PRESERVED_CREDENTIAL_LIFECYCLE cycles=6 physical_unlocks=2 sources=732 sampled_peak=33",
+    "sourcePinsVerified": 732,
+    "supervisorReturnCode": 0,
+    "strictPassed": true,
+    "cycles": [
+      {
+        "index": 0,
+        "sha256": "b16bfc1d9446fcb4089629a59b6cf1fb329c947f9ffb2a3d4b2c29373092e730",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "index": 1,
+        "sha256": "a715273ace6a91ad8a451990280c53497732b594fecbb82fd713eddb4c8bf8ca",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "index": 2,
+        "sha256": "cc633bc5f6aa83572db19f01ae971c77e2501d05772d777e6ab3b5e101b1cb4e",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "index": 3,
+        "sha256": "b8e0249568498b6c5ed3addaf981fd279eef3bbdeac21cbb802cc781fa347bee",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "index": 4,
+        "sha256": "dcf6fe7384744bcfc24119c4b55c09d9200e76bd9e6a380d4ced4d5dfe97e0a9",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      },
+      {
+        "index": 5,
+        "sha256": "8056f86ee778613f32abc5a839a74f4e6fef368787a490d175b280960bfe4d7c",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ]
+      }
+    ],
+    "phases": [
+      {
+        "phase": "original",
+        "appPid": 8738,
+        "userUnlockWaitMillis": 4,
+        "mountWaitMillis": 828,
+        "providerQueryWaitMillis": 907,
+        "providerNotReadyRetries": 0
+      },
+      {
+        "phase": 0,
+        "appPid": 11232,
+        "userUnlockWaitMillis": 2,
+        "mountWaitMillis": 95,
+        "providerQueryWaitMillis": 398,
+        "providerNotReadyRetries": 0
+      },
+      {
+        "phase": 1,
+        "appPid": 13637,
+        "userUnlockWaitMillis": 2,
+        "mountWaitMillis": 50,
+        "providerQueryWaitMillis": 390,
+        "providerNotReadyRetries": 0
+      },
+      {
+        "phase": 2,
+        "appPid": 15828,
+        "userUnlockWaitMillis": 6669,
+        "mountWaitMillis": 842,
+        "providerQueryWaitMillis": 2079,
+        "providerNotReadyRetries": 4
+      },
+      {
+        "phase": 3,
+        "appPid": 18646,
+        "userUnlockWaitMillis": 14780,
+        "mountWaitMillis": 2243,
+        "providerQueryWaitMillis": 2164,
+        "providerNotReadyRetries": 0
+      },
+      {
+        "phase": "offline-outer-restart",
+        "appPid": 21132,
+        "userUnlockWaitMillis": 14997,
+        "mountWaitMillis": 1831,
+        "providerQueryWaitMillis": 2275,
+        "providerNotReadyRetries": 2
+      }
+    ],
+    "twoPhysicalUnlocksVerified": true,
+    "newTestCredentialsRemoved": true,
+    "originalPasswordFreeStateRestored": true,
+    "plaintextMigrationRepeated": false,
+    "sampledPeakChildren": 33,
+    "observerSamples": 389,
+    "observerErrors": [],
+    "hostSettingsUnchanged": true
+  },
+  "secureReadiness47Ce3Trial": {
+    "status": "FAIL_PRE_CREDENTIAL_COMPLETED_RESTART_CHECKPOINT_REQUIRES_EXPLICIT_CONTINUATION",
+    "runId": "d140c380a1e04bcba2ee237c82e26bb4",
+    "candidate": "out/api32/readiness47-ce3-candidate.json",
+    "failureAudit": "out/api32/readiness47-ce3-result/failure-audit.json",
+    "job": {
+      "pid": 6029,
+      "token": "d9f284bffa354c7cb6190243edf6fe2d",
+      "script": "/home/pi/pocket-api32-vm/readiness47-ce3-validation/run-d9f284bffa354c7cb6190243edf6fe2d.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-ce3-validation/run-d9f284bffa354c7cb6190243edf6fe2d.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-ce3-validation/run-d9f284bffa354c7cb6190243edf6fe2d.exit.json"
+    },
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "managerSha256": "e9c716531be37350116e781446e3134da054c9f543c23c2b5e1789cfea66c86e",
+    "completedCycles": 0,
+    "credentialChangesRequested": false,
+    "secureReadinessBranchVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false
+  },
+  "secureReadiness47Ce3ContinuationTrial": {
+    "status": "FAIL_HOST_DRIVER_NAMEERROR_AFTER_FIVE_GUEST_STRICT_PASSES",
+    "runId": "b7625ee6ca134398a9fd7f8451931b01",
+    "job": {
+      "pid": 7661,
+      "token": "8c1519dd2e594684bea0e23b6826a359",
+      "script": "/home/pi/pocket-api32-vm/readiness47-ce3-continuation-validation/run-8c1519dd2e594684bea0e23b6826a359.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-ce3-continuation-validation/run-8c1519dd2e594684bea0e23b6826a359.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-ce3-continuation-validation/run-8c1519dd2e594684bea0e23b6826a359.exit.json"
+    },
+    "candidate": "out/api32/readiness47-ce3-continuation-candidate.json",
+    "candidateSha256": "7119d59fca7512f53619b3ffb4a453f45d3460e380b8cbf694661649442ca93d",
+    "sourcePins": 757,
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "managerSha256": "f151cc67c26475627aa9f70ad5cab37845baf4ccd1a83effcf33c7ca26d12a57",
+    "packageCheck": "out/api32/readiness47-ce3-continuation-package-check.json",
+    "priorCheckpointRejectionAudit": "out/api32/readiness47-ce3-result/failure-audit.json",
+    "scope": "Explicit completed-checkpoint continuation after pre-credential rejection d140; validate exact successful predecessor and installed failed APK, observe live authless app/key readiness, archive checkpoint without overwrite and retain its hash before changing credentials. Incremental image37-to47 upgrade of preserved CE3 five-root encrypted profile; same production Java/five freshly source-built host JNI/image as pending-install AV pass, only CE test/driver differ. First require actual authless keyguard/user/boot/storage readiness and original app/Keystore/UID/canaries, then full credential set/wrong rejection/change/old rejection/removal/automatic unlock/restore. Require owner app-open rejection while securely locked and actual readiness after unlock on three secure boots and outer restart. Actual focused password entry and host input, complete mounted-media/app/key persistence, six strict native/kernel-child shutdown cycles, offline image on outer Manager restart, restore original password-free state at success. No data reset, ordinary-app replacement, historical secrets, accessibility text, phone, VM72, release or fresh plaintext migration claim. New random test credentials remain in owner0600 Pi recovery file on failure and are removed only after successful restoration.",
+    "secureReadinessBranchVerified": false,
+    "encryptedImageUpgradeVerified": false,
+    "completedCheckpointArchiveVerified": false,
+    "processBudgetVerified": false,
+    "productionReleaseReady": false,
+    "completedGuestCycles": 5,
+    "guestFiveBootValidation": "PASS",
+    "failureAudit": "out/api32/readiness47-ce3-continuation-result/failure-audit.json",
+    "fullCredentialLifecycleVerified": false,
+    "originalPasswordFreeStateRestored": false,
+    "continuedBy": "secureReadiness47CombinedSixCycleTrial"
+  },
+  "secureReadiness47CombinedSixCycleTrial": {
+    "status": "PASS_COMBINED_CE47_SIX_GUEST_CYCLES_RECOVERED_HOST_VERIFIER",
+    "runId": "b7625ee6ca134398a9fd7f8451931b01",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "managerSha256": "f151cc67c26475627aa9f70ad5cab37845baf4ccd1a83effcf33c7ca26d12a57",
+    "runtimeSourcePinsVerified": 757,
+    "resumeSourcePinsVerified": 758,
+    "independentCheck": "out/api32/readiness47-ce3-outer-resume-result/independent-check.json",
+    "independentCheckSha256": "2021d2c605a143146493ccd9350d3dc51e214f1d5f70ca4d796ace699dde2068",
+    "validationCommand": "python3 out/api32/verify_readiness47_ce3_outer_resume_result.py",
+    "validationResult": "PASS",
+    "job": {
+      "pid": 20656,
+      "token": "b367c46c5a3d4ad5a58f4bdb357b4751",
+      "script": "/home/pi/pocket-api32-vm/readiness47-ce3-outer-resume-validation/run-b367c46c5a3d4ad5a58f4bdb357b4751.py",
+      "log": "/home/pi/pocket-api32-vm/readiness47-ce3-outer-resume-validation/run-b367c46c5a3d4ad5a58f4bdb357b4751.log",
+      "exit": "/home/pi/pocket-api32-vm/readiness47-ce3-outer-resume-validation/run-b367c46c5a3d4ad5a58f4bdb357b4751.exit.json"
+    },
+    "originalHostVerifierFailurePreserved": true,
+    "failureAudit": "out/api32/readiness47-ce3-continuation-result/failure-audit.json",
+    "completedGuestCycles": 6,
+    "twoPhysicalKeyguardUnlocksVerified": true,
+    "secureLockedAppOperationRejectionVerified": true,
+    "actualPreservedAuthlessBootVerified": true,
+    "encryptedImageUpgradeVerified": true,
+    "sameOriginalAppKeyUidPath": true,
+    "originalPasswordFreeStateRestored": true,
+    "newTestCredentialFileRemoved": true,
+    "plaintextMigrationRepeated": false,
+    "sampledPeakChildren": 33,
+    "observerSamples": 536,
+    "processBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/readiness47-ce3-terminal-state.json",
+    "scope": "Complete current47 preserved encrypted upgrade with five strict guest boots, followed by independently replaying corrected host checks and actually resuming outer Manager restart with the exact same APK. Full data/key/UID/canary/mounted-volume persistence, wrong-password rejection, password change/removal/restoration, three secure boots plus locked owner-operation denial after actual outer restart, two focused password-input unlocks, six strict native/descendant teardowns. Original failed host NameError report and checkpoint rejection remain unchanged. Corrected helpers validate all recorded five-boot states; original successful cycle hashes are retained exactly in the resumed report. The used recovery file is removed only after real password-free restoration. No fresh plaintext migration, process-bound or phone/release claim."
+  },
+  "currentCe47BudgetAudit": {
+    "status": "FAIL_CURRENT47_CE_SAMPLED_PROCESS_BUDGET_PEAK33",
+    "imageVersion": "0.78.47",
+    "imageSha256": "985cbd2c2656b92136e88aa31b561612d71c9de293ead700e93bef21dc4ad9d9",
+    "runId": "b7625ee6ca134398a9fd7f8451931b01",
+    "allGuestFunctionalAndCleanupChecksPassed": true,
+    "originalHostDriverFailurePreserved": true,
+    "distinctGuestStarts": 6,
+    "totalSamples": 536,
+    "sampledPeakChildren": 33,
+    "defaultHostPhantomMax": 32,
+    "allNativeGuestHelperAndTracingProcessesCounted": true,
+    "firstFiveSampledPeakChildren": 33,
+    "outerRestartSampledPeakChildren": 30,
+    "processBudgetPassed": false,
+    "hardProcessBoundVerified": false,
+    "productionReleaseReady": false,
+    "independentCheck": "out/api32/readiness47-ce3-outer-resume-result/independent-check.json",
+    "peakCensus": "out/api32/readiness47-ce3-live-peak-census.json",
+    "scope": "The current encrypted workload exceeds32 despite full functional/strict-cleanup success. The separate media/Signal baseline peaks30/32 do not close this gate. Preserve all process rows and all prior failures; no subtraction or policy relaxation."
+  },
+  "installdSourceBuildPreparation": {
+    "status": "PASS_FULL_INSTALLD_PINNED_SOURCE_ARM64_16K_BUILD",
+    "evidence": "out/api32/installd-source48/independent-build-check.json",
+    "runtimeVerified": false,
+    "sharedCoreIntegrationImplemented": false,
+    "processBudgetVerified": false
+  },
+  "sharedInstalld48SecureSixCycleTrial": {
+    "status": "PASS_CORE48_CE_ENCRYPTED_UPGRADE_NATIVE_INSTALLD_SIX_CYCLES",
+    "runId": "b0111ff7db22438ea3fb0d3e122803cf",
+    "imageVersion": "0.78.48",
+    "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+    "managerSha256": "1f9e52e99d725b14d5c9b374339c169666494ab77740eb5cb352dcad59f27cdc",
+    "sourcePinsVerified": 763,
+    "independentCheck": "out/api32/installd-core48-ce3-result/independent-check.json",
+    "independentCheckSha256": "3222560fbbfd378b054f77108ff265191d54f8e7bf18c0b686a38d150266ae71",
+    "validationCommand": "python3 out/api32/verify_installd_core48_ce3_result.py --run-id b0111ff7db22438ea3fb0d3e122803cf",
+    "validationResult": "PASS",
+    "cycles": [
+      {
+        "index": 0,
+        "sha256": "ae9a6c9af568663df24137153d2e737e83b70e031d936519407d2effe0b8df7a",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 28640,
+        "cryptoFrontendPid": 28717
+      },
+      {
+        "index": 1,
+        "sha256": "8331e62973b2dcfaac532771fd5a3fb1d95a4dd983223b66cdd5ff92ad1b64ba",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 31863,
+        "cryptoFrontendPid": 31919
+      },
+      {
+        "index": 2,
+        "sha256": "6e0d87e92e887de1814de95b045414274128939aa96bec9822aeb7daa0cea385",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 3304,
+        "cryptoFrontendPid": 3354
+      },
+      {
+        "index": 3,
+        "sha256": "5101dd4ef9dd81b1c933c1200b1abe461567bc53ac8e9b885ba13f8870c342b5",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 15,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 6088,
+        "cryptoFrontendPid": 6138
+      },
+      {
+        "index": 4,
+        "sha256": "536ff44cf6db10b18ffc5d6499ff56e0817ed508b17b944a04678beaffbdece5",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 9226,
+        "cryptoFrontendPid": 9280
+      },
+      {
+        "index": 5,
+        "sha256": "51d533d0f1a1201292c818e213390f43876705c14c22553ed728996940df8ed9",
+        "strictPassed": true,
+        "serviceLifetimesReaped": 14,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "sharedInstalldCorePid": 12672,
+        "cryptoFrontendPid": 12722
+      }
+    ],
+    "adoptedDescendantsReapedPerCycle": [
+      11,
+      11,
+      11,
+      11,
+      11,
+      12
+    ],
+    "twoPhysicalKeyguardUnlocksVerified": true,
+    "sameOriginalAppKeyUidPath": true,
+    "fiveRootCanariesAndPublicMediaVerified": true,
+    "secureLockedAppOperationRejectionVerified": true,
+    "passwordSetChangeRemovalRestoreVerified": true,
+    "originalPasswordFreeStateRestored": true,
+    "thisRunRecoveryFileRemoved": true,
+    "encryptedNativeAppDataCallerDenialAndBootDexoptVerified": true,
+    "imageSourceOfflineOuterRestart": true,
+    "oldPredecessorReportUnchanged": true,
+    "completedPredecessorCheckpointArchiveSha256": "1e2d335754c0f76e6c48ced5ddf5706a2889557a1810bed5405181ce36613813",
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "a9229e62f9e2431f20b72a68933b42815d0cae435ac7d90b4d641d4fd37b3e25",
+      "reusedFiles": 2596,
+      "replacedFiles": 54,
+      "reusedBytes": 1286084404,
+      "writtenBytes": 18823858,
+      "durationMillis": 143131
+    },
+    "distinctGuestStarts": 6,
+    "sampledPeakChildren": 29,
+    "observerSamples": 562,
+    "sampledPeakWithinDefault32": true,
+    "freshPlaintextMigrationRepeated": false,
+    "postBootCompilerVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false,
+    "terminalStateEvidence": "out/api32/installd-core48-ce3-terminal-state.json"
+  }
+}

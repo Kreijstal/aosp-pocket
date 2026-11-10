@@ -8,6 +8,12 @@
 #include <atomic>
 #include <stdio.h>
 #include <string.h>
+#if POCKET_GUEST_API == 32
+#include <hwbinder/IPCThreadState.h>
+#include <mutex>
+extern void pocketSuspendWakeAcquired32(const std::string& name, pid_t pid);
+extern void pocketSuspendWakeReleased32(const std::string& name, pid_t pid);
+#endif
 using namespace android;
 using namespace android::hardware;
 using namespace android::system::suspend::V1_0;
@@ -40,15 +46,38 @@ int pocketPowerRequest(unsigned operation,uint64_t token,const char* name,uint64
 namespace {
 class RelayWakeLock final : public IWakeLock {
     uint64_t token;
+#if POCKET_GUEST_API == 32
+    std::mutex mutex;
+    bool released=false;
+    std::string name;
+    pid_t pid;
+public:
+    RelayWakeLock(uint64_t token,const std::string& name,pid_t pid):token(token),name(name),pid(pid){}
+#else
     std::atomic<bool> released{false};
 public:
     explicit RelayWakeLock(uint64_t token):token(token){}
-    ~RelayWakeLock() override {release();}
+#endif
+    ~RelayWakeLock() override {release().isOk();}
     Return<void> release() override {
+#if POCKET_GUEST_API == 32
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            if(released)return Void();
+            int result=pocketPowerRequest(2,token,nullptr,nullptr);
+            if(result) {
+                fprintf(stderr,"API32_WAKE_LOCK_RELEASE_FAILED status=%d\n",result);
+                return Status::fromExceptionCode(Status::EX_TRANSACTION_FAILED,"Host wake-lock release failed");
+            }
+            released=true;
+        }
+        pocketSuspendWakeReleased32(name,pid);
+#else
         if(!released.exchange(true)) {
             int result=pocketPowerRequest(2,token,nullptr,nullptr);
             if(result)fprintf(stderr,"API29_WAKE_LOCK_RELEASE_FAILED status=%d\n",result);
         }
+#endif
         return Void();
     }
 };
@@ -62,7 +91,13 @@ class SystemSuspend final : public ISystemSuspend {
             fprintf(stderr,"API29_WAKE_LOCK_ACQUIRE_FAILED status=%d\n",result);
             return sp<IWakeLock>();
         }
+#if POCKET_GUEST_API == 32
+        pid_t pid=android::hardware::IPCThreadState::self()->getCallingPid();
+        pocketSuspendWakeAcquired32(name.c_str(),pid);
+        return sp<IWakeLock>(new RelayWakeLock(token,name.c_str(),pid));
+#else
         return sp<IWakeLock>(new RelayWakeLock(token));
+#endif
     }
 };
 }

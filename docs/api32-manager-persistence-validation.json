@@ -1,0 +1,533 @@
+{
+  "schema": 1,
+  "status": "CACHED_IMAGE_HOST_RESTART_ORDINARY_API32_PRIVATE_DATA_AND_KEYSTORE_PASS",
+  "scope": "Two real guest boots across outer Manager process restart; pinned image server is stopped for second boot. Controlled ordinary API32 app, not an unmodified third-party compatibility test. Android host network remains enabled.",
+  "runId": "c4a71aa073624c3095f8035739781dd7",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "reportPath": "out/api32/manager-persistence-report.json",
+  "reportSha256": "1d62dd836b1789dbbad8b30c208e8685050a9ad5b684c18a4fd310344c72e6c5",
+  "candidatePath": "out/api32/manager-persistence-candidate.json",
+  "candidateSha256": "cde8ef39371bd30c804a803be1163f175cb7e15acb345fbf118cca2494bc67ee",
+  "sourceHashes": {
+    "tools/build_api32_persistence_app.py": "d077c4642e4e7236655234afbd72d26b133db8d276db8dcf0945666748ec1def",
+    "tools/build_api29_manager.py": "da3d959f8d333b4d63d712547dc9d92dc4f158811dae694dca774d4267ca21b6",
+    "tools/test_api32_persistence_on_pi.py": "94ed27c92c49e13298d440a8c1f2f531a6818cc97eb418213f90c5434ce8371b",
+    "runtime/tests/api32/ManagerSessionProbe32.java": "d279c43fb0e78624d4e7928c70b63741383b9cd709df836ff05d5c34f2e0928e",
+    "runtime/tests/api32/ManagerPersistenceProbe32.java": "fd49247fb8177212716b72f21fcbf3ab65282983c4b39562a0e6088cb4da73db",
+    "runtime/tests/api32/persistenceapp/MainActivity.java": "46e661fd1abbf1499502cc51801bc152a5da4300d7c4215fa86d40a09f3fa33d",
+    "runtime/tests/api32/persistenceapp/AndroidManifest.xml": "31fa1817575de9a31d522b7269c462d3e07aae11fb3da6c160876c893d857e18"
+  },
+  "manager": {
+    "apk": "/home/kreijstal/git/aosp-pocket/out/api32/persistence-manager-probe/api32-persistence-manager-probe.apk",
+    "sha256": "ea0bd29aabc076a744d1f15f75f7adf645873e80d15e830a5de8e1a1292921fe",
+    "bytes": 2627444,
+    "probe": true,
+    "guestImagesBundled": 0,
+    "hostNativeLibrariesUnchanged": true,
+    "guestSdks": [
+      28,
+      29,
+      32
+    ],
+    "runtimeValidated": false
+  },
+  "app": {
+    "package": "dev.kreijstal.pocketpersist32",
+    "minSdk": 32,
+    "targetSdk": 32,
+    "apkSha256": "317c5069b385bec63a212ad857c8c238ef90076130a7b85d70a6b2ffffab6952",
+    "apkBytes": 20817
+  },
+  "imageSha256": "56ecff67a0c45adba79fe5d1aaf89d09fcb088f978b3b38561d5a08c8184e78b",
+  "imageSourceOffline": true,
+  "hostNetworkDisabled": false,
+  "imageRequests": [],
+  "hostPids": {
+    "first": 3217,
+    "second": 5794
+  },
+  "inputActions": [
+    {
+      "phase": "first",
+      "stage": "awaiting-host-tap",
+      "id": "first:aae389e085c3474ba9143da8a8f3174a:button",
+      "x": 240,
+      "y": 270
+    },
+    {
+      "phase": "first",
+      "stage": "awaiting-host-text",
+      "id": "first:aae389e085c3474ba9143da8a8f3174a:editor",
+      "x": 240,
+      "y": 307,
+      "text": "pc4a71aa"
+    },
+    {
+      "phase": "offline",
+      "stage": "awaiting-host-tap",
+      "id": "offline:4c6a02d72bcb4596a5747464400acaa5:button",
+      "x": 240,
+      "y": 270
+    }
+  ],
+  "cycleChecks": [
+    {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "3783"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true
+    },
+    {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "6355"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "15",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true
+    }
+  ],
+  "cycles": [
+    {
+      "appState": {
+        "sdk": 32,
+        "uid": 10107,
+        "pid": 5208,
+        "activityId": "aae389e085c3474ba9143da8a8f3174a",
+        "token": "ecff75a3738541e1831c05e0af177fb3",
+        "launches": 1,
+        "resumes": 2,
+        "taps": 1,
+        "text": "pc4a71aa",
+        "cryptoValid": true,
+        "drawn": true,
+        "cipherDigest": "a1aa039c88376883d61b2442d174c41fbb2a4db43b436d0f98020f45ae8c3ff1",
+        "buttonX": 240,
+        "buttonY": 191,
+        "editorX": 240,
+        "editorY": 238
+      },
+      "session": {
+        "sdk": 32,
+        "runId": "6e7bc09b8c004616a618220bcbaaf101",
+        "ready": false,
+        "running": false,
+        "closed": true,
+        "input": {
+          "touchEventsAccepted": 4,
+          "keyEventsAccepted": 18,
+          "inputEventsAccepted": 22,
+          "inputEventsRejected": 0
+        },
+        "audio": {
+          "hostPcmBytesWritten": 0,
+          "completedStreams": 0,
+          "streamErrors": 0,
+          "microphoneRequested": false
+        },
+        "ownerAlive": false,
+        "ownerExitCode": 0
+      },
+      "display": {
+        "transport": "composer-rgba",
+        "backing": "anonymous",
+        "codec": "none",
+        "pixel_bytes_over_socket": 0,
+        "target_fps": 38,
+        "screenshot_calls": 0,
+        "presenter": "ahardwarebuffer-egl",
+        "host_gl_renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 16.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+        "host_gl_vendor": "Google Inc. (Google)",
+        "gpu_fallback_reason": "",
+        "gpu_buffers": 2,
+        "width": 480,
+        "height": 800,
+        "shared_bytes": 4608000,
+        "frames_presented": 295,
+        "frames_received": 292,
+        "composer_sequence": 372,
+        "interval_fps": 1.9719029950914158,
+        "mean_capture_ms": 1.65951,
+        "mean_copy_ms": 1.65951,
+        "max_capture_ms": 42.112426,
+        "mean_present_ms": 79.784191
+      },
+      "crashRoleDenied": "API32_TOMBSTONED_ROLE_DENIED_PASS uid=39999 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12",
+      "crashOutsideDenied": "API32_TOMBSTONED_OUTSIDE_PROFILE_DENIED_PASS uid=0 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12"
+    },
+    {
+      "appState": {
+        "sdk": 32,
+        "uid": 10107,
+        "pid": 7609,
+        "activityId": "4c6a02d72bcb4596a5747464400acaa5",
+        "token": "ecff75a3738541e1831c05e0af177fb3",
+        "launches": 2,
+        "resumes": 4,
+        "taps": 2,
+        "text": "pc4a71aa",
+        "cryptoValid": true,
+        "drawn": true,
+        "cipherDigest": "a1aa039c88376883d61b2442d174c41fbb2a4db43b436d0f98020f45ae8c3ff1",
+        "buttonX": 240,
+        "buttonY": 191,
+        "editorX": 240,
+        "editorY": 238
+      },
+      "session": {
+        "sdk": 32,
+        "runId": "b47cc933285a439d995a7e63a6726567",
+        "ready": false,
+        "running": false,
+        "closed": true,
+        "input": {
+          "touchEventsAccepted": 2,
+          "keyEventsAccepted": 2,
+          "inputEventsAccepted": 4,
+          "inputEventsRejected": 0
+        },
+        "audio": {
+          "hostPcmBytesWritten": 0,
+          "completedStreams": 0,
+          "streamErrors": 0,
+          "microphoneRequested": false
+        },
+        "ownerAlive": false,
+        "ownerExitCode": 0
+      },
+      "display": {
+        "transport": "composer-rgba",
+        "backing": "anonymous",
+        "codec": "none",
+        "pixel_bytes_over_socket": 0,
+        "target_fps": 38,
+        "screenshot_calls": 0,
+        "presenter": "ahardwarebuffer-egl",
+        "host_gl_renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 16.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+        "host_gl_vendor": "Google Inc. (Google)",
+        "gpu_fallback_reason": "",
+        "gpu_buffers": 2,
+        "width": 480,
+        "height": 800,
+        "shared_bytes": 4608000,
+        "frames_presented": 148,
+        "frames_received": 147,
+        "composer_sequence": 213,
+        "interval_fps": 0,
+        "mean_capture_ms": 1.868996,
+        "mean_copy_ms": 1.868996,
+        "max_capture_ms": 19.163297,
+        "mean_present_ms": 143.085741
+      },
+      "crashRoleDenied": "API32_TOMBSTONED_ROLE_DENIED_PASS uid=39999 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12",
+      "crashOutsideDenied": "API32_TOMBSTONED_OUTSIDE_PROFILE_DENIED_PASS uid=0 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12"
+    }
+  ],
+  "hostSettings": {
+    "selinuxBefore": "Enforcing",
+    "phantomLimitBefore": "null",
+    "phantomMonitoringBefore": "null",
+    "selinuxAfter": "Enforcing",
+    "phantomLimitAfter": "null",
+    "phantomMonitoringAfter": "null"
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_persistence_app.py",
+      "result": "PASS: signed original fixture APK minSdk=32 targetSdk=32"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/session-image-v2/pocket-images.json --persistence-probe32 --out out/api32/persistence-manager-probe",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/manager-persistence-validation/test_api32_persistence_on_pi.py",
+      "result": "PASS: both strict per-boot gates; outer process restart; data, text, token, package UID and non-exportable-key decryption preserved"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/persistence-manager-probe/api32-persistence-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/api32/legacy-persistence-regression",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/legacy-persistence-regression/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    }
+  ],
+  "additionalChecks": {
+    "ordinaryAppNonDebuggableBinaryManifest": true,
+    "legacyDefaultProductionDexByteIdentical": true,
+    "legacyAllHostJniByteIdentical": true,
+    "legacyBaseline": "out/api32/legacy-data-regression/aosp-pocket-manager-0.77.apk"
+  },
+  "notEstablished": {
+    "repeatedFreshProfileStartupStability": true,
+    "unmodifiedThirdPartyApi32RequiredApp": true,
+    "phoneValidation": true,
+    "fullNetworkingStorageApiCoverage": true,
+    "guestCeEncryption": true,
+    "hardwareBackedKeystoreOrAttestation": true
+  },
+  "broaderCompletionFlags": {
+    "fullGuestBootVerified": false,
+    "pocketManagerApi32Supported": false,
+    "normalStartupStabilityVerified": false,
+    "normalStartupDefaultHostProcessBudgetVerified": false
+  },
+  "freshSandboxRepeat": {
+    "runId": "fe5ad2b7e29e47b394d6bdebe98ca1cd",
+    "reportPath": "out/api32/manager-persistence-fresh-report.json",
+    "reportSha256": "483ecdd532e2e264aa71b4c372bfc4aee5c17f9ed8d605cd0816ccb184cd9837",
+    "validation": "PASS",
+    "strictPassed": true,
+    "imageRequests": [
+      "/pocket-api32-arm64-0.78.2.zip"
+    ],
+    "requestsBeforeRestart": 1,
+    "hostPids": [
+      8454,
+      13057
+    ],
+    "cycleChecks": [
+      {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "10719"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true
+      },
+      {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "13572"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true
+      }
+    ],
+    "cycles": [
+      {
+        "appState": {
+          "sdk": 32,
+          "uid": 10106,
+          "pid": 11822,
+          "activityId": "f5aadf459494428c9849fde1513b8f0f",
+          "token": "d4d9a620a57043cb994fa1821fcb0120",
+          "launches": 1,
+          "resumes": 2,
+          "taps": 1,
+          "text": "pfe5ad2b",
+          "cryptoValid": true,
+          "drawn": true,
+          "cipherDigest": "d420ccd96c89cff83bcb511f9fa915772d1d93e5a630a0cd876d6341d5ca53c1",
+          "buttonX": 240,
+          "buttonY": 191,
+          "editorX": 240,
+          "editorY": 238
+        },
+        "framesPresented": 349,
+        "session": {
+          "sdk": 32,
+          "runId": "11fe51f63d414e5dbd6310b05208003c",
+          "ready": false,
+          "running": false,
+          "closed": true,
+          "input": {
+            "touchEventsAccepted": 4,
+            "keyEventsAccepted": 18,
+            "inputEventsAccepted": 22,
+            "inputEventsRejected": 0
+          },
+          "audio": {
+            "hostPcmBytesWritten": 0,
+            "completedStreams": 0,
+            "streamErrors": 0,
+            "microphoneRequested": false
+          },
+          "ownerAlive": false,
+          "ownerExitCode": 0
+        }
+      },
+      {
+        "appState": {
+          "sdk": 32,
+          "uid": 10106,
+          "pid": 14857,
+          "activityId": "47094a5af5e347aa9153e7b74d29cb59",
+          "token": "d4d9a620a57043cb994fa1821fcb0120",
+          "launches": 2,
+          "resumes": 4,
+          "taps": 2,
+          "text": "pfe5ad2b",
+          "cryptoValid": true,
+          "drawn": true,
+          "cipherDigest": "d420ccd96c89cff83bcb511f9fa915772d1d93e5a630a0cd876d6341d5ca53c1",
+          "buttonX": 240,
+          "buttonY": 191,
+          "editorX": 240,
+          "editorY": 238
+        },
+        "framesPresented": 211,
+        "session": {
+          "sdk": 32,
+          "runId": "6a2d23eb7ae74a2a9137bc1ab9792097",
+          "ready": false,
+          "running": false,
+          "closed": true,
+          "input": {
+            "touchEventsAccepted": 2,
+            "keyEventsAccepted": 2,
+            "inputEventsAccepted": 4,
+            "inputEventsRejected": 0
+          },
+          "audio": {
+            "hostPcmBytesWritten": 0,
+            "completedStreams": 0,
+            "streamErrors": 0,
+            "microphoneRequested": false
+          },
+          "ownerAlive": false,
+          "ownerExitCode": 0
+        }
+      }
+    ],
+    "scope": "Cleared data only for the isolated VM73 Manager probe package before first boot; downloaded the pinned image once, then booted again after closing its server. Host network stayed enabled."
+  },
+  "mountedBackend07837Trial": {
+    "status": "TERMINAL_STRICT_PASS",
+    "job": {
+      "pid": 6146,
+      "token": "8d09d4efc5794470a21ac58a5edfbc1e",
+      "script": "/home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation/run-8d09d4efc5794470a21ac58a5edfbc1e.py",
+      "log": "/home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation/run-8d09d4efc5794470a21ac58a5edfbc1e.log",
+      "exit": "/home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation/run-8d09d4efc5794470a21ac58a5edfbc1e.exit.json"
+    },
+    "observer": {
+      "pid": 6262,
+      "script": "/home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation/process-budget-observer.log",
+      "sourceSha256": "520826badd5ae00212a8bbe02a27fd391f0ac548f34f19ac71c58ff0bf79db17"
+    },
+    "candidate": "out/api32/volume-live-proc-retry-persistence-candidate.json",
+    "command": "python3 /home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation/test_api32_persistence_on_pi.py --work-dir /home/pi/pocket-api32-vm/volume-live-proc-retry-persistence-validation",
+    "managerSha256": "188c37a3d6c7a18717a7264d2329a78e93688c3a35e476627e08ecbbd7260b41",
+    "imageSha256": "951197adefd97368213b9e09a17a9b6ae8e7dcb127a13ac2fef13860766dcff9",
+    "scope": "Actual outer Manager PID change between two strict mounted-backend boots, unchanged ordinary app/UID/data/nonexportable software Keystore crypto, physical input and Home/reopen, second boot with image server offline, zero native errors/replyFailures/remaining descendants/ANRs/fatals. Existing guest data retained; no CE3/VM72 access. Does not establish encrypted volume ordering or abrupt-crash recovery.",
+    "runId": "dac399bfa7da40b5bd26319dbff99bad",
+    "validation": "PASS",
+    "strictPassed": true,
+    "reportPath": "out/api32/volume-live-proc-retry-persistence-result/manager-persistence-report.json",
+    "reportSha256": "ecbd23ad99cc667aa885d4e581494fd6b340950bdac5ce63efaabd1829903cf3",
+    "supervisorReturnCode": 0,
+    "imageSourceOffline": true,
+    "imageRequests": [],
+    "hostPids": [
+      22127,
+      25460
+    ],
+    "physicalInputActions": 3,
+    "cycleChecks": [
+      {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "23060"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "16",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true,
+        "descendantStop": [
+          [
+            "14",
+            "13",
+            "0",
+            "0"
+          ]
+        ],
+        "kernelChildOwnershipVerified": true,
+        "externalVolumeVerified": true
+      },
+      {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "26323"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "16",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true,
+        "descendantStop": [
+          [
+            "13",
+            "1",
+            "0",
+            "0"
+          ]
+        ],
+        "kernelChildOwnershipVerified": true,
+        "externalVolumeVerified": true
+      }
+    ],
+    "observerSamples": 170,
+    "sampledPeakChildren": 34,
+    "observerErrors": [],
+    "functionalScope": "Normal outer Manager process restart only, after first guest cleanly stops. Cached installed image works without source server; unchanged ordinary app private token/text/taps/UID and nonexportable software Keystore decrypt after restart. Both mounted-backend cycles pass source/cleanup/reaping/no ANR/fatal/input gates. No CE or abrupt-crash recovery claim; sampled peak34 leaves default hard process-bound reliability open."
+  }
+}

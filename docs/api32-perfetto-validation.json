@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "status": "STOCK_PERFETTO_CORE_SESSION_AND_SCOPE_PASS_SYSTEMUI_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Stock Perfetto core consumer service in a private guest; no traced_probes, ftrace, host kernel tracing, stable startup, full guest boot or production Manager claim.",
+  "hostVmInstance": 73,
+  "guestSdk": 32,
+  "runId": "1f0c00d97481432fa2440f89d064de5f",
+  "apkSha256": "8731572e662bba1dcf53cfda58d8c435557990efea7adf1105428eb8121e98b2",
+  "imageVerifiedFiles": 2657,
+  "reportPath": "out/api32/perfetto-scope-report.json",
+  "reportSha256": "7e13603095d332c796ecef1ef0d2d72d5952942e804521dcfa190686aefa1675",
+  "sourceSha256": {
+    "runtime/api32/perfetto_scope.cpp": "dd31d638faa45cc38043d55680cbeeb9d89bd139406e8f856e40ced76e3c1563",
+    "runtime/api32/perfetto_probe.cpp": "85e0413da1d32a6dbc89f12872262d9f361488515abdce340faef3af8a4ddfe8",
+    "tools/build_api32_perfetto.py": "34ab6d9c4c4443db5c94ac5cb8133bc069967c618b4cb9c078fd1df3e5699de4",
+    "tools/build_api32_probe.py": "52dd7cc4356bb1ee9a9dab4e59649d5064728037d3eaf9f2ddc5151a0e32c67a",
+    "tools/test_api32_on_pi.py": "70d7aec38f64ada1018b0006d9263386f367f9dae41ec24e2cc0d3121075f451"
+  },
+  "stockTextIntegrity": {
+    "system/bin/perfetto": {
+      "referenceTextSha256": "5d944991f48566d1849c27a593d7201e4f4319921557b674abd50e921bdca4ee",
+      "stagedTextSha256": "5d944991f48566d1849c27a593d7201e4f4319921557b674abd50e921bdca4ee",
+      "textUnchanged": true
+    },
+    "system/bin/traced": {
+      "referenceTextSha256": "b122eadff9086be7734141ac38de6809225a23b70404aaf91b0d04daadb4a088",
+      "stagedTextSha256": "b122eadff9086be7734141ac38de6809225a23b70404aaf91b0d04daadb4a088",
+      "textUnchanged": true
+    }
+  },
+  "componentMarkers": [
+    "API32_PERFETTO_UNREGISTERED_DENIED_PASS requests=24 same_kernel_uid=1 daemon_fd_before=8 daemon_fd_after=8 service_alive=1",
+    "API32_PERFETTO_SESSION_PASS owner_uid=1000 other_uid=39999 other_attach=denied stopped=1 trace_bytes=701 framed_packets=11 stock_client=1 stock_service=1"
+  ],
+  "traceur": {
+    "bootReceiverObserved": true,
+    "stockQueryObserved": true,
+    "fatalProcessObserved": false,
+    "perfettoErrorObserved": false
+  },
+  "startupAnrs": [
+    [
+      "com.android.systemui",
+      "14529",
+      "executing service com.android.systemui/.keyguard.KeyguardService"
+    ]
+  ],
+  "driverExitCode": 1,
+  "guestExitCode": 0,
+  "passed": false,
+  "uiStartupCrashes": [],
+  "nativeLogWithinCaptureLimit": true,
+  "uiMarkers": [
+    "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=15564 stable_seconds=40"
+  ],
+  "cleanupMarkers": [
+    "API32_INIT_STOPPED reaped=32 remaining=0 failed=0"
+  ],
+  "hostPhantomLimitRestored": true,
+  "hostSelinuxAfter": "Enforcing",
+  "extendedScopeValidation": "terminal; both session and unregistered-peer checks passed",
+  "fullGuestBootVerified": false,
+  "systemuiStartupVerified": false,
+  "usableLauncherVerified": false,
+  "pocketManagerApi32Supported": false,
+  "initialRun": {
+    "runId": "99c800cff8d64fcdb9d45fe90f0d1fe3",
+    "apkSha256": "51230309786c1f30f392932083e14882cd6d9b6260b80ed11d7125803f1c9a26",
+    "reportPath": "out/api32/perfetto-initial-report.json",
+    "reportSha256": "965b8effe1f3e5c18e0acceb582344c866b7e3d949369b89c90ed2dc757e1415",
+    "componentMarkers": [
+      "API32_PERFETTO_SESSION_PASS owner_uid=1000 other_uid=39999 other_attach=denied stopped=1 trace_bytes=701 stock_client=1 stock_service=1"
+    ],
+    "startupAnrs": [
+      [
+        "com.android.systemui",
+        "10232",
+        "executing service com.android.systemui/.SystemUIService"
+      ]
+    ],
+    "traceur": {
+      "bootReceiverObserved": true,
+      "stockQueryObserved": true,
+      "fatalProcessObserved": false,
+      "perfettoError127Observed": false
+    }
+  },
+  "apkBytes": 7660762,
+  "javaFatalProcesses": [],
+  "nativeLogUtf16Units": 1407982,
+  "displayMarkers": [
+    "API32_SOFTWARE_DISPLAY_PASS expected_hz=60 actual_hz=60.000004 source=DisplayManager"
+  ],
+  "streamRefreshHz": 60,
+  "touchEventsAccepted": 8,
+  "keyEventsAccepted": 12,
+  "inputEventsRejected": 0,
+  "startupTraceRequested": false,
+  "startupCodeObserveRequested": false,
+  "gateReplay": {
+    "originalReportSha256": "7e13603095d332c796ecef1ef0d2d72d5952942e804521dcfa190686aefa1675",
+    "allRequiredMarkersPresent": true,
+    "strictStartupPassed": false,
+    "missingMarkers": [],
+    "missingNativeMarkers": [],
+    "markerRemovalChecks": {
+      "API32_PERFETTO_SESSION_PASS": "required and absent when removed",
+      "API32_PERFETTO_UNREGISTERED_DENIED_PASS": "required and absent when removed",
+      "API32_SOFTWARE_DISPLAY_PASS": "required and absent when removed"
+    },
+    "originalReportUnchanged": true
+  },
+  "tracedProbesSupported": false,
+  "hostKernelSystemTracingSupported": false,
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_perfetto.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS / exit 0; -Wall -Wextra -Werror, no undefined symbols, 16 KiB ELF alignment."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/perfetto-initial-baseline/image-manifest.json",
+      "result": "PASS / exit 0; signed 7,660,762-byte APK; all 2,657 staged hashes and the APK hash verified."
+    },
+    {
+      "command": "python3 out/api32/run_startup_code_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component checks PASS; strict startup FAIL / driver exit 1, guest exit 0. Initial SystemUI KeyguardService ANR remains; later UI/input pass. No Java fatal captured. All 32 supervised services reaped, none remaining/failed; host limit restored and SELinux Enforcing."
+    },
+    {
+      "command": "python3 out/api32/replay_perfetto_gates.py out/api32/perfetto-scope-report.json out/api32/perfetto-scope-gate-replay.json",
+      "result": "PASS / exit 0; all required markers present, removal of either Perfetto marker or the display-rate marker is detected; strict startup stays failed, original report unchanged."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_perfetto.py tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0."
+    }
+  ]
+}

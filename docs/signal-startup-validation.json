@@ -1,0 +1,94 @@
+{
+  "status": "BLOCKED_VM_UNLOCK_AND_ADB_AUTHORIZATION",
+  "appPackage": "org.thoughtcrime.securesms",
+  "appVersion": "8.33.2",
+  "apkSha256": "5e2efd0bb9f937e2cd3c7c912e8069ba7fa8aac220a64b180b10f0982157b512",
+  "apkSource": "https://updates.signal.org/android/Signal-Android-website-prod-universal-release-8.33.2.apk",
+  "apkBytes": 115038476,
+  "apkMinSdk": 23,
+  "apkTargetSdk": 36,
+  "certificateSha256": [
+    "4be4f6cd5be844083e900279dc822af65a547fecc26aba7ff1f5203a45518cd8",
+    "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26"
+  ],
+  "guestSdkUnderTest": 29,
+  "appInstalledInGuest": false,
+  "appLaunchValidated": false,
+  "linkedDeviceValidated": false,
+  "checks": [
+    {
+      "command": "python3 tools/build_api29_manager.py --app-probe --catalog runtime/images/api29-arm64.json --out out/signal/manager",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/signal/production-check",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/signal/production-check/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api29_manager.py tools/test_app_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "productionClassComparison": "All 80 compiled production classes unchanged; AppProbe absent from production DEX",
+  "liveTestCommand": "ssh pi@juanraspberry python3 /home/pi/test_app_on_pi.py --manager /home/pi/api29-manager-probe.apk --apk /home/pi/pocket-signal-8.33.2.apk --package org.thoughtcrime.securesms",
+  "liveTestBlocker": "Outer Android VM requires PIN after reboot; dedicated ADB endpoint 127.0.0.1:6591 is unauthorized. No credential changed and no guest APK installed.",
+  "scope": "Official website APK and phone-installed Play APK have different minimum SDKs. Aurora successfully downloaded a Google Play variant for Android 10 ARM64 and all three signatures verified for SDK 29. Actual Pocket installation, startup, linking, messaging and calls remain untested; user deferred phone testing until Wi-Fi.",
+  "phoneInstalledApk": {
+    "version": "8.33.2",
+    "versionCode": 177201,
+    "minSdk": 32,
+    "targetSdk": 36,
+    "metadataInspected": true
+  },
+  "playDownload": {
+    "source": "Google Play via Aurora Store 4.8.4 on Linux Waydroid",
+    "downloadProfile": {
+      "name": "Xperia 5 Dual",
+      "sdk": 29,
+      "abi": "arm64-v8a"
+    },
+    "version": "8.33.2",
+    "versionCode": 177201,
+    "package": "org.thoughtcrime.securesms",
+    "minSdk": 29,
+    "targetSdk": 36,
+    "phoneInstalledVariantMinSdk": 32,
+    "signatureVerifiedForGuestSdk": 29,
+    "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+    "files": [
+      {
+        "name": "base.apk",
+        "bytes": 87145686,
+        "sha256": "5ef2723c3f2b9217ade41bb2e61ec8ad07230d87574c35e8ab62189f3d66f537"
+      },
+      {
+        "name": "config.arm64_v8a.apk",
+        "bytes": 30184532,
+        "sha256": "efed429f1b86cf67a1ae4f1af45f9ca16231f82c546d722a62679c0c1b7c0972"
+      },
+      {
+        "name": "config.xxhdpi.apk",
+        "bytes": 216130,
+        "sha256": "f5932f627ef8ef2aa645d0db1e0ed3d67d89eeacbe70a8d785dca606f432c65f"
+      }
+    ],
+    "archive": "Signal-8.33.2-play-arm64-api29.apks",
+    "archiveSha256": "d87fa8a2f2701df03a311065aa49faa7bfa3ce2fb61f6a2b6f2dbebc4e455b85",
+    "apkModified": false,
+    "guestInstallValidated": false,
+    "phoneAccessUsedForDownload": false,
+    "installation": "Install all three APKs in one PackageInstaller session; the base APK alone is incomplete.",
+    "checks": [
+      "apksigner verify --print-certs --min-sdk-version 29 --max-sdk-version 29 <each-apk>: PASS",
+      "aapt dump badging <each-apk>: package/version match and minSdk 29: PASS"
+    ]
+  }
+}

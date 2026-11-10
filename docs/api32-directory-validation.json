@@ -1,0 +1,224 @@
+{
+  "schema": 1,
+  "status": "HOST_AND_ARM64_BIONIC_DIRECTORY_AND_RELATIVE_SYSCALLS_PASS_PRODUCTION_VOLUME_PENDING",
+  "goalTurn": "Progress: implemented socket-backed directory VFS and authenticated held-dirfd namespace operations with shared lookup ownership; proved ordinary Bionic/SIGSYS routing on VM73. Full Android12L goal remains active.",
+  "scope": "Rootless directory VFS component against a real-file-backed FUSE wire test peer. Does not prove real MediaProvider policy, real AppFuse directory mounts, production trusted-core embedding or mounted external_primary.",
+  "sourceSha256": {
+    "runtime/api32/directory_handles.h": "6fc63c2a0c8b8d33ffc8b5e3084f08b1446fc14ad2cfee63caf9e2f23d9b348b",
+    "runtime/api32/external_kernel.h": "92ad75a34cefd04027fab7ac2658fffdfa6e89d1f9498e00e6e3bb0582d84acd",
+    "runtime/api32/fuse_files.h": "e58213b0dfef1b266d044feb13cb771a4fdff78e9503ac09cfb7160e5e728a9f",
+    "runtime/api32/fuse_namespace.h": "d2a95b3b85af9b05c9584ae23bfc0ad3c19cd53a0419b139ba7fba22136340f8",
+    "runtime/api32/external_open_rpc.h": "c18ebe31f28da0567d5a1bb2f95a63349a93a292980ff418f4b1741b68a30cb4",
+    "runtime/loader/external_protocol.h": "4f1400937fb4026d0bfdff8ddecf503edf6eb3ea0962bf4407980b8a4df8a474",
+    "runtime/loader/external_runtime.h": "f087b17e1ac59a4930685db8cd7c017db99cc5aa2c9a4b2124d38a2aca730eb6",
+    "runtime/loader/external_namespace_runtime.h": "f697ec1a0689f2a5f349bdbd863ad8419e6a9a30984b34bf2d11af1a201c2a33",
+    "runtime/loader/external_kernel_scope.h": "024924d6326c7106b788b33fe12e6f428e9536ddfdfc9b2924609f49763e3200",
+    "runtime/loader/loader.c": "222a726223027a690efed404d472edbb752ff10945ea4e111eef91d57cb6079b",
+    "runtime/tests/api32/external_namespace_rpc.cpp": "cc3aafdcb81ca52f6836fd7dbc8767d64bcd55c37c7726022d879e0af4e1a150",
+    "runtime/tests/api32/fuse_namespace.cpp": "5fe1195b5c7597738c1da2e83be8d4f4ee99a27f662bd50ef9948ea7305c0b23",
+    "runtime/tests/api32/fuse_namespace_peer.h": "58eb1cd57f922edbc59857e4f29abb3f159c7eef8160003ecd3f6965bbe8edab",
+    "runtime/tests/api32/fuse/FuseTransportActivity.java": "c75ff22d039fe66d418e58b642594edda02e8b36323ea8fcabfc8c58f78bfca3",
+    "runtime/tests/external_kernel_scope_host.c": "286cd1b1265d44e1f67d492072dd0c33159026efd65d07d8d7fc8ad3acfbd2d3",
+    "runtime/tests/external_namespace_runtime_host.c": "8f0429678277982d71af979d48234fd4cfeab27d99430dc0f74db7fab48bf48b",
+    "tools/build_api32_fuse_probe.py": "c700089df42377eec55bda6850a40b9b3691564b7580a4708d237edecea44722",
+    "tools/test_api32_fuse_on_pi.py": "e60b96061023f7d300db5f1a7df74e323b08c810a7a64ca28637a65594b76af1"
+  },
+  "implementation": {
+    "carrier": "AF_UNIX SOCK_SEQPACKET descriptor, abstract pocket.dir32 tag plus kernel SO_COOKIE and actual socket device/inode. Broker retains peer endpoint. Final kernel FD reference across dup/fork/SCM_RIGHTS triggers peer HUP and one provider release. No inotify event counting or guessed process-FD reference counts.",
+    "directorySyscalls": "getdents64 converts live FUSE_READDIRPLUS results to aligned native dirent64 records. Cursor is shared per open description; read reply waits for client copy acknowledgment. EFAULT/disconnect does not consume entries. Rewind reopens the actual provider directory cursor. Logical flags, fresh attrs, seek, sync, EISDIR/ENOTSOCK/ENOTTY/ENODEV behavior are supplied by the loader.",
+    "relativeOperations": "Request v2 reserved[1] selects first/second-path relative directory proofs. Exact ordered SCM_RIGHTS count and live caller identity are validated. No client supplies provider inode, file slot or cookie. openat, fstatat, mkdirat, unlinkat, renameat and access route from held provider nodes, including two directory proofs for rename; absolute paths ignore the supplied dirfd. No original pathname reconstruction is required.",
+    "lookupOwnership": "Shared lookup-reference bundles outlive closed parent OPENDIR handles when relative-open children still depend on them. Failed operations release temporary LOOKUP references. Component peer asserts every non-root provider request still owns a lookup reference; all final refs/handles balance.",
+    "kernelInspection": "Per-thread nested scope for the trusted logical UID0 broker only. Atomic PID/TID/depth words survive nested signals and fork; ordinary guest UID0 commands retain the VFS view. App UID10001 cannot enter the scope. This does not change host kernel credentials, provide root, or create a kernel isolation boundary.",
+    "selection": "Namespace marker remains disabled in normal Manager profiles. Extra read/socket syscall traps are selected at interpreter startup; directory tests use a fresh host-launched loader process.",
+    "testDevice": "The ordinary-libc directory-only child uses an explicit synthetic logical device ID different from the ordinary-file surrogate proof device, preventing Bionic libraries on the same kernel filesystem from being mistaken for AppFuse proxy files. It makes no claim to a real host proxy mount."
+  },
+  "hostValidation": [
+    {
+      "command": "gcc -std=gnu11 -O1 -g -Wall -Wextra -Werror -Wno-unused-function -fsanitize=address,undefined -fno-omit-frame-pointer -pthread -c runtime/tests/external_namespace_runtime_host.c -o out/api32/fuse-namespace-host/relative-runtime.o",
+      "result": "PASS"
+    },
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread -DPOCKET_DIRECTORY_RPC32 runtime/tests/api32/external_namespace_rpc.cpp out/api32/fuse-namespace-host/relative-runtime.o -o out/api32/fuse-namespace-host/directory-relative-rpc",
+      "result": "PASS"
+    },
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/api32/fuse_namespace.cpp -o out/api32/fuse-namespace-host/fuse-namespace-relative",
+      "result": "PASS"
+    },
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/api32/fuse_files.cpp -o out/api32/fuse-namespace-host/fuse-files-relative",
+      "result": "PASS"
+    },
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/api32/external_files_rpc.cpp -o out/api32/fuse-namespace-host/external-files-rpc-relative",
+      "result": "PASS"
+    },
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/api32/external_open_rpc.cpp -o out/api32/fuse-namespace-host/external-open-rpc-relative",
+      "result": "PASS"
+    },
+    {
+      "command": "gcc -std=gnu11 -O1 -g -Wall -Wextra -Werror -Wno-unused-function -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/external_runtime_host.c -o out/api32/fuse-namespace-host/external-loader-relative",
+      "result": "PASS"
+    },
+    {
+      "command": "gcc -std=gnu11 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/external_kernel_scope_host.c -o out/api32/fuse-namespace-host/external-kernel-scope",
+      "result": "PASS"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/directory-relative-rpc",
+      "result": "PASS; exit0, no sanitizer errors"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/fuse-namespace-relative",
+      "result": "PASS; exit0, no sanitizer errors"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/fuse-files-relative",
+      "result": "PASS; exit0, no sanitizer errors"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/external-files-rpc-relative",
+      "result": "PASS; exit0, no sanitizer errors"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/external-open-rpc-relative",
+      "result": "PASS; exit0, no sanitizer errors"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/external-loader-relative",
+      "result": "PASS; exit0, no sanitizer errors"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/fuse-namespace-host/external-kernel-scope",
+      "result": "PASS; exit0, no sanitizer errors"
+    }
+  ],
+  "nativeBuild": {
+    "command": "python3 tools/build_api32_fuse_probe.py --ndk out/magisk-pocket/toolchain/ndk/ondk-r29.5 --image out/api32/subreaper-image/pocket-api32-arm64-0.78.27.zip --out out/api32/directory-relative-native-v2-probe --directory-rpc",
+    "result": "PASS; signed non-debuggable APK, fresh freestanding ARM64 loader, pinned12L Bionic/linker",
+    "metadata": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/directory-relative-native-v2-probe/api32-fuse-probe.apk",
+      "sha256": "66677c95956960b743cf84dd01266788d6665b7a6055cc6d049a61f11d6410a4",
+      "bytes": 2204935,
+      "imageSha256": "dd75b62160d0d9d685a490f1bf3839a1ae6ff8a187459533991f7cfe1ea8674c",
+      "assets": {
+        "system-data/media/0/lower-view": "f9960c0c62482b7ed3b6df5f59bc6a962228caaf26deeaaabca535faed5ecaff",
+        "system/bin/fuse-stock": "4b59e2e4ff2a35f6d942c72a3adc3a08e71dfef7786bbef84d1399512517e96e",
+        "system/bin/linker64": "61d9752166b1c05e8028f839ebcde0c61a8e9d8ced47b8902f9fd65d1bcf51b2",
+        "system/bin/pocket-loader": "33e5cf42554a45d5d3d788678fba1762ccdd82d37915b141cd9eb422d9c303e0",
+        "system/lib64/ld-android.so": "3be279f8ebd077f25477f57ec0b6ded9e072e4cb6d0e5002ed2d2a233bfec843",
+        "system/lib64/libc.so": "9f6aaee0b61706b617492d9aa70254f7f63fd6dd648b095377f4061c27083a40",
+        "system/lib64/libdl.so": "cab54511650fc5f56e35b0b3fc345a7d88bf293b94ba5ef3ee384eac43d56924",
+        "system/lib64/libfuse.so": "3e97c7bea3a4479ff5643a14ccd37c86f9682ba7a2e29b9dbe853f4da350dd54",
+        "system/lib64/libm.so": "021563c4554561098e8d97d8dc297bcc64ce7e141f7384e1550dc1d1fafc6e98",
+        "system/lib64/libstdc++.so": "bd509750bd5f729e11b7d88a31974425eb074587c18c8b7143c25ff3589b5b2d"
+      },
+      "scope": "12L Bionic/loader namespace broker/client against a real-file-backed FUSE peer; no real MediaProvider, host AppFuse proxy mount, production mounted volume or scoped-policy claim",
+      "package": "dev.kreijstal.aosppocket.api32namespacerpctest",
+      "activity": "dev.kreijstal.aosppocket.api32namespacerpctest/dev.kreijstal.aosppocket.runtime.FuseTransportActivity",
+      "externalProxy": false,
+      "namespaceRpc": true,
+      "directoryRpc": true,
+      "directoryLibcChild": true
+    }
+  },
+  "nativeRuntime": {
+    "command": "python3 /home/pi/pocket-api32-vm/directory-relative-native-v2-validation/test_api32_fuse_on_pi.py --apk /home/pi/pocket-api32-vm/directory-relative-native-v2-validation/api32-fuse-probe.apk --require-namespace-rpc --require-directory-rpc --prior-report /home/pi/pocket-api32-vm/directory-relative-native-validation/fuse-report.json",
+    "result": "PASS",
+    "job": {
+      "pid": 1817,
+      "token": "7746c538651544e58f22606ebc7b2009",
+      "script": "/home/pi/pocket-api32-vm/directory-relative-native-v2-validation/run-7746c538651544e58f22606ebc7b2009.py",
+      "log": "/home/pi/pocket-api32-vm/directory-relative-native-v2-validation/run-7746c538651544e58f22606ebc7b2009.log",
+      "exit": "/home/pi/pocket-api32-vm/directory-relative-native-v2-validation/run-7746c538651544e58f22606ebc7b2009.exit.json"
+    },
+    "candidate": "out/api32/directory-relative-native-v2-candidate.json",
+    "sourceSnapshot": "out/api32/directory-relative-native-v2-source-snapshot",
+    "report": "out/api32/directory-relative-native-v2-result/fuse-report.json",
+    "reportSha256": "4e5a4e74e1937fa9570949574880d77ce6d81599a3a29784808eefdf55912d2f",
+    "runId": "807b6ff345d4461abac70cccf71b71e9",
+    "nativeExit": 0,
+    "child": {
+      "exit": 0,
+      "log": "linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nWARNING: linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nDIRECTORY_LIBC_CLIENT_PASS uid=10001 kernel_scope_denied=1 real_opendir=1 real_readdir=1 real_rewinddir=1 path_fd_metadata=1 real_sync=1 read_eisdir=1 socket_facade_denied=1 close=1 relative_open_stat_mkdir_rename_remove=1 renamed_parent_fd=1 unlinked_directory_fd=1\n",
+      "validation": "PASS"
+    },
+    "nativeLog": "linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nWARNING: linker: Warning: failed to find generated linker configuration from \"/linkerconfig/ld.config.txt\"\nDIRECTORY_LIBC_BRIDGE_PASS separate_host_process=1 fresh_interpreter_filter=1 ordinary_guest_uid=10001 synthetic_directory_device=1 no_appfuse_mount=1\nDIRECTORY_RPC_PASS provider_metadata=1 logical_flags=1 getdents64=1 dup_cursor=1 independent_open=1 concurrent_reads=1 seek_rewind=1 copy_failure_rollback=1 directory_sync=1 descriptor_io_errors=1 abandoned_fd_release=1 fork_scm_rights_last_close=1 relative_fd_proofs=1 relative_malformed_denied=1\nEXTERNAL_NAMESPACE_RPC_PASS live_pid_start_tid=1 descriptor_proof=1 guessed_cap_denied=1 stale_cap_denied=1 partial_header_rights=1 excess_rights_closed=1 path_fd_attrs_agree=1 real_filesystem_mutations=1 readonly_truncate_denied=1 cross_process_denied=1 loader_dispatch_client=1 missing_relative_mkdir=1 cross_mount_rename_denied=1 bad_user_buffer=1 mask_not_changed=1 forced_provider_fd=1 lookup_refs_and_handles_balanced=1 fd_leaks=0\n",
+    "pollErrors": 0,
+    "hostUid": 10156,
+    "hostSettingsUnchanged": true,
+    "guestDataReset": false,
+    "phoneAccessUsed": false,
+    "preservedProfiles": "Only the inspected terminal native fixture APK was updated; prior failed directories and reports retained. VM72, normal Manager and preserved encrypted CE3 profile untouched."
+  },
+  "retainedTrials": [
+    {
+      "report": "out/api32/directory-rpc-native-result/fuse-report.json",
+      "sha256": "d5f6999e23dc3e7bc77eea8b2816f10ad360791d911cb11d503cf569028b7256",
+      "runId": "c96652171ebe4629bb30362e776079bf",
+      "apkSha256": "5f684aa3aab2eb71d21feeef1e20338e5833375ef3bc7fbd715e6cfb77d25f82",
+      "validation": "PASS",
+      "nativeExit": 0,
+      "explanation": "PASS through C dispatch adapter; not ordinary libc SIGSYS routing"
+    },
+    {
+      "report": "out/api32/directory-libc-native-result/fuse-report.json",
+      "sha256": "de0cb8730c0885601b6ec1645386aef3453e95f623ff5a8e3d9b9bceb5ad12bb",
+      "runId": "5923dd7bcfc542d6a82cf10d7d6cefc4",
+      "apkSha256": "a2d18cc933c2d260377766fdca4a295ce0368c887357f35f3f671b4996439e2f",
+      "validation": "FAIL",
+      "nativeExit": null,
+      "explanation": "FAIL before directory calls: child linker could not stat libdl. The surrogate proxy device was shared with Bionic; the following test also exposed a stale handshake before exercising the self-contained child."
+    },
+    {
+      "report": "out/api32/directory-libc-native-v2-result/fuse-report.json",
+      "sha256": "6e4c0bef3541071cb858ef9d351fece4a75105ab139f70a63a7ce15908e5c323",
+      "runId": "a7f961ad96364dae865a47e180c6903a",
+      "apkSha256": "de948f32feb02040ade9391438b805950db4f6c6275076494050fc889f49c6bd",
+      "validation": "FAIL",
+      "nativeExit": 134,
+      "explanation": "FAIL on stale readiness/done files from prior run. Corrected with nonce-qualified handshake files and logs."
+    },
+    {
+      "report": "out/api32/directory-libc-native-v3-result/fuse-report.json",
+      "sha256": "0d82b569f2d8cd4e0fa47b27811c63ea1253df367472a57a4a599bfa4cbe29e2",
+      "runId": "fab853a131dc4f4698e295da054fdd18",
+      "apkSha256": "675b3c045ba0b7015718273bb954dcd5df8793c866f35aa2618ee8d27fb4b068",
+      "validation": "PASS",
+      "nativeExit": 0,
+      "explanation": "PASS through ordinary Bionic in a separate guest process. Explicitly synthetic directory device, no kernel AppFuse mount."
+    },
+    {
+      "report": "out/api32/directory-relative-native-result/fuse-report.json",
+      "sha256": "3f308ddffaaf4952080419663257472f78f95af13907c0f2fd9533605393fd04",
+      "runId": "831b1d62b077433b90a2e5c930badaba",
+      "apkSha256": "ad1eed6c48fc343c9566fe9bad7bc45344677f2f58d7b1158b2eda9e13cd62fe",
+      "validation": "FAIL",
+      "nativeExit": 134,
+      "explanation": "FAIL in new C adapter relative-mkdir test because parent had already restored its umask. Corrected the fixture to set/restore0027 explicitly; provider keeps its strict mode/umask check."
+    }
+  ],
+  "remaining": [
+    "Complete relative dot/dotdot/trailing-slash and symlink semantics, fchdir/cwd, proc-fd path aliases, O_PATH and poll/epoll coverage before general directory-VFS enablement. Current strict namespace parser rejects unsupported traversal rather than resolving through the lower tree.",
+    "Trusted core/Manager AppFuse adapter embedding, including scoped kernel inspection during v2 regular-FD attachment/metadata to avoid recursive proxy routing.",
+    "Production vold/StorageManager/ExternalStorageService reset/mount/unmount and failure lifecycle. Real external_primary attachment remains absent; prior MediaProvider CREATE rejection remains unresolved.",
+    "Actual mounted MediaProvider CREATE/MediaStore, regular AppFuse/relative-open data plane, private Android/data/obb lower views and coherency after mutations/unlink.",
+    "Keep namespace selection immutable before first guest filter installation or version/extend inherited filters; live marker changes across already filtered execs are not verified.",
+    "Complete-image packaging and full workload validation; preserved CE physical keyguard and outer restart restoration; repeated default-budget startup reliability; codec/camera workloads; API28/29 regressions; release/catalog/reproducibility gates."
+  ],
+  "volumeSessionFollowup": {
+    "evidence": "docs/api32-volume-validation.json",
+    "status": "NATIVE_REAL_APPFUSE_AND_BOOTSTRAP_CORRECTION_PASS_FULL_07829_RETRY_RUNNING",
+    "nativeRunId": "ffd26e6792ac4ac7b1be458f9d44488d",
+    "nativeComponentVerified": true,
+    "stockFrameworkVolumeVerified": false,
+    "imageVersion": "0.78.28",
+    "published": false,
+    "frameworkRunId": "034bb49d93614fa680368973afe634fa",
+    "frameworkValidation": "FAIL",
+    "bootstrapCorrectionNativeRunId": "e7d5c294805f44fda32ba4898486697e",
+    "nextImageVersion": "0.78.29",
+    "fullRetryStatus": "RUNNING_NOT_PROVEN"
+  }
+}

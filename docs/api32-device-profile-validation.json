@@ -1,0 +1,1084 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "status": "TERMINAL_STRICT_POLICY_AND_ALL_CAMERA_AV_PASS",
+  "productionReleaseReady": false,
+  "deviceProfile": {
+    "schema": 1,
+    "sdk": 32,
+    "profile": "rootless-v1",
+    "omittedReferencePackages": [
+      {
+        "package": "com.android.emulator.multidisplay",
+        "directory": "system_ext/priv-app/MultiDisplayProvider/",
+        "reason": "Goldfish-only persistent service requires the QEMU multidisplay pipe; Pocket supplies its own display transport."
+      }
+    ],
+    "disabledBootReceivers": [
+      {
+        "package": "com.android.dynsystem",
+        "class": "com.android.dynsystem.BootCompletedReceiver",
+        "reason": "Kernel guest installation and reboot are unavailable to this rootless profile. Keep the package and its data, without starting the installer at every boot."
+      }
+    ]
+  },
+  "imageVersion": "0.78.43",
+  "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+  "imageBytes": 590902632,
+  "imageFiles": 2648,
+  "imagePackageCheck": {
+    "status": "PASS_FULL43_ROOTLESS_DEVICE_IMAGE_PACKAGE",
+    "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+    "bytes": 590902632,
+    "filesVerified": 2648,
+    "added": [
+      "system/etc/pocket-device-profile.json",
+      "system/etc/sysconfig/pocket-device-profile.xml"
+    ],
+    "removed": [
+      "system_ext/priv-app/MultiDisplayProvider/MultiDisplayProvider.apk",
+      "system_ext/priv-app/MultiDisplayProvider/lib/arm64/libemulator_multidisplay_jni.so",
+      "system_ext/priv-app/MultiDisplayProvider/oat/arm64/MultiDisplayProvider.odex",
+      "system_ext/priv-app/MultiDisplayProvider/oat/arm64/MultiDisplayProvider.vdex"
+    ],
+    "changedExistingPayloads": [],
+    "dynamicSystemApkAndDataPolicy": "Retain APK and disable only boot receiver via stock SystemConfig; no reset/uninstall/data-clear command",
+    "runtimeValidated": false
+  },
+  "imageBuildCommand": "python3 tools/build_api32_image.py --fixture-root out/api32/gralloc-paired-fixture/root --out out/api32/rootless-device-image --version 0.78.43 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.43.zip --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --external-volume --mediaprovider-dir out/api32/mediaprovider-private-package --probe",
+  "imageBuildResult": "PASS",
+  "managerBuild": "out/api32/rootless-device-av-manager-probe/build.json",
+  "managerBuildResult": "PASS",
+  "managerValidatorCommand": "python3 tools/validate_download_manager.py out/api32/rootless-device-av-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+  "managerValidatorResult": "PASS",
+  "sourceReferenceReceipt": "out/api32/budget-rootless-profile-reference/receipt.json",
+  "candidate": "out/api32/rootless-device-av-candidate.json",
+  "runtimeDriver": "out/api32/run_rootless_device_av.py",
+  "runtimeScope": "Retained VM73 ordinary profile, original all-camera AV APK, unchanged production Java/five fresh host JNI. Actual stock package/receiver-state and no-running-unsupported-package observations, repeated all-camera capture plus real PCM/mic/audio closure/Home/reopen, unchanged actual host max32 and strict native cleanup. No reset/data-clear/root/host-limit changes. This pending trial does not establish a hard/repeated process bound or physical-phone support.",
+  "initialManagerBuildError": "out/api32/rootless-device-av-manager-initial-build-error.log",
+  "initialManagerBuildErrorPhase": "Catalog read before image build completed; no APK created or remote mutation in that failed attempt.",
+  "runtimeJob": {
+    "pid": 2991,
+    "token": "34f6468c940149999e9b874aaaca93ee",
+    "script": "/home/pi/pocket-api32-vm/rootless-device-av-validation/run-34f6468c940149999e9b874aaaca93ee.py",
+    "log": "/home/pi/pocket-api32-vm/rootless-device-av-validation/run-34f6468c940149999e9b874aaaca93ee.log",
+    "exit": "/home/pi/pocket-api32-vm/rootless-device-av-validation/run-34f6468c940149999e9b874aaaca93ee.exit.json"
+  },
+  "runtimeBudgetObserver": {
+    "pid": 3156,
+    "script": "/home/pi/pocket-api32-vm/rootless-device-av-validation/observe-budget.py",
+    "log": "/home/pi/pocket-api32-vm/rootless-device-av-validation/process-budget-observer.log",
+    "sourceSha256": "aedebb6341ceb33ca2a9dfe5d5e7a830b52665b0cdd209619806fc6417d42d26"
+  },
+  "runtimeAmsObserver": {
+    "pid": 3179,
+    "script": "/home/pi/pocket-api32-vm/rootless-device-av-validation/observe-ams.py",
+    "sourceSha256": "48ec5cddd15c9ac5c6d3adce9404857422ad817c2aceb366bceb0ab05d889fe4"
+  },
+  "runtimeObservedRunId": "b8c0a3750b094e04a02eec3347a5ea44",
+  "runtimeObservedStage": "booting: downloaded archive, checking image",
+  "runId": "b8c0a3750b094e04a02eec3347a5ea44",
+  "validation": "PASS",
+  "strictPassed": true,
+  "supervisorReturnCode": 0,
+  "report": "out/api32/rootless-device-av-result/manager-app-report.json",
+  "reportSha256": "99adf69b0fdfe4e5cb93b0cc5ef96af15978c5959602d9c6b887b2ca50ae595a",
+  "independentCheck": "out/api32/rootless-device-av-result/independent-check.json",
+  "verificationCommand": "python3 out/api32/verify_rootless_device_av_result.py",
+  "verificationResult": "PASS",
+  "result": {
+    "status": "PASS_FULL43_ROOTLESS_DEVICE_POLICY_AND_ALL_CAMERA_AV_REPEAT",
+    "runId": "b8c0a3750b094e04a02eec3347a5ea44",
+    "reportSha256": "99adf69b0fdfe4e5cb93b0cc5ef96af15978c5959602d9c6b887b2ca50ae595a",
+    "sourcePinsVerified": 749,
+    "imageVersion": "0.78.43",
+    "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+    "managerSha256": "0e978845078aaee600fc050218773547b737f458d37536c8ce38b583dc629dcc",
+    "phases": [
+      {
+        "phase": "firstLaunch",
+        "uid": 10112,
+        "pid": 15558,
+        "nonce": "ed6c21f8-03e8-49f5-8d86-813ee77b1934",
+        "generation": 1,
+        "deviceProfile": {
+          "profile": "rootless-v1",
+          "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+          "multidisplayInstalled": false,
+          "dynamicSystemPackagePresent": true,
+          "dynamicSystemUid": 1000,
+          "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+          "dynamicSystemBootReceiverEnabled": false,
+          "runningUnsupportedPackages": []
+        },
+        "playback": {
+          "sampleRate": 48000,
+          "channels": 2,
+          "writtenFrames": 96000,
+          "playedFrames": 96000,
+          "elapsedMillis": 5154,
+          "underruns": 0,
+          "validation": "PASS"
+        },
+        "microphone": {
+          "sampleRate": 48000,
+          "channels": 1,
+          "samples": 96000,
+          "reads": 36,
+          "rms": 18930.806079892638,
+          "timestampFrame": 97920,
+          "timestampNanos": 11955613196132,
+          "elapsedMillis": 2897,
+          "validation": "PASS"
+        },
+        "cameras": [
+          {
+            "cameraId": "0",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 160,
+            "previewHeight": 120,
+            "previewFrames": [
+              {
+                "timestampNanos": 11961257729981,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 275413
+              },
+              {
+                "timestampNanos": 11961449842184,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 276944
+              },
+              {
+                "timestampNanos": 11961507068666,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 277544
+              }
+            ],
+            "captureCompletions": 5,
+            "jpeg": {
+              "bytes": 7302,
+              "width": 160,
+              "height": 120,
+              "sampledColors": 93,
+              "timestampNanos": 11961723329777,
+              "sha256": "62aeff41863b36aedb68d9d7fa6a6fe67e2ba81f92bdb5e1535477ef24fb067e"
+            },
+            "validation": "PASS"
+          },
+          {
+            "cameraId": "1",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 320,
+            "previewHeight": 240,
+            "previewFrames": [
+              {
+                "timestampNanos": 11963090333406,
+                "minLuma": 30,
+                "maxLuma": 251,
+                "sampleSum": 1070331
+              },
+              {
+                "timestampNanos": 11963123670646,
+                "minLuma": 27,
+                "maxLuma": 251,
+                "sampleSum": 1061262
+              },
+              {
+                "timestampNanos": 11963198122646,
+                "minLuma": 25,
+                "maxLuma": 251,
+                "sampleSum": 1049214
+              }
+            ],
+            "captureCompletions": 5,
+            "jpeg": {
+              "bytes": 10883,
+              "width": 320,
+              "height": 240,
+              "sampledColors": 142,
+              "timestampNanos": 11963356952017,
+              "sha256": "b4cb189880bf52a4b1e617e8572845a08f5f2f8ea938d8161f92eedebc5bb425"
+            },
+            "validation": "PASS"
+          }
+        ]
+      },
+      {
+        "phase": "reopened",
+        "uid": 10112,
+        "pid": 15558,
+        "nonce": "b5d20ae1-f728-4946-a6ff-33b1cb7056b6",
+        "generation": 2,
+        "deviceProfile": {
+          "profile": "rootless-v1",
+          "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+          "multidisplayInstalled": false,
+          "dynamicSystemPackagePresent": true,
+          "dynamicSystemUid": 1000,
+          "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+          "dynamicSystemBootReceiverEnabled": false,
+          "runningUnsupportedPackages": []
+        },
+        "playback": {
+          "sampleRate": 48000,
+          "channels": 2,
+          "writtenFrames": 96000,
+          "playedFrames": 96000,
+          "elapsedMillis": 2819,
+          "underruns": 0,
+          "validation": "PASS"
+        },
+        "microphone": {
+          "sampleRate": 48000,
+          "channels": 1,
+          "samples": 96000,
+          "reads": 38,
+          "rms": 18912.858046557627,
+          "timestampFrame": 97920,
+          "timestampNanos": 12024530023739,
+          "elapsedMillis": 2416,
+          "validation": "PASS"
+        },
+        "cameras": [
+          {
+            "cameraId": "0",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 160,
+            "previewHeight": 120,
+            "previewFrames": [
+              {
+                "timestampNanos": 12028732171941,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 277669
+              },
+              {
+                "timestampNanos": 12028825687478,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 277856
+              },
+              {
+                "timestampNanos": 12028940421885,
+                "minLuma": 35,
+                "maxLuma": 251,
+                "sampleSum": 274407
+              }
+            ],
+            "captureCompletions": 4,
+            "jpeg": {
+              "bytes": 7285,
+              "width": 160,
+              "height": 120,
+              "sampledColors": 94,
+              "timestampNanos": 12029175260811,
+              "sha256": "565a5a11d024b183424e13e9b32237d80ca8e3785ab65a336c0d09fc8af4e1f2"
+            },
+            "validation": "PASS"
+          },
+          {
+            "cameraId": "1",
+            "advertisedCameras": [
+              "0",
+              "1"
+            ],
+            "previewWidth": 320,
+            "previewHeight": 240,
+            "previewFrames": [
+              {
+                "timestampNanos": 12030490076069,
+                "minLuma": 30,
+                "maxLuma": 251,
+                "sampleSum": 1080546
+              },
+              {
+                "timestampNanos": 12030575807717,
+                "minLuma": 27,
+                "maxLuma": 251,
+                "sampleSum": 1064535
+              },
+              {
+                "timestampNanos": 12030663262791,
+                "minLuma": 25,
+                "maxLuma": 251,
+                "sampleSum": 1031637
+              }
+            ],
+            "captureCompletions": 4,
+            "jpeg": {
+              "bytes": 10508,
+              "width": 320,
+              "height": 240,
+              "sampledColors": 131,
+              "timestampNanos": 12030838812347,
+              "sha256": "9e0748b4fdff49858b190e7f9014cb30c415d377dc1b7178aa50382686327be2"
+            },
+            "validation": "PASS"
+          }
+        ]
+      }
+    ],
+    "hostAudio": {
+      "hostPcmBytesWritten": 1935360,
+      "completedStreams": 4,
+      "streamErrors": 0,
+      "microphoneRequested": true,
+      "microphoneStreams": 2,
+      "microphoneDenied": 0,
+      "microphonePeerClosures": 2,
+      "lastStreamErrorClass": null
+    },
+    "nativeCleanup": {
+      "anrs": [],
+      "javaFatalHeaders": [],
+      "nativeFatals": [],
+      "systemUiStarts": [
+        "14145"
+      ],
+      "nativeLogWithinLimit": true,
+      "initStop": [
+        [
+          "17",
+          "0",
+          "0"
+        ]
+      ],
+      "strictPassed": true,
+      "descendantStop": [
+        [
+          "12",
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "kernelChildOwnershipVerified": true,
+      "externalVolumeVerified": true
+    },
+    "serviceLifetimesReaped": 17,
+    "imageInstallStats": {
+      "schema": 1,
+      "sdk": 32,
+      "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+      "reusedFiles": 2594,
+      "replacedFiles": 54,
+      "reusedBytes": 1286088292,
+      "writtenBytes": 18253802,
+      "durationMillis": 136938
+    },
+    "hostDefaultPhantomPolicyVerified": true,
+    "hostMediaPermissionsRestored": true,
+    "sampledPeakChildren": 32,
+    "observerSamples": 175,
+    "amsSamples": 7,
+    "maxObservedAmsRecords": 26,
+    "unsupportedPackagesAbsentFromSamples": true,
+    "sampledPeakWithinDefault32": true,
+    "repeatedFreshStartBudgetVerified": false,
+    "hardProcessBoundVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
+  },
+  "cachedImageFreshStartRepeat1": {
+    "status": "TERMINAL_STRICT_PASS",
+    "job": {
+      "pid": 8408,
+      "token": "def29cdf1d8f49c6a8354bafba4f33a5",
+      "script": "/home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/run-def29cdf1d8f49c6a8354bafba4f33a5.py",
+      "log": "/home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/run-def29cdf1d8f49c6a8354bafba4f33a5.log",
+      "exit": "/home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/run-def29cdf1d8f49c6a8354bafba4f33a5.exit.json"
+    },
+    "budgetObserver": {
+      "pid": 8789,
+      "script": "/home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/process-budget-observer.log",
+      "sourceSha256": "f04f05943a024481637d87655eab204ab55281480f33c2825a085f50e79bb862"
+    },
+    "amsObserver": {
+      "pid": 8830,
+      "script": "/home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/observe-ams.py",
+      "sourceSha256": "fb79d7de3466e2a12b2580b05220b7961408d5edc0ac23e63c662c327c8cd61f"
+    },
+    "command": "python3 /home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation/test_api32_app_on_pi.py --work-dir /home/pi/pocket-api32-vm/rootless-device-av-repeat1-validation --allow-media-fixture --require-image-reuse",
+    "scope": "Same complete43 image, exact Manager/ordinary AV APK/JNI/test sources. New outer Manager install/launch and new framework lifetime in retained normal profile, require cached image statistics and independently check server requests for no image download. No results claimed until terminal strict report and independent cleanup/policy/budget verification.",
+    "runId": "9995b11ad6304d689d7dc9fcb95abd3c",
+    "validation": "PASS",
+    "strictPassed": true,
+    "supervisorReturnCode": 0,
+    "report": "out/api32/rootless-device-av-repeat1-result/manager-app-report.json",
+    "independentCheck": "out/api32/rootless-device-av-repeat1-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_rootless_device_av_repeat_result.py --repeat 1 --run-id 9995b11ad6304d689d7dc9fcb95abd3c",
+    "verificationResult": "PASS",
+    "result": {
+      "status": "PASS_FULL43_CACHED_IMAGE_FRESH_START_ALL_CAMERA_AV_REPEAT",
+      "repeatIndex": 1,
+      "priorRunId": "b8c0a3750b094e04a02eec3347a5ea44",
+      "guestSessionRunId": "2a5978267faa46df99f294c42dbacbf3",
+      "cachedImageNoDownloadVerified": true,
+      "runId": "9995b11ad6304d689d7dc9fcb95abd3c",
+      "reportSha256": "d2a1949a53f278a171d36aa25b54dbfc6573f9e347ad313f6c1de5b9066ba81c",
+      "sourcePinsVerified": 749,
+      "imageVersion": "0.78.43",
+      "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+      "managerSha256": "0e978845078aaee600fc050218773547b737f458d37536c8ce38b583dc629dcc",
+      "phases": [
+        {
+          "phase": "firstLaunch",
+          "uid": 10112,
+          "pid": 19768,
+          "nonce": "a156587e-77ed-42da-8b99-e0ac9848b6bd",
+          "generation": 1,
+          "deviceProfile": {
+            "profile": "rootless-v1",
+            "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+            "multidisplayInstalled": false,
+            "dynamicSystemPackagePresent": true,
+            "dynamicSystemUid": 1000,
+            "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+            "dynamicSystemBootReceiverEnabled": false,
+            "runningUnsupportedPackages": []
+          },
+          "playback": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "writtenFrames": 96000,
+            "playedFrames": 96000,
+            "elapsedMillis": 5522,
+            "underruns": 0,
+            "validation": "PASS"
+          },
+          "microphone": {
+            "sampleRate": 48000,
+            "channels": 1,
+            "samples": 96000,
+            "reads": 36,
+            "rms": 18918.212211055547,
+            "timestampFrame": 97920,
+            "timestampNanos": 12608577018688,
+            "elapsedMillis": 3039,
+            "validation": "PASS"
+          },
+          "cameras": [
+            {
+              "cameraId": "0",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 160,
+              "previewHeight": 120,
+              "previewFrames": [
+                {
+                  "timestampNanos": 12613833769814,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 277544
+                },
+                {
+                  "timestampNanos": 12613903291536,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 277041
+                },
+                {
+                  "timestampNanos": 12613928132703,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 275480
+                }
+              ],
+              "captureCompletions": 6,
+              "jpeg": {
+                "bytes": 7587,
+                "width": 160,
+                "height": 120,
+                "sampledColors": 93,
+                "timestampNanos": 12613969842833,
+                "sha256": "84bc6d1c1cb5693e6dd5102f112a47b5c8fa81b5ad0bcdeb7ad75df07e45e757"
+              },
+              "validation": "PASS"
+            },
+            {
+              "cameraId": "1",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 320,
+              "previewHeight": 240,
+              "previewFrames": [
+                {
+                  "timestampNanos": 12615474919906,
+                  "minLuma": 30,
+                  "maxLuma": 251,
+                  "sampleSum": 1071591
+                },
+                {
+                  "timestampNanos": 12615517375850,
+                  "minLuma": 27,
+                  "maxLuma": 251,
+                  "sampleSum": 1051812
+                },
+                {
+                  "timestampNanos": 12615550687054,
+                  "minLuma": 25,
+                  "maxLuma": 251,
+                  "sampleSum": 1050285
+                }
+              ],
+              "captureCompletions": 6,
+              "jpeg": {
+                "bytes": 10396,
+                "width": 320,
+                "height": 240,
+                "sampledColors": 134,
+                "timestampNanos": 12615720374220,
+                "sha256": "f61360c620e913bfcedc3aed26b43dc9d2c5cecde991d6069373e2f34abf98fe"
+              },
+              "validation": "PASS"
+            }
+          ]
+        },
+        {
+          "phase": "reopened",
+          "uid": 10112,
+          "pid": 19768,
+          "nonce": "a7032d46-f0c9-4642-886d-7097a6fead5c",
+          "generation": 2,
+          "deviceProfile": {
+            "profile": "rootless-v1",
+            "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+            "multidisplayInstalled": false,
+            "dynamicSystemPackagePresent": true,
+            "dynamicSystemUid": 1000,
+            "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+            "dynamicSystemBootReceiverEnabled": false,
+            "runningUnsupportedPackages": []
+          },
+          "playback": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "writtenFrames": 96000,
+            "playedFrames": 96000,
+            "elapsedMillis": 2864,
+            "underruns": 0,
+            "validation": "PASS"
+          },
+          "microphone": {
+            "sampleRate": 48000,
+            "channels": 1,
+            "samples": 96000,
+            "reads": 38,
+            "rms": 18954.730947293923,
+            "timestampFrame": 96960,
+            "timestampNanos": 12668963027689,
+            "elapsedMillis": 2767,
+            "validation": "PASS"
+          },
+          "cameras": [
+            {
+              "cameraId": "0",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 160,
+              "previewHeight": 120,
+              "previewFrames": [
+                {
+                  "timestampNanos": 12670973009021,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 274518
+                },
+                {
+                  "timestampNanos": 12671041978502,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 275300
+                },
+                {
+                  "timestampNanos": 12671167064335,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 277996
+                }
+              ],
+              "captureCompletions": 5,
+              "jpeg": {
+                "bytes": 7895,
+                "width": 160,
+                "height": 120,
+                "sampledColors": 104,
+                "timestampNanos": 12671393867150,
+                "sha256": "0de0dbcd2b375538dcdb2d38804f92c0ed51f967fe1d541c9734ece17659996e"
+              },
+              "validation": "PASS"
+            },
+            {
+              "cameraId": "1",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 320,
+              "previewHeight": 240,
+              "previewFrames": [
+                {
+                  "timestampNanos": 12672488803798,
+                  "minLuma": 30,
+                  "maxLuma": 251,
+                  "sampleSum": 1074102
+                },
+                {
+                  "timestampNanos": 12672527089298,
+                  "minLuma": 27,
+                  "maxLuma": 251,
+                  "sampleSum": 1067127
+                },
+                {
+                  "timestampNanos": 12672615301131,
+                  "minLuma": 25,
+                  "maxLuma": 251,
+                  "sampleSum": 1049214
+                }
+              ],
+              "captureCompletions": 4,
+              "jpeg": {
+                "bytes": 10508,
+                "width": 320,
+                "height": 240,
+                "sampledColors": 131,
+                "timestampNanos": 12672790927075,
+                "sha256": "38bab0a60b771a5ba9c0695117d66c4f33e6e6f4de5437c7e8d3d6ca86a757fc"
+              },
+              "validation": "PASS"
+            }
+          ]
+        }
+      ],
+      "hostAudio": {
+        "hostPcmBytesWritten": 1927680,
+        "completedStreams": 4,
+        "streamErrors": 0,
+        "microphoneRequested": true,
+        "microphoneStreams": 2,
+        "microphoneDenied": 0,
+        "microphonePeerClosures": 2,
+        "lastStreamErrorClass": null
+      },
+      "nativeCleanup": {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "18344"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "17",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true,
+        "descendantStop": [
+          [
+            "12",
+            "8",
+            "0",
+            "0"
+          ]
+        ],
+        "kernelChildOwnershipVerified": true,
+        "externalVolumeVerified": true
+      },
+      "serviceLifetimesReaped": 17,
+      "imageInstallStats": {
+        "schema": 1,
+        "sdk": 32,
+        "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+        "reusedFiles": 2594,
+        "replacedFiles": 54,
+        "reusedBytes": 1286088292,
+        "writtenBytes": 18253802,
+        "durationMillis": 136938
+      },
+      "hostDefaultPhantomPolicyVerified": true,
+      "hostMediaPermissionsRestored": true,
+      "sampledPeakChildren": 32,
+      "observerSamples": 105,
+      "amsSamples": 7,
+      "maxObservedAmsRecords": 25,
+      "unsupportedPackagesAbsentFromSamples": true,
+      "sampledPeakWithinDefault32": true,
+      "repeatedFreshStartBudgetVerified": false,
+      "hardProcessBoundVerified": false,
+      "physicalPhoneVerified": false,
+      "productionReleaseReady": false
+    }
+  },
+  "cachedImageFreshStartRepeat2": {
+    "status": "TERMINAL_STRICT_FUNCTIONAL_PASS_SAMPLED_BUDGET33",
+    "job": {
+      "pid": 12331,
+      "token": "169470a041fe43e7abd04295a3ec3792",
+      "script": "/home/pi/pocket-api32-vm/rootless-device-av-repeat2-validation/run-169470a041fe43e7abd04295a3ec3792.py",
+      "log": "/home/pi/pocket-api32-vm/rootless-device-av-repeat2-validation/run-169470a041fe43e7abd04295a3ec3792.log",
+      "exit": "/home/pi/pocket-api32-vm/rootless-device-av-repeat2-validation/run-169470a041fe43e7abd04295a3ec3792.exit.json"
+    },
+    "budgetObserver": {
+      "pid": 12349,
+      "script": "/home/pi/pocket-api32-vm/rootless-device-av-repeat2-validation/observe-budget.py",
+      "log": "/home/pi/pocket-api32-vm/rootless-device-av-repeat2-validation/process-budget-observer.log",
+      "sourceSha256": "309c7672032f309dbc545187838c6f22bdd9c777090179123c896a0c72a2ac69"
+    },
+    "amsObserver": {
+      "pid": 12370,
+      "script": "/home/pi/pocket-api32-vm/rootless-device-av-repeat2-validation/observe-ams.py",
+      "sourceSha256": "642a28190f9beb5abec31ea3247d0cd59edcd5a961d5e56eb8a797a6f1f3be25"
+    },
+    "scope": "Exact same image/Manager/AV APK/source pins as upgrade and first cached repeat. Third fresh native framework lifetime, preserving retained data/default host limits. Pending strict report and independent verification.",
+    "runId": "656ab56f9bab46959f70dab3e3cc1ef1",
+    "validation": "PASS",
+    "strictPassed": true,
+    "supervisorReturnCode": 0,
+    "report": "out/api32/rootless-device-av-repeat2-result/manager-app-report.json",
+    "independentCheck": "out/api32/rootless-device-av-repeat2-result/independent-check.json",
+    "verificationCommand": "python3 out/api32/verify_rootless_device_av_repeat_result.py --repeat 2 --run-id 656ab56f9bab46959f70dab3e3cc1ef1",
+    "verificationResult": "PASS_FUNCTIONAL_POLICY_AND_AV",
+    "result": {
+      "status": "PASS_FULL43_CACHED_IMAGE_FRESH_START_ALL_CAMERA_AV_REPEAT",
+      "repeatIndex": 2,
+      "priorRunId": "9995b11ad6304d689d7dc9fcb95abd3c",
+      "guestSessionRunId": "64bbeee662574ccfa56818042afb734e",
+      "cachedImageNoDownloadVerified": true,
+      "runId": "656ab56f9bab46959f70dab3e3cc1ef1",
+      "reportSha256": "57a788385c59c78fc4f5681299b8aaf4ac42d957cf67165e6e97b4908c4dae67",
+      "sourcePinsVerified": 749,
+      "imageVersion": "0.78.43",
+      "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+      "managerSha256": "0e978845078aaee600fc050218773547b737f458d37536c8ce38b583dc629dcc",
+      "phases": [
+        {
+          "phase": "firstLaunch",
+          "uid": 10112,
+          "pid": 23620,
+          "nonce": "cb365255-e8ca-4478-b8dd-56290197c79e",
+          "generation": 1,
+          "deviceProfile": {
+            "profile": "rootless-v1",
+            "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+            "multidisplayInstalled": false,
+            "dynamicSystemPackagePresent": true,
+            "dynamicSystemUid": 1000,
+            "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+            "dynamicSystemBootReceiverEnabled": false,
+            "runningUnsupportedPackages": []
+          },
+          "playback": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "writtenFrames": 96000,
+            "playedFrames": 96000,
+            "elapsedMillis": 4872,
+            "underruns": 0,
+            "validation": "PASS"
+          },
+          "microphone": {
+            "sampleRate": 48000,
+            "channels": 1,
+            "samples": 96000,
+            "reads": 39,
+            "rms": 18961.50708233053,
+            "timestampFrame": 99840,
+            "timestampNanos": 13197781348799,
+            "elapsedMillis": 3447,
+            "validation": "PASS"
+          },
+          "cameras": [
+            {
+              "cameraId": "0",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 160,
+              "previewHeight": 120,
+              "previewFrames": [
+                {
+                  "timestampNanos": 13203193397092,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 274518
+                },
+                {
+                  "timestampNanos": 13203356717555,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 277041
+                },
+                {
+                  "timestampNanos": 13203411629981,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 275554
+                }
+              ],
+              "captureCompletions": 7,
+              "jpeg": {
+                "bytes": 7302,
+                "width": 160,
+                "height": 120,
+                "sampledColors": 93,
+                "timestampNanos": 13203585579129,
+                "sha256": "58891328e0d380c0cae0de8e524d6069d72336d6904e4db0afc307376c3589f4"
+              },
+              "validation": "PASS"
+            },
+            {
+              "cameraId": "1",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 320,
+              "previewHeight": 240,
+              "previewFrames": [
+                {
+                  "timestampNanos": 13205469821702,
+                  "minLuma": 30,
+                  "maxLuma": 251,
+                  "sampleSum": 1070331
+                },
+                {
+                  "timestampNanos": 13205522941758,
+                  "minLuma": 27,
+                  "maxLuma": 251,
+                  "sampleSum": 1046106
+                },
+                {
+                  "timestampNanos": 13205678911332,
+                  "minLuma": 22,
+                  "maxLuma": 251,
+                  "sampleSum": 1021413
+                }
+              ],
+              "captureCompletions": 6,
+              "jpeg": {
+                "bytes": 10607,
+                "width": 320,
+                "height": 240,
+                "sampledColors": 148,
+                "timestampNanos": 13205899217943,
+                "sha256": "44404cc96076a959ba4572ed6c505a5f0dc89a4cb9a315e41f9ecdf6deebe7cd"
+              },
+              "validation": "PASS"
+            }
+          ]
+        },
+        {
+          "phase": "reopened",
+          "uid": 10112,
+          "pid": 23620,
+          "nonce": "81f15c45-2e88-427a-89ad-741c20e6a320",
+          "generation": 2,
+          "deviceProfile": {
+            "profile": "rootless-v1",
+            "policySha256": "3109ad95ed8ac79c1fcd0b2a646022d92b286947ade553b7e83b33fe807662b1",
+            "multidisplayInstalled": false,
+            "dynamicSystemPackagePresent": true,
+            "dynamicSystemUid": 1000,
+            "dynamicSystemApkSha256": "7c571c267dca5d6a63f5ea70f73d984b494ccd9cb5a493b154f510c508b9bcfb",
+            "dynamicSystemBootReceiverEnabled": false,
+            "runningUnsupportedPackages": []
+          },
+          "playback": {
+            "sampleRate": 48000,
+            "channels": 2,
+            "writtenFrames": 96000,
+            "playedFrames": 96000,
+            "elapsedMillis": 3276,
+            "underruns": 0,
+            "validation": "PASS"
+          },
+          "microphone": {
+            "sampleRate": 48000,
+            "channels": 1,
+            "samples": 96000,
+            "reads": 35,
+            "rms": 18924.57769291778,
+            "timestampFrame": 97920,
+            "timestampNanos": 13267536860573,
+            "elapsedMillis": 2834,
+            "validation": "PASS"
+          },
+          "cameras": [
+            {
+              "cameraId": "0",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 160,
+              "previewHeight": 120,
+              "previewFrames": [
+                {
+                  "timestampNanos": 13269454483331,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 275666
+                },
+                {
+                  "timestampNanos": 13269539652608,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 275300
+                },
+                {
+                  "timestampNanos": 13269659462071,
+                  "minLuma": 35,
+                  "maxLuma": 251,
+                  "sampleSum": 277041
+                }
+              ],
+              "captureCompletions": 5,
+              "jpeg": {
+                "bytes": 7913,
+                "width": 160,
+                "height": 120,
+                "sampledColors": 104,
+                "timestampNanos": 13269893016534,
+                "sha256": "320374e0bd2e31c7661a31b867e366546db1e5eba0d2e3f8eab44ecb17ec1e69"
+              },
+              "validation": "PASS"
+            },
+            {
+              "cameraId": "1",
+              "advertisedCameras": [
+                "0",
+                "1"
+              ],
+              "previewWidth": 320,
+              "previewHeight": 240,
+              "previewFrames": [
+                {
+                  "timestampNanos": 13270850611534,
+                  "minLuma": 30,
+                  "maxLuma": 251,
+                  "sampleSum": 1073634
+                },
+                {
+                  "timestampNanos": 13270899438941,
+                  "minLuma": 27,
+                  "maxLuma": 251,
+                  "sampleSum": 1054518
+                },
+                {
+                  "timestampNanos": 13270987234274,
+                  "minLuma": 25,
+                  "maxLuma": 251,
+                  "sampleSum": 1045848
+                }
+              ],
+              "captureCompletions": 4,
+              "jpeg": {
+                "bytes": 10101,
+                "width": 320,
+                "height": 240,
+                "sampledColors": 139,
+                "timestampNanos": 13271163228663,
+                "sha256": "04d069733d7d5ceda05e0dea2961f55359e3b8a2310a99c46be60e149fbd0dc7"
+              },
+              "validation": "PASS"
+            }
+          ]
+        }
+      ],
+      "hostAudio": {
+        "hostPcmBytesWritten": 1912320,
+        "completedStreams": 4,
+        "streamErrors": 0,
+        "microphoneRequested": true,
+        "microphoneStreams": 2,
+        "microphoneDenied": 0,
+        "microphonePeerClosures": 2,
+        "lastStreamErrorClass": null
+      },
+      "nativeCleanup": {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "22346"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "17",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true,
+        "descendantStop": [
+          [
+            "12",
+            "8",
+            "0",
+            "0"
+          ]
+        ],
+        "kernelChildOwnershipVerified": true,
+        "externalVolumeVerified": true
+      },
+      "serviceLifetimesReaped": 17,
+      "imageInstallStats": {
+        "schema": 1,
+        "sdk": 32,
+        "imageSha256": "5a6c3b45df4133b8f83c0ab71f3977766a743e17f39ed57f92473edb799c1cce",
+        "reusedFiles": 2594,
+        "replacedFiles": 54,
+        "reusedBytes": 1286088292,
+        "writtenBytes": 18253802,
+        "durationMillis": 136938
+      },
+      "hostDefaultPhantomPolicyVerified": true,
+      "hostMediaPermissionsRestored": true,
+      "sampledPeakChildren": 33,
+      "observerSamples": 111,
+      "amsSamples": 8,
+      "maxObservedAmsRecords": 17,
+      "unsupportedPackagesAbsentFromSamples": true,
+      "sampledPeakWithinDefault32": false,
+      "repeatedFreshStartBudgetVerified": false,
+      "hardProcessBoundVerified": false,
+      "physicalPhoneVerified": false,
+      "productionReleaseReady": false
+    }
+  },
+  "threeStartBudgetCheck": {
+    "command": "python3 out/api32/verify_rootless_device_budget_repeats.py",
+    "result": "FAIL_SAMPLED_PEAK33",
+    "evidence": "out/api32/rootless-device-av-three-starts-check.json",
+    "peakCensus": "out/api32/rootless-device-av-repeat2-result/peak-census.json",
+    "scope": "All three functional policy/AV/clean-stop trials pass; sampled peaks32,32,33 across391 samples leave repeated-budget gate open."
+  },
+  "embeddedManager44Followup": {
+    "evidence": "docs/api32-embedded-manager-validation.json",
+    "scope": "Unchanged43 device profile/native/platform payloads in44. Actual package/receiver policy checks pass on all three AV starts and Signal. Owner-command helper VMs removed; sampled peaks32/32/31/33 keep combined budget gate open."
+  }
+}

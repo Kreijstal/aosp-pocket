@@ -258,6 +258,10 @@ final class HostMedia {
     }
     /** Continuous guest audio output: after the reply, the socket carries only PCM16 until the guest closes it. */
     static void stream(LocalSocket peer,JSONObject args,DataInputStream in,DataOutputStream out) throws Exception {
+        stream(peer,args,in,out,null);
+    }
+    static void stream(LocalSocket peer,JSONObject args,DataInputStream in,DataOutputStream out,
+            java.util.function.IntConsumer accepted) throws Exception {
         int rate=args.getInt("sample_rate"),channels=args.getInt("channels");
         if(rate!=48000 || channels!=2)throw new IllegalArgumentException("Unsupported guest audio stream");
         int mask=AudioFormat.CHANNEL_OUT_STEREO,frame=channels*2;
@@ -284,8 +288,13 @@ final class HostMedia {
                 if(count<0)break;
                 pending+=count;int whole=pending-pending%frame;
                 if(whole==0)continue;
-                int written=track.write(buffer,0,whole,AudioTrack.WRITE_BLOCKING);
-                if(written<0)throw new IOException("Host playback write failed: "+written);
+                int offset=0;
+                while(offset<whole) {
+                    int written=track.write(buffer,offset,whole-offset,AudioTrack.WRITE_BLOCKING);
+                    if(written<=0)throw new IOException("Host playback write failed: "+written);
+                    offset+=written;
+                    if(accepted!=null)accepted.accept(written);
+                }
                 System.arraycopy(buffer,whole,buffer,0,pending-whole);pending-=whole;
             }
         } finally {
@@ -295,6 +304,9 @@ final class HostMedia {
     }
     /** Continuous guest audio input: after the reply, the socket carries host microphone PCM16 until the guest closes it. */
     static void capture(LocalSocket peer,JSONObject args,DataOutputStream out) throws Exception {
+        capture(peer,args,out,null);
+    }
+    static void capture(LocalSocket peer,JSONObject args,DataOutputStream out,Runnable peerClosed) throws Exception {
         int rate=args.getInt("sample_rate"),channels=args.getInt("channels");
         if(rate!=48000 || channels!=1)throw new IllegalArgumentException("Unsupported guest audio input");
         int minimum=AudioRecord.getMinBufferSize(rate,AudioFormat.CHANNEL_IN_MONO,AudioFormat.ENCODING_PCM_16BIT);
@@ -315,7 +327,21 @@ final class HostMedia {
             while(true) {
                 int count=record.read(buffer,0,buffer.length,AudioRecord.READ_BLOCKING);
                 if(count<0)throw new IOException("Host PCM read failed: "+count);
-                out.write(buffer,0,count);out.flush();
+                try {out.write(buffer,0,count);out.flush();}
+                catch(IOException ended) {
+                    // LocalSocket's native write may discard the errno cause.
+                    // Confirm a peer hangup through the kernel; microphone
+                    // read/initialization failures remain stream errors.
+                    android.system.StructPollfd state=new android.system.StructPollfd();
+                    state.fd=peer.getFileDescriptor();state.events=0;
+                    try {
+                        android.system.Os.poll(new android.system.StructPollfd[]{state},0);
+                        if((state.revents&android.system.OsConstants.POLLHUP)!=0) {
+                            if(peerClosed!=null)peerClosed.run();return;
+                        }
+                    }catch(android.system.ErrnoException unavailable){}
+                    throw ended;
+                }
             }
         } finally {
             try{if(record!=null){try{record.stop();}catch(IllegalStateException ignored){}record.release();}}

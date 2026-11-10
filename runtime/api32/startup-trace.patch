@@ -1,0 +1,19 @@
+--- a/cmds/app_process/app_main.cpp
++++ b/cmds/app_process/app_main.cpp
+@@ -12,6 +12,7 @@
+ #include <sys/prctl.h>
+ #include <sys/stat.h>
+ #include <unistd.h>
++#include <dlfcn.h>
+ 
+ #include <android-base/macros.h>
+ #include <binder/IPCThreadState.h>
+@@ -94,6 +95,8 @@
+         sp<ProcessState> proc = ProcessState::self();
+         ALOGV("App process: starting thread pool.\n");
+         proc->startThreadPool();
++        auto trace = reinterpret_cast<void(*)()>(dlsym(RTLD_DEFAULT, "pocketStartStartupTrace32"));
++        if (trace) trace();
+     }
+ 
+     virtual void onExit(int code)

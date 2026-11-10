@@ -27,7 +27,7 @@ final class RemoteImage {
         return out.toString("UTF-8");
     }
     private static synchronized JSONObject descriptor(Context context,int sdk)throws Exception {
-        if(sdk!=28 && sdk!=29)throw new IOException("Unsupported direct guest SDK");
+        if(sdk!=28 && sdk!=29 && sdk!=32)throw new IOException("Unsupported direct guest SDK");
         if(selected.containsKey(sdk))return selected.get(sdk);
         if(!catalogLoaded){
             String text;
@@ -52,11 +52,22 @@ final class RemoteImage {
     }
     static boolean prepare(Context context,File root,int sdk,GuestImage.Progress progress)throws Exception {
         JSONObject image=descriptor(context,sdk);if(image==null)return false;
-        String androidVersion=sdk==29?"10":"9";
+        String androidVersion=sdk==32?"12L":sdk==29?"10":"9";
         JSONObject manifest=image.getJSONObject("manifest");
         for(String field:new String[]{"profile","sdk","abi","runtime","version"})
             if(!image.get(field).toString().equals(manifest.get(field).toString()))throw new IOException("Image metadata mismatch");
         if(manifest.getInt("schema")!=1)throw new IOException("Unsupported image manifest");
+        if(sdk==32) {
+            for(JSONObject metadata:new JSONObject[]{image,manifest})
+                if(!metadata.getBoolean("experimental") || metadata.getInt("service_layout")!=2
+                        || !metadata.getString("boot_protocol").equals("api32-v1")
+                        || !metadata.getString("storage").equals("app-private"))
+                    throw new IOException("Unsupported Android 12L runtime layout");
+            if(image.has("child_supervision") || manifest.has("child_supervision"))
+                if(!"kernel-subreaper".equals(image.optString("child_supervision"))
+                        || !"kernel-subreaper".equals(manifest.optString("child_supervision")))
+                    throw new IOException("Unsupported Android 12L child supervision");
+        }
         String sha=image.getString("sha256"),manifestSha=image.getString("manifest_sha256");
         if(!sha.matches("[0-9a-f]{64}") || !manifestSha.matches("[0-9a-f]{64}"))throw new IOException("Invalid image checksum");
         long packed=image.getLong("bytes"),unpacked=image.getLong("unpacked_bytes");
@@ -74,6 +85,16 @@ final class RemoteImage {
             if(!files.containsKey(required))throw new IOException("Image lacks a required system file");
         if(sdk==29 && !files.containsKey("apex/com.android.runtime/lib64/bionic/libc.so"))
             throw new IOException("Android 10 image lacks its runtime APEX");
+        if(sdk==32)for(String required:new String[]{".pocket-readonly-system","bootstrap-linkerconfig",
+                "system/bin/pocket-core-api32","system/bin/pocket-crypto-api32",
+                "system/bin/pocket-runtime-prepare-api32","system/bin/pocket-runtime-wait-api32",
+                "system/bin/getprop","system/bin/pocket-setprop-api32",
+                "system/bin/pocket-manager-api32","system/framework/pocket-manager.jar",
+                "system/etc/init/pocket-runtime.rc","system/etc/pocket-runtime-boot.sh","system/etc/pocket-runtime-env.sh",
+                "system/framework/pocket-zygote.jar","system/framework/pocket-tools.jar",
+                "apex/com.android.art/javalib/arm64/boot.art","apex/com.android.runtime/lib64/bionic/libc.so",
+                "product/overlay/PocketMemory/PocketMemory.apk"})
+            if(!files.containsKey(required))throw new IOException("Android 12L image lacks "+required);
         if(!root.isDirectory() && !root.mkdirs())throw new IOException("Cannot create image directory");
         File marker=new File(root,".pocket-image-id"),pending=new File(root,".pocket-image-installing");
         boolean complete=!pending.exists();
@@ -109,10 +130,16 @@ final class RemoteImage {
         File payload=ImageDownload.fetch(new URL(image.getString("url")),downloads,packed,sha,progress::update);
         progress.phase("Checking Android "+androidVersion);
         boolean[] verified={false};
-        ImageArchive.install(payload,root,files,manifestSha,sha,(done,size)->{
+        long installStarted=System.nanoTime();
+        ImageArchive.InstallStats installed=ImageArchive.install(payload,root,files,manifestSha,sha,(done,size)->{
             if(!verified[0]){verified[0]=true;progress.phase("Setting up Android "+androidVersion);}
             progress.update(done,size);
         });
+        JSONObject statistics=new JSONObject().put("schema",1).put("sdk",sdk).put("imageSha256",sha)
+            .put("reusedFiles",installed.reusedFiles).put("replacedFiles",installed.replacedFiles)
+            .put("reusedBytes",installed.reusedBytes).put("writtenBytes",installed.writtenBytes)
+            .put("durationMillis",(System.nanoTime()-installStarted)/1000000L);
+        ImageArchive.atomicText(new File(root,".pocket-image-install-stats.json"),statistics.toString()+"\n");
         if(savedManifest.isFile()) {
             JSONObject old;
             try(InputStream in=new FileInputStream(savedManifest)){old=new JSONObject(read(in,8*1024*1024)).getJSONObject("entries");}

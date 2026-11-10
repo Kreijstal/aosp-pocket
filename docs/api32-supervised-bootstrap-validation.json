@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "sdk": 32,
+  "status": "STRICT_FRAMEWORK_MEDIA_STORAGE_AND_BOOTSTRAP_FAILURES_PASS_BUDGET_PENDING",
+  "runtimeVerified": true,
+  "productionReleaseReady": false,
+  "design": {
+    "owner": "The preboot shell execs init after linker/classpath preparation. Init starts a disabled oneshot bootstrap service for the remaining service startup commands.",
+    "ready": "The child stages an exact run nonce and exits. Init reaps it before validating and atomically publishing the existing runtime-ready marker.",
+    "failure": "A nonzero bootstrap exit or a successful exit without its valid staged nonce makes init fail and stop/reap its services.",
+    "logs": "Init and its children inherit the Manager console file. The bootstrap reads that same file. The separate runtime validator explicitly redirects into its own log."
+  },
+  "hostValidation": {
+    "command": "c++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined runtime/tests/api32/bootstrap_ready.cpp -o out/api32/bootstrap-ready-host && out/api32/bootstrap-ready-host",
+    "result": "PASS",
+    "coverage": [
+      "missing and partial nonce",
+      "wrong nonce and trailing bytes",
+      "invalid run ID",
+      "atomic publication",
+      "symlink and directory rejection"
+    ]
+  },
+  "nativeBuild": {
+    "command": "python3 tools/build_api32_native.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --init",
+    "result": "PASS"
+  },
+  "firstTrial": {
+    "report": {
+      "path": "out/api32/supervised-bootstrap-report.json",
+      "sha256": "07a40bdf7575a004c69162d20bb598fc3ba2bb5f48aa1a2b61b8ab0b53f82018"
+    },
+    "runId": "aa3787684a454bdda898d7a8d0199f83",
+    "originalCodeRestored": true,
+    "reason": "The preboot negative test invoked a freshly copied loader before configuring its instance paths; it exited125 before reaching init. The fixture now calls the same NativeLoader.prepare used by ordinary Manager preparation."
+  },
+  "currentTrial": {
+    "candidate": {
+      "path": "out/api32/supervised-bootstrap-v2-candidate.json",
+      "sha256": "55f63bae04084efe80c2b8f6c1a7d924d3b47ec490765aaea4920f1aa15450de"
+    },
+    "job": "out/api32/supervised-bootstrap-v2-job.json",
+    "sourceSnapshot": "out/api32/supervised-bootstrap-v2-source-snapshot",
+    "sourceCount": 192,
+    "build": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/supervised-bootstrap-v2-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "0d9e7df780c3232bfa366b3cb809e7ecca3ce95b22d9340ceb1a366b56e7c2e4",
+      "bytes": 3571075,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": true,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "guestCodePatchSha256": {
+        "system/bin/pocket-loader": "280b23a0366a3d629fd1a9dcf16fa05503b88cddb9d346c83d02841a4941c5ad",
+        "system/lib64/libpocket_zygote_api32.so": "a747792247cc46758f70805fcc7ad854726c0e1d9b282ef097d4ba1c3b8f0ff3",
+        "system/bin/pocket-init-api32": "80159d55c006a3d1c180ac3ad7d0a87f56078635dca3dba0dae7243096d99a2f",
+        "system/bin/pocket-core-api32": "fadeb244e6e75570c1fff73cf3b8c90483d8a5e59bc5d1e4872acfc7cdcafb75",
+        "system/etc/pocket-runtime-boot.sh": "a21f6e55dc28ec278f8ab8b2f6241ddd804adc2ae92088a63b452e99c14ec250",
+        "system/lib64/libpocket_hidl_api32.so": "302b56bedde55af3b93dc2c908da90367a3443ab960cd42b19dee724170ac31e",
+        "system/lib64/libpocket_binder_api32.so": "3389632b8474113b535b977b6869ba078c92f7f730a1bf670c38403bbb9dfbbf",
+        "system/lib64/libpocket_media_api32.so": "9adc2c1144a17b9b666678fb32156b32969522abf29057e8241319222dd908d8",
+        "system/etc/init/pocket-runtime.rc": "1c1bc49ed9421747d23b409b8c27ef50d445105a0a32f8a66ba0c1b9de44408a"
+      },
+      "lazyMediaProbeSha256": "11b54b39562c86d569d0392f3d951a629af7cc441818d27517a6afe42262dfb6"
+    },
+    "result": {
+      "runId": "fb763d006cb14322852444498edf37f0",
+      "apkSha256": "0d9e7df780c3232bfa366b3cb809e7ecca3ce95b22d9340ceb1a366b56e7c2e4",
+      "imageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+      "strictPassed": true,
+      "functionalPassed": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "supervisedBootstrapVerified": true,
+      "initStop": [
+        [
+          "18",
+          "0",
+          "0"
+        ]
+      ],
+      "pollErrors": 0,
+      "systemUiStarts": [
+        "10913"
+      ],
+      "anrs": [],
+      "javaFatals": [],
+      "nativeFatals": [],
+      "selinuxBefore": "Enforcing",
+      "selinuxAfter": "Enforcing",
+      "phantomLimitBefore": "null",
+      "phantomLimitAfter": "null"
+    },
+    "report": {
+      "path": "out/api32/supervised-bootstrap-v2-report.json",
+      "sha256": "e3559697278766c2faec86e12440d0c1a841d4cd103329f472b427723a576eb5"
+    },
+    "cleanup": {
+      "path": "out/api32/supervised-bootstrap-v2-cleanup.json",
+      "sha256": "76643c63f34cebf6434b033fc11bfd8196789823dbf73757b7b9d2ff8f3ee5cc"
+    },
+    "sourcesMatchedAfterTrial": 192
+  },
+  "remaining": [
+    "Keep full startup/active workloads within the unchanged host default process budget and validate repeated starts.",
+    "Complete production image/storage integration and required CE/legacy regressions."
+  ],
+  "processBudget": {
+    "census": {
+      "path": "out/api32/supervised-bootstrap-v2-process-budget.json",
+      "sha256": "0cd224aa3ee02ac3e447745ca2baf9dcf10f89eda94588d610c50583969963c7"
+    },
+    "sampleCount": 53,
+    "observedPeakChildren": 34,
+    "errors": [],
+    "ownerParentageVerified": true,
+    "residentShellAbsentDuringWorkload": true,
+    "unchangedHostDefault": 32,
+    "withinDefaultBudgetVerified": false,
+    "sampledPeaksAreNotUpperBounds": true
+  }
+}

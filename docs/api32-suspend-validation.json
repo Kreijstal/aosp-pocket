@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "status": "COMPONENT_PASS_STARTUP_FAILED",
+  "component": "native_suspend_control",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "runId": "a54484972b8b4adfa29359b42708657e",
+  "apkSha256": "763049b6a5e4b913d3925aa7aa81a0b8ddb9892453fe6329ffd361b6cf025085",
+  "apkBytes": 7660597,
+  "previousGoalTurnClassification": "no_progress_on_12L_download_request_satisfied",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Frozen public V1 callbacks and pinned 12L internal native wake-lock stats backed by actual host partial wake locks. No host kernel suspend or fabricated kernel telemetry. Full Android12L and Manager support remain unverified.",
+  "sourceSha256": {
+    "runtime/api32/suspend_control.cpp": "476ec8a248187382a12d2cae44ba75cb97d3ea722c240e0fed1ab0e5c5f88d07",
+    "runtime/api32/suspend_probe.cpp": "fb1c81fa5605ce5cd9350cf426fc83eb93b40813bf9f5fcb161049be6ef66b1b",
+    "runtime/api29/power.cpp": "85a201229a23c209f18edc733a78b95e8f0f5ffdabbc556862e150c99d0c5817",
+    "runtime/direct/boot_hardware.cpp": "4cd9de915ade8d62e54d4052409a9419d9badf55ff207cc28dc20cfd4b6a7ab2",
+    "tools/build_api32_framework.py": "a7c29bc0bf4cfa3c3bee5faa5de26759e7cf6441d2bb76d255efe4bbb5ff892c",
+    "tools/build_api32_probe.py": "840987c2b1fde4702bc438d1b55a1117056160b3746bacba2cce5ed29ded87e9",
+    "tools/test_api32_on_pi.py": "dd4e000ef621c6a863a32d8555e0f10b3c312910c8e34463d09907308844de21"
+  },
+  "reportPath": "out/api32/suspend-control-report.json",
+  "reportSha256": "7dd1296b61ea734984247f6b12de7cfd6c595b379d7d9735251aac1e3083330a",
+  "imageManifestSha256": "292742941d7dba34d094ddca403246357809320b981f3520b61775ea6216fca9",
+  "imageVerifiedFiles": 2645,
+  "nativeLogChars": 1637265,
+  "nativeLogWithinCaptureLimit": true,
+  "checks": [
+    {
+      "command": "PYTHONPATH=tools python3 -c 'from pathlib import Path; from build_api32_framework import build_hardware; build_hardware(Path(\"/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c\"))'",
+      "result": "PASS / exit 0; hardware daemon DSO and typed hardware/suspend probes built with -Wall -Wextra -Werror."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_framework.py tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/suspend-control-first-manifest.json",
+      "result": "PASS / exit 0; final signed APK 7,660,597 bytes. All 2645 guest inputs verified; exact three-asset delta vs actually deployed first candidate. Suspend adapter, zygote bootstrap and trusted services preopt unchanged by probe correction."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component PASS; driver exit 1, guest exit 0. Suspend callbacks/native stats/roles passed, zero native suspend-service waits. Full startup FAIL: two SystemUI ANRs and a Launcher3 crash. Home/Settings focused/drawn with a later SystemUI stable for 40s. Init reaped 28 services, none remaining/failed; temporary host limit restored and SELinux Enforcing."
+    },
+    {
+      "command": "Replay the actual uiStartupCrashes expression from tools/test_api32_on_pi.py on out/api32/suspend-control-report.json, plus a Traceur-only negative sample",
+      "result": "PASS / exit 0; detects Launcher3 PID 9929 and does not attribute Traceur to UI. Added after terminal run; original runtime report is retained unchanged."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "interfaces": {
+    "public": "android.system.suspend.ISuspendControlService",
+    "version": 1,
+    "hash": "34506b107801d68c881c2c7368ad4c676aed3e9b",
+    "internal": "android.system.suspend.internal.ISuspendControlServiceInternal",
+    "implementation": "Pinned AOSP callback/death-recipient and bounded WakeLockEntryList implementations; custom adapter replaces the kernel backend."
+  },
+  "verified": {
+    "serverPid": 8403,
+    "clientPid": 8416,
+    "clientUid": 1000,
+    "remote": true,
+    "hostHeldCountsPerRound": [
+      0,
+      1,
+      0
+    ],
+    "rounds": 2,
+    "acquiredCallbacks": 2,
+    "releasedCallbacks": 2,
+    "duplicateReleaseIdempotent": true,
+    "nullCallbacks": "Stock generated AIDL EX_NULL_POINTER at unmarshalling; empty name and duplicate registration return false",
+    "nativeStats": [
+      "API32_SUSPEND_NATIVE_STAT name=Api32SuspendProbe:8416 pid=8416 active=1 count=1 total_ms=54 max_ms=54 valid=1",
+      "API32_SUSPEND_NATIVE_STAT name=Api32SuspendProbe:8416 pid=8416 active=0 count=1 total_ms=59 max_ms=59 valid=1",
+      "API32_SUSPEND_NATIVE_STAT name=Api32SuspendProbe:8416 pid=8416 active=1 count=2 total_ms=113 max_ms=59 valid=1",
+      "API32_SUSPEND_NATIVE_STAT name=Api32SuspendProbe:8416 pid=8416 active=0 count=2 total_ms=119 max_ms=60 valid=1"
+    ],
+    "protectedMethodsDeniedUid39999": 7,
+    "hostWakeLockDeathRegressionPassed": true,
+    "kernelWakeupsFabricated": 0
+  },
+  "unsupported": {
+    "enableAutosuspend": "returns false; host suspend policy stays with Android",
+    "forceSuspend": "returns false",
+    "getWakeupStats": "EX_UNSUPPORTED_OPERATION",
+    "getSuspendStats": "EX_UNSUPPORTED_OPERATION",
+    "kernelWakeLocks": "Not included in getWakeLockStats; list contains host-backed guest native acquisitions only"
+  },
+  "suspendControlServiceWaits": {
+    "previous": 228,
+    "previousRunId": "cc432835f95e4b15a8c1a33c0490860c",
+    "current": 0
+  },
+  "firstAttempt": {
+    "runId": "9f83dd83123d4660bf968d9df525c508",
+    "guestExitCode": 5,
+    "cause": "Probe incorrectly expected a handler false reply for non-null AIDL arguments. Pinned generated onTransact maps UNEXPECTED_NULL to EX_NULL_POINTER. Probe corrected; suspend implementation unchanged."
+  },
+  "startupAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 9104,
+      "reason": "executing service com.android.systemui/.ImageWallpaper"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 9602,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 10680,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "startupCrashes": [
+    {
+      "thread": "UiThreadHelper",
+      "process": "com.android.launcher3",
+      "pid": 9929
+    }
+  ],
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "managerApi32Supported": false,
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "resourceEvidence": {
+    "paths": [
+      "out/api32/suspend-control-resources-before.json",
+      "out/api32/suspend-control-resources-boot.json",
+      "out/api32/suspend-control-resources-systemserver.json",
+      "out/api32/suspend-control-resources-startup.json",
+      "out/api32/suspend-control-resources-after.json"
+    ],
+    "earlyAnrSnapshot": "out/api32/suspend-control-anr-early.json",
+    "observation": "system_server PID 8825 main thread state D while parsing mapped APK resources during startHome; 9.569s CPU and 4.092s runnable wait in that early trace. The paired VM snapshot had MemAvailable 404876kB and I/O PSI some avg10 36.14%. Memory/CPU PSI and /proc/swaps are permission denied; no elevated access used.",
+    "interpretation": "I/O stalls and scheduling pressure are evidenced; this does not prove an exclusive cause for every ANR."
+  },
+  "driverGateReplay": {
+    "allRequiredMarkersPresent": true,
+    "missingMarkers": [],
+    "missingNativeMarkers": [],
+    "currentCrashGateMatched": [
+      {
+        "thread": "UiThreadHelper",
+        "process": "com.android.launcher3",
+        "pid": 9929
+      }
+    ],
+    "strictUiPassed": false,
+    "originalReportUnmodified": true
+  }
+}

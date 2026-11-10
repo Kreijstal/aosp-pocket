@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "status": "SOFTWARE_WORKER_PRIORITY_CHANGE_VERIFIED_STARTUP_ANR_REMAINS",
+  "scope": "Explicit SDK32 SurfaceFlinger/SwiftShader thread-creation experiment; off by default. Actual kernel nice changes, unchanged compositor control-thread policy, no privileged scheduling or host cgroup claim. This run does not establish a startup fix.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "runId": "7940dda759c14acbb0ce19b073f28c57",
+  "reportPath": "out/api32/renderer-policy-report.json",
+  "reportSha256": "b75ce96dba911042118bb2387e2449281f5695e8e6b3b556b33b76aee4e8a16d",
+  "candidatePath": "out/api32/core8-renderer-runtime-candidate.json",
+  "candidateSha256": "e4b172b22059606498e039a1bae49a71efe8633f188c76c3265ad59809c7a430",
+  "apkSha256": "07913d7b52e7213d031a2b9a4043d7d462644fb35c0f90bc5d9890b380b6a76a",
+  "imageVerifiedFiles": 2671,
+  "driverExitCode": 1,
+  "guestExitCode": 0,
+  "strictPassed": false,
+  "rendererWorkerPriorities": [
+    {
+      "pid": 18885,
+      "tid": 19792,
+      "before": -8,
+      "after": 0,
+      "error": 0,
+      "library": "GLESv2"
+    },
+    {
+      "pid": 18885,
+      "tid": 19793,
+      "before": -8,
+      "after": 0,
+      "error": 0,
+      "library": "GLESv2"
+    },
+    {
+      "pid": 18885,
+      "tid": 19794,
+      "before": -8,
+      "after": 0,
+      "error": 0,
+      "library": "GLESv2"
+    },
+    {
+      "pid": 18885,
+      "tid": 19795,
+      "before": -8,
+      "after": 0,
+      "error": 0,
+      "library": "GLESv2"
+    }
+  ],
+  "workersLowered": 4,
+  "runtimeMissingMarkers": [],
+  "runtimeAnrs": [
+    "com.android.systemui"
+  ],
+  "runtimeUiProcesses": {
+    "com.android.systemui": [
+      19508,
+      20291,
+      20608
+    ],
+    "com.android.launcher3": [
+      19845
+    ]
+  },
+  "javaFatalHeaders": [],
+  "nativeFatals": [],
+  "nativeLogWithinCaptureLimit": true,
+  "normalValidationCompleted": true,
+  "uiMarkers": [
+    "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=20608 stable_seconds=40"
+  ],
+  "cleanupMarkers": [
+    "API32_INIT_STOPPED reaped=15 remaining=0 failed=0"
+  ],
+  "input": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "inputEventsRejected": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostDefaultLimit": {
+    "instance": 73,
+    "before": "null",
+    "phantomSettings": [
+      "max_phantom_processes=32"
+    ],
+    "hostSettingMutated": false,
+    "testExitCode": 1,
+    "after": "null",
+    "unchanged": true
+  },
+  "policyMismatchGuard": {
+    "mismatchedPolicyRejected": true,
+    "exitCode": 1,
+    "artifactsUnchanged": true,
+    "baselineApkSha256": "291bfd24525e7bc1779b3589004d95754a1f8ca308133cad7fabde3ac7aa5ef2"
+  },
+  "nativeBuildCommand": "python3 tools/build_api32_renderer_policy.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+  "nativeBuildResult": "exit 0; -Wall -Wextra -Werror; no undefined symbols; 16KiB ELF alignment",
+  "nativeBuildLog": "out/api32/renderer-policy-native-build.log",
+  "apkBuildCommand": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --core-services --runtime-boot --renderer-worker-scheduling --reuse-native --delta-from out/api32/core8-runtime-baseline/image-manifest.json",
+  "apkBuildResult": "exit 0",
+  "apkBuildLog": "out/api32/renderer-policy-apk-build.log",
+  "launchCommand": "python3 out/api32/start_renderer_policy_default_job.py",
+  "job": {
+    "pid": 17432,
+    "script": "/home/pi/pocket-api32-test/api32-renderer-policy-default-01a922a1b5034e6a80e919108ac79af5.py",
+    "log": "/home/pi/pocket-api32-test/api32-renderer-policy-default-01a922a1b5034e6a80e919108ac79af5.log",
+    "exit": "/home/pi/pocket-api32-test/api32-renderer-policy-default-01a922a1b5034e6a80e919108ac79af5.exit.json",
+    "token": "01a922a1b5034e6a80e919108ac79af5",
+    "instance": 73
+  },
+  "startupAnrResolved": false,
+  "enabledByDefault": false,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false
+}

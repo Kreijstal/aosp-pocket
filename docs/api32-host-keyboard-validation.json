@@ -1,0 +1,327 @@
+{
+  "schema": 1,
+  "status": "PASS",
+  "scope": "PASS: reusable API 32 host input client delivered three acknowledged button taps, an editor-focus tap and hardware KeyEvents to a real ordinary-app EditText; no production Manager or host/guest soft IME claim",
+  "hostVmInstance": 73,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "apkSha256": "a06d2fb6a7a06836862324a5766ab1a53067a15c21e850880c74ade008a365b5",
+  "apkBytes": 7660593,
+  "hostInputDeliveryVerified": true,
+  "hostKeyboardDeliveryVerified": true,
+  "repeatedHostTouchVerified": true,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "implementation": [
+    "Reusable host GuestInput32 performs the existing kernel PID/UID plus lifetime-descriptor handshake, serializes touch and key events, and shares InputCommandQueue MOVE coalescing without crossing gesture/key boundaries.",
+    "InputControl32 validates keyboard packets and forwards real KeyEvents to stock IInputManager with the guest virtual-keyboard map, action, repeat count, timestamps and modifier state.",
+    "The ordinary test app records real onPause/onResume state, process-start counters distinct from activity recreation, acknowledged clicks, EditText text changes and received key-up events.",
+    "The driver waits for stable current-layout pixel proof, rechecks layout after its screenshot, sends three separately acknowledged button taps and an editor-focus tap, then types a12b, deletes one character and types 9 through the actual host view. It requires guest text a129 and the final key-up. It does not retry unacknowledged taps."
+  ],
+  "checks": [
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar:out/api32/android-probe/classes -d out/api32/keyboard-host-classes runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestInput32.java runtime/tests/api32/HostDisplay32.java",
+      "result": "PASS / exit 0 before sharing the existing queue helper; final helper integration also passed the complete fixture build"
+    },
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/keyboard-guest-classes runtime/api32/InputControl32.java runtime/api32/AppLifecycleProbe32.java runtime/tests/api32/guestapp/MainActivity.java",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --reuse-native --delta-from out/api32/host-keyboard-memory-baseline-image-manifest.json",
+      "result": "PASS / exit 0; four embedded guest assets exactly matched deployed manifest diff and hashes; bootstrap JAR unchanged."
+    },
+    {
+      "command": "python3 out/api32/run_display_with_vm73_phantom_limit.py",
+      "result": "PASS / exit 0; eight touch events and twelve key events accepted, zero rejected; ordinary app acknowledged three clicks, EditText a129 and six key-ups; cache limit four verified; init reaped 28 services, zero remaining or failed; host SELinux Enforcing and temporary phantom-process limit restored."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 out/api32/capture_keyboard_result.py",
+      "result": "PASS / exit 0; required the expected run ID and foreground test activity before saving the retained final host frame; screenshot hash verified and visually inspected."
+    }
+  ],
+  "previousSingleTapPassEvidence": "docs/api32-host-display-validation.json",
+  "runId": "b385d1b0230f41c7864d27496b0de748",
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 0,
+    "after": "null",
+    "restored": true
+  },
+  "verifiedMarkers": [
+    "LOADER_SIGNAL_DURING_TRAP_PASS interrupted=blocking_write handler=filesystem_io",
+    "API32_DUMP_IDENTITY_PASS uid=0 pid=kernel_matched allowed=1 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=1000 pid=kernel_matched allowed=1 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=39999 pid=kernel_matched allowed=0 token=absent",
+    "API32_DUMP_IDENTITY_PASS uid=39999 pid=kernel_matched allowed=0 token=absent",
+    "API32_GUEST_MEMORY_PROFILE_PASS cached_process_limit=4 host_memory_policy=unchanged",
+    "API32_APP_INSTALL_READY_PASS action=android.intent.action.PACKAGE_REPLACED observer=registered_app observer_uid=10106 update_time=1793626452712 sequence_delta=2",
+    "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=1321734638",
+    "API32_APP_ACTIVITY_PASS uid=10105 pid=6382 resumed=1 drawn=false",
+    "API32_APP_ACTIVITY_PASS uid=10105 pid=6526 resumed=1 drawn=false",
+    "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+    "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+    "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+    "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified",
+    "API32_INPUT_GUEST_PEER_DENIED_PASS uid=1000 kernel_pid=not_host_owner",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:140:432:32:240:196:240:243",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_APP_INPUT_READY nonce=5fe893c7f1db4dcdb45173f6766a2df9 target=5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "API32_HOST_INPUT_PASS ordinary_app_clicks=3 nonce=5fe893c7f1db4dcdb45173f6766a2df9",
+    "API32_HOST_KEYBOARD_PASS text=a129 key_ups=6 stock_EditText=1 deletion=real nonce=5fe893c7f1db4dcdb45173f6766a2df9",
+    "API32_NATIVE_RUNTIME_PASS",
+    "API32_INIT_STOPPED reaped=28 remaining=0 failed=0"
+  ],
+  "passed": true,
+  "exitCode": 0,
+  "hostUid": 10154,
+  "imageManifestSha256": "e18144deb1a0d21ff76641709b0b70c135aba9eecd6c3c61a014a4ba2f9718b4",
+  "imageVerifiedFiles": 2557,
+  "extractedFiles": 4,
+  "extractionMillis": 409,
+  "imageVerificationMillis": 63597,
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostDisplay": {
+    "width": 480,
+    "height": 800,
+    "framesReceived": 829,
+    "framesPresented": 839,
+    "guestPatternMatches": 16,
+    "hostPatternMatches": 16,
+    "matchedNonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+    "matchedTargetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+    "pixelCopyStatus": 0,
+    "error": "java.io.EOFException",
+    "viewX": 0,
+    "viewY": 103,
+    "viewWidth": 480,
+    "viewHeight": 649,
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "inputEventsAccepted": 20,
+    "inputEventsRejected": 0,
+    "inputReady": {
+      "runId": "b385d1b0230f41c7864d27496b0de748",
+      "nonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+      "patternLeft": 24,
+      "patternTop": 164,
+      "patternWidth": 432,
+      "patternHeight": 32,
+      "buttonX": 240,
+      "buttonY": 220,
+      "editorX": 240,
+      "editorY": 267,
+      "clicks": 3,
+      "expectedClicks": 3,
+      "textFocused": true,
+      "typedText": "a129",
+      "keyUps": 6,
+      "targetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267"
+    },
+    "guestPatternSamples": [
+      "ff5f0525",
+      "ffe8b232",
+      "ff93c93f",
+      "ffc79d4c",
+      "fff1ab59",
+      "ffdb8166",
+      "ff4d1773",
+      "ffcd9780",
+      "ffb4ee8d",
+      "ff510b9a",
+      "ff7329a7",
+      "fff6acb4",
+      "ff762cc1",
+      "ff6a30ce",
+      "ff2d77db",
+      "fff9a3e8"
+    ],
+    "sampleTargetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267"
+  },
+  "cachedProcessLimitVerified": true,
+  "build": {
+    "status": "PASS",
+    "apkSha256": "a06d2fb6a7a06836862324a5766ab1a53067a15c21e850880c74ade008a365b5",
+    "apkBytes": 7660681,
+    "imageManifestSha256": "e18144deb1a0d21ff76641709b0b70c135aba9eecd6c3c61a014a4ba2f9718b4",
+    "guestCachedProcessLimitRequested": 4,
+    "guestCachedProcessLimitVerified": true,
+    "buildCommand": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --reuse-native --delta-from out/api32/host-keyboard-memory-baseline-image-manifest.json",
+    "buildResult": "PASS / exit 0; four embedded guest assets exactly matched deployed manifest diff and hashes; bootstrap JAR unchanged.",
+    "runtimeCommand": "python3 out/api32/run_display_with_vm73_phantom_limit.py"
+  },
+  "previousFailures": [
+    {
+      "runId": "ccf3d1ca02aa46938b9024ff74433e0a",
+      "apkSha256": "fe0b9592a74c044fde4cc7c5dc9ae4f5ce6ebfc13aaf859ca66ddf06a5957a7c",
+      "failure": {
+        "hostPid": 29927,
+        "timestamp": "2026-11-02 13:14:05.133",
+        "reason": "LOW_MEMORY",
+        "lmkEvidence": "11-02 13:14:01.664   342   342 I lowmemorykiller: Kill 'dev.kreijstal.aosppocket.api32test' (29927), uid 10154, oom_score_adj 0 to free 65692kB rss, 89756kB swap; reason: min watermark is breached even after kill",
+        "inputAttempted": false,
+        "frameworkBootReached": true,
+        "ordinaryAppChecksReached": true,
+        "notes": "Host app was killed before a drawn input-ready layout. The driver eventually exited 1 at its existing deadline and restored the temporary host phantom limit. No current-run terminal app report was written; the previous run report was not reused."
+      },
+      "hostSetup": {
+        "instance": 73,
+        "before": "null",
+        "temporaryLimit": 256,
+        "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+        "during": "256",
+        "testExitCode": 1,
+        "after": "null",
+        "restored": true
+      },
+      "verifiedMarkers": [
+        "API32_FRAMEWORK_BOOT_PASS stock_system_server=1 boot_completed=1 activity_package_window=live",
+        "API32_APP_INSTALL_READY_PASS action=android.intent.action.PACKAGE_REPLACED observer=registered_app observer_uid=10106 update_time=1793625183392 sequence_delta=2",
+        "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=891550771",
+        "API32_APP_ACTIVITY_PASS uid=10105 pid=472 resumed=1 drawn=false",
+        "API32_APP_ACTIVITY_PASS uid=10105 pid=599 resumed=1 drawn=false",
+        "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+        "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+        "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+        "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified",
+        "API32_INPUT_GUEST_PEER_DENIED_PASS uid=1000 kernel_pid=not_host_owner"
+      ]
+    }
+  ],
+  "hostInputActions": [
+    {
+      "kind": "button",
+      "nonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+      "targetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+      "guestX": 240,
+      "guestY": 220,
+      "hostX": 240,
+      "hostY": 281,
+      "clicksBefore": 0
+    },
+    {
+      "kind": "button",
+      "nonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+      "targetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+      "guestX": 240,
+      "guestY": 220,
+      "hostX": 240,
+      "hostY": 281,
+      "clicksBefore": 1
+    },
+    {
+      "kind": "button",
+      "nonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+      "targetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+      "guestX": 240,
+      "guestY": 220,
+      "hostX": 240,
+      "hostY": 281,
+      "clicksBefore": 2
+    },
+    {
+      "kind": "editor",
+      "nonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+      "targetToken": "5fe893c7f1db4dcdb45173f6766a2df9:24:164:432:32:240:220:240:267",
+      "guestX": 240,
+      "guestY": 267,
+      "hostX": 240,
+      "hostY": 319,
+      "clicksBefore": 3
+    },
+    {
+      "kind": "keyboard",
+      "nonce": "5fe893c7f1db4dcdb45173f6766a2df9",
+      "typed": "a12b",
+      "deleted": 1,
+      "appended": "9",
+      "expectedText": "a129"
+    }
+  ],
+  "stockCacheTrimExamples": [
+    "ActivityManager:Killing 5227:com.android.cellbroadcastreceiver.module/u0a63 (adj 925): empty #3",
+    "ActivityManager:Killing 5378:com.android.deskclock/u0a41 (adj 915): empty #3",
+    "ActivityManager:Killing 5615:com.android.quicksearchbox/u0a46 (adj 915): empty #3",
+    "ActivityManager:Killing 4932:com.android.settings/1000 (adj 915): empty #3",
+    "ActivityManager:Killing 5651:com.android.localtransport/1000 (adj 925): empty #3",
+    "ActivityManager:Killing 5775:com.android.traceur/u0a16 (adj 905): empty #3",
+    "ActivityManager:Killing 5688:com.android.printspooler/u0a33 (adj 925): empty #3",
+    "ActivityManager:Killing 5901:com.android.dialer/u0a38 (adj 915): empty #3",
+    "ActivityManager:Killing 5796:com.android.keychain/1000 (adj 915): empty #4",
+    "ActivityManager:Killing 5547:com.android.permissioncontroller/u0a66 (adj 915): empty #3",
+    "ActivityManager:Killing 6149:com.android.calendar/u0a40 (adj 915): empty #3",
+    "ActivityManager:Killing 6116:dev.kreijstal.aosppocket.guestbridge/u0a106 (adj 905): empty #3",
+    "ActivityManager:Killing 6191:com.android.camera2/u0a42 (adj 915): empty #3",
+    "ActivityManager:Killing 6233:com.android.cellbroadcastreceiver.module/u0a63 (adj 915): empty #3",
+    "ActivityManager:Killing 5922:android.process.media/u0a5 (adj 925): empty #3",
+    "ActivityManager:Killing 6266:com.android.contacts/u0a37 (adj 915): empty #3",
+    "ActivityManager:Killing 6360:com.android.deskclock/u0a41 (adj 915): empty #3",
+    "ActivityManager:Killing 6306:com.android.keychain/1000 (adj 925): empty #3",
+    "ActivityManager:Killing 6033:android.process.acore/u0a1 (adj 925): empty #3",
+    "ActivityManager:Killing 6483:com.android.dialer/u0a38 (adj 915): empty #3",
+    "ActivityManager:Killing 6580:com.android.dynsystem/1000 (adj 925): empty #3"
+  ],
+  "initialScreenshot": {
+    "artifact": "out/api32/host-keyboard-memory.png",
+    "sha256": "870f00f6053363dd1f4b698d2e2278522886b28b2a640bc0de2d149431dd8934",
+    "visuallyInspected": true,
+    "phase": "Before the input sequence"
+  },
+  "finalFrameScreenshot": {
+    "artifact": "out/api32/host-keyboard-result.png",
+    "sha256": "0ac8e53f2ac2dbc93d454111eb6bffeb0a1820bbc992af16c091d0ffae65ce71",
+    "visuallyInspected": true,
+    "phase": "Retained last guest frame after terminal report and service cleanup",
+    "buttonText": "INPUT RECEIVED",
+    "editorText": "a129"
+  },
+  "remainingIssues": "This one completed input sequence does not establish stress/reboot reliability. Host and guest soft IMEs, non-ASCII input, navigation/long-press behavior, full launcher/SystemUI stability, framework ConnectivityManager callbacks, complete credential/encrypted-storage lifecycle, real third-party API32 apps and production Manager download/boot support remain unverified. The guest cache profile reduced cached retention and this run survived; no general memory-performance or all-OOM resolution claim.",
+  "observedServiceAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 4752,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 5496,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 6055,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    }
+  ],
+  "systemUiStable": false,
+  "usableLauncherVerified": false,
+  "cachedProcessLimit": 4,
+  "systemUiPrecompiledArtifact": {
+    "path": "system_ext/priv-app/SystemUI/oat/arm64/SystemUI.odex",
+    "bytes": 115640,
+    "compilerFilter": "verify",
+    "observation": "The bundled artifact verifies DEX and does not provide speed compilation. Current ANR traces include interpreted Dagger initialization, Binder settings/observer work and render waits; a unique root cause is not established.",
+    "nextValidation": "Use stock dexopt speed compilation for SystemUI and compare a fresh framework boot; preserve actual service and launcher checks."
+  }
+}

@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.kreijstal.pockethostnativeprobe">
+    <application android:label="Pocket host native probe" android:allowBackup="false" android:debuggable="false" android:extractNativeLibs="true">
+        <activity android:name=".MainActivity" android:exported="true" />
+    </application>
+</manifest>

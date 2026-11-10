@@ -9,6 +9,7 @@ import java.util.*;
 public final class CeNamespace {
     public static final int REG=0100000,DIR=0040000,LNK=0120000;
     public static final String[] ROOTS={"/data/user/0","/data/system_ce/0","/data/misc_ce/0","/data/media/0"};
+    public static final String[] API32_ROOTS={"/data/user/0","/data/system_ce/0","/data/misc_ce/0","/data/media/0","/data/vendor_ce/0"};
     private static final String INDEX="namespace-v1";
     public static final class FsException extends IOException {
         private static final long serialVersionUID=1;
@@ -33,6 +34,7 @@ public final class CeNamespace {
     public final EncryptedStore store;
     private final TreeMap<Integer,Node> nodes=new TreeMap<>();
     private int next=7;
+    private String[] roots=ROOTS;
     // Hashes describe the current in-memory index, including uncommitted
     // writes. Compare before calling store.write, which otherwise has to read
     // every old chunk after file data has evicted it from the shared cache.
@@ -41,9 +43,13 @@ public final class CeNamespace {
     private long metadataRevision;
     public boolean autoCommit=true;
     public CeNamespace(EncryptedStore store,boolean create)throws IOException,GeneralSecurityException {
+        this(store,create,false);
+    }
+    public CeNamespace(EncryptedStore store,boolean create,boolean api32)throws IOException,GeneralSecurityException {
         this.store=store;
         if(create) {
-            for(int i=0;i<ROOTS.length;i++){Node n=newNode(i+3,0,DIR|0771,1000,1000);nodes.put(n.id,n);}
+            roots=api32?API32_ROOTS:ROOTS;next=roots.length+3;
+            for(int i=0;i<roots.length;i++){Node n=newNode(i+3,0,DIR|0771,i==4?0:1000,i==4?0:1000);nodes.put(n.id,n);}
             store.createFile(INDEX);sync();
         } else {
             long size=store.size(INDEX);if(size>16*1024*1024)throw new IOException("Oversized CE namespace");
@@ -71,6 +77,11 @@ public final class CeNamespace {
         for(int i=0;i<ROOTS.length;i++)if(path.equals(ROOTS[i]) || path.startsWith(ROOTS[i]+"/"))return i+3;
         return 0;
     }
+    public String[] roots(){return roots.clone();}
+    public int rootId(String path) {
+        for(int i=0;i<roots.length;i++)if(path.equals(roots[i]) || path.startsWith(roots[i]+"/"))return i+3;
+        return 0;
+    }
     public static String alias(String path) {
         for(String base:new String[]{"/storage/emulated","/mnt/runtime/default/emulated","/mnt/runtime/read/emulated","/mnt/runtime/write/emulated"})
             if(path.startsWith(base+"/"))return "/data/media"+path.substring(base.length());
@@ -86,8 +97,7 @@ public final class CeNamespace {
         return path;
     }
     public synchronized String path(int id)throws IOException {
-        Node n=node(id);if(n.id>=3 && n.id<=6)return ROOTS[n.id-3];
-        if(!n.directory())throw new FsException(20);
+        Node n=node(id);if(n.id>=3 && n.id<roots.length+3)return roots[n.id-3];
         Node parent=node(n.parent);String name=null;
         for(Map.Entry<String,Integer> item:parent.children.entrySet())if(item.getValue()==id){name=item.getKey();break;}
         if(name==null)throw new FsException(2);return path(parent.id)+"/"+name;
@@ -101,15 +111,15 @@ public final class CeNamespace {
         return resolve(path,uid,gid,groups,follow,0);
     }
     private Node resolve(String path,int uid,int gid,int[] groups,boolean follow,int depth)throws IOException {
-        if(depth>40)throw new FsException(40);path=alias(path);int root=root(path);if(root==0)throw new Outside(path);
-        Node current=node(root);String tail=path.substring(ROOTS[root-3].length());String[] parts=tail.split("/",-1);
+        if(depth>40)throw new FsException(40);path=alias(path);int root=rootId(path);if(root==0)throw new Outside(path);
+        Node current=node(root);String tail=path.substring(roots[root-3].length());String[] parts=tail.split("/",-1);
         for(int i=0;i<parts.length;i++) {
             String part=parts[i];if(part.isEmpty())continue;
             if(!current.directory())throw new FsException(20);access(current,uid,gid,groups,1);
             if(part.equals("."))continue;
             if(part.equals("..")) {
                 if(current.parent==0) {
-                    String base=ROOTS[current.id-3];base=base.substring(0,base.lastIndexOf('/'));
+                    String base=roots[current.id-3];base=base.substring(0,base.lastIndexOf('/'));
                     StringBuilder rest=new StringBuilder(base);for(int j=i+1;j<parts.length;j++)rest.append('/').append(parts[j]);
                     throw new Outside(rest.toString());
                 }
@@ -142,6 +152,10 @@ public final class CeNamespace {
         if(parent.children.containsKey(name))throw new FsException(17);
         if(next==Integer.MAX_VALUE || nodes.size()>=9999)throw new FsException(28);
         n=newNode(next++,parent.id,mode,uid,(parent.mode&02000)!=0?parent.gid:gid);
+        // No guest SELinux policy is loaded. Retain the actual inherited host
+        // label captured during migration for metadata readers such as installd.
+        byte[] label=parent.xattrs.get("security.selinux");
+        if(label!=null)n.xattrs.put("security.selinux",label.clone());
         if((parent.mode&02000)!=0 && n.directory())n.mode|=02000;
         n.target=target==null?"":target;if(n.regular())store.createFile(content(n.id));
         nodes.put(n.id,n);parent.children.put(name,n.id);if(n.directory())parent.links++;parent.mtime=parent.ctime=now();markDirty();}commit();return n;
@@ -199,7 +213,9 @@ public final class CeNamespace {
             long revision;
             synchronized(this) {
                 ByteArrayOutputStream bytes=new ByteArrayOutputStream();DataOutputStream out=new DataOutputStream(bytes);
-                out.writeInt(2);out.writeInt(next);out.writeInt(nodes.size());
+                // API32 adds a fifth reserved root. Legacy stores keep format2
+                // and inode7 remains an ordinary file/directory in that layout.
+                out.writeInt(roots.length==ROOTS.length?2:3);out.writeInt(next);out.writeInt(nodes.size());
                 for(Node n:nodes.values()) {
                     out.writeInt(n.id);out.writeInt(n.parent);out.writeInt(n.mode);out.writeInt(n.uid);out.writeInt(n.gid);out.writeInt(n.links);
                     out.writeLong(n.atime);out.writeLong(n.mtime);out.writeLong(n.ctime);out.writeUTF(n.target);out.writeInt(n.children.size());
@@ -225,8 +241,9 @@ public final class CeNamespace {
         }
     }
     private void decode(byte[] raw)throws IOException {
-        DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));int version=in.readInt();if(version!=1 && version!=2)throw new IOException("Unknown CE namespace version");
-        next=in.readInt();int count=in.readInt();if(count<4 || count>10000 || next<7)throw new IOException("Invalid CE namespace count");
+        DataInputStream in=new DataInputStream(new ByteArrayInputStream(raw));int version=in.readInt();if(version<1 || version>3)throw new IOException("Unknown CE namespace version");
+        roots=version==3?API32_ROOTS:ROOTS;
+        next=in.readInt();int count=in.readInt();if(count<roots.length || count>10000 || next<roots.length+3)throw new IOException("Invalid CE namespace count");
         for(int i=0;i<count;i++) {
             Node n=new Node();n.id=in.readInt();n.parent=in.readInt();n.mode=in.readInt();n.uid=in.readInt();n.gid=in.readInt();n.links=in.readInt();
             n.atime=in.readLong();n.mtime=in.readLong();n.ctime=in.readLong();n.target=in.readUTF();int children=in.readInt();
@@ -234,12 +251,12 @@ public final class CeNamespace {
             for(int j=0;j<children;j++){String name=in.readUTF();if(!basename(name).equals(name) || n.children.put(name,in.readInt())!=null)throw new IOException("Invalid CE name");}
             if(version>=2) {
                 int attrs=in.readInt();if(attrs<0 || attrs>64)throw new IOException("Invalid CE attribute count");
-                for(int j=0;j<attrs;j++){String name=in.readUTF();int size=in.readInt();if(size<0 || size>16384 || !name.startsWith("user."))throw new IOException("Invalid CE attribute");byte[] value=new byte[size];in.readFully(value);if(n.xattrs.put(name,value)!=null)throw new IOException("Duplicate CE attribute");}
+                for(int j=0;j<attrs;j++){String name=in.readUTF();int size=in.readInt();if(size<0 || size>16384 || (!name.startsWith("user.") && !name.equals("security.selinux")))throw new IOException("Invalid CE attribute");byte[] value=new byte[size];in.readFully(value);if(n.xattrs.put(name,value)!=null)throw new IOException("Duplicate CE attribute");}
             }
             if(nodes.put(n.id,n)!=null)throw new IOException("Duplicate CE inode");
         }
         if(in.available()!=0)throw new IOException("Trailing CE namespace data");
-        for(int i=3;i<=6;i++)if(!node(i).directory() || node(i).parent!=0)throw new IOException("Invalid CE root");
+        for(int i=3;i<roots.length+3;i++)if(!node(i).directory() || node(i).parent!=0)throw new IOException("Invalid CE root");
         for(Node n:nodes.values())for(int id:n.children.values())node(id);
     }
 }

@@ -38,6 +38,6 @@ long fw_call(long nr,long a,long b,long c,long d,long e,long f) {
 }
 // Do not assume host syscall numbers in Python.
 long fw_nr(int which) {
-    const long numbers[]={__NR_connect,__NR_sendto,__NR_write,__NR_writev,__NR_sendmsg,__NR_sendmmsg,__NR_sendfile,__NR_splice};
-    return which>=0 && which<8?numbers[which]:-1;
+    const long numbers[]={__NR_connect,__NR_sendto,__NR_write,__NR_writev,__NR_sendmsg,__NR_sendmmsg,__NR_sendfile,__NR_splice,__NR_socket};
+    return which>=0 && which<9?numbers[which]:-1;
 }

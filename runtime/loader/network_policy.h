@@ -8,13 +8,23 @@
 #define POCKET_NP_UIDS 100000U
 #define POCKET_NP_BYTES (POCKET_NP_UIDS/8U)
 enum {POCKET_NP_DOZE=0,POCKET_NP_STANDBY=1,POCKET_NP_POWERSAVE=2,POCKET_NP_NO_INTERNET=3,POCKET_NP_CHAINS=4};
+enum {POCKET_NP_RESTRICTED=4,POCKET_NP_CHAINS_V3=5};
 struct PocketNetworkPolicyHeader {uint32_t magic,version,enabled,reserved;};
 struct PocketNetworkPolicy {
     struct PocketNetworkPolicyHeader header;
     uint8_t members[POCKET_NP_CHAINS][POCKET_NP_BYTES];
 };
+// Version 3 adds Android 12L's restricted-networking allowlist. Keep the
+// version 2 structure and validation unchanged for existing Android 9/10 data.
+struct PocketNetworkPolicyV3 {
+    struct PocketNetworkPolicyHeader header;
+    uint8_t members[POCKET_NP_CHAINS_V3][POCKET_NP_BYTES];
+};
 static inline int pocket_np_valid(const struct PocketNetworkPolicyHeader* p) {
     return p->magic==POCKET_NP_MAGIC && p->version==2 && !(p->enabled&~15U) && !p->reserved;
+}
+static inline int pocket_np_v3_valid(const struct PocketNetworkPolicyHeader* p) {
+    return p->magic==POCKET_NP_MAGIC && p->version==3 && !(p->enabled&~31U) && !p->reserved;
 }
 static inline int pocket_np_member_denies(unsigned chain,unsigned uid,int member) {
     if(chain==POCKET_NP_STANDBY || chain==POCKET_NP_NO_INTERNET)return member;

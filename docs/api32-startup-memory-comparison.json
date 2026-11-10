@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "status": "COMPARISON_COMPLETE_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "guestSdk": 32,
+  "hostVmInstance": 73,
+  "scope": "Compare unchanged API32 fixture at 1536 vs 2560 MiB host memory, then restore original dedicated VM configuration and validate persistence. Both comparison runs retained the previously enabled periodic startup tracer. This is not an uninstrumented performance benchmark.",
+  "apkSha256": "91335aad417c857a6360a04863e731b3e47eef2f398b4e27fb8c84d804de6244",
+  "runs": [
+    {
+      "memoryMb": 1536,
+      "runId": "639071280392434483d0ddb5bf6de4af",
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "passed": false,
+      "imageVerifiedFiles": 2645,
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 13809,
+          "reason": "executing service com.android.systemui/.ImageWallpaper"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 14360,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 15402,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "uiStartupCrashes": [],
+      "laterUiPhasePassed": true,
+      "periodicStartupTraceEnabled": true,
+      "hostSelinuxBefore": "Enforcing",
+      "hostSelinuxAfter": "Enforcing"
+    },
+    {
+      "memoryMb": 2560,
+      "runId": "e70ea0fe73ba49cb924488d9eaa4ef6f",
+      "driverExitCode": 1,
+      "guestExitCode": 0,
+      "passed": false,
+      "imageVerifiedFiles": 2645,
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 4271,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 5608,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "uiStartupCrashes": [
+        {
+          "thread": "UiThreadHelper",
+          "process": "com.android.launcher3",
+          "pid": 4520
+        }
+      ],
+      "laterUiPhasePassed": true,
+      "periodicStartupTraceEnabled": true,
+      "hostSelinuxBefore": "Enforcing",
+      "hostSelinuxAfter": "Enforcing"
+    }
+  ],
+  "increaseEvidence": "out/api32/vm73-memory-change-2560.json",
+  "restoreEvidence": "out/api32/vm73-memory-change-1536.json",
+  "restoredMemoryMb": 1536,
+  "originalConfigurationRestored": true,
+  "installedApkAndDataPreserved": true,
+  "vm72Modified": false,
+  "commands": [
+    {
+      "command": "ssh pi@juanraspberry python3 /home/pi/pocket-api32-test/change_vm73_memory.py 2560",
+      "result": "PASS / exit 0; exact instance73 guards, clean launcher stop, preserved data marker and APK; actual Android MemTotal 2527752kB."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui --reuse-installed",
+      "result": "FAIL / driver exit 1, guest exit 0. One SystemUI KeyguardService ANR plus Launcher3 UiThreadHelper crash. Later UI/code/input probes passed; 28 services reaped, zero remaining/failed; temporary phantom limit restored."
+    },
+    {
+      "command": "ssh pi@juanraspberry python3 /home/pi/pocket-api32-test/change_vm73_memory.py 1536",
+      "result": "PASS / exit 0; complete original configuration restored; actual Android MemTotal 1502756kB; persistence marker and installed APK unchanged."
+    }
+  ],
+  "interpretation": "More memory alone did not eliminate startup failures in this trial. ANR counts are variable and the host also rebooted; no minimum-RAM or exclusive-cause claim is made. Subsequent investigation found that the fixture enables repeated SIGQUIT dumps in its startup participants by default; normal startup must be tested without this optional diagnostic workload.",
+  "sourceReference": "https://source.android.com/docs/devices/cuttlefish/restart",
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false
+}

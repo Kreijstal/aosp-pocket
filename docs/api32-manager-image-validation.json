@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "status": "DOWNLOAD_PREPARATION_OFFLINE_AND_PATH_MIGRATION_VERIFIED_LIVE_SESSION_PENDING",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "scope": "Image-free Manager downloader and DirectImage preparation in an isolated, non-debuggable app sandbox; no full guest/session/launcher claim.",
+  "candidatePath": "out/api32/manager-image-candidate.json",
+  "candidateSha256": "f9d3e79c22704ab731d5c5e49d31b666b1d2fe1515cb63ddd6c2edfd4c35dd86",
+  "apkSha256": "cb4abe1e0f0d4a93ab64b362f9249691786437e8310886dc4070e2222598a7de",
+  "apkBytes": 2594526,
+  "hostNativeLibrariesUnchanged": true,
+  "guestImagesBundled": 0,
+  "image": {
+    "sha256": "e3e9c9350f0ed79634c7f24d6d2108a7ffc9b6aa412d8506750b7bf25ca5465e",
+    "bytes": 589698562,
+    "unpacked_bytes": 1300928910,
+    "manifest_sha256": "0a37773d524501f676e1bef0c22f0d79c110df0f858464887a82d55a83bd1cb6",
+    "url": "http://127.0.0.1:8794/pocket-api32-arm64-0.78.0.zip",
+    "fileCount": 2629
+  },
+  "sourceHashes": {
+    "tools/build_api32_image.py": "576ad5f77b4c06a9f4148673284dd9823649121b9b04252e082562e38665690d",
+    "tools/build_api29_manager.py": "dad05f619f60d73a5cf99a352c32bcbbef125dd39ab856390bd4884720a0c197",
+    "tools/test_api32_image_on_pi.py": "d6337adf3fbbd58e4995dddfc632f0d78436be9bac73cb957087703918d88e04",
+    "tools/validate_download_manager.py": "9f2ca3b19c419cab303c13c77ef5ec38e3ca45c4614d14035a9e1df15f9f2c75",
+    "runtime/api32/getprop.c": "9d85876fde72e1d5d562a18d8695317f3a79a4e13b1dd66f8111f1677a1b158e",
+    "runtime/tests/api32/ImageProbe32.java": "c221667c11cc777e3bee3c37d29eff91c9dd2beba83a3ec9732b6dbfb7b169bb",
+    "runtime/tests/ImageDownloadTest.java": "55c267f3666730ae16be0917dba4dd8f7726f86e18c99488aac3d2f11e80a4e4",
+    "runtime/tests/DirectImageLinksFixture.java": "1ad2b42b2b0da2ce2d46f1963e7a5cb23266aa9ee767cf58b0774a5812162de4",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/DirectImage.java": "cd5bc1f082d892503beca6ee80178c8217bbf46951e1f7bd9084939fa8ef6dc8",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/RemoteImage.java": "0966f7e63527cfee2d0d13cfa58cf3eb0f8ea9d7f1ee836334ddfe4eaca32dae",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/ImageArchive.java": "918ac5505722ec1f0ae986f9df57fb06cbaeb76e06eac3134d66b16397cd4182",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/SyscallBackend.java": "a1269e678e8e84b4a4e2527a0875e06bed4cc547fa152da03c8812911586a830"
+  },
+  "freshRun": {
+    "runId": "d83ccc17a1f04c069ded628189cbbb93",
+    "vmInstance": 73,
+    "serial": "127.0.0.1:6592",
+    "managerSha256": "cb4abe1e0f0d4a93ab64b362f9249691786437e8310886dc4070e2222598a7de",
+    "imageSha256": "e3e9c9350f0ed79634c7f24d6d2108a7ffc9b6aa412d8506750b7bf25ca5465e",
+    "guestBootVerified": false,
+    "managerSessionVerified": false,
+    "selinuxBefore": "Enforcing",
+    "freshAppInstall": true,
+    "imageServerStoppedBeforeSecondPreparation": true,
+    "app": {
+      "runId": "d83ccc17a1f04c069ded628189cbbb93",
+      "hostUid": 10157,
+      "sdk": 32,
+      "stage": "finished",
+      "imageId": "e3e9c9350f0ed79634c7f24d6d2108a7ffc9b6aa412d8506750b7bf25ca5465e",
+      "offlinePreparation": true,
+      "dataPreserved": true,
+      "relocatedElfExecuted": true,
+      "nativeGetprop": true,
+      "validation": "PASS"
+    },
+    "selinuxAfter": "Enforcing",
+    "validation": "PASS",
+    "requests": [
+      {
+        "path": "/pocket-api32-arm64-0.78.0.zip",
+        "range": null
+      }
+    ],
+    "downloadRequestedThisRun": true
+  },
+  "migrationRun": {
+    "runId": "661eb371e00f4618a4e6fba35740f678",
+    "vmInstance": 73,
+    "serial": "127.0.0.1:6592",
+    "managerSha256": "cb4abe1e0f0d4a93ab64b362f9249691786437e8310886dc4070e2222598a7de",
+    "imageSha256": "e3e9c9350f0ed79634c7f24d6d2108a7ffc9b6aa412d8506750b7bf25ca5465e",
+    "guestBootVerified": false,
+    "managerSessionVerified": false,
+    "selinuxBefore": "Enforcing",
+    "freshAppInstall": false,
+    "imageServerStoppedBeforeSecondPreparation": true,
+    "app": {
+      "runId": "661eb371e00f4618a4e6fba35740f678",
+      "hostUid": 10156,
+      "sdk": 32,
+      "stage": "finished",
+      "pathMigrationDataPreserved": true,
+      "imageId": "e3e9c9350f0ed79634c7f24d6d2108a7ffc9b6aa412d8506750b7bf25ca5465e",
+      "offlinePreparation": true,
+      "dataPreserved": true,
+      "relocatedElfExecuted": true,
+      "nativeGetprop": true,
+      "validation": "PASS"
+    },
+    "selinuxAfter": "Enforcing",
+    "validation": "PASS",
+    "requests": [],
+    "downloadRequestedThisRun": false
+  },
+  "reports": {
+    "fresh": {
+      "path": "out/api32/image-preparation-fresh-report.json",
+      "sha256": "ebc9b0989afc2367453fbc5be5ce36f646515cd6447109836adbc32d31260793"
+    },
+    "migration": {
+      "path": "out/api32/image-preparation-migration-report.json",
+      "sha256": "b3367841923b2c7048858888d5f0785e287cb214cdbac000256a6fbd228e8499"
+    },
+    "socketPathFailure": {
+      "path": "out/api32/image-preparation-socket-path-failure.json",
+      "sha256": "287e0ced7f1f31b1eff35698ada9904a9ff897af467ef1c5307c88a5a84bf97a"
+    },
+    "firstColdFailure": {
+      "path": "out/api32/image-preparation-first-report.json",
+      "sha256": "cacd247f1e3a0a07b9075caae73a968f407307693514ceea4ae7dbc2c22ec136"
+    }
+  },
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_image.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/api32/manager-image --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.0.zip --probe",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/manager-image/pocket-images.json --image-probe32 --out out/api32/image-manager-probe",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/manager-image-validation/test_api32_image_on_pi.py",
+      "result": "PASS",
+      "runs": [
+        "661eb371e00f4618a4e6fba35740f678",
+        "d83ccc17a1f04c069ded628189cbbb93"
+      ]
+    },
+    {
+      "command": "java -cp out/api32/image-download-test dev.kreijstal.aosppocket.runtime.ImageDownloadTest",
+      "result": "PASS: 48 assertions"
+    },
+    {
+      "command": "java -cp out/api32/image-download-test:out/api32/image-manager-probe/classes:/home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar dev.kreijstal.aosppocket.runtime.DirectImageLinksFixture",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/image-manager-probe/api32-image-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/api32/legacy-manager-compile",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/legacy-manager-compile/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    }
+  ],
+  "additionalNegativeChecks": {
+    "missingUrlHostCredentialsAndNonLoopbackHttpRejected": true,
+    "productionValidatorRejectsHttpProbe": true,
+    "probeOverrideRejectsProductionApk": true
+  },
+  "completion": {
+    "fullGuestBootVerified": false,
+    "managerLiveSessionVerified": false,
+    "usableLauncherVerified": false,
+    "normalStartupStabilityVerified": false,
+    "api32EncryptedStorageImplemented": false,
+    "phoneValidated": false
+  }
+}

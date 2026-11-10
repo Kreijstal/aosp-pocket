@@ -24,13 +24,15 @@ import java.util.concurrent.*;
 final class HostBroker implements AutoCloseable {
     private final Context context;
     private final File endpoint;
+    private final File root;
+    private final boolean api32Dns;
     private final LocalSocket bound=new LocalSocket();
     private final LocalServerSocket server;
     private final ThreadPoolExecutor workers=new ThreadPoolExecutor(4,4,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(8));
     private final Set<LocalSocket> clients=ConcurrentHashMap.newKeySet();
     private volatile boolean closed;
     HostBroker(Context owner,File root) throws IOException {
-        context=owner.getApplicationContext();endpoint=new File(root,"dev/socket/pocket_host");
+        context=owner.getApplicationContext();this.root=root;api32Dns=HostDns.api32(root);endpoint=new File(root,"dev/socket/pocket_host");
         if(endpoint.exists() && !endpoint.delete())throw new IOException("Cannot reset host broker endpoint");
         bound.bind(new LocalSocketAddress(endpoint.getPath(),LocalSocketAddress.Namespace.FILESYSTEM));
         server=new LocalServerSocket(bound.getFileDescriptor());
@@ -61,17 +63,7 @@ final class HostBroker implements AutoCloseable {
         return result;
     }
     static JSONObject network(Context c) throws Exception {
-        ConnectivityManager cm=(ConnectivityManager)c.getSystemService(Context.CONNECTIVITY_SERVICE);
-        Network active=cm.getActiveNetwork();NetworkCapabilities caps=active==null?null:cm.getNetworkCapabilities(active);
-        JSONObject n=new JSONObject().put("connected",active!=null && caps!=null)
-            .put("metered",cm.isActiveNetworkMetered())
-            .put("internet",caps!=null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET))
-            .put("validated",caps!=null && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED));
-        JSONArray transports=new JSONArray(),dns=new JSONArray();
-        if(caps!=null)for(int t=0;t<=7;t++)if(caps.hasTransport(t))transports.put(t);
-        LinkProperties lp=active==null?null:cm.getLinkProperties(active);
-        if(lp!=null)for(InetAddress a:lp.getDnsServers())dns.put(a.getHostAddress());
-        return n.put("transports",transports).put("dns",dns);
+        return HostDns.network(c);
     }
     private void accept() {
         while(!closed) {
@@ -113,10 +105,14 @@ final class HostBroker implements AutoCloseable {
                 catch(Exception error){out.writeInt(503);HostWire.write(out,("Guest audio input unavailable: "+error.getClass().getSimpleName()).getBytes(StandardCharsets.UTF_8));out.flush();return;}
             }
             int status=0;byte[] response;
+            if(api32Dns && (op==HostWire.DNS || op==HostWire.DNS_SERVERS || op==HostWire.DNS_PACKET) && !HostDns.trustedPeer(root,peer.getPeerCredentials().getPid())) {
+                out.writeInt(403);HostWire.write(out,new byte[0]);out.flush();return;
+            }
             try {response=handle(op,request);}
             catch(SecurityException denied){status=403;response=denied.getMessage().getBytes(StandardCharsets.UTF_8);}
             catch(IllegalArgumentException invalid){status=400;response="Invalid host bridge request".getBytes(StandardCharsets.UTF_8);}
             catch(UnsupportedOperationException unavailable){status=404;response=unavailable.getMessage().getBytes(StandardCharsets.UTF_8);}
+            catch(java.net.SocketTimeoutException | java.util.concurrent.TimeoutException timeout){status=504;response="Host operation timed out".getBytes(StandardCharsets.UTF_8);}
             catch(Exception error){status=503;response=("Host operation unavailable: "+error.getClass().getSimpleName()).getBytes(StandardCharsets.UTF_8);}
             out.writeInt(status);HostWire.write(out,response);out.flush();
         } catch(IOException ignored) { /* A stopped guest or cancelled operation may close its socket. */ }
@@ -126,15 +122,14 @@ final class HostBroker implements AutoCloseable {
     private byte[] handle(int op,byte[] request) throws Exception {
         if(closed)throw new IOException("Guest session ended");
         if(op==HostWire.INFO)return json(info(context));
-        if(op==HostWire.DNS) {
-            String hostname=new String(request,StandardCharsets.UTF_8);
-            if(hostname.isEmpty() || hostname.length()>253 || !hostname.matches("[A-Za-z0-9_.:%-]+"))
-                throw new IllegalArgumentException("Invalid hostname");
-            InetAddress[] addresses=InetAddress.getAllByName(hostname);
-            ByteArrayOutputStream bytes=new ByteArrayOutputStream();DataOutputStream data=new DataOutputStream(bytes);
-            data.writeInt(Math.min(addresses.length,64));
-            for(int i=0;i<Math.min(addresses.length,64);i++)HostWire.write(data,addresses[i].getAddress());
-            return bytes.toByteArray();
+        if(op==HostWire.DNS)return HostDns.resolve(request);
+        if(op==HostWire.DNS_PACKET) {
+            if(!api32Dns)throw new UnsupportedOperationException("Raw DNS requires the API32 resolver service");
+            return HostDnsPacket.resolve(context,request);
+        }
+        if(op==HostWire.DNS_SERVERS) {
+            if(request.length!=0)throw new IllegalArgumentException("DNS server query has no payload");
+            return HostDns.servers(context);
         }
         if(op==HostWire.PLAYBACK)return json(HostMedia.play(context,request));
         JSONObject args=request.length==0?new JSONObject():new JSONObject(new String(request,StandardCharsets.UTF_8));
@@ -144,7 +139,10 @@ final class HostBroker implements AutoCloseable {
         case HostWire.PHONE:require(Manifest.permission.READ_PHONE_STATE);return json(phone());
         case HostWire.PHONE_UI:return json(phoneUi(args));
         case HostWire.SENSORS:return json(sensors(args));
-        case HostWire.CAMERAS:require(Manifest.permission.CAMERA);
+        // Camera2 exposes public IDs and stream capabilities before CAMERA is
+        // granted. Enumerate at boot; opening either capture path still checks
+        // the host permission above/below, including after permission changes.
+        case HostWire.CAMERAS:
             return "lines".equals(args.optString("format"))?HostMedia.cameraLines(context):json(HostMedia.cameras(context));
         case HostWire.CAMERA:require(Manifest.permission.CAMERA);return HostMedia.camera(context,args);
         case HostWire.MICROPHONE:require(Manifest.permission.RECORD_AUDIO);return HostMedia.record(context,args);

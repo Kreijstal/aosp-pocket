@@ -1,0 +1,228 @@
+--- a/jni/FuseDaemon.cpp
++++ b/jni/FuseDaemon.cpp
+@@ -60,6 +60,7 @@
+ #include <unordered_map>
+ #include <unordered_set>
+ #include <vector>
++#include "mediaprovider_private_view.h"
+ 
+ #include "MediaProviderWrapper.h"
+ #include "libfuse_jni/FuseUtils.h"
+@@ -566,6 +567,15 @@
+         // transcoded file on the lower fs. A subsequent transcode at FUSE_READ should ensure we
+         // don't reuse any stale transcode page cache content.
+         node->SetTransformsComplete(transforms_complete);
++    }
++    if (pocket_private_fuse_enabled() && (S_ISDIR(e->attr.st_mode) || S_ISREG(e->attr.st_mode)) &&
++            is_package_owned_path(path, fuse->path)) {
++        const int anchor_error = node->PreparePrivateInodeAnchor(path, e->attr);
++        if (anchor_error) {
++            node->Release(1);
++            *error_code = -anchor_error;
++            return nullptr;
++        }
+     }
+     TRACE_NODE(node, req);
+ 
+@@ -668,7 +678,8 @@
+         if (pkg == ".nomedia") {
+             return true;
+         }
+-        if (android::base::StartsWith(path, "/storage/emulated")) {
++        if (android::base::StartsWith(path, "/storage/emulated")
++                && !pocket_private_fuse_enabled()) {
+             // Emulated storage bind-mounts app-private data directories, and so these
+             // should not be accessible through FUSE anyway.
+             LOG(WARNING) << "Rejected access to app-private dir on FUSE: " << path
+@@ -703,6 +714,14 @@
+     TRACE_NODE(parent_node, req);
+ 
+     const string child_path = parent_path + "/" + name;
++    // Rootless private views have no kernel bind-mount namespace to filter
++    // other packages. Apply the same provider UID/package check to the child
++    // before returning LOOKUP attributes, including O_PATH-only callers.
++    if (pocket_private_fuse_enabled() &&
++            !is_app_accessible_path(fuse->mp, child_path, req->ctx.uid)) {
++        *error_code = ENOENT;
++        return nullptr;
++    }
+     std::smatch match;
+     std::regex_search(child_path, match, storage_emulated_regex);
+ 
+@@ -1256,6 +1275,37 @@
+         fi->direct_io = true;
+     }
+ 
++    // Private bind views do not depend on a live MediaStore pathname.
++    // The selected replacement keeps the actual removed inode inside the
++    // provider, with fresh package/UID policy above and kernel access checks.
++    // Public media always retains OnFileOpen redaction/transform handling.
++    if (pocket_private_fuse_enabled() &&
++            is_package_owned_path(build_path, fuse->path) && node->UnlinkedPrivateState() != 0) {
++        if (node->GetTransforms() || !node->GetIoPath().empty()) {
++            fuse_reply_err(req, EOPNOTSUPP);
++            return;
++        }
++        const int held = node->OpenUnlinkedPrivate(fi->flags);
++        if (held < 0) {
++            fuse_reply_err(req, -held);
++            return;
++        }
++        int keep_cache = 1;
++        handle* h = create_handle_for_node(fuse, build_path, held, ctx->uid,
++                0 /* no transforms */, node, new RedactionInfo(), &keep_cache);
++        fi->fh = ptr_to_id(h);
++        fi->keep_cache = keep_cache;
++        fi->direct_io = !h->cached;
++        if (h->passthrough && !do_passthrough_enable(req, fi, held)) {
++            node->DestroyHandle(h);
++            fuse_reply_err(req, EOPNOTSUPP);
++            return;
++        }
++        fputs("POCKET_MEDIA_PRIVATE_INODE_OPEN unlinked=1 directory=0 provider_fd=1\n", stderr);
++        fuse_reply_open(req, fi);
++        return;
++    }
++
+     // Force permission check with the build path because the MediaProvider database might not be
+     // aware of the io_path
+     // We don't redact if the caller was granted write permission for this file
+@@ -1288,6 +1338,14 @@
+     if (fd < 0) {
+         fuse_reply_err(req, errno);
+         return;
++    }
++    if (pocket_private_fuse_enabled() && is_package_owned_path(build_path, fuse->path)) {
++        const int check = node->VerifyPrivateOpenedInode(fd);
++        if (check) {
++            close(fd);
++            fuse_reply_err(req, -check);
++            return;
++        }
+     }
+ 
+     int keep_cache = 1;
+@@ -1547,12 +1605,32 @@
+         return;
+     }
+ 
+-    DIR* dir = opendir(path.c_str());
++    DIR* dir = nullptr;
++    if (pocket_private_fuse_enabled() && is_package_owned_path(path, fuse->path) &&
++            node->UnlinkedPrivateState() != 0) {
++        const int held = node->OpenUnlinkedPrivate(O_RDONLY | O_DIRECTORY);
++        if (held < 0) {
++            fuse_reply_err(req, -held);
++            return;
++        }
++        dir = fdopendir(held);
++        if (!dir) close(held);
++    } else {
++        dir = opendir(path.c_str());
++    }
+     if (!dir) {
+         fuse_reply_err(req, errno);
+         return;
+     }
+ 
++    if (pocket_private_fuse_enabled() && is_package_owned_path(path, fuse->path)) {
++        const int check = node->VerifyPrivateOpenedInode(dirfd(dir));
++        if (check) {
++            closedir(dir);
++            fuse_reply_err(req, -check);
++            return;
++        }
++    }
+     dirhandle* h = new dirhandle(dir);
+     node->AddDirHandle(h);
+ 
+@@ -1590,6 +1668,17 @@
+     }
+ 
+     TRACE_NODE(node, req);
++    if (pocket_private_fuse_enabled() && is_package_owned_path(path, fuse->path)) {
++        const int state = node->UnlinkedPrivateState();
++        if (state != 0) {
++            const int status = fuse->mp->IsOpendirAllowed(path, req->ctx.uid, false);
++            // An unlinked directory is empty. Never enumerate a replacement
++            // of its old name or return stale database directory entries.
++            if (state < 0 || status) fuse_reply_err(req, status ? status : -state);
++            else fuse_reply_buf(req, nullptr, 0);
++            return;
++        }
++    }
+     // Get all directory entries from MediaProvider on first readdir() call of
+     // directory handle. h->next_off = 0 indicates that current readdir() call
+     // is first readdir() call for the directory handle, Avoid multiple JNI calls
+@@ -1737,6 +1826,20 @@
+         return;
+     }
+     TRACE_NODE(node, req);
++
++    // The selected private view replaces Android's private bind mounts.
++    // Search a retained, removed directory inode without reopening its old
++    // pathname. Package/UID policy above and current Java policy still apply;
++    // public directories and ordinary live-path operations keep stock access.
++    if (pocket_private_fuse_enabled() && mask == X_OK &&
++            is_package_owned_path(path, fuse->path)) {
++        const int search = node->SearchUnlinkedPrivateDirectory();
++        if (search != -EAGAIN) {
++            const int status = fuse->mp->IsOpendirAllowed(path, req->ctx.uid, false);
++            fuse_reply_err(req, status ? status : -search);
++            return;
++        }
++    }
+ 
+     // exists() checks are always allowed.
+     if (mask == F_OK) {
+--- a/jni/node-inl.h
++++ b/jni/node-inl.h
+@@ -18,6 +18,7 @@
+ #define MEDIA_PROVIDER_JNI_NODE_INL_H_
+ 
+ #include <android-base/logging.h>
++#include "mediaprovider_directory_anchor.h"
+ 
+ #include <sys/types.h>
+ #include <atomic>
+@@ -352,6 +353,32 @@
+         auto it = std::find_if(dirhandles_.begin(), dirhandles_.end(), comp);
+         CHECK(it != dirhandles_.end());
+         dirhandles_.erase(it);
++    }
++
++    int PreparePrivateInodeAnchor(const std::string& path, const struct stat& expected) {
++        std::lock_guard<std::recursive_mutex> guard(*lock_);
++        if (expected.st_ino != ino_) return -ESTALE;
++        return private_inode_anchor_.initialize(path.c_str(), expected);
++    }
++
++    int SearchUnlinkedPrivateDirectory() const {
++        std::lock_guard<std::recursive_mutex> guard(*lock_);
++        return private_inode_anchor_.searchUnlinked();
++    }
++
++    int UnlinkedPrivateState() const {
++        std::lock_guard<std::recursive_mutex> guard(*lock_);
++        return private_inode_anchor_.unlinkedState();
++    }
++
++    int OpenUnlinkedPrivate(int flags) const {
++        std::lock_guard<std::recursive_mutex> guard(*lock_);
++        return private_inode_anchor_.openUnlinked(flags);
++    }
++
++    int VerifyPrivateOpenedInode(int fd) const {
++        std::lock_guard<std::recursive_mutex> guard(*lock_);
++        return private_inode_anchor_.verifyOpened(fd);
+     }
+ 
+     // Deletes the tree of nodes rooted at |tree|.
+@@ -536,6 +563,7 @@
+     // Inode number of the file represented by this node.
+     const ino_t ino_;
+ 
++    PocketPrivateInodeAnchor private_inode_anchor_;
+     NodeTracker* const tracker_;
+ 
+     ~node() {

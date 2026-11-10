@@ -1,0 +1,122 @@
+--- a/EventHub.cpp
++++ b/EventHub.cpp
+@@ -24,7 +24,6 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <sys/capability.h>
+ #include <sys/epoll.h>
+ #include <sys/inotify.h>
+ #include <sys/ioctl.h>
+@@ -53,6 +52,7 @@
+ #include <regex>
+ 
+ #include "EventHub.h"
++#include "input_wake.h"
+ 
+ #define INDENT "  "
+ #define INDENT2 "    "
+@@ -624,47 +624,6 @@
+     return !lightInfos.empty();
+ }
+ 
+-/**
+- * Get the capabilities for the current process.
+- * Crashes the system if unable to create / check / destroy the capabilities object.
+- */
+-class Capabilities final {
+-public:
+-    explicit Capabilities() {
+-        mCaps = cap_get_proc();
+-        LOG_ALWAYS_FATAL_IF(mCaps == nullptr, "Could not get capabilities of the current process");
+-    }
+-
+-    /**
+-     * Check whether the current process has a specific capability
+-     * in the set of effective capabilities.
+-     * Return CAP_SET if the process has the requested capability
+-     * Return CAP_CLEAR otherwise.
+-     */
+-    cap_flag_value_t checkEffectiveCapability(cap_value_t capability) {
+-        cap_flag_value_t value;
+-        const int result = cap_get_flag(mCaps, capability, CAP_EFFECTIVE, &value);
+-        LOG_ALWAYS_FATAL_IF(result == -1, "Could not obtain the requested capability");
+-        return value;
+-    }
+-
+-    ~Capabilities() {
+-        const int result = cap_free(mCaps);
+-        LOG_ALWAYS_FATAL_IF(result == -1, "Could not release the capabilities structure");
+-    }
+-
+-private:
+-    cap_t mCaps;
+-};
+-
+-static void ensureProcessCanBlockSuspend() {
+-    Capabilities capabilities;
+-    const bool canBlockSuspend =
+-            capabilities.checkEffectiveCapability(CAP_BLOCK_SUSPEND) == CAP_SET;
+-    LOG_ALWAYS_FATAL_IF(!canBlockSuspend,
+-                        "Input must be able to block suspend to properly process events");
+-}
+-
+ // --- EventHub ---
+ 
+ const int EventHub::EPOLL_MAX_EVENTS;
+@@ -679,7 +638,8 @@
+         mPendingEventCount(0),
+         mPendingEventIndex(0),
+         mPendingINotify(false) {
+-    ensureProcessCanBlockSuspend();
++    LOG_ALWAYS_FATAL_IF(!pocketInputAcquireWake32(this),
++                        "Pocket input requires a real host wake lock");
+ 
+     mEpollFd = epoll_create1(EPOLL_CLOEXEC);
+     LOG_ALWAYS_FATAL_IF(mEpollFd < 0, "Could not create epoll instance: %s", strerror(errno));
+@@ -698,7 +658,7 @@
+     }
+ 
+     struct epoll_event eventItem = {};
+-    eventItem.events = EPOLLIN | EPOLLWAKEUP;
++    eventItem.events = EPOLLIN;
+     eventItem.data.fd = mINotifyFd;
+     int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mINotifyFd, &eventItem);
+     LOG_ALWAYS_FATAL_IF(result != 0, "Could not add INotify to epoll instance.  errno=%d", errno);
+@@ -731,6 +691,7 @@
+     ::close(mINotifyFd);
+     ::close(mWakeReadPipeFd);
+     ::close(mWakeWritePipeFd);
++    pocketInputReleaseWake32(this);
+ }
+ 
+ InputDeviceIdentifier EventHub::getDeviceIdentifier(int32_t deviceId) const {
+@@ -1670,16 +1631,9 @@
+         }
+ 
+         // Poll for events.
+-        // When a device driver has pending (unread) events, it acquires
+-        // a kernel wake lock.  Once the last pending event has been read, the device
+-        // driver will release the kernel wake lock, but the epoll will hold the wakelock,
+-        // since we are using EPOLLWAKEUP. The wakelock is released by the epoll when epoll_wait
+-        // is called again for the same fd that produced the event.
+-        // Thus the system can only sleep if there are no events pending or
+-        // currently being processed.
+-        //
+-        // The timeout is advisory only.  If the device is asleep, it will not wake just to
+-        // service the timeout.
++        // The rootless profile holds a real host wake-lock lease for this
++        // EventHub's lifetime. No privileged EPOLLWAKEUP flag is requested.
++        // This also protects work between returning events and the next poll.
+         mPendingEventIndex = 0;
+ 
+         mLock.unlock(); // release lock before poll
+@@ -1767,7 +1721,7 @@
+ status_t EventHub::registerFdForEpoll(int fd) {
+     // TODO(b/121395353) - consider adding EPOLLRDHUP
+     struct epoll_event eventItem = {};
+-    eventItem.events = EPOLLIN | EPOLLWAKEUP;
++    eventItem.events = EPOLLIN;
+     eventItem.data.fd = fd;
+     if (epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &eventItem)) {
+         ALOGE("Could not add fd to epoll instance: %s", strerror(errno));

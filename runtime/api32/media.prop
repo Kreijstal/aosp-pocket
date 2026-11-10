@@ -1,0 +1,3 @@
+# Stock 12L media services and the existing host-camera provider.
+ro.pocket.media.enabled=true
+ro.pocket.camera.enabled=1

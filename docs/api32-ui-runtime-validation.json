@@ -1,0 +1,605 @@
+{
+  "schema": 1,
+  "status": "NORMAL_TRACE_MODE_PASS_STARTUP_FAILED",
+  "scope": "Normal startup no longer enables repeated ART profiling; manual trace sink and all component checks pass. Two earlier SystemUI KeyguardService ANRs still fail readiness; requested crash service is missing.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "apkSha256": "0e0d02d1bf5b2f28fbdb8d88aff82fb067a53fa590d9dad38f6bc284d913f808",
+  "compileRunId": "d37c374adc0f45fca59528482a46c5f5",
+  "compilePassed": true,
+  "coldUiPassed": false,
+  "systemUiStartupVerified": false,
+  "usableLauncherVerified": false,
+  "stockWindowManagerDumpVerified": true,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "compiledArtifact": {
+    "package": "com.android.systemui",
+    "path": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex",
+    "bytes": 24780632,
+    "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422",
+    "compilerFilter": "speed",
+    "compiler": "stock_dex2oat",
+    "elapsedMillis": 4488,
+    "reused": true,
+    "elf64LittleEndianVerified": true
+  },
+  "compileMarker": "API32_UI_DEXOPT_PASS package=com.android.systemui source_parent_writable=false compiler=stock_dex2oat filter=speed bytes=24780632 sha256=1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422 reused=true elapsed_ms=4488",
+  "preparationHostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 0,
+    "after": "null",
+    "restored": true
+  },
+  "invariants": [
+    "UI APK and framework bytecode were not changed; stock PackageManager/installd/dex2oat created the artifact.",
+    "The bootstrap JAR is unchanged; helper-only code remains outside BOOTCLASSPATH.",
+    "Small-guest profile uses stock cached-process limit four and two normal dex2oat workers; active app heaps and host memory policy are unchanged.",
+    "Fresh-boot UI validation requires actual focused/drawn Home and Settings windows, stable SystemUI PID through both phases, host screenshots and no SystemUI or launcher ANRs in this run.",
+    "The first preparation run does not establish startup stability; an existing compiled artifact alone is not a UI pass.",
+    "Strict startup gate also rejects SystemUI/Launcher3 AndroidRuntime fatal crashes, including those preceding the later stable UI phase; validated by replay against this run."
+  ],
+  "checks": [
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/ui-probe-classes runtime/api32/UiRuntimeProbe32.java",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/ui-speed-baseline-image-manifest.json",
+      "result": "PASS / exit 0; signed 7,668,939-byte APK, five changed guest assets exactly matched deployed baseline diff and hashes; bootstrap JAR unchanged."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py",
+      "result": "PASS / exit 0; stock speed ELF verified; core services and eight touch/twelve key events passed; init reaped 28 services with zero remaining or failed; temporary host phantom limit restored."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --reuse-installed --require-ui",
+      "result": "FAIL / driver exit 1, guest exit 0. Actual focused/drawn Home and Settings with screenshots and stock WindowManager DUMP passed; two earlier SystemUI ImageWallpaper ANRs correctly failed startup gate. Speed artifact recompiled despite identical SHA."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Overall FAIL / driver exit 1, guest exit 0; immutable-platform and ART speed-cache reuse PASS. Stock Home and Settings focused/drawn with screenshots, SystemUI phase PID stable 40s, hardware input PASS. Three earlier SystemUI SystemUIService ANRs correctly fail startup gate; LatinIME/Gallery ANRs, Traceur Perfetto error 127, and Bluetooth alarm failure remain."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Current framework-artifact candidate: component PASS, overall FAIL / driver exit 1, guest exit 0; two SystemUI KeyguardService ANRs. Focused/drawn Home/Settings, 40s stable phase PID, hardware input and cache reuse passed. See docs/api32-framework-artifacts-validation.json."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Trusted-preopt candidate: component PASS, full startup FAIL / driver exit 1, guest exit 0; three SystemUI KeyguardService ANRs. Actual system_server services.odex executable speed mapping, focused/drawn Home/Settings, hardware input and cache reuse passed. See docs/api32-systemserver-dexopt-validation.json."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Primary-preload candidate: component PASS, overall FAIL / driver exit 1, guest exit 0 due two SystemUI startup ANRs. Full class/resource preload, six unchanged service-artifact reuse, executable trusted services code, Home/Settings and hardware input verified. See docs/api32-primary-preload-validation.json."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component PASS; driver exit 1, guest exit 0. Suspend callbacks/native stats/roles passed, zero native suspend-service waits. Full startup FAIL: two SystemUI ANRs and a Launcher3 crash. Home/Settings focused/drawn with a later SystemUI stable for 40s. Init reaped 28 services, none remaining/failed; temporary host limit restored and SELinux Enforcing."
+    },
+    {
+      "command": "Replay the actual uiStartupCrashes expression from tools/test_api32_on_pi.py on out/api32/suspend-control-report.json, plus a Traceur-only negative sample",
+      "result": "PASS / exit 0; detects Launcher3 PID 9929 and does not attribute Traceur to UI. Added after terminal run; original runtime report is retained unchanged."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 out/api32/read_vm73_report_transport.py out/api32/ui-code-observer-pending.json",
+      "result": "PASS / exit 0; 280-byte pending dump, distinct pending line for current run, no terminal payload."
+    },
+    {
+      "command": "python3 out/api32/read_vm73_report_transport.py out/api32/ui-code-observer-terminal.json",
+      "result": "PASS / exit 0; 2280445-byte complete terminal dump, correct current run ID."
+    },
+    {
+      "command": "python3 out/api32/read_vm73_report_transport.py out/api32/ui-code-observer-saved-diagnostics-transport.json",
+      "result": "PASS / exit 0 after diagnostics-only app restart; saved terminal report remains readable, progress says runtimeStarted=false. Initial immediate dump was too early while Activity was attaching; re-observed without restarting again."
+    },
+    {
+      "command": "Replay current driver marker/gate AST on out/api32/ui-code-report.json in memory",
+      "result": "PASS / exit 0; all required markers present, strict UI remains false due startup ANRs; original report is unchanged."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/normal-startup-baseline-manifest.json",
+      "result": "PASS / exit 0; 7644207-byte signed APK. All 2645 hashes and exact three-asset delta verified. Actual RC explicitly sets POCKET_API32_TRACE_STARTUP=0; native runtime, trace sink, bootstrap and tools JAR unchanged."
+    },
+    {
+      "command": "Invoke each builder/test CLI with --trace-startup but without --system-server",
+      "result": "PASS / expected exit 2 with --trace-startup requires --system-server; no VM mutation."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Normal trace-mode component PASS, full startup FAIL / driver exit 1, guest exit 0. Manual ART trace probe passed with one write, no periodic private ART traces. Two SystemUI KeyguardService ANRs, Bluetooth service ANR and Gallery boot receiver ANR remain. No SystemUI/Launcher3 Java crash in this run. Later 40s UI/code/input phase passed. All 28 services reaped, none remaining/failed; host limit restored, SELinux Enforcing."
+    },
+    {
+      "command": "Replay the actual current driver marker/gate AST on out/api32/normal-startup-report.json",
+      "result": "PASS / exit 0; all required markers present and strict UI still rejects startup ANRs. Original report unchanged."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "coldUiRunId": "09c4b4c5f7c948aabc6e61f7ba2afe19",
+  "focusedDrawnHomeSettingsVerified": true,
+  "coldRunGuestExitCode": 0,
+  "coldRunDriverExitCode": 1,
+  "startupAnrs": [
+    {
+      "process": "com.android.bluetooth",
+      "pid": 4262,
+      "reason": "executing service com.android.bluetooth/.btservice.AdapterService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 4283,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 4817,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 5856,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "coldCompilation": {
+    "reused": true,
+    "elapsedMillis": 6578,
+    "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422"
+  },
+  "homeScreenshot": {
+    "path": "out/api32/normal-startup-home.png",
+    "sha256": "ad23b215d3c3ae8880a792e542d01679bcf61724f9966581d29381abc50c41a9",
+    "phase": {
+      "runId": "09c4b4c5f7c948aabc6e61f7ba2afe19",
+      "phase": "home",
+      "package": "com.android.launcher3",
+      "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+      "systemUiPid": 5411,
+      "windowDrawn": true
+    },
+    "framesPresented": 1064,
+    "visuallyInspected": false
+  },
+  "settingsScreenshot": {
+    "path": "out/api32/normal-startup-settings.png",
+    "sha256": "2de793acf4dced9fcb2f6eddfbf74dfc647dd476bff224b54205a609d5528b71",
+    "phase": {
+      "runId": "09c4b4c5f7c948aabc6e61f7ba2afe19",
+      "phase": "settings",
+      "package": "com.android.settings",
+      "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+      "systemUiPid": 5411,
+      "windowDrawn": true
+    },
+    "framesPresented": 1187,
+    "visuallyInspected": false
+  },
+  "cacheSelectionDiagnosis": {
+    "source": "pinned ART runtime/oat_file_assistant.cc, commit ab1f62ad90952006e0a47cabdb3e5a3bcd07124e",
+    "behavior": "A writable APK parent unconditionally selects adjacent odex; a read-only parent can select the usable data-cache oat.",
+    "observedBackingTree": "Host app ownership made the SystemUI source parent writable in the guest view.",
+    "fixEvidence": "docs/api32-readonly-validation.json"
+  },
+  "previousColdRun": {
+    "apkSha256": "eb4824bb8aad289c5df1539f748442077ec1186331ca414a60629b2d87c5f37e",
+    "coldUiRunId": "9717d5ddce20445d9bd43c3eb881d6e6",
+    "coldRunGuestExitCode": 0,
+    "coldRunDriverExitCode": 1,
+    "startupAnrs": [
+      {
+        "process": "com.android.systemui",
+        "pid": 13369,
+        "reason": "executing service com.android.systemui/.ImageWallpaper"
+      },
+      {
+        "process": "com.android.systemui",
+        "pid": 13978,
+        "reason": "executing service com.android.systemui/.ImageWallpaper"
+      }
+    ],
+    "coldCompilation": {
+      "reused": false,
+      "elapsedMillis": 92985,
+      "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422",
+      "dexoptNeeded": -3
+    },
+    "homeScreenshot": {
+      "path": "out/api32/ui-speed-home.png",
+      "sha256": "aa93b11e218e41cd29e9697716a37f957b4c95d34fcb57a3c8468132e6ec6bb2"
+    },
+    "settingsScreenshot": {
+      "path": "out/api32/ui-speed-settings.png",
+      "sha256": "a81e68b1766753c0a663cbf027a9990bba0fd79ba7832f891266aa650ebbecc6"
+    }
+  },
+  "preparationCompiledArtifact": {
+    "package": "com.android.systemui",
+    "path": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex",
+    "bytes": 24780632,
+    "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422",
+    "compilerFilter": "speed",
+    "compiler": "stock_dex2oat",
+    "elapsedMillis": 123409,
+    "reused": false,
+    "elf64LittleEndianVerified": true
+  },
+  "cacheReuseVerified": true,
+  "uiRuntimePhasePassed": true,
+  "stableSystemUiPhasePid": 5411,
+  "stableSystemUiPhaseSeconds": 40,
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "input": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "inputEventsRejected": 0,
+    "clicks": 3,
+    "typedText": "a129",
+    "keyUps": 6
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "readonlyEvidence": "docs/api32-readonly-validation.json",
+  "currentRunReport": "out/api32/normal-startup-report.json",
+  "currentAnrEvidence": "out/api32/anr-09c4b4c5f7c948aabc6e61f7ba2afe19.json",
+  "priorDriverMarkerIssue": {
+    "runId": "b75292eea35e4a0cbb6b68e3e691c505",
+    "oldExactMarkerMatched": false,
+    "correctedExactMarkerMatched": true,
+    "startupAnrsStillPresent": true,
+    "result": "Prior overall failure had both a stale exact-marker mismatch and genuine SystemUI ANRs. Driver corrected; original runtime report retained unchanged."
+  },
+  "previousColdRuns": [
+    {
+      "coldUiRunId": "b75292eea35e4a0cbb6b68e3e691c505",
+      "apkSha256": "b6cc13d390707d4952bb48bf6a74c93dbe6f13222864ec8165c9b4cf50c6ef9b",
+      "status": "CACHE_REUSE_PASS_STARTUP_FAILED",
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 18077,
+          "reason": "executing service com.android.systemui/.SystemUIService"
+        },
+        {
+          "process": "com.android.inputmethod.latin",
+          "pid": 18588,
+          "reason": "executing service com.android.inputmethod.latin/.LatinIME"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 18691,
+          "reason": "executing service com.android.systemui/.SystemUIService"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 19354,
+          "reason": "executing service com.android.systemui/.SystemUIService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 19789,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "coldCompilation": {
+        "reused": true,
+        "elapsedMillis": 8671,
+        "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422",
+        "loadedOatEvidence": [
+          {
+            "trace": "root/tmp/art-traces/anr_19917_66853_345857670",
+            "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+          },
+          {
+            "trace": "root/tmp/art-traces/anr_19917_66843_383428306",
+            "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+          },
+          {
+            "trace": "root/tmp/art-traces/anr_19354_66720_446251620",
+            "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+          },
+          {
+            "trace": "root/tmp/art-traces/anr_19354_66708_907690108",
+            "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+          },
+          {
+            "trace": "root/tmp/art-traces/anr_18691_66690_504828730",
+            "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+          },
+          {
+            "trace": "root/tmp/art-traces/anr_18691_66680_533939403",
+            "entry": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex: speed"
+          }
+        ]
+      },
+      "homeScreenshot": {
+        "path": "out/api32/readonly-home.png",
+        "sha256": "de3587d58f1fb86b704f3d84319dd1e875f5eb3cc7413f181356d78ad0ccc08a",
+        "phase": {
+          "runId": "b75292eea35e4a0cbb6b68e3e691c505",
+          "phase": "home",
+          "package": "com.android.launcher3",
+          "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+          "systemUiPid": 19917,
+          "windowDrawn": true
+        },
+        "visuallyInspected": true
+      },
+      "settingsScreenshot": {
+        "path": "out/api32/readonly-settings.png",
+        "sha256": "0136323e5d6cfc3d24a7a56875231ba98c2241d193b369214d5e00b05fc30cba",
+        "phase": {
+          "runId": "b75292eea35e4a0cbb6b68e3e691c505",
+          "phase": "settings",
+          "package": "com.android.settings",
+          "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+          "systemUiPid": 19917,
+          "windowDrawn": true
+        },
+        "visuallyInspected": true
+      }
+    },
+    {
+      "coldUiRunId": "224a82c8c55c466a9d157f46eece61a7",
+      "apkSha256": "a82efa41f6c2ae12483803cf9a733ea0e3ad49924d5294103a8a52a6c465dffe",
+      "status": "FRAMEWORK_IMAGES_PASS_STARTUP_FAILED",
+      "startupAnrs": [
+        {
+          "process": "com.android.bluetooth",
+          "pid": 23858,
+          "reason": "executing service com.android.bluetooth/.btservice.AdapterService"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 23878,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 24458,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 25800,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "coldCompilation": {
+        "reused": true,
+        "elapsedMillis": 11611,
+        "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422"
+      },
+      "homeScreenshot": {
+        "path": "out/api32/framework-artifacts-home.png",
+        "sha256": "1433b6c6c626d8399916368c2ed0f733228cee5c697629586e4838bfae1a4e2e",
+        "phase": {
+          "runId": "224a82c8c55c466a9d157f46eece61a7",
+          "phase": "home",
+          "package": "com.android.launcher3",
+          "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+          "systemUiPid": 25216,
+          "windowDrawn": true
+        },
+        "visuallyInspected": true
+      },
+      "settingsScreenshot": {
+        "path": "out/api32/framework-artifacts-settings.png",
+        "sha256": "805bfd6c6f09c9f52e95eab030bdb105fc911dbc24c6fa4f8243b1bcffa8327f",
+        "phase": {
+          "runId": "224a82c8c55c466a9d157f46eece61a7",
+          "phase": "settings",
+          "package": "com.android.settings",
+          "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+          "systemUiPid": 25216,
+          "windowDrawn": true
+        },
+        "visuallyInspected": true
+      }
+    },
+    {
+      "coldUiRunId": "5d21c06786fb49869b165e68c2181d18",
+      "apkSha256": "31f3768a8ee20c5f902df220f1d27c13b52de8ebb23f36307858ac9d79516fea",
+      "status": "TRUSTED_SYSTEMSERVER_PREOPT_PASS_STARTUP_FAILED",
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 30419,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 30960,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 31653,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 32268,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "coldCompilation": {
+        "reused": true,
+        "elapsedMillis": 7825,
+        "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422"
+      },
+      "homeScreenshot": {
+        "path": "out/api32/systemserver-trusted-preopt-home.png",
+        "sha256": "37dbdad8f736ccd926aa26249afc2aff4e4377673f6986b83baa3b0841674667",
+        "phase": {
+          "runId": "5d21c06786fb49869b165e68c2181d18",
+          "phase": "home",
+          "package": "com.android.launcher3",
+          "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+          "systemUiPid": 32117,
+          "windowDrawn": true
+        },
+        "visuallyInspected": true
+      },
+      "settingsScreenshot": {
+        "path": "out/api32/systemserver-trusted-preopt-settings.png",
+        "sha256": "bdbe95214c9e447ded35631ef1de37528b05f8f2338e43cd999beeb5ad63a919",
+        "phase": {
+          "runId": "5d21c06786fb49869b165e68c2181d18",
+          "phase": "settings",
+          "package": "com.android.settings",
+          "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+          "systemUiPid": 32117,
+          "windowDrawn": true
+        },
+        "visuallyInspected": true
+      }
+    },
+    {
+      "coldUiRunId": "cc432835f95e4b15a8c1a33c0490860c",
+      "apkSha256": "0655927a2bc878b431200f0fe5091caf6df6a74c8cc4670456445613c9fae5d8",
+      "status": "PRIMARY_PRELOAD_PASS_STARTUP_FAILED",
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 3408,
+          "reason": "executing service com.android.systemui/.ImageWallpaper"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 4018,
+          "reason": "executing service com.android.systemui/.SystemUIService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 5158,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "coldCompilation": {
+        "reused": true,
+        "elapsedMillis": 4488,
+        "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422"
+      }
+    },
+    {
+      "coldUiRunId": "a54484972b8b4adfa29359b42708657e",
+      "apkSha256": "763049b6a5e4b913d3925aa7aa81a0b8ddb9892453fe6329ffd361b6cf025085",
+      "status": "SUSPEND_CONTROL_PASS_STARTUP_FAILED",
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 9104,
+          "reason": "executing service com.android.systemui/.ImageWallpaper"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 9602,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 10680,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "startupCrashes": [
+        {
+          "thread": "UiThreadHelper",
+          "process": "com.android.launcher3",
+          "pid": 9929
+        }
+      ],
+      "coldCompilation": {
+        "reused": true,
+        "elapsedMillis": 6459,
+        "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422"
+      }
+    },
+    {
+      "coldUiRunId": "639071280392434483d0ddb5bf6de4af",
+      "apkSha256": "91335aad417c857a6360a04863e731b3e47eef2f398b4e27fb8c84d804de6244",
+      "status": "SYSTEMUI_CODE_PASS_STARTUP_FAILED",
+      "startupAnrs": [
+        {
+          "process": "com.android.systemui",
+          "pid": 13809,
+          "reason": "executing service com.android.systemui/.ImageWallpaper"
+        },
+        {
+          "process": "com.android.systemui",
+          "pid": 14360,
+          "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+        },
+        {
+          "process": "com.android.gallery3d",
+          "pid": 15402,
+          "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+        }
+      ],
+      "startupCrashes": [],
+      "coldCompilation": {
+        "reused": true,
+        "elapsedMillis": 7529,
+        "sha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422"
+      }
+    }
+  ],
+  "frameworkArtifactEvidence": "docs/api32-framework-artifacts-validation.json",
+  "sourceFrameworkBootImagesMapped": true,
+  "systemServerLoadedFilter": "speed (trusted /system preopt); APEX verification remains verify",
+  "systemServerDexoptEvidence": "docs/api32-systemserver-dexopt-validation.json",
+  "primaryZygotePreloadEvidence": "docs/api32-primary-preload-validation.json",
+  "normalPrimaryPreloadVerified": true,
+  "startupCrashes": [],
+  "suspendControlEvidence": "docs/api32-suspend-validation.json",
+  "nativeSuspendControlVerified": true,
+  "suspendControlServiceWaits": 0,
+  "systemUiExecutableMappingVerified": true,
+  "systemUiExecutableMappingScope": "Later stable PID 5411 before and after Home/Settings; earlier ANR PID mappings unverified.",
+  "uiCodeEvidence": "docs/api32-ui-code-validation.json",
+  "pendingReportPollingVerified": true,
+  "normalStartupEvidence": "docs/api32-normal-startup-validation.json",
+  "startupTraceRequested": false,
+  "defaultStartupProfilingEnabled": false
+}

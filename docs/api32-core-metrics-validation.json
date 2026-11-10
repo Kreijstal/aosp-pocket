@@ -1,0 +1,317 @@
+{
+  "schema": 1,
+  "status": "SOURCE_BUILT_HOST_COMPLETE_IMAGE_AND_COMBINED_RUNTIME_PASS_REPEATED_PROCESS_BOUND_OPEN",
+  "productionReleaseReady": false,
+  "purpose": "Retain the stock Android12L media.metrics Binder service while removing its separate resident process from normal startup. Process-budget reduction is not yet runtime-verified.",
+  "architecture": {
+    "implementation": "Pinned stock SDK32 libmediametricsservice.so and mediametricsservice-aidl-cpp.so; source-built entry in pocket-core-api32",
+    "serviceName": "media.metrics",
+    "normalCoreComponents": 9,
+    "legacyCoreComponents": 8,
+    "legacyNonCoreModePreserved": true,
+    "standaloneServiceRemovedFromNormalRc": "pocket-mediametrics",
+    "lazyActivation": "Shared core slot with exact allowlist; observational checkService remains observational",
+    "logicalUidBefore": 1013,
+    "logicalUidAfter": 0,
+    "actualHostKernelUid": "unchanged; all guest identities share the Manager app UID",
+    "limits": "Stock service record-count and expiry limits are retained. The standalone main process-wide 128MiB RLIMIT_AS cannot be applied to a core shared with other services and is omitted. This changes aggregate address-space containment.",
+    "failureOwnership": "Any core component exit terminates the supervised core; normal init owns/reaps it."
+  },
+  "sourcePins": "sources.lock.json guest_api32.headers; exact pinned commits and sparse paths remain authoritative",
+  "builds": [
+    {
+      "command": "python3 tools/build_api32_core.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated",
+      "log": "out/api32/metrics-core-build-v5.log",
+      "result": "PASS; native core, test core and typed stock AIDL caller-policy probe compiled"
+    },
+    {
+      "command": "g++ -std=c++17 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -pthread runtime/tests/api32/service_activation.cpp -o out/api32/metrics-core-host/service-activation",
+      "result": "PASS"
+    },
+    {
+      "command": "ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 out/api32/metrics-core-host/service-activation",
+      "result": "PASS: exact allowlist, flags, aliases, shared metrics, cooldown, reentrant/concurrent activation"
+    },
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/ce-unlock-observer-classes runtime/tests/api32/CeAppInspector32.java",
+      "result": "PASS; CE observer now waits for actual Android user unlock before obtaining a CE provider"
+    },
+    {
+      "command": "python3 tools/build_host_native.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/api32/host-native-metrics-built --jobs 4",
+      "log": "out/api32/host-native-metrics-build.log",
+      "result": "PASS"
+    }
+  ],
+  "runtimeProbe": {
+    "source": "runtime/tests/api32/metrics_core_probe.cpp",
+    "submissionIdentity": 10021,
+    "forgedClaimedUid": 1000,
+    "forgedClaimedPackage": "android",
+    "allowedRecordKey": "extractor",
+    "forbiddenRecordKey": "pocket.forbidden",
+    "orderedOneway": "Submit forbidden record first, then allowed record to the same Binder. Only verification after the allowed record appears can establish that the preceding forbidden submission was processed.",
+    "checks": [
+      "Actual typed stock AIDL submitBuffer invocation",
+      "Allowed record is retained with UID10021 and forged android package removed",
+      "Forbidden record is absent",
+      "Published service is in the actual supervised core PID",
+      "No standalone media.metrics service was started",
+      "Publication precedes framework start"
+    ],
+    "result": "PASS"
+  },
+  "failedLocalBuildAttempts": [
+    {
+      "log": "out/api32/metrics-core-build.log",
+      "failure": "Missing IPackageManagerNative.h; corrected by generating the pinned permission/binder package manager AIDL headers"
+    },
+    {
+      "log": "out/api32/metrics-core-build-v2.log",
+      "failure": "Missing stats_event.h; corrected by adding pinned statssocket headers"
+    }
+  ],
+  "remaining": [
+    "Hard normal process bound and repeated/fresh-start reliability",
+    "CE current-source keyguard UI and outer Manager restart verification",
+    "Complete mounted storage including directories, mutations, MediaStore, private lower views and cache coherence",
+    "Actual codec/camera workloads, legacy backend checks and release/phone validation"
+  ],
+  "image": {
+    "version": "0.78.26",
+    "sha256": "1036140a7d14a31e43e5c837bed5bff2643e909a96e5c0a06eef51559909450f",
+    "bytes": 590689254,
+    "verifiedEntries": 2649,
+    "allPriorEntriesRetained": true,
+    "changedFrom07825": [
+      "system/bin/pocket-core-api32",
+      "system/bin/pocket-servicemanager-api32",
+      "system/etc/init/pocket-runtime.rc",
+      "system/etc/pocket-runtime-boot.sh",
+      "system/lib64/libpocket_hidl_api32.so"
+    ],
+    "stockMediaMetricsImplementationBytesUnchanged": true,
+    "normalServiceCount": 18,
+    "sharedCoreMetricsEnabledExactlyOnce": true,
+    "metricsReadyBeforeFramework": true,
+    "coreDependenciesVerified": true,
+    "runtimeVerified": false
+  },
+  "managerBuilds": {
+    "app": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/core-metrics-app-manager-probe/api32-app-manager-probe.apk",
+      "sha256": "1be2cba6941e976ab7e12569319af9c7c1eb5e768a36f2ce81186528e91f0d2c",
+      "bytes": 8386560,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      }
+    },
+    "media": {
+      "apk": "/home/kreijstal/git/aosp-pocket/out/api32/core-metrics-media-manager-probe/api32-media-manager-probe.apk",
+      "sha256": "24239047fab4292bff591156bf76324e8de323d07d19bc3935f95190b0ffe8c3",
+      "bytes": 8653406,
+      "probe": true,
+      "guestImagesBundled": 0,
+      "hostNativeLibrariesUnchanged": false,
+      "hostNativeBaseApkSha256": "7cb694adfae411a809571ac46aaa7c19526c005136903f59648a2a0b97ec342c",
+      "guestSdks": [
+        28,
+        29,
+        32
+      ],
+      "runtimeValidated": false,
+      "hostNativeSourceBuild": {
+        "manifestSha256": "422ac3ce29cecba07421236f806fa3a50fa313473285b7df854d8c63b5b95e53",
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22204208,
+            "sha256": "995e28f1b2a57edb192bbd6188f28b3faacd48d1ca0bb82383fb107bf6e81148"
+          },
+          "libproot.so": {
+            "bytes": 822352,
+            "sha256": "409d642fe4689d99944c61c6ab08afe0c50e7fca1b7b7f54b66d68b0b9623c2e"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        }
+      },
+      "externalFileJniAdditionSha256": "95c72657d61b0d6adc6e87dde4b340bf6924b0c9309b631ed39e7f1915e9ac0f",
+      "packagedImageTrial": true,
+      "guestCodePatchSha256": {},
+      "lazyMediaProbeSha256": "7f247f6f89d2448fe90191d2fe39e5b03fdaa25a3f3842fb99ec422d8349bbb6",
+      "metricsProbeSha256": "61cbaffbdcc1bb661a9d1463a2a2ce05647ba5ff82b9333105ca4fb1a8034dda"
+    }
+  },
+  "staticCommands": [
+    {
+      "command": "python3 tools/build_api32_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/api32/core-metrics-fixture --runtime-root /data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/root --art --binder --zygote --init --hardware --apex --installd --system-server --graphics --input --network --dns --mdns --audio --storage --keystore --apps --display --compile-ui --runtime-boot --core-services --reuse-native",
+      "result": "PASS; 2685 staged files; selected native build outputs reused; dependencies and source caches populated"
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --fixture-root out/api32/core-metrics-fixture/root --out out/api32/core-metrics-image --version 0.78.26 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.26.zip --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --probe",
+      "result": "PASS; 2649 entries; full archive hashes/CRC/size, retained inventory, stock metrics implementation and ELF dependencies verified"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/core-metrics-app-manager-probe/api32-app-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/core-metrics-media-manager-probe/api32-media-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+      "result": "PASS"
+    }
+  ],
+  "appRuntimeJob": {
+    "pid": 4381,
+    "token": "16d35bddd376438a9b5c95583cdad181",
+    "script": "/home/pi/pocket-api32-vm/core-metrics-app-validation/run-16d35bddd376438a9b5c95583cdad181.py",
+    "log": "/home/pi/pocket-api32-vm/core-metrics-app-validation/run-16d35bddd376438a9b5c95583cdad181.log",
+    "exit": "/home/pi/pocket-api32-vm/core-metrics-app-validation/run-16d35bddd376438a9b5c95583cdad181.exit.json"
+  },
+  "appBudgetObserverJob": {
+    "pid": 4702,
+    "script": "/home/pi/pocket-api32-vm/core-metrics-app-validation/observe-budget.py",
+    "log": "/home/pi/pocket-api32-vm/core-metrics-app-validation/process-budget-observer.log",
+    "sourceSha256": "d7a56aee529ac730c7ff0fa8a6eb1e60ea8752e20d3c998817350ac4482cbcff"
+  },
+  "candidate": "out/api32/core-metrics-app-candidate.json",
+  "sourceSnapshot": "out/api32/core-metrics-app-source-snapshot",
+  "mediaValidationNotes": [
+    "Typed caller-policy probe is packaged in the media fixture, not the downloadable image",
+    "Media driver matches every INIT_CHILD service/PID lifetime to INIT_REAP, independently of a hardcoded service count",
+    "App run does not establish the typed caller-policy gate; the combined media run remains pending"
+  ],
+  "buildCommands": {
+    "appManager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --host-native-dir out/api32/host-native-metrics-built --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/core-metrics-image/pocket-images.json --app-probe32 out/api32/signal-app-spec.json --out out/api32/core-metrics-app-manager-probe",
+    "mediaManager": "python3 tools/build_api29_manager.py --base-apk out/api32/bfix-manager-probe/api32-app-manager-probe.apk --host-native-dir out/api32/host-native-metrics-built --catalog out/api32/media-path-current-image-app/catalog-api29.json --api32-catalog out/api32/core-metrics-image/pocket-images.json --media-session-probe32 out/api32/source-media-session-app --media-session-image32 --media-session-lazy-probe32 out/api32/warm-extractor-patch/pocket-lazy-media-probe --media-session-metrics-probe32 out/api32/core-metrics-image/native-core/pocket-metrics-probe-api32 --out out/api32/core-metrics-media-manager-probe"
+  },
+  "currentSources": {
+    "runtime/api32/core_main.cpp": "7d9316ecdee04712cecb8d4695465906588c80f1dc094c6e0607712c80702607",
+    "runtime/api32/metrics_core.cpp": "e10cd921d4364fe877ea38196c68ed0dcbb8aea92e2cb834dd017ab3472167a7",
+    "runtime/api32/lazy_service_runtime.h": "0ee755f16ddead965e8633af031ec67099fea6b8748a6f9f5ec5d7022a5c8857",
+    "runtime/api32/service_activation.h": "c8d530e4a95dc0395569b488530b508ef163261c00d7f710b302a1e263280ab3",
+    "runtime/tests/api32/metrics_core_probe.cpp": "5055a86c7d7bf4f2066dfcc2558f02b3580497c367ea2b86a37e9b4238fdb940",
+    "tools/build_api32_core.py": "95c2b7f3b09041f487da57b20ef69ba0f36f3aa6e95deb6055ee8d0cf6490f25",
+    "tools/build_api32_metrics.py": "16a59163ad75b5ca9b2216b31369484af7f484f0c36b35d1097f9da657d49b38",
+    "tools/api32_runtime_boot.py": "e516925b2e9ebbc38c47ee4aa83fab958fa5f9a0e7170b6d0a59593b1f99e1e6",
+    "tools/build_api32_probe.py": "263e1981c12ea5545cfd4b6f5a9117d0db4992dddb85d1f8247d5bfffc432ae3",
+    "tools/build_api32_image.py": "864fdd9653287ca05fbc591229725d504eb5994d6704c5288074e7ddec97636c",
+    "tools/build_api29_manager.py": "268ae16a284067e8d984f5db521f6f10d61b5cdcd1899fe15d61b54ae7953aaf",
+    "runtime/tests/api32/ManagerMediaSessionProbe32.java": "572ce535dd827472b7e883b54a3d24fd4b6af8ba4b1928c2dc621bd5c6d724a2",
+    "tools/test_api32_media_session_on_pi.py": "a955114249a0f3fa7afe2f32a7ee4d3b7a58630fc0dc1ae02dea658d1d398b34"
+  },
+  "appRuntime": {
+    "report": "out/api32/core-metrics-app-manager-app-report.json",
+    "reportSha256": "7534797c2b5b529063c57e4f05f85a12ca110c81dae66683f069711fad6b02da",
+    "runId": "38411e935fbd477cbc4458eb0a29825d",
+    "validation": "PASS",
+    "sharedMetricsAndCorePid": 3566,
+    "supervisedLifetimesReaped": 16,
+    "reapAccounting": true,
+    "singleSystemUi": true,
+    "anrs": [],
+    "javaFatals": [],
+    "nativeFatals": [],
+    "pollErrors": 0,
+    "sampledPeakChildren": 32,
+    "censusSamples": 234,
+    "observerErrors": [],
+    "hardProcessBoundProven": false,
+    "typedMetricsPolicyVerified": false
+  },
+  "mediaRuntimeJob": {
+    "pid": 10040,
+    "token": "dc7f228dcf404ab2b7c43dd187966880",
+    "script": "/home/pi/pocket-api32-vm/core-metrics-media-validation/run-dc7f228dcf404ab2b7c43dd187966880.py",
+    "log": "/home/pi/pocket-api32-vm/core-metrics-media-validation/run-dc7f228dcf404ab2b7c43dd187966880.log",
+    "exit": "/home/pi/pocket-api32-vm/core-metrics-media-validation/run-dc7f228dcf404ab2b7c43dd187966880.exit.json"
+  },
+  "mediaCandidate": "out/api32/core-metrics-media-candidate.json",
+  "mediaSourceSnapshot": "out/api32/core-metrics-media-source-snapshot",
+  "mediaRuntime": {
+    "report": "out/api32/core-metrics-media-media-session-report.json",
+    "reportSha256": "7eb87dd2df4e6e7fda23c94cb3cddc56c00f7e09f22f0324b7ed64f78d2ae0d9",
+    "runId": "8eb2d6401c33443eabafac0fc7123d50",
+    "validation": "PASS",
+    "strictPassed": true,
+    "gates": {
+      "packagedImageVerified": true,
+      "playerBootStartVerified": true,
+      "externalFilesVerified": true,
+      "ordinaryPathsVerified": true,
+      "lazyMediaVerified": true,
+      "extractorFirstDemandVerified": true,
+      "extractorBootStartVerified": true,
+      "supervisedBootstrapVerified": true,
+      "memoryProfileVerified": true,
+      "systemServerBridgeVerified": true,
+      "coreMediaMetricsVerified": true,
+      "reapAccounting": true
+    },
+    "supervisedLifetimesReaped": 16,
+    "anrs": [],
+    "javaFatals": [],
+    "nativeFatals": [],
+    "systemUiStarts": [
+      "8225"
+    ],
+    "pollErrors": 0,
+    "sampledPeakChildren": 32,
+    "censusSamples": 52,
+    "censusErrors": [],
+    "hardProcessBoundProven": false,
+    "codeHashesPreserved": 13,
+    "metricsProbe": [
+      {
+        "mode": "submit",
+        "exit": 0,
+        "log": "API32_CORE_METRICS_SUBMITTED uid=10021 claimed_uid=1000 oneway=1\n"
+      },
+      {
+        "mode": "verify",
+        "exit": 0,
+        "log": "API32_CORE_METRICS_VERIFIED stock_record=1 caller_uid=10021 forged_identity_replaced=1 forbidden_key_absent=1\n"
+      }
+    ]
+  },
+  "mediaBudgetObserverJob": {
+    "pid": 10187,
+    "script": "/home/pi/pocket-api32-vm/core-metrics-media-validation/observe-budget.py",
+    "log": "/home/pi/pocket-api32-vm/core-metrics-media-validation/process-budget-observer.log",
+    "sourceSha256": "ee30b21a6ba510d905d4e7f8e6e3efd860572e631f26a1ec457d0d9c566c4bdf"
+  },
+  "shutdownFollowupEvidence": "docs/api32-child-ownership-validation.json",
+  "shutdownFollowup": "The preserved encrypted profile still uses 0.78.25. Its provider readiness/persistence checks pass after the test fix, but it fails descendant cleanup with peak33. New native subreaper code is built and host-tested, with Android runtime validation pending. The two complete0.78.26 runs above remain strict passes."
+}

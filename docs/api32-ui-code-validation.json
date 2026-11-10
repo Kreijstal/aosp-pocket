@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "status": "COMPONENT_PASS_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Actual executable SystemUI app AOT mapping during the later stable UI phase and bounded pending-report polling. No claim of ANR-free startup, early-crashing-process AOT selection, full guest boot or Manager support.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "runId": "639071280392434483d0ddb5bf6de4af",
+  "apkSha256": "91335aad417c857a6360a04863e731b3e47eef2f398b4e27fb8c84d804de6244",
+  "apkBytes": 7676977,
+  "imageManifestSha256": "2272b696f48bbe6c5b88dec63092be95f04ca6881ecf4f34df17418b5fc88a36",
+  "imageVerifiedFiles": 2645,
+  "sourceSha256": {
+    "runtime/api32/UiRuntimeProbe32.java": "18b2e6daefe7b14d6198ae6101dfb387d9b3550b3191d392c412da6a7b753f76",
+    "runtime/tests/api32/MainActivity.java": "db2f9b0bd5508cc04ebe79fb2264b512083b83546cc898a454f2dee0f564ae54",
+    "tools/test_api32_on_pi.py": "2f8ace52d9cf73e4227c578a350ce7a3e7495c0e3580d6c5e6153fac21dae872"
+  },
+  "reportPath": "out/api32/ui-code-report.json",
+  "reportSha256": "e4e359cecbc114f758f9185814f2f7892256f5ff97a7f38ca52c8034b2542e9c",
+  "checks": [
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/ui-code-probe-classes runtime/api32/UiRuntimeProbe32.java runtime/api32/SystemServerDexopt32.java runtime/api32/BootArtifactsProbe32.java",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/ui-code-baseline-manifest.json",
+      "result": "PASS / exit 0; rebuilt tools JAR without changing bootstrap/native code."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-fixture --delta-from out/api32/ui-code-baseline-manifest.json",
+      "result": "PASS / exit 0; rebuilt host APK after report-publication guard change; 7,676,977 bytes, all 2645 guest hashes and exact three-asset delta verified."
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component PASS; driver exit 1, guest exit 0. Real executable SystemUI speed cache mapped before/after both UI phases, no required markers missing. Full startup FAIL on two earlier SystemUI ANRs; no SystemUI/Launcher3 Java crashes in captured log. Home/Settings and input passed. Init reaped 28 services, none remaining/failed; host limit restored and SELinux Enforcing."
+    },
+    {
+      "command": "python3 out/api32/read_vm73_report_transport.py out/api32/ui-code-observer-pending.json",
+      "result": "PASS / exit 0; 280-byte pending dump, distinct pending line for current run, no terminal payload."
+    },
+    {
+      "command": "python3 out/api32/read_vm73_report_transport.py out/api32/ui-code-observer-terminal.json",
+      "result": "PASS / exit 0; 2280445-byte complete terminal dump, correct current run ID."
+    },
+    {
+      "command": "python3 out/api32/read_vm73_report_transport.py out/api32/ui-code-observer-saved-diagnostics-transport.json",
+      "result": "PASS / exit 0 after diagnostics-only app restart; saved terminal report remains readable, progress says runtimeStarted=false. Initial immediate dump was too early while Activity was attaching; re-observed without restarting again."
+    },
+    {
+      "command": "Replay current driver marker/gate AST on out/api32/ui-code-report.json in memory",
+      "result": "PASS / exit 0; all required markers present, strict UI remains false due startup ANRs; original report is unchanged."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "executableSystemUiCode": {
+    "pid": 15014,
+    "markers": [
+      "API32_SYSTEMUI_CODE_LOADED_PASS stage=before pid=15014 path=/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex filter=speed executable_mapping=1 source=app_data_cache",
+      "API32_SYSTEMUI_CODE_LOADED_PASS stage=after pid=15014 path=/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex filter=speed executable_mapping=1 source=app_data_cache"
+    ],
+    "filter": "speed",
+    "source": "app_data_cache",
+    "path": "/data/dalvik-cache/arm64/system_ext@priv-app@SystemUI@SystemUI.apk@classes.dex",
+    "compiledArtifactSha256": "1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422",
+    "beforeAndAfterUiPhases": true,
+    "scope": "The later stable process only. These measurements do not establish executable mappings of earlier ANR PIDs 13809/14360."
+  },
+  "pendingReportPolling": {
+    "previousSavedReportDump": {
+      "instance": 73,
+      "status": 0,
+      "dumpUtf8Bytes": 2347164,
+      "elapsedSeconds": 0.6359739799809176,
+      "terminalRunId": "a54484972b8b4adfa29359b42708657e",
+      "terminalPayloadPresent": true
+    },
+    "newPendingDump": {
+      "instance": 73,
+      "status": 0,
+      "dumpUtf8Bytes": 280,
+      "elapsedSeconds": 0.08956041498458944,
+      "terminalRunId": null,
+      "terminalPayloadPresent": false,
+      "pending": [
+        "POCKET_API32_REPORT_PENDING run_id=639071280392434483d0ddb5bf6de4af"
+      ]
+    },
+    "newTerminalDump": {
+      "instance": 73,
+      "status": 0,
+      "dumpUtf8Bytes": 2280445,
+      "elapsedSeconds": 0.6751851009903476,
+      "terminalRunId": "639071280392434483d0ddb5bf6de4af",
+      "terminalPayloadPresent": true,
+      "pending": []
+    },
+    "savedDiagnostics": {
+      "instance": 73,
+      "passed": true,
+      "savedTerminalRunId": "639071280392434483d0ddb5bf6de4af",
+      "diagnosticsRunId": "api32-saved-diagnostics-check",
+      "runtimeStarted": false,
+      "terminalDumpUtf8Bytes": 2280445,
+      "savedReportReadableAfterAppRestart": true,
+      "initialImmediateObservation": "No report yet while restarted activity was attaching; subsequent read succeeded without another restart."
+    },
+    "publication": "Volatile ready flag set only after atomic report file replacement; explicit diagnostics-only startup allows the saved report. Pending uses a distinct nonterminal key and returns before reading report.json.",
+    "measurementScope": "Individual transport observations; not a general latency benchmark or proof of ANR causality. reportReadRetries includes expected no-terminal-yet pending polls."
+  },
+  "sourceBootstrapAndNativeAdaptersUnchanged": true,
+  "missingRequiredMarkers": [],
+  "missingRequiredNativeMarkers": [],
+  "startupAnrs": [
+    {
+      "process": "com.android.systemui",
+      "pid": 13809,
+      "reason": "executing service com.android.systemui/.ImageWallpaper"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 14360,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 15402,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "startupCrashes": [],
+  "nativeLogChars": 1588423,
+  "nativeLogWithinCaptureLimit": true,
+  "suspendControlServiceWaits": 0,
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "fullGuestBootVerified": false,
+  "systemUiStartupVerified": false,
+  "managerApi32Supported": false,
+  "resourceComparison": "Both current and prior tests used the same 1536MiB, four-vCPU VM73 host; memory capacity has not yet been varied. No VM configuration change was made. VM72 was not modified."
+}

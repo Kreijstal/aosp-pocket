@@ -1,0 +1,144 @@
+{
+  "schema": 1,
+  "status": "IMMUTABLE_FRAMEWORK_MEMORY_DEFAULT_PASS_SYSTEMUI_STARTUP_FAILED",
+  "previousGoalTurnClassification": "progress",
+  "thisGoalTurnClassification": "progress",
+  "scope": "Product framework resource overlay supplies the stock ActivityManager constructor cache default. The test observes actual resource/default/current/override state without setting the process limit. No claim of fixed startup ANRs, a controlled performance benchmark, complete boot or production Manager support.",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "runId": "2f3979de7b4e4cbfbfc55d568d67ec72",
+  "apkSha256": "db2630fc82de20e6516289061b35552984652ab1cc3233cbfe2b486032a030a5",
+  "apkBytes": 7685360,
+  "imageVerifiedFiles": 2658,
+  "imageManifestSha256": "4e0a7ce54f08ea4744ab2cf27bbe86473d5a286e43e1043e4d21ab26c25af027",
+  "reportPath": "out/api32/early-memory-report.json",
+  "reportSha256": "083e20f05fa5029418d792843d5e10bbc889502b6c43a593d564a2f93abc983e",
+  "sourceSha256": {
+    "tools/build_api32_memory_overlay.py": "3613c10acab2f736af14238cfdcbb91de37516f1ee98fa06540ba093e4e6fe46",
+    "tools/build_api32_probe.py": "ca5ed5d93ccdc15df47f30739da579fefb8347dba5691a2a49358e6779b3636a",
+    "tools/test_api32_on_pi.py": "0f74fea5612787e216d85566c85b519a3a7b03f049654aaa6979dbc22d08da9d",
+    "runtime/api32/FrameworkReadyProbe.java": "2b53a9c64798eded71a8fe840e9690c2114c0c2e8b6f07830b52ab452f2ec991",
+    "runtime/api32/memory.prop": "38fd2f91a2eb720e7e50ec5532166b299c2da88c81d6181e36237b83c5abb674",
+    "runtime/api32/overlays/PocketMemory/AndroidManifest.xml": "79ab81e1dd2287d6ea0725a0746281c10a9b149c077ade4358502572a54b6d79",
+    "runtime/api32/overlays/PocketMemory/res/values/config.xml": "11f74b2092de1df64fe1a90cc2bd42b3b14f032db18bd923ace29fc779c50fce"
+  },
+  "overlay": {
+    "package": "dev.kreijstal.aosppocket.overlay.memory",
+    "sdk": 32,
+    "cachedProcessLimit": 4,
+    "frameworkApkModified": false,
+    "apkSha256": "640ea1e81212a3f2e5530181061767a485492663a4380e527fbc4cb6f538d7e9",
+    "apkBytes": 8532,
+    "runtimeVerified": true
+  },
+  "overlayRebuildCheck": {
+    "beforeSha256": "640ea1e81212a3f2e5530181061767a485492663a4380e527fbc4cb6f538d7e9",
+    "afterSha256": "640ea1e81212a3f2e5530181061767a485492663a4380e527fbc4cb6f538d7e9",
+    "identical": true
+  },
+  "guardChecks": {
+    "mismatchedPropertyAndResourceRejected": true,
+    "tamperedCachedAapt2Rejected": true
+  },
+  "stockFrameworkResourcesServicesAndBootstrapUnchanged": true,
+  "referenceFrameworkDefault": 32,
+  "verifiedConstructorDefault": 4,
+  "verifiedCurrentLimit": 4,
+  "verifiedOverride": -1,
+  "lateProcessLimitSetterRemoved": true,
+  "componentMarkers": [
+    "API32_GUEST_MEMORY_PROFILE_PASS cached_process_limit=4 host_memory_policy=unchanged",
+    "API32_GUEST_MEMORY_EARLY_DEFAULT_PASS constructor_limit=4 current_limit=4 override=-1 source=stock_ActivityManager_settings"
+  ],
+  "startupAnrs": [
+    [
+      "com.android.systemui",
+      "19096",
+      "executing service com.android.systemui/.dump.SystemUIAuxiliaryDumpService"
+    ]
+  ],
+  "uiStartupCrashes": [],
+  "javaFatalProcesses": [],
+  "nativeLogWithinCaptureLimit": true,
+  "uiMarkers": [
+    "API32_UI_RUNTIME_PASS home=focused_drawn settings=focused_drawn systemui_pid=20319 stable_seconds=40"
+  ],
+  "touchEventsAccepted": 8,
+  "keyEventsAccepted": 12,
+  "inputEventsRejected": 0,
+  "cleanupMarkers": [
+    "API32_INIT_STOPPED reaped=32 remaining=0 failed=0"
+  ],
+  "hostPhantomLimitRestored": true,
+  "hostSelinuxAfter": "Enforcing",
+  "startupCodeObserveRequested": false,
+  "startupTraceRequested": false,
+  "gateReplay": {
+    "originalReportSha256": "083e20f05fa5029418d792843d5e10bbc889502b6c43a593d564a2f93abc983e",
+    "allRequiredMarkersPresent": true,
+    "strictStartupPassed": false,
+    "missingMarkers": [],
+    "missingNativeMarkers": [],
+    "markerRemovalChecks": {
+      "API32_PERFETTO_SESSION_PASS": "required and absent when removed",
+      "API32_PERFETTO_UNREGISTERED_DENIED_PASS": "required and absent when removed",
+      "API32_SOFTWARE_DISPLAY_PASS": "required and absent when removed"
+    },
+    "originalReportUnchanged": true,
+    "earlyMemoryMarkerRemovalRejected": true,
+    "missingMemoryMarkerWhenRemoved": "API32_GUEST_MEMORY_EARLY_DEFAULT_PASS constructor_limit=4 current_limit=4 override=-1"
+  },
+  "driverExitCode": 1,
+  "guestExitCode": 0,
+  "passed": false,
+  "fullGuestBootVerified": false,
+  "systemuiStartupVerified": false,
+  "usableLauncherVerified": false,
+  "pocketManagerApi32Supported": false,
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_memory_overlay.py",
+      "result": "PASS / exit 0; signed code-free overlay with one integer resource. Original framework APK unchanged."
+    },
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/memory-overlay-java-classes runtime/api32/FrameworkReadyProbe.java",
+      "result": "PASS / exit 0; deprecation notice only."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/early-memory-baseline/image-manifest.json",
+      "result": "PASS / exit 0; signed 7,685,360-byte APK. All 2,658 staged file hashes and APK hash verified."
+    },
+    {
+      "command": "PYTHONPATH=tools python3: build_memory_overlay(CACHE/'reference') and compare both complete signed APK SHA256 values",
+      "result": "PASS / identical 640ea1e81212a3f2e5530181061767a485492663a4380e527fbc4cb6f538d7e9; this proves only consecutive builds of this overlay."
+    },
+    {
+      "command": "PYTHONPATH=tools python3: isolated temporary profile/resource mismatch and tampered cached AAPT2 checks",
+      "result": "PASS / both rejected before tool execution, using disposable copies without mutating the real profile/cache."
+    },
+    {
+      "command": "python3 out/api32/run_startup_code_with_vm73_phantom_limit.py --require-ui",
+      "result": "Memory default PASS; strict startup FAIL / driver exit 1, guest exit 0. Initial SystemUIAuxiliaryDumpService ANR; later UI/input passed and all 32 services reaped with none remaining/failed. Host phantom setting restored, SELinux Enforcing."
+    },
+    {
+      "command": "python3 replay of actual driver AST gates against out/api32/early-memory-report.json, including removal of API32_GUEST_MEMORY_EARLY_DEFAULT_PASS",
+      "result": "PASS / all required markers present, removed early-default proof rejected, strict startup remains failed and original report unchanged."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_memory_overlay.py tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0."
+    }
+  ],
+  "buildTool": {
+    "version": "7.1.3-7984345",
+    "url": "https://dl.google.com/dl/android/maven2/com/android/tools/build/aapt2/7.1.3-7984345/aapt2-7.1.3-7984345-linux.jar",
+    "bytes": 2062453,
+    "sha256": "9582d97439fa1360ecd322e6a39c9e56fb3fc7a2f459bef8b258ce21790985b8",
+    "binarySha256": "bba94dd72057740ef241146a1c9e3821fc8ab5a0dbd1fc4b7a4570c7e9f0c85a"
+  }
+}

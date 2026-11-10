@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
 #include <string>
 static std::string property(const char* name) {
     std::string value;
@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     __system_property_get("ro.build.version.sdk", value);
     if (strcmp(value, POCKET_PROPERTY_STRING(POCKET_GUEST_API))) { printf("WRONG_PROPERTY_AREA sdk=%s\n", value); return 1; }
     if (!strcmp(argv[1], "check") || !strcmp(argv[1], "fresh")) {
-#if POCKET_GUEST_API == 29
+#if POCKET_GUEST_API >= 29
         std::string fingerprint,brand=property("ro.product.brand");
         const char* keys[]={"ro.product.brand","ro.product.name","ro.product.device","ro.build.version.release",
             "ro.build.id","ro.build.version.incremental","ro.build.type","ro.build.tags"};
@@ -35,7 +35,13 @@ int main(int argc, char** argv) {
         for(size_t i=0;i<8;i++){if(i)fingerprint+=separators[i-1];fingerprint+=property(keys[i]);}
         if(brand.empty() || fingerprint!=property("ro.build.fingerprint") ||
             __system_property_set("ro.build.fingerprint","tamper")==0)return 12;
-        printf("API29_PRODUCT_PROPERTIES_PASS brand=%s fingerprint=%s\n",brand.c_str(),fingerprint.c_str());
+        printf("API%d_PRODUCT_PROPERTIES_PASS brand=%s fingerprint=%s\n",POCKET_GUEST_API,brand.c_str(),fingerprint.c_str());
+#endif
+#if POCKET_GUEST_API == 32
+        if (property("ro.product.cpu.abilist")!="arm64-v8a" ||
+            property("ro.product.cpu.abilist64")!="arm64-v8a" || !property("ro.product.cpu.abilist32").empty() ||
+            __system_property_set("ro.product.cpu.abilist","tamper")==0) return 13;
+        puts("API32_CPU_ABI_PROPERTIES_PASS arm64-v8a readonly=1");
 #endif
         if (__system_property_set("ro.build.version.sdk", "999") == 0) return 2;
         if (__system_property_set("ctl.start", "zygote") == 0) return 3;

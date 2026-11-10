@@ -1,0 +1,103 @@
+{
+  "runId": "41231af2d3704044b333c531d8de96c0",
+  "passed": true,
+  "exitCode": 0,
+  "hostUid": 10154,
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "apkSha256": "2acb6d4ad466e5a7d27b5b09a44b8f0efce9e0b4d4e985a93370e253b506430f",
+  "imageManifestSha256": "0f8b6f6a1288fbf868cfcf3291c08b3b4bc1b49c1248525ee3607a24e56bcfd8",
+  "imageVerifiedFiles": 2553,
+  "extractedFiles": 6,
+  "extractionMillis": 585,
+  "imageVerificationMillis": 80972,
+  "debuggable": false,
+  "deltaUpdate": true,
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "androidAppSandboxVerified": true,
+  "fullGuestBootVerified": false,
+  "schema": 1,
+  "scope": "Ordinary installed SDK 32 test app lifecycle under the rootless 12L framework; no host presentation/input, full guest restart or production Manager claim",
+  "package": "dev.kreijstal.pocketapi32guesttest",
+  "minSdk": 32,
+  "targetSdk": 32,
+  "installedUid": 10105,
+  "activities": [
+    {
+      "uid": 10105,
+      "pid": 21554,
+      "resumed": true,
+      "drawCallbackSeen": true
+    },
+    {
+      "uid": 10105,
+      "pid": 21696,
+      "resumed": true,
+      "drawCallbackSeen": false
+    }
+  ],
+  "packageInstallerSessionVerified": true,
+  "activityResumeVerified": true,
+  "ordinarySettingsReadQueryVerified": true,
+  "appAndroidKeyStoreAesGcmVerified": true,
+  "keyExportDeniedVerified": true,
+  "privateCiphertextAcrossProcessRestartVerified": true,
+  "httpsDefaultTlsVerificationVerified": true,
+  "httpsStatus": 200,
+  "httpsResponseBytes": 577,
+  "forceStopThroughAmsVerified": true,
+  "privateStateCounterAndDigestAcrossProcessRestartVerified": true,
+  "guestServiceRestartPersistenceVerified": false,
+  "ordinaryFrameworkConnectivityCallbacksVerified": false,
+  "hostFramePresentationVerified": false,
+  "hostInputDeliveryVerified": false,
+  "usableLauncherVerified": false,
+  "managerApi32Supported": false,
+  "guestFrameworkPolicy": "Process-local SDK 32 policy-disabled semantics. The framework SELinux JNI skips guest relabeling when no guest kernel policy exists. Host kernel enforcement stays Enforcing. The framework library excludes installd execv filtering; logical Binder/UID permission checks remain active.",
+  "remainingIssues": "SystemUIService and Launcher Quickstep TouchInteractionService ANRs remain in the observed native log. First test activity reported a draw callback; the second had resumed but had not reported drawing at the status snapshot. No host surface, guest input, full guest restart, encrypted CE, real third-party API32 app or Manager download/boot validation yet.",
+  "preparationObservation": "Image extraction took 585 ms; complete image checksum verification took 80972 ms. No verification-cache relaxation was added.",
+  "verifiedMarkers": [
+    "API32_FRAMEWORK_BOOT_PASS stock_system_server=1 boot_completed=1 activity_package_window=live",
+    "API32_FRAMEWORK_USER_UNLOCKED user=0 source=UserManager",
+    "API32_SETTINGS_PROVIDER_PASS stock_provider=1 client=external_tool call=real query=real nonce=verified cleanup=1",
+    "API32_GATEKEEPER_ROLE_DENIED_PASS uid=39999 enroll=error clear_sid=unchanged public_sid=readable raw_hal=denied",
+    "API32_GATEKEEPER_PASS stock_daemon=12L stock_software_hal=1 setup_report=real enrollment=real wrong_password=rejected altered_sid=rejected challenge=matched sid_lifecycle=verified hardware_backed=0 emulator_token_mac=not_secure cleanup=1",
+    "API32_APP_INSTALL_PASS package=dev.kreijstal.pocketapi32guesttest uid=10105 min_sdk=32 target_sdk=32 session=272112076",
+    "API32_APP_ACTIVITY_PASS uid=10105 pid=21554 resumed=1 drawn=true",
+    "API32_APP_ACTIVITY_PASS uid=10105 pid=21696 resumed=1 drawn=false",
+    "API32_APP_SETTINGS_PASS client=ordinary_app read=real query=real",
+    "API32_APP_KEYSTORE_PASS provider=AndroidKeyStore key_export=denied private_ciphertext=verified process_restart=1",
+    "API32_APP_HTTPS_PASS uid=10105 status=200 bytes=577 default_tls_verification=1",
+    "API32_APP_RESTART_PASS force_stop=AMS pid_changed=1 private_state=persisted launches_incremented=1 guest_restart=unverified",
+    "API32_FRAMEWORK_POLICY guest_selinux=disabled host_policy=inherited",
+    "API32_INIT_STOPPED reaped=27 remaining=0 failed=0"
+  ],
+  "checks": [
+    {
+      "command": "python3 tools/build_api32_guest_app.py",
+      "result": "PASS; signed APK verified with apksigner --min-sdk-version 32 --max-sdk-version 32"
+    },
+    {
+      "command": "python3 tools/build_api32_framework.py --installd --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS; C++ installd/framework clients and both policy libraries. llvm-nm confirmed the framework library exports no execv hook."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --reuse-native --delta-from out/api32/app-policy-baseline-image-manifest.json",
+      "result": "PASS; signed 7628012-byte delta APK. Embedded changed asset set and SHA-256 values matched the baseline diff."
+    },
+    {
+      "command": "ssh -o BatchMode=yes pi@juanraspberry 'python3 /home/pi/pocket-api32-test/test_api32_on_pi.py --apk /home/pi/pocket-api32-test/api32-probe.apk --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps'",
+      "result": "PASS / exit 0; every component and app marker passed. Init reaped=27 remaining=0 failed=0. Host SELinux Enforcing before/after."
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_framework.py tools/build_api32_gatekeeper.py tools/build_api32_guest_app.py tools/build_api32_probe.py tools/build_api32_android_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ]
+}

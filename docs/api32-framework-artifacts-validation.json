@@ -1,0 +1,549 @@
+{
+  "schema": 1,
+  "status": "COMPONENT_PASS_STARTUP_FAILED",
+  "component": "stock_framework_boot_images_and_preopt",
+  "guestSdk": 32,
+  "hostVmInstance": 73,
+  "previousGoalTurnClassification": "progress",
+  "scope": "Restore the pinned stock compiled framework images and matching preoptimized JAR artifacts; verify real executable image mappings before framework startup. Full 12L/Manager support remains unverified.",
+  "bootImageLocation": "/apex/com.android.art/javalib/boot.art:/system/framework/boot-framework.art",
+  "stockArtifactFiles": 84,
+  "stockArtifactBytes": 59339640,
+  "stockArtifactsUnmodified": true,
+  "stockArtifactInventory": {
+    "system/framework/arm64/boot-core-icu4j.art": {
+      "bytes": 475136,
+      "sha256": "0a4a3c37b08f44b3edf3bc28b10de649a80ea5941a5941d9471ae4a72accc22e"
+    },
+    "system/framework/arm64/boot-core-icu4j.oat": {
+      "bytes": 1174256,
+      "sha256": "3d70c41f3fd946b085edcb5e7fd890022313f705c5fb29504846ff735c8f7f0d"
+    },
+    "system/framework/arm64/boot-core-icu4j.vdex": {
+      "bytes": 22848,
+      "sha256": "365ad68cdac37af363172f968282eceedadfb1429f0f6c5a328206d1011f9991"
+    },
+    "system/framework/arm64/boot-ext.art": {
+      "bytes": 40960,
+      "sha256": "84111f1bc9788a6639d93018ff9987062c3ed92356641169d6b1f75c40f8e16a"
+    },
+    "system/framework/arm64/boot-ext.oat": {
+      "bytes": 128616,
+      "sha256": "9ba740a8791d323c9b85c6b4330691ab69c22db2972ad3bc38f77972e18cabe1"
+    },
+    "system/framework/arm64/boot-ext.vdex": {
+      "bytes": 1448,
+      "sha256": "7115508b30ff265778ddd2f860e25b296c9db48660af9310208e46d8ad655235"
+    },
+    "system/framework/arm64/boot-framework-graphics.art": {
+      "bytes": 8192,
+      "sha256": "f8356ecf294af1a7b18073ed45a743fbe7ea7071b8745686854f33113c61b9a8"
+    },
+    "system/framework/arm64/boot-framework-graphics.oat": {
+      "bytes": 17328,
+      "sha256": "465f755ac1ff5c4fc748474937e71016c0307bd6bfb0b58c98d82a3c69c06110"
+    },
+    "system/framework/arm64/boot-framework-graphics.vdex": {
+      "bytes": 92,
+      "sha256": "1c801e8b1d3cb9598e85ab3102d2c41f1323010f141aacfda3b71b0252dfd9bc"
+    },
+    "system/framework/arm64/boot-framework.art": {
+      "bytes": 3690496,
+      "sha256": "87770c50fe5d2e617b8dae662a1c04c8217a9e55552b146f5c956194469b165c"
+    },
+    "system/framework/arm64/boot-framework.oat": {
+      "bytes": 9361896,
+      "sha256": "113d192a725e053d4e70538a1d46d5d708da34d007a16ee78583f52ffad31452"
+    },
+    "system/framework/arm64/boot-framework.vdex": {
+      "bytes": 323740,
+      "sha256": "5aac1ed2518617d7cf8f62121a61e3f11f663ac2136ad16e8f1b599b3149ecd1"
+    },
+    "system/framework/arm64/boot-ims-common.art": {
+      "bytes": 81920,
+      "sha256": "74f6c2d1495a7454d069a9c1086af392e877a4da80e7a0583a7602263adef827"
+    },
+    "system/framework/arm64/boot-ims-common.oat": {
+      "bytes": 17328,
+      "sha256": "9875efd91de6c71df590fce70661fb723d042a363cf4ecbd0331e19b981082b9"
+    },
+    "system/framework/arm64/boot-ims-common.vdex": {
+      "bytes": 5644,
+      "sha256": "a56d0ed8e386888485333d799928a95a9c3f2165ee3d7832a6ddbe55c8791b39"
+    },
+    "system/framework/arm64/boot-telephony-common.art": {
+      "bytes": 487424,
+      "sha256": "83744c4913830da0c7f2713520d50b28b2d50788e43919afe6fe504a9eaa5713"
+    },
+    "system/framework/arm64/boot-telephony-common.oat": {
+      "bytes": 29616,
+      "sha256": "ec591a57d53cbca1cbbfc94b028243441ee6235b05968381050b1eaa062ec9f4"
+    },
+    "system/framework/arm64/boot-telephony-common.vdex": {
+      "bytes": 23476,
+      "sha256": "a8baff5ccbbe8210598f625eb58195999bf2c7cb27f2ad957a8492df44a51f92"
+    },
+    "system/framework/arm64/boot-voip-common.art": {
+      "bytes": 155648,
+      "sha256": "599a2fdd099d7af738ed8d9fda7a39684e24f9ee1232cc8d17710848243cda7d"
+    },
+    "system/framework/arm64/boot-voip-common.oat": {
+      "bytes": 25912,
+      "sha256": "1e666973c9d1a90d87c3434952a47b5fbb7beb65b3c0918a914a39d02819a2bf"
+    },
+    "system/framework/arm64/boot-voip-common.vdex": {
+      "bytes": 10664,
+      "sha256": "65dcaa2c5c2bbd5cbfea0d33af6a034124f84f0a5258e723c5f17018bd8c2b63"
+    },
+    "system/framework/oat/arm64/abx.odex": {
+      "bytes": 17328,
+      "sha256": "43137eb0119dd530473f2ab33f01726b0864e0a5e3f1ce7119ff84fa894db0c2"
+    },
+    "system/framework/oat/arm64/abx.vdex": {
+      "bytes": 108,
+      "sha256": "4791fc921b4212d055d1e254a03900a18253a6d08e278a663e86870d693dad7c"
+    },
+    "system/framework/oat/arm64/am.odex": {
+      "bytes": 17328,
+      "sha256": "8300c128ff50de0276dc6018ace1da6c6f5015625cdcfd932a00f787d4329954"
+    },
+    "system/framework/oat/arm64/am.vdex": {
+      "bytes": 5524,
+      "sha256": "b318f4eccfc70e07b30669e26d91f0d9c0795a12cf9521923cf4d7c1a6c6edc6"
+    },
+    "system/framework/oat/arm64/android.hidl.base-V1.0-java.odex": {
+      "bytes": 17328,
+      "sha256": "d81146530abdb8b4f5e7d84c2a9ca2d1088c3c7e45db070564ad30c6f601d25e"
+    },
+    "system/framework/oat/arm64/android.hidl.base-V1.0-java.vdex": {
+      "bytes": 204,
+      "sha256": "aefc5fc457041e4b57d47ba53640639f876e9fe9789ae3de5bdf4f503d90a3ac"
+    },
+    "system/framework/oat/arm64/android.hidl.manager-V1.0-java.odex": {
+      "bytes": 17328,
+      "sha256": "74d1719b350825e55a8e63c2053de1b242bd61cc547dde60a9ba265321b30de8"
+    },
+    "system/framework/oat/arm64/android.hidl.manager-V1.0-java.vdex": {
+      "bytes": 328,
+      "sha256": "703718339634ebcef085d3991d3d9423a01706978538acbea282c9b94620d3d7"
+    },
+    "system/framework/oat/arm64/android.test.base.odex": {
+      "bytes": 17328,
+      "sha256": "acf71bee6388b120740a7097a25eacb10b3593b9bacf003d5aaadb3314c936c5"
+    },
+    "system/framework/oat/arm64/android.test.base.vdex": {
+      "bytes": 684,
+      "sha256": "0266b935cb6f05d2ca4a26f925efa6580e0be318adb4a99078f2c3918944fecb"
+    },
+    "system/framework/oat/arm64/android.test.mock.odex": {
+      "bytes": 21424,
+      "sha256": "6b2077d9aeb8c7a02147c8b6845d6da9c6ed82e24d6baf7d3340e8aab5553e11"
+    },
+    "system/framework/oat/arm64/android.test.mock.vdex": {
+      "bytes": 5420,
+      "sha256": "c292862642f5705d1065467744a478f4957dadd8b5c80eef5aebeebae6da670f"
+    },
+    "system/framework/oat/arm64/android.test.runner.odex": {
+      "bytes": 17328,
+      "sha256": "70ed6c30f3357bb40b9466fb48bf2c7d29be663bfee8e9f346887f26bb451a8e"
+    },
+    "system/framework/oat/arm64/android.test.runner.vdex": {
+      "bytes": 1380,
+      "sha256": "1741d5f1d882ffadd26486c136384de760b9fe4672809d2e860809da8bbc77cb"
+    },
+    "system/framework/oat/arm64/appwidget.odex": {
+      "bytes": 17328,
+      "sha256": "af9d8ad6d9f97abc88442d63e3e88c40a1cc4359fda62a2f7fa9b1c237c9d0a1"
+    },
+    "system/framework/oat/arm64/appwidget.vdex": {
+      "bytes": 160,
+      "sha256": "a1565d005b00a710b76d6a565fef5f2e6b34fa2095014a39fc10040e1bece242"
+    },
+    "system/framework/oat/arm64/bmgr.odex": {
+      "bytes": 17328,
+      "sha256": "9b0bd9d29f7471e8361eff078e9fbcc75371fb2390a2e9721e64a923ec0308df"
+    },
+    "system/framework/oat/arm64/bmgr.vdex": {
+      "bytes": 404,
+      "sha256": "582c608f371da0d1fb18636fc3da2c5130c2646a086f854c4e10388e7befd22e"
+    },
+    "system/framework/oat/arm64/bu.odex": {
+      "bytes": 17328,
+      "sha256": "b2f013d1043cc0d8151228d8e946d6f762cd968de5368020d40043b04da6c349"
+    },
+    "system/framework/oat/arm64/bu.vdex": {
+      "bytes": 104,
+      "sha256": "f01d5aec3cc21242e3ff6872ccdb20b71ad7a23fc98ba050f1dc4e4a445e36f4"
+    },
+    "system/framework/oat/arm64/com.android.future.usb.accessory.odex": {
+      "bytes": 17328,
+      "sha256": "4ae0ca0c390d6d28cbe56c2089f10f0cdd90090dcaa6e3b0589441fc5c6215ba"
+    },
+    "system/framework/oat/arm64/com.android.future.usb.accessory.vdex": {
+      "bytes": 108,
+      "sha256": "1f25349c713ecc2de01c09181c5687711a2863bb46291d036b2e9a4eac03dae7"
+    },
+    "system/framework/oat/arm64/com.android.location.provider.odex": {
+      "bytes": 48592,
+      "sha256": "21d155b932f5b771ea5646ec91c39507824cd28939e249307314c575acb82758"
+    },
+    "system/framework/oat/arm64/com.android.location.provider.vdex": {
+      "bytes": 528,
+      "sha256": "30d3d994e2375c0310d083b861a51e0b4ceea44819cf16c43447ee65d416c105"
+    },
+    "system/framework/oat/arm64/com.android.media.remotedisplay.odex": {
+      "bytes": 17328,
+      "sha256": "80b5c7c59fa078018cbe04a30723cda0d1d462353ba19270e13d4520181c1f99"
+    },
+    "system/framework/oat/arm64/com.android.media.remotedisplay.vdex": {
+      "bytes": 172,
+      "sha256": "e1f05647bca84bd8a94dd3dd81db3a196160760b7615763e2d138bfab0749f2a"
+    },
+    "system/framework/oat/arm64/com.android.mediadrm.signer.odex": {
+      "bytes": 17328,
+      "sha256": "8a5c6ba9ceb9bfa5eed28242e8952d1fc4e3f4d8ec896975dabf82d5786a60ff"
+    },
+    "system/framework/oat/arm64/com.android.mediadrm.signer.vdex": {
+      "bytes": 124,
+      "sha256": "58608918ce2d828f14c38e1b196b357063ebe443651689c94a8d34fa94acf627"
+    },
+    "system/framework/oat/arm64/com.android.nfc_extras.odex": {
+      "bytes": 17328,
+      "sha256": "10b9f572ca4f051ebbc27a6bf2177e33c38553478b7e7a3f13c2c28847a50fd2"
+    },
+    "system/framework/oat/arm64/com.android.nfc_extras.vdex": {
+      "bytes": 352,
+      "sha256": "54a82a27331e6cd4eef37d2f9eeca5634dcfb51ebf6e15874b3051c76cf80ac3"
+    },
+    "system/framework/oat/arm64/content.odex": {
+      "bytes": 17328,
+      "sha256": "a14636aa3ed7b742d62eb36e532ac214b2bf273de6e9cab49ad28f31685e1dce"
+    },
+    "system/framework/oat/arm64/content.vdex": {
+      "bytes": 332,
+      "sha256": "9a011a685d1cb065493f426e7dbab13ee0a36b06ea79de7a27b68b868062c2bb"
+    },
+    "system/framework/oat/arm64/ethernet-service.odex": {
+      "bytes": 87168,
+      "sha256": "5d5a5c2348cc9cd5c7635dc468a5fa4b8c9917c7f80ecb8fdaf1305ff2f5a5c1"
+    },
+    "system/framework/oat/arm64/ethernet-service.vdex": {
+      "bytes": 892,
+      "sha256": "f1630b5db96a1d57d453018c94b6cd1a1edacb74732615ad4e6c863b7847f4c7"
+    },
+    "system/framework/oat/arm64/hid.odex": {
+      "bytes": 17328,
+      "sha256": "de824bdb3436fbdc6f91a00777ad35beb885807d9c43bfb217ab76bb291fc9b3"
+    },
+    "system/framework/oat/arm64/hid.vdex": {
+      "bytes": 324,
+      "sha256": "2b4d3245c81df9810c9a9f3db89cd2f1c4fab32d89a242630f8f05ed3e974449"
+    },
+    "system/framework/oat/arm64/incident-helper-cmd.odex": {
+      "bytes": 17328,
+      "sha256": "dcd04c9525aaa4c0ff13ac29cec7bc41828cbbe7a164b9819f3c7bf72c0ca103"
+    },
+    "system/framework/oat/arm64/incident-helper-cmd.vdex": {
+      "bytes": 336,
+      "sha256": "f0d3ef73f0cbfa2b6acf74d3ddda9fb315826c705a202189ee50e29ff75e4899"
+    },
+    "system/framework/oat/arm64/javax.obex.odex": {
+      "bytes": 17328,
+      "sha256": "cdb8251f872835bb3f652c2481a8a5dd8b6f31f33efd51ec41acbaffb803dc39"
+    },
+    "system/framework/oat/arm64/javax.obex.vdex": {
+      "bytes": 548,
+      "sha256": "5cf44dc3d12b81a64ca63ec02dafc3c6f888e8626e60b4690858ed28bdee0c93"
+    },
+    "system/framework/oat/arm64/locksettings.odex": {
+      "bytes": 17328,
+      "sha256": "577b29feb06f22508d042b3912c07c40976a003c65f94d8c64bda01d3c3974e2"
+    },
+    "system/framework/oat/arm64/locksettings.vdex": {
+      "bytes": 112,
+      "sha256": "2b5daac90c6948a588becf5246ce9ff166015b5023694e49e20f080b36401f9f"
+    },
+    "system/framework/oat/arm64/monkey.odex": {
+      "bytes": 17328,
+      "sha256": "51d40bab40cf7c8ba44a6c9a4e940c0e5c5c4cca14f0729bcb79d1ef4bfc6656"
+    },
+    "system/framework/oat/arm64/monkey.vdex": {
+      "bytes": 2332,
+      "sha256": "e6f3681c2c4fa3b5b502f03bf1eabd8d9bd0c586608854f945fa274d90fca7b9"
+    },
+    "system/framework/oat/arm64/org.apache.http.legacy.odex": {
+      "bytes": 347040,
+      "sha256": "c72e8cad56d3be8b8b219accd8d139c2f28548d3e3639e091c11126592b6b043"
+    },
+    "system/framework/oat/arm64/org.apache.http.legacy.vdex": {
+      "bytes": 9260,
+      "sha256": "582f5e2fa5fae9b41fabbde2b49f5bfb2b703f7e8f72779f2a8a585dda217a57"
+    },
+    "system/framework/oat/arm64/requestsync.odex": {
+      "bytes": 17328,
+      "sha256": "9ecc38f83a66d209690f10d76799107e4f2305123ad62f933683ef2c9b3ad1fd"
+    },
+    "system/framework/oat/arm64/requestsync.vdex": {
+      "bytes": 252,
+      "sha256": "f543e0538eb1b76e4715deb486605bbe927f66f275a0c8dec1503741087bd73a"
+    },
+    "system/framework/oat/arm64/services.art": {
+      "bytes": 2281472,
+      "sha256": "1e712e2c7a9eec6094ba82ccc0e6a6c46a215c3c77a02eef19a43cbecf51a8ce"
+    },
+    "system/framework/oat/arm64/services.odex": {
+      "bytes": 39763952,
+      "sha256": "534815dac7cccb8203132632109aa4eae8beba63d114a90efb7ebdab3fd14962"
+    },
+    "system/framework/oat/arm64/services.vdex": {
+      "bytes": 213052,
+      "sha256": "bb88babe41f450f82492574478c0367070361cb03eadbfc729fbb2c8a6236242"
+    },
+    "system/framework/oat/arm64/sm.odex": {
+      "bytes": 17328,
+      "sha256": "683af58ddb8675a838f7697f39dcde1b79931da7424c62003868fafaf2271b28"
+    },
+    "system/framework/oat/arm64/sm.vdex": {
+      "bytes": 176,
+      "sha256": "94ca415b03cd8a33ccd73c45760a9b7fd37c8fb2c7b94bafd45cf24aeb3d28ae"
+    },
+    "system/framework/oat/arm64/svc.odex": {
+      "bytes": 17328,
+      "sha256": "0ceba72cd9471199e3debd4132953278715bc0381fc101f650818a89b7e1f132"
+    },
+    "system/framework/oat/arm64/svc.vdex": {
+      "bytes": 236,
+      "sha256": "cc7effcc4fc953fe10242eb75fd4fd8b478f35c9ac965dfbd7b5ca2569e6aa1a"
+    },
+    "system/framework/oat/arm64/telecom.odex": {
+      "bytes": 17328,
+      "sha256": "6cbe75fede0d5563f15e594541929e6d5b9ca796cb8f5414c68fb0f65142a8c5"
+    },
+    "system/framework/oat/arm64/telecom.vdex": {
+      "bytes": 132,
+      "sha256": "ad001427aa8e788a2bcc9e7e501fc4b243a73223d015ccef1ae12dc1fcf1d44b"
+    },
+    "system/framework/oat/arm64/uiautomator.odex": {
+      "bytes": 21424,
+      "sha256": "0b54fecad1a60db06aaca0e7780ae69d0850b50dbe63367a6a49995adceec5cf"
+    },
+    "system/framework/oat/arm64/uiautomator.vdex": {
+      "bytes": 8676,
+      "sha256": "72ffe70fe7b34d30594e3bad03249a0505e076a284afc1057b1e032addcad735"
+    },
+    "system/framework/oat/arm64/uinput.odex": {
+      "bytes": 17328,
+      "sha256": "e841ae3d3f6bff4dd2f375440b937e293128d74d509c9ebc0a7f7c4a8d94f06a"
+    },
+    "system/framework/oat/arm64/uinput.vdex": {
+      "bytes": 340,
+      "sha256": "964553e98ba5575e71c410cc76c5a9a5dd119a120d14b0e665dd81fbbb736edc"
+    },
+    "system/framework/oat/arm64/vr.odex": {
+      "bytes": 17328,
+      "sha256": "ef568e34413fa0b4c309f1f7714e077c64440bf931c175e5fbcfc54348ac944e"
+    },
+    "system/framework/oat/arm64/vr.vdex": {
+      "bytes": 128,
+      "sha256": "81df570a388231099a6ebf898c9b848e202173c6d41882973dc776f8a5366be7"
+    }
+  },
+  "apkSha256": "a82efa41f6c2ae12483803cf9a733ea0e3ad49924d5294103a8a52a6c465dffe",
+  "apkBytes": 7672881,
+  "androidSandboxVerified": true,
+  "startupStabilityVerified": false,
+  "fullGuestBootVerified": false,
+  "managerApi32Supported": false,
+  "sources": {
+    "tools/build_api32_probe.py": "a512795cd72bd315d852c37bb6342f2a20ee190fc0d9f16723c0b8fb04d1d109",
+    "runtime/api32/BootArtifactsProbe32.java": "b06dbd38accccda04ba07bbc51df5b5742af85dc1f584cefdeda00381d8703cb",
+    "runtime/tests/api32/zygote_launcher.c": "9ac67977db9ea2097329511e6a68f199abf2c6ea29551fb754d8ccc40f30188b",
+    "tools/test_api32_on_pi.py": "3da802a7ed4d657481bee12e9e7881fdc8602ee14728efc34afe2e82b8649b2a"
+  },
+  "checks": [
+    {
+      "command": "javac --release 8 -cp /home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/boot-artifacts-probe-classes runtime/api32/BootArtifactsProbe32.java",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android32-clang -O2 -Wall -Wextra -Werror runtime/tests/api32/zygote_launcher.c -Wl,-z,max-page-size=16384 -o out/api32/native/pocket-zygote-launcher-api32",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/framework-artifacts-baseline-image-manifest.json",
+      "result": "PASS / exit 0; signed APK; delta assets match manifest diff/hashes; all 84 original compiled artifacts match pinned reference byte-for-byte; bootstrap JAR unchanged"
+    },
+    {
+      "command": "python3 out/api32/run_ui_speed_with_vm73_phantom_limit.py --require-ui",
+      "result": "Component PASS: seven stock framework images mapped, four OAT components executable, original artifacts unchanged; framework/User0/Settings and touch/keys/Home/Settings passed. Overall FAIL / driver exit 1, guest exit 0 due two SystemUI KeyguardService ANRs. Five service caches remain verify; actual services.jar verify loading confirmed by ART trace. All 28 services reaped, zero remaining/failed, host SELinux Enforcing and temporary phantom limit restored."
+    },
+    {
+      "command": "python3 tools/build_api32_android_probe.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --binder --zygote --init --hardware --apex --installd --graphics --input --network --dns --mdns --audio --storage --keystore --system-server --apps --display --compile-ui --reuse-native --delta-from out/api32/framework-artifacts-candidate1-image-manifest.json",
+      "result": "PASS / exit 0; corrected probe; three embedded delta assets match manifest diff/hashes; original compiled framework artifacts and bootstrap JAR unchanged"
+    },
+    {
+      "command": "python3 -m py_compile tools/build_api32_probe.py tools/test_api32_on_pi.py",
+      "result": "PASS / exit 0"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS / exit 0"
+    }
+  ],
+  "initialProbeFailure": {
+    "runId": "45f382cb3d0c4c3d9b1b5e6ff00b8a68",
+    "apkSha256": "2ad33e98243a27db6e9e46c1b231833a7edd2772da2b886f085e0d784c84497f",
+    "guestExitCode": 137,
+    "driverExitCode": 1,
+    "imageVerifiedFiles": 2644,
+    "reason": "Probe incorrectly required executable code for metadata-only boot-framework-graphics.oat, whose ELF has no executable segment. The Java uncaught-exception handler subsequently killed its own process. This was a probe failure, not host low-memory termination.",
+    "correction": "Every image/OAT must map; executable mappings are required only for original PT_LOAD segments with PF_X and nonzero file data. Probe handles failures with System.exit(1).",
+    "cleanup": {
+      "reaped": 18,
+      "remaining": 0,
+      "failed": 0
+    },
+    "hostPhantomLimitRestored": true,
+    "report": "out/api32/framework-artifacts-first-report.json"
+  },
+  "runId": "224a82c8c55c466a9d157f46eece61a7",
+  "guestExitCode": 0,
+  "driverExitCode": 1,
+  "combinedFixturePassed": false,
+  "imageVerifiedFiles": 2644,
+  "mappingMarker": "API32_FRAMEWORK_BOOT_IMAGES_PASS source=stock mapped_images=7 executable_oat=4 bytecode=unchanged",
+  "systemServerArtifactsObserved": [
+    {
+      "path": "/system/framework/com.android.location.provider.jar",
+      "filter": "speed",
+      "reason": "prebuilt"
+    },
+    {
+      "path": "/system/framework/services.jar",
+      "filter": "verify",
+      "reason": "server-dexopt"
+    },
+    {
+      "path": "/system/framework/ethernet-service.jar",
+      "filter": "verify",
+      "reason": "server-dexopt"
+    },
+    {
+      "path": "/apex/com.android.appsearch/javalib/service-appsearch.jar",
+      "filter": "verify",
+      "reason": "server-dexopt"
+    },
+    {
+      "path": "/apex/com.android.media/javalib/service-media-s.jar",
+      "filter": "verify",
+      "reason": "server-dexopt"
+    },
+    {
+      "path": "/apex/com.android.permission/javalib/service-permission.jar",
+      "filter": "verify",
+      "reason": "server-dexopt"
+    }
+  ],
+  "systemServerTraceSnapshot": "out/api32/anr-snapshot-224a82c8c55c466a9d157f46eece61a7-20261102T152053270332.json",
+  "systemServerLoadedArtifactEvidence": [
+    {
+      "trace": "root/tmp/art-traces/anr_23619_68253_265921595",
+      "loadedArtifact": "/data/dalvik-cache/arm64/system@framework@services.jar@classes.dex",
+      "filter": "verify"
+    },
+    {
+      "trace": "root/tmp/art-traces/anr_23619_68243_430352193",
+      "loadedArtifact": "/data/dalvik-cache/arm64/system@framework@services.jar@classes.dex",
+      "filter": "verify"
+    }
+  ],
+  "systemServerSpeedCompilationVerified": false,
+  "uiRuntimePhasePassed": true,
+  "stockWindowManagerDumpVerified": true,
+  "systemUiStablePhasePid": 25216,
+  "systemUiStablePhaseSeconds": 40,
+  "screenshots": {
+    "home": {
+      "path": "out/api32/framework-artifacts-home.png",
+      "sha256": "1433b6c6c626d8399916368c2ed0f733228cee5c697629586e4838bfae1a4e2e",
+      "phase": {
+        "runId": "224a82c8c55c466a9d157f46eece61a7",
+        "phase": "home",
+        "package": "com.android.launcher3",
+        "activity": "com.android.launcher3.uioverrides.QuickstepLauncher",
+        "systemUiPid": 25216,
+        "windowDrawn": true
+      },
+      "visuallyInspected": true
+    },
+    "settings": {
+      "path": "out/api32/framework-artifacts-settings.png",
+      "sha256": "805bfd6c6f09c9f52e95eab030bdb105fc911dbc24c6fa4f8243b1bcffa8327f",
+      "phase": {
+        "runId": "224a82c8c55c466a9d157f46eece61a7",
+        "phase": "settings",
+        "package": "com.android.settings",
+        "activity": "com.android.settings.homepage.SettingsHomepageActivity",
+        "systemUiPid": 25216,
+        "windowDrawn": true
+      },
+      "visuallyInspected": true
+    }
+  },
+  "startupAnrs": [
+    {
+      "process": "com.android.bluetooth",
+      "pid": 23858,
+      "reason": "executing service com.android.bluetooth/.btservice.AdapterService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 23878,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.systemui",
+      "pid": 24458,
+      "reason": "executing service com.android.systemui/.keyguard.KeyguardService"
+    },
+    {
+      "process": "com.android.gallery3d",
+      "pid": 25800,
+      "reason": "Broadcast of Intent { act=android.intent.action.BOOT_COMPLETED flg=0x89000010 cmp=com.android.gallery3d/com.android.camera.DisableCameraReceiver (has extras) }"
+    }
+  ],
+  "hostSelinuxBefore": "Enforcing",
+  "hostSelinuxAfter": "Enforcing",
+  "hostSetup": {
+    "instance": 73,
+    "before": "null",
+    "temporaryLimit": 256,
+    "reason": "Default host phantom-process cap killed the validation shell before app/input validation",
+    "during": "256",
+    "testExitCode": 1,
+    "after": "null",
+    "restored": true
+  },
+  "cleanup": {
+    "reaped": 28,
+    "remaining": 0,
+    "failed": 0
+  },
+  "input": {
+    "touchEventsAccepted": 8,
+    "keyEventsAccepted": 12,
+    "inputEventsRejected": 0,
+    "clicks": 3,
+    "typedText": "a129",
+    "keyUps": 6
+  },
+  "nativeLogChars": 1660744,
+  "nativeLogLimitChars": 2097152,
+  "systemUiCacheReuseMarker": "API32_UI_DEXOPT_PASS package=com.android.systemui source_parent_writable=false compiler=stock_dex2oat filter=speed bytes=24780632 sha256=1b6142a9206c61058bd6f7b9022978ac3abe4409e6aa73b6c26467760a538422 reused=true elapsed_ms=11611",
+  "runtimeReport": "out/api32/framework-artifacts-fixed-cold-ui-report.json",
+  "nextStep": "Use stock system-server dexopt to upgrade the selected service caches from verify to compiled code, and verify the actual loaded filters before assessing startup again. Keep existing ANR and timeout gates.",
+  "currentDriverMissingMarkers": [],
+  "currentDriverMissingNativeMarkers": [],
+  "currentDriverRetrospectiveGateResult": false,
+  "systemServerPreoptFollowup": "docs/api32-systemserver-dexopt-validation.json"
+}

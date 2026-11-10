@@ -1,0 +1,831 @@
+--- a/capabilities.h
++++ b/capabilities.h
+@@ -15,7 +15,7 @@
+ #ifndef _INIT_CAPABILITIES_H
+ #define _INIT_CAPABILITIES_H
+ 
+-#include <sys/capability.h>
++#include <linux/capability.h>
+ 
+ #include <bitset>
+ #include <string>
+@@ -35,12 +35,7 @@
+ namespace android {
+ namespace init {
+ 
+-struct CapDeleter {
+-    void operator()(cap_t caps) const { cap_free(caps); }
+-};
+-
+ using CapSet = std::bitset<CAP_LAST_CAP + 1>;
+-using ScopedCaps = std::unique_ptr<std::remove_pointer<cap_t>::type, CapDeleter>;
+ 
+ int LookupCap(const std::string& cap_name);
+ bool CapAmbientSupported();
+--- a/subcontext.h
++++ b/subcontext.h
+@@ -25,13 +25,12 @@
+ 
+ #include "builtins.h"
+ #include "result.h"
+-#include "system/core/init/subcontext.pb.h"
+ 
+ namespace android {
+ namespace init {
+ 
+-static constexpr const char kInitContext[] = "u:r:init:s0";
+-static constexpr const char kVendorContext[] = "u:r:vendor_init:s0";
++static constexpr const char kInitContext[] = "";
++static constexpr const char kVendorContext[] = "";
+ static constexpr const char kTestContext[] = "test-test-test";
+ 
+ class Subcontext {
+@@ -53,7 +52,6 @@
+ 
+   private:
+     void Fork();
+-    Result<SubcontextReply> TransmitMessage(const SubcontextCommand& subcontext_command);
+ 
+     std::vector<std::string> path_prefixes_;
+     std::string context_;
+--- a/service.cpp
++++ b/service.cpp
+@@ -33,12 +33,11 @@
+ #include <android-base/stringprintf.h>
+ #include <android-base/strings.h>
+ #include <cutils/sockets.h>
+-#include <processgroup/processgroup.h>
+-#include <selinux/selinux.h>
+ 
+ #include "lmkd_service.h"
+ #include "service_list.h"
+ #include "util.h"
++#include "pocket_properties.h"
+ 
+ #ifdef INIT_FULL_SOURCES
+ #include <ApexProperties.sysprop.h>
+@@ -56,7 +55,6 @@
+ using android::base::GetProperty;
+ using android::base::Join;
+ using android::base::make_scope_guard;
+-using android::base::SetProperty;
+ using android::base::StartsWith;
+ using android::base::StringPrintf;
+ using android::base::WriteStringToFile;
+@@ -64,43 +62,7 @@
+ namespace android {
+ namespace init {
+ 
+-static Result<std::string> ComputeContextFromExecutable(const std::string& service_path) {
+-    std::string computed_context;
+-
+-    char* raw_con = nullptr;
+-    char* raw_filecon = nullptr;
+-
+-    if (getcon(&raw_con) == -1) {
+-        return Error() << "Could not get security context";
+-    }
+-    std::unique_ptr<char, decltype(&freecon)> mycon(raw_con, freecon);
+-
+-    if (getfilecon(service_path.c_str(), &raw_filecon) == -1) {
+-        return Error() << "Could not get file context";
+-    }
+-    std::unique_ptr<char, decltype(&freecon)> filecon(raw_filecon, freecon);
+-
+-    char* new_con = nullptr;
+-    int rc = security_compute_create(mycon.get(), filecon.get(),
+-                                     string_to_security_class("process"), &new_con);
+-    if (rc == 0) {
+-        computed_context = new_con;
+-        free(new_con);
+-    }
+-    if (rc == 0 && computed_context == mycon.get()) {
+-        return Error() << "File " << service_path << "(labeled \"" << filecon.get()
+-                       << "\") has incorrect label or no domain transition from " << mycon.get()
+-                       << " to another SELinux domain defined. Have you configured your "
+-                          "service correctly? https://source.android.com/security/selinux/"
+-                          "device-policy#label_new_services_and_address_denials. Note: this "
+-                          "error shows up even in permissive mode in order to make auditing "
+-                          "denials possible.";
+-    }
+-    if (rc < 0) {
+-        return Error() << "Could not get process context";
+-    }
+-    return computed_context;
+-}
++// The outer app retains its host SELinux domain.
+ 
+ static bool ExpandArgsAndExecv(const std::vector<std::string>& args, bool sigstop) {
+     std::vector<std::string> expanded_args;
+@@ -164,13 +126,13 @@
+     }
+ 
+     std::string prop_name = "init.svc." + name_;
+-    SetProperty(prop_name, new_state);
++    pocketPropertySet(prop_name, new_state);
+ 
+     if (new_state == "running") {
+         uint64_t start_ns = time_started_.time_since_epoch().count();
+         std::string boottime_property = "ro.boottime." + name_;
+         if (GetProperty(boottime_property, "").empty()) {
+-            SetProperty(boottime_property, std::to_string(start_ns));
++            pocketPropertySet(boottime_property, std::to_string(start_ns));
+         }
+     }
+ 
+@@ -178,79 +140,27 @@
+     // on device for security checks.
+     std::string pid_property = "init.svc_debug_pid." + name_;
+     if (new_state == "running") {
+-        SetProperty(pid_property, std::to_string(pid_));
++        pocketPropertySet(pid_property, std::to_string(pid_));
+     } else if (new_state == "stopped") {
+-        SetProperty(pid_property, "");
++        pocketPropertySet(pid_property, "");
+     }
+ }
+ 
+ void Service::KillProcessGroup(int signal, bool report_oneshot) {
+-    // If we've already seen a successful result from killProcessGroup*(), then we have removed
+-    // the cgroup already and calling these functions a second time will simply result in an error.
+-    // This is true regardless of which signal was sent.
+-    // These functions handle their own logging, so no additional logging is needed.
+-    if (!process_cgroup_empty_) {
+-        LOG(INFO) << "Sending signal " << signal << " to service '" << name_ << "' (pid " << pid_
+-                  << ") process group...";
+-        int max_processes = 0;
+-        int r;
+-        if (signal == SIGTERM) {
+-            r = killProcessGroupOnce(proc_attr_.uid, pid_, signal, &max_processes);
+-        } else {
+-            r = killProcessGroup(proc_attr_.uid, pid_, signal, &max_processes);
+-        }
+-
+-        if (report_oneshot && max_processes > 0) {
+-            LOG(WARNING)
+-                    << "Killed " << max_processes
+-                    << " additional processes from a oneshot process group for service '" << name_
+-                    << "'. This is new behavior, previously child processes would not be killed in "
+-                       "this case.";
+-        }
+-
+-        if (r == 0) process_cgroup_empty_ = true;
+-    }
+-
+-    if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
+-        LmkdUnregister(name_, pid_);
+-    }
++    // The supervisor calls Reap before waitpid, reserving this child's PID
++    // until its process group is gone. Never signal an arbitrary host group.
++    if (pid_ <= 1 || process_cgroup_empty_) return;
++    int result = kill(-pid_, signal);
++    if (result < 0 && errno == ESRCH) result = kill(pid_, signal);
++    if (result == 0 || errno == ESRCH) {
++        if (signal == SIGKILL) process_cgroup_empty_ = true;
++    } else PLOG(ERROR) << "Cannot signal owned service group " << name_;
+ }
+ 
+ void Service::SetProcessAttributesAndCaps() {
+-    // Keep capabilites on uid change.
+-    if (capabilities_ && proc_attr_.uid) {
+-        // If Android is running in a container, some securebits might already
+-        // be locked, so don't change those.
+-        unsigned long securebits = prctl(PR_GET_SECUREBITS);
+-        if (securebits == -1UL) {
+-            PLOG(FATAL) << "prctl(PR_GET_SECUREBITS) failed for " << name_;
+-        }
+-        securebits |= SECBIT_KEEP_CAPS | SECBIT_KEEP_CAPS_LOCKED;
+-        if (prctl(PR_SET_SECUREBITS, securebits) != 0) {
+-            PLOG(FATAL) << "prctl(PR_SET_SECUREBITS) failed for " << name_;
+-        }
+-    }
+-
+-    if (auto result = SetProcessAttributes(proc_attr_); !result.ok()) {
+-        LOG(FATAL) << "cannot set attribute for " << name_ << ": " << result.error();
+-    }
+-
+-    if (!seclabel_.empty()) {
+-        if (setexeccon(seclabel_.c_str()) < 0) {
+-            PLOG(FATAL) << "cannot setexeccon('" << seclabel_ << "') for " << name_;
+-        }
+-    }
+-
+-    if (capabilities_) {
+-        if (!SetCapsForExec(*capabilities_)) {
+-            LOG(FATAL) << "cannot set capabilities for " << name_;
+-        }
+-    } else if (proc_attr_.uid) {
+-        // Inheritable caps can be non-zero when running in a container.
+-        if (!DropInheritableCaps()) {
+-            LOG(FATAL) << "cannot drop inheritable caps for " << name_;
+-        }
+-    }
++    if (capabilities_ || !seclabel_.empty()) LOG(FATAL) << "Host capabilities and SELinux transitions unavailable";
++    if (auto result = SetProcessAttributes(proc_attr_); !result.ok())
++        LOG(FATAL) << "Cannot specialize service " << name_ << ": " << result.error();
+ }
+ 
+ void Service::Reap(const siginfo_t& siginfo) {
+@@ -330,8 +240,8 @@
+                     LOG(ERROR) << "process with updatable components '" << name_
+                                << "' exited 4 times " << exit_reason;
+                     // Notifies update_verifier and apexd
+-                    SetProperty("sys.init.updatable_crashing_process_name", name_);
+-                    SetProperty("sys.init.updatable_crashing", "1");
++                    pocketPropertySet("sys.init.updatable_crashing_process_name", name_);
++                    pocketPropertySet("sys.init.updatable_crashing", "1");
+                 }
+             }
+         } else {
+@@ -449,38 +359,8 @@
+         return ErrnoError() << "Cannot find '" << args_[0] << "'";
+     }
+ 
+-    std::string scon;
+-    if (!seclabel_.empty()) {
+-        scon = seclabel_;
+-    } else {
+-        auto result = ComputeContextFromExecutable(args_[0]);
+-        if (!result.ok()) {
+-            return result.error();
+-        }
+-        scon = *result;
+-    }
+-
+-    // APEXd is always started in the "current" namespace because it is the process to set up
+-    // the current namespace.
+-    const bool is_apexd = args_[0] == "/system/bin/apexd";
+-
+-    if (!IsDefaultMountNamespaceReady() && !is_apexd) {
+-        // If this service is started before APEXes and corresponding linker configuration
+-        // get available, mark it as pre-apexd one. Note that this marking is
+-        // permanent. So for example, if the service is re-launched (e.g., due
+-        // to crash), it is still recognized as pre-apexd... for consistency.
+-        use_bootstrap_ns_ = true;
+-    }
+-
+-    // For pre-apexd services, override mount namespace as "bootstrap" one before starting.
+-    // Note: "ueventd" is supposed to be run in "default" mount namespace even if it's pre-apexd
+-    // to support loading firmwares from APEXes.
+-    std::optional<MountNamespace> override_mount_namespace;
+-    if (name_ == "ueventd") {
+-        override_mount_namespace = NS_DEFAULT;
+-    } else if (use_bootstrap_ns_) {
+-        override_mount_namespace = NS_BOOTSTRAP;
+-    }
++    const std::string scon;
++    const std::optional<MountNamespace> override_mount_namespace;
+ 
+     post_data_ = ServiceList::GetInstance().IsPostData();
+ 
+@@ -527,14 +407,6 @@
+             descriptor.Publish();
+         }
+ 
+-        if (auto result = WritePidToFiles(&writepid_files_); !result.ok()) {
+-            LOG(ERROR) << "failed to write pid to files: " << result.error();
+-        }
+-
+-        if (task_profiles_.size() > 0 && !SetTaskProfiles(getpid(), task_profiles_)) {
+-            LOG(ERROR) << "failed to set task profiles";
+-        }
+-
+         // As requested, set our gid, supplemental gids, uid, context, and
+         // priority. Aborts on failure.
+         SetProcessAttributesAndCaps();
+@@ -552,70 +424,15 @@
+         return ErrnoError() << "Failed to fork";
+     }
+ 
+-    if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
+-        std::string oom_str = std::to_string(oom_score_adjust_);
+-        std::string oom_file = StringPrintf("/proc/%d/oom_score_adj", pid);
+-        if (!WriteStringToFile(oom_str, oom_file)) {
+-            PLOG(ERROR) << "couldn't write oom_score_adj";
+-        }
+-    }
+-
++    // Set the group in both processes to close the Start/Stop race. The child
++    // sets it before exec; EACCES means it has already exec'd in that group.
++    if (setpgid(pid,pid) && errno != EACCES && errno != ESRCH)
++        PLOG(ERROR) << "Cannot establish owned service process group";
+     time_started_ = boot_clock::now();
+     pid_ = pid;
+     flags_ |= SVC_RUNNING;
+     start_order_ = next_start_order_++;
+     process_cgroup_empty_ = false;
+-
+-    bool use_memcg = swappiness_ != -1 || soft_limit_in_bytes_ != -1 || limit_in_bytes_ != -1 ||
+-                      limit_percent_ != -1 || !limit_property_.empty();
+-    errno = -createProcessGroup(proc_attr_.uid, pid_, use_memcg);
+-    if (errno != 0) {
+-        PLOG(ERROR) << "createProcessGroup(" << proc_attr_.uid << ", " << pid_
+-                    << ") failed for service '" << name_ << "'";
+-    } else if (use_memcg) {
+-        if (swappiness_ != -1) {
+-            if (!setProcessGroupSwappiness(proc_attr_.uid, pid_, swappiness_)) {
+-                PLOG(ERROR) << "setProcessGroupSwappiness failed";
+-            }
+-        }
+-
+-        if (soft_limit_in_bytes_ != -1) {
+-            if (!setProcessGroupSoftLimit(proc_attr_.uid, pid_, soft_limit_in_bytes_)) {
+-                PLOG(ERROR) << "setProcessGroupSoftLimit failed";
+-            }
+-        }
+-
+-        size_t computed_limit_in_bytes = limit_in_bytes_;
+-        if (limit_percent_ != -1) {
+-            long page_size = sysconf(_SC_PAGESIZE);
+-            long num_pages = sysconf(_SC_PHYS_PAGES);
+-            if (page_size > 0 && num_pages > 0) {
+-                size_t max_mem = SIZE_MAX;
+-                if (size_t(num_pages) < SIZE_MAX / size_t(page_size)) {
+-                    max_mem = size_t(num_pages) * size_t(page_size);
+-                }
+-                computed_limit_in_bytes =
+-                        std::min(computed_limit_in_bytes, max_mem / 100 * limit_percent_);
+-            }
+-        }
+-
+-        if (!limit_property_.empty()) {
+-            // This ends up overwriting computed_limit_in_bytes but only if the
+-            // property is defined.
+-            computed_limit_in_bytes = android::base::GetUintProperty(
+-                    limit_property_, computed_limit_in_bytes, SIZE_MAX);
+-        }
+-
+-        if (computed_limit_in_bytes != size_t(-1)) {
+-            if (!setProcessGroupLimit(proc_attr_.uid, pid_, computed_limit_in_bytes)) {
+-                PLOG(ERROR) << "setProcessGroupLimit failed";
+-            }
+-        }
+-    }
+-
+-    if (oom_score_adjust_ != DEFAULT_OOM_SCORE_ADJUST) {
+-        LmkdRegister(name_, proc_attr_.uid, pid_, oom_score_adjust_);
+-    }
+ 
+     NotifyStateChange("running");
+     reboot_on_failure.Disable();
+--- a/service_utils.cpp
++++ b/service_utils.cpp
+@@ -30,10 +30,10 @@
+ #include <android-base/strings.h>
+ #include <cutils/android_get_control_file.h>
+ #include <cutils/sockets.h>
+-#include <processgroup/processgroup.h>
+ 
+ #include "mount_namespace.h"
+ #include "util.h"
++#include "guest_api.h"
+ 
+ using android::base::GetProperty;
+ using android::base::StartsWith;
+@@ -45,104 +45,6 @@
+ namespace init {
+ 
+ namespace {
+-
+-Result<void> EnterNamespace(int nstype, const char* path) {
+-    auto fd = unique_fd{open(path, O_RDONLY | O_CLOEXEC)};
+-    if (fd == -1) {
+-        return ErrnoError() << "Could not open namespace at " << path;
+-    }
+-    if (setns(fd, nstype) == -1) {
+-        return ErrnoError() << "Could not setns() namespace at " << path;
+-    }
+-    return {};
+-}
+-
+-Result<void> SetUpMountNamespace(bool remount_proc, bool remount_sys) {
+-    constexpr unsigned int kSafeFlags = MS_NODEV | MS_NOEXEC | MS_NOSUID;
+-
+-    // Recursively remount / as MS_SLAVE like zygote does so that
+-    // unmounting and mounting /proc doesn't interfere with the parent
+-    // namespace's /proc mount. This will also prevent any other
+-    // mounts/unmounts initiated by the service from interfering with the
+-    // parent namespace but will still allow mount events from the parent
+-    // namespace to propagate to the child.
+-    if (mount("rootfs", "/", nullptr, (MS_SLAVE | MS_REC), nullptr) == -1) {
+-        return ErrnoError() << "Could not remount(/) recursively as MS_SLAVE";
+-    }
+-
+-    // umount() then mount() /proc and/or /sys
+-    // Note that it is not sufficient to mount with MS_REMOUNT.
+-    if (remount_proc) {
+-        if (umount("/proc") == -1) {
+-            return ErrnoError() << "Could not umount(/proc)";
+-        }
+-        if (mount("", "/proc", "proc", kSafeFlags, "") == -1) {
+-            return ErrnoError() << "Could not mount(/proc)";
+-        }
+-    }
+-    if (remount_sys) {
+-        if (umount2("/sys", MNT_DETACH) == -1) {
+-            return ErrnoError() << "Could not umount(/sys)";
+-        }
+-        if (mount("", "/sys", "sysfs", kSafeFlags, "") == -1) {
+-            return ErrnoError() << "Could not mount(/sys)";
+-        }
+-    }
+-    return {};
+-}
+-
+-Result<void> SetUpPidNamespace(const char* name) {
+-    if (prctl(PR_SET_NAME, name) == -1) {
+-        return ErrnoError() << "Could not set name";
+-    }
+-
+-    pid_t child_pid = fork();
+-    if (child_pid == -1) {
+-        return ErrnoError() << "Could not fork init inside the PID namespace";
+-    }
+-
+-    if (child_pid > 0) {
+-        // So that we exit with the right status.
+-        static int init_exitstatus = 0;
+-        signal(SIGTERM, [](int) { _exit(init_exitstatus); });
+-
+-        pid_t waited_pid;
+-        int status;
+-        while ((waited_pid = wait(&status)) > 0) {
+-            // This loop will end when there are no processes left inside the
+-            // PID namespace or when the init process inside the PID namespace
+-            // gets a signal.
+-            if (waited_pid == child_pid) {
+-                init_exitstatus = status;
+-            }
+-        }
+-        if (!WIFEXITED(init_exitstatus)) {
+-            _exit(EXIT_FAILURE);
+-        }
+-        _exit(WEXITSTATUS(init_exitstatus));
+-    }
+-    return {};
+-}
+-
+-void SetupStdio(bool stdio_to_kmsg) {
+-    auto fd = unique_fd{open("/dev/null", O_RDWR | O_CLOEXEC)};
+-    dup2(fd, STDIN_FILENO);
+-    if (stdio_to_kmsg) {
+-        fd.reset(open("/dev/kmsg_debug", O_WRONLY | O_CLOEXEC));
+-        if (fd == -1) fd.reset(open("/dev/null", O_WRONLY | O_CLOEXEC));
+-    }
+-    dup2(fd, STDOUT_FILENO);
+-    dup2(fd, STDERR_FILENO);
+-}
+-
+-void OpenConsole(const std::string& console) {
+-    auto fd = unique_fd{open(console.c_str(), O_RDWR | O_CLOEXEC)};
+-    if (fd == -1) fd.reset(open("/dev/null", O_RDWR | O_CLOEXEC));
+-    ioctl(fd, TIOCSCTTY, 0);
+-    dup2(fd, 0);
+-    dup2(fd, 1);
+-    dup2(fd, 2);
+-}
+ 
+ }  // namespace
+ 
+@@ -197,123 +99,27 @@
+ 
+ Result<void> EnterNamespaces(const NamespaceInfo& info, const std::string& name,
+                              std::optional<MountNamespace> override_mount_namespace) {
+-    for (const auto& [nstype, path] : info.namespaces_to_enter) {
+-        if (auto result = EnterNamespace(nstype, path.c_str()); !result.ok()) {
+-            return result;
+-        }
+-    }
+-
+-#if defined(__ANDROID__)
+-    if (override_mount_namespace.has_value()) {
+-        if (auto result = SwitchToMountNamespaceIfNeeded(override_mount_namespace.value());
+-            !result.ok()) {
+-            return result;
+-        }
+-    }
+-#endif
+-
+-    if (info.flags & CLONE_NEWNS) {
+-        bool remount_proc = info.flags & CLONE_NEWPID;
+-        bool remount_sys =
+-                std::any_of(info.namespaces_to_enter.begin(), info.namespaces_to_enter.end(),
+-                            [](const auto& entry) { return entry.first == CLONE_NEWNET; });
+-        if (auto result = SetUpMountNamespace(remount_proc, remount_sys); !result.ok()) {
+-            return result;
+-        }
+-    }
+-
+-    if (info.flags & CLONE_NEWPID) {
+-        // This will fork again to run an init process inside the PID namespace.
+-        if (auto result = SetUpPidNamespace(name.c_str()); !result.ok()) {
+-            return result;
+-        }
+-    }
+-
++    if (info.flags || !info.namespaces_to_enter.empty() || override_mount_namespace.has_value())
++        return Error() << "Kernel namespaces unavailable in rootless init";
+     return {};
+ }
+ 
+ Result<void> SetProcessAttributes(const ProcessAttributes& attr) {
+-    if (attr.ioprio_class != IoSchedClass_NONE) {
+-        if (android_set_ioprio(getpid(), attr.ioprio_class, attr.ioprio_pri)) {
+-            PLOG(ERROR) << "failed to set pid " << getpid() << " ioprio=" << attr.ioprio_class
+-                        << "," << attr.ioprio_pri;
+-        }
+-    }
+-
+-    if (!attr.console.empty()) {
+-        setsid();
+-        OpenConsole(attr.console);
+-    } else {
+-        if (setpgid(0, getpid()) == -1) {
+-            return ErrnoError() << "setpgid failed";
+-        }
+-        SetupStdio(attr.stdio_to_kmsg);
+-    }
+-
+-    for (const auto& rlimit : attr.rlimits) {
+-        if (setrlimit(rlimit.first, &rlimit.second) == -1) {
+-            return ErrnoErrorf("setrlimit({}, {{rlim_cur={}, rlim_max={}}}) failed", rlimit.first,
+-                               rlimit.second.rlim_cur, rlimit.second.rlim_max);
+-        }
+-    }
+-
+-    if (attr.gid) {
+-        if (setgid(attr.gid) != 0) {
+-            return ErrnoError() << "setgid failed";
+-        }
+-    }
+-    if (setgroups(attr.supp_gids.size(), const_cast<gid_t*>(&attr.supp_gids[0])) != 0) {
+-        return ErrnoError() << "setgroups failed";
+-    }
+-    if (attr.uid) {
+-        if (setuid(attr.uid) != 0) {
+-            return ErrnoError() << "setuid failed";
+-        }
+-    }
+-
+-    if (attr.priority != 0) {
+-        if (setpriority(PRIO_PROCESS, 0, attr.priority) != 0) {
+-            return ErrnoError() << "setpriority failed";
+-        }
+-    }
++    if (!attr.console.empty() || attr.stdio_to_kmsg || attr.ioprio_class != IoSchedClass_NONE || attr.priority)
++        return Error() << "Unsupported host console or scheduling operation";
++    if (setpgid(0,0)) return ErrnoError() << "Cannot establish service process group";
++    // Retain the supervisor's private log descriptors, never open host kmsg.
++    for (const auto& limit : attr.rlimits)
++        if (setrlimit(limit.first,&limit.second)) return ErrnoError() << "Cannot apply service rlimit";
++    if (pocket_native_setgroups(attr.supp_gids.size(),attr.supp_gids.data()))
++        return ErrnoError() << "Cannot set logical service groups";
++    if (setresgid(attr.gid,attr.gid,attr.gid) || setresuid(attr.uid,attr.uid,attr.uid))
++        return ErrnoError() << "Cannot set logical service credentials";
+     return {};
+ }
+ 
+ Result<void> WritePidToFiles(std::vector<std::string>* files) {
+-    // See if there were "writepid" instructions to write to files under cpuset path.
+-    std::string cpuset_path;
+-    if (CgroupGetControllerPath("cpuset", &cpuset_path)) {
+-        auto cpuset_predicate = [&cpuset_path](const std::string& path) {
+-            return StartsWith(path, cpuset_path + "/");
+-        };
+-        auto iter = std::find_if(files->begin(), files->end(), cpuset_predicate);
+-        if (iter == files->end()) {
+-            // There were no "writepid" instructions for cpusets, check if the system default
+-            // cpuset is specified to be used for the process.
+-            std::string default_cpuset = GetProperty("ro.cpuset.default", "");
+-            if (!default_cpuset.empty()) {
+-                // Make sure the cpuset name starts and ends with '/'.
+-                // A single '/' means the 'root' cpuset.
+-                if (default_cpuset.front() != '/') {
+-                    default_cpuset.insert(0, 1, '/');
+-                }
+-                if (default_cpuset.back() != '/') {
+-                    default_cpuset.push_back('/');
+-                }
+-                files->push_back(
+-                        StringPrintf("%s%stasks", cpuset_path.c_str(), default_cpuset.c_str()));
+-            }
+-        }
+-    } else {
+-        LOG(ERROR) << "cpuset cgroup controller is not mounted!";
+-    }
+-    std::string pid_str = std::to_string(getpid());
+-    for (const auto& file : *files) {
+-        if (!WriteStringToFile(pid_str, file)) {
+-            return ErrnoError() << "couldn't write " << pid_str << " to " << file;
+-        }
+-    }
+-    return {};
++    return Error() << "Host cgroup writepid unavailable";
+ }
+ 
+ }  // namespace init
+--- a/service_parser.cpp
++++ b/service_parser.cpp
+@@ -51,31 +51,7 @@
+ namespace init {
+ 
+ Result<void> ServiceParser::ParseCapabilities(std::vector<std::string>&& args) {
+-    service_->capabilities_ = 0;
+-
+-    if (!CapAmbientSupported()) {
+-        return Error()
+-               << "capabilities requested but the kernel does not support ambient capabilities";
+-    }
+-
+-    unsigned int last_valid_cap = GetLastValidCap();
+-    if (last_valid_cap >= service_->capabilities_->size()) {
+-        LOG(WARNING) << "last valid run-time capability is larger than CAP_LAST_CAP";
+-    }
+-
+-    for (size_t i = 1; i < args.size(); i++) {
+-        const std::string& arg = args[i];
+-        int res = LookupCap(arg);
+-        if (res < 0) {
+-            return Errorf("invalid capability '{}'", arg);
+-        }
+-        unsigned int cap = static_cast<unsigned int>(res);  // |res| is >= 0.
+-        if (cap > last_valid_cap) {
+-            return Errorf("capability '{}' not supported by the kernel", arg);
+-        }
+-        (*service_->capabilities_)[cap] = true;
+-    }
+-    return {};
++    return Error() << "Host capabilities unavailable in rootless init";
+ }
+ 
+ Result<void> ServiceParser::ParseClass(std::vector<std::string>&& args) {
+@@ -461,6 +437,7 @@
+     }
+ 
+     socket.context = args.size() > 6 ? args[6] : "";
++    if (!socket.context.empty()) return Error() << "Socket SELinux context unavailable";
+ 
+     auto old = std::find_if(service_->sockets_.begin(), service_->sockets_.end(),
+                             [&socket](const auto& other) { return socket.name == other.name; });
+@@ -618,6 +595,10 @@
+         return {};
+     }
+ 
++    static const std::set<std::string> supported = {"class","disabled","oneshot","onrestart","user","group",
++        "socket","file","setenv","rlimit","restart_period","timeout_period","interface","override"};
++    if (args.empty() || !supported.count(args[0]))
++        return Error() << "Unsupported rootless service option: " << (args.empty()?"":args[0]);
+     auto parser = GetParserMap().Find(args);
+ 
+     if (!parser.ok()) return parser.error();
+--- a/util.cpp
++++ b/util.cpp
+@@ -39,7 +39,6 @@
+ #include <android-base/strings.h>
+ #include <android-base/unique_fd.h>
+ #include <cutils/sockets.h>
+-#include <selinux/android.h>
+ 
+ #ifdef INIT_FULL_SOURCES
+ #include <android/api-level.h>
+@@ -88,18 +87,12 @@
+  */
+ Result<int> CreateSocket(const std::string& name, int type, bool passcred, mode_t perm, uid_t uid,
+                          gid_t gid, const std::string& socketcon) {
+-    if (!socketcon.empty()) {
+-        if (setsockcreatecon(socketcon.c_str()) == -1) {
+-            return ErrnoError() << "setsockcreatecon(\"" << socketcon << "\") failed";
+-        }
+-    }
+-
++    if (!socketcon.empty()) return Error() << "Socket SELinux contexts unavailable";
+     android::base::unique_fd fd(socket(PF_UNIX, type, 0));
+     if (fd < 0) {
+         return ErrnoError() << "Failed to open socket '" << name << "'";
+     }
+ 
+-    if (!socketcon.empty()) setsockcreatecon(nullptr);
+ 
+     struct sockaddr_un addr;
+     memset(&addr, 0 , sizeof(addr));
+@@ -110,10 +103,6 @@
+         return ErrnoError() << "Failed to unlink old socket '" << name << "'";
+     }
+ 
+-    std::string secontext;
+-    if (SelabelLookupFileContext(addr.sun_path, S_IFSOCK, &secontext) && !secontext.empty()) {
+-        setfscreatecon(secontext.c_str());
+-    }
+ 
+     if (passcred) {
+         int on = 1;
+@@ -125,9 +114,6 @@
+     int ret = bind(fd, (struct sockaddr *) &addr, sizeof (addr));
+     int savederrno = errno;
+ 
+-    if (!secontext.empty()) {
+-        setfscreatecon(nullptr);
+-    }
+ 
+     auto guard = android::base::make_scope_guard([&addr] { unlink(addr.sun_path); });
+ 
+@@ -177,18 +163,9 @@
+ }
+ 
+ static int OpenFile(const std::string& path, int flags, mode_t mode) {
+-    std::string secontext;
+-    if (SelabelLookupFileContext(path, mode, &secontext) && !secontext.empty()) {
+-        setfscreatecon(secontext.c_str());
+-    }
+ 
+     int rc = open(path.c_str(), flags, mode);
+ 
+-    if (!secontext.empty()) {
+-        int save_errno = errno;
+-        setfscreatecon(nullptr);
+-        errno = save_errno;
+-    }
+ 
+     return rc;
+ }
+@@ -262,18 +239,9 @@
+ }
+ 
+ bool make_dir(const std::string& path, mode_t mode) {
+-    std::string secontext;
+-    if (SelabelLookupFileContext(path, mode, &secontext) && !secontext.empty()) {
+-        setfscreatecon(secontext.c_str());
+-    }
+ 
+     int rc = mkdir(path.c_str(), mode);
+ 
+-    if (!secontext.empty()) {
+-        int save_errno = errno;
+-        setfscreatecon(nullptr);
+-        errno = save_errno;
+-    }
+ 
+     return rc == 0;
+ }
+@@ -638,42 +606,7 @@
+ 
+ Result<std::pair<int, std::vector<std::string>>> ParseRestorecon(
+         const std::vector<std::string>& args) {
+-    struct flag_type {
+-        const char* name;
+-        int value;
+-    };
+-    static const flag_type flags[] = {
+-            {"--recursive", SELINUX_ANDROID_RESTORECON_RECURSE},
+-            {"--skip-ce", SELINUX_ANDROID_RESTORECON_SKIPCE},
+-            {"--cross-filesystems", SELINUX_ANDROID_RESTORECON_CROSS_FILESYSTEMS},
+-            {0, 0}};
+-
+-    int flag = 0;
+-    std::vector<std::string> paths;
+-
+-    bool in_flags = true;
+-    for (size_t i = 1; i < args.size(); ++i) {
+-        if (android::base::StartsWith(args[i], "--")) {
+-            if (!in_flags) {
+-                return Error() << "flags must precede paths";
+-            }
+-            bool found = false;
+-            for (size_t j = 0; flags[j].name; ++j) {
+-                if (args[i] == flags[j].name) {
+-                    flag |= flags[j].value;
+-                    found = true;
+-                    break;
+-                }
+-            }
+-            if (!found) {
+-                return Error() << "bad flag " << args[i];
+-            }
+-        } else {
+-            in_flags = false;
+-            paths.emplace_back(args[i]);
+-        }
+-    }
+-    return std::pair(flag, paths);
++    return Error() << "Host SELinux relabeling unavailable";
+ }
+ 
+ Result<std::string> ParseSwaponAll(const std::vector<std::string>& args) {
+--- a/parser.cpp
++++ b/parser.cpp
+@@ -144,6 +144,7 @@
+     android::base::Timer t;
+     auto config_contents = ReadFile(path);
+     if (!config_contents.ok()) {
++        ++parse_error_count_;
+         LOG(INFO) << "Unable to read config file '" << path << "': " << config_contents.error();
+         return false;
+     }
+@@ -158,6 +159,7 @@
+     LOG(INFO) << "Parsing directory " << path << "...";
+     std::unique_ptr<DIR, decltype(&closedir)> config_dir(opendir(path.c_str()), closedir);
+     if (!config_dir) {
++        ++parse_error_count_;
+         PLOG(INFO) << "Could not import directory '" << path << "'";
+         return false;
+     }

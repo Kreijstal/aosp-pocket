@@ -12,6 +12,7 @@
 #include <sys/statvfs.h>
 #include <sys/xattr.h>
 #include <sys/wait.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 #define REQUIRE(x) do{if(!(x)){fprintf(stderr,"CE_FAIL line=%d errno=%d %s\n",__LINE__,errno,strerror(errno));exit(1);}}while(0)
 typedef struct sqlite3 sqlite3;
@@ -20,6 +21,28 @@ static int (*sqlexec)(sqlite3*,const char*,int(*)(void*,int,char**,char**),void*
 static int (*sqlclose)(sqlite3*);
 static const char* (*sqlerror)(sqlite3*);
 static int count(void* out,int columns,char** values,char** names){(void)names;REQUIRE(columns==1);*(int*)out=atoi(values[0]);return 0;}
+static void metadata_test(int verify) {
+    char label[256],other[256],path[4096],link[128];
+    ssize_t length=getxattr("/data/user/0","security.selinux",label,sizeof(label));REQUIRE(length>0);
+    int fd=open("/data/user/0/seed",O_PATH|O_CLOEXEC);REQUIRE(fd>=0);
+    REQUIRE(getxattr("/data/user/0/seed","security.selinux",other,sizeof(other))==length && !memcmp(label,other,length));
+    snprintf(link,sizeof(link),"/proc/self/fd/%d",fd);ssize_t n=readlink(link,path,sizeof(path)-1);REQUIRE(n>0);path[n]=0;
+    if(strcmp(path,"/data/user/0/seed"))fprintf(stderr,"CE_METADATA_PROC_FD expected=/data/user/0/seed actual=%s\n",path);
+    REQUIRE(!strcmp(path,"/data/user/0/seed"));REQUIRE(close(fd)==0);
+    fd=open("/data/user/0",O_PATH|O_DIRECTORY|O_CLOEXEC);REQUIRE(fd>=0);
+    snprintf(link,sizeof(link),"/proc/self/fd/%d",fd);n=readlink(link,path,sizeof(path)-1);REQUIRE(n>0);path[n]=0;
+    REQUIRE(!strcmp(path,"/data/user/0"));REQUIRE(close(fd)==0);
+    REQUIRE(realpath("/data/user/0/seed",path) && !strcmp(path,"/data/user/0/seed"));
+    if(!verify) {
+        REQUIRE(mkdir("/data/user/0/metadata-child",0700)==0);
+        fd=open("/data/user/0/metadata-child/file",O_CREAT|O_RDWR,0600);REQUIRE(fd>=0);
+        REQUIRE(fgetxattr(fd,"security.selinux",other,sizeof(other))==length && !memcmp(label,other,length));
+        REQUIRE(fsetxattr(fd,"security.selinux","untrusted-label",16,0)<0 && errno==EOPNOTSUPP);
+        REQUIRE(fsync(fd)==0 && close(fd)==0);
+    }
+    REQUIRE(getxattr("/data/user/0/metadata-child/file","security.selinux",other,sizeof(other))==length && !memcmp(label,other,length));
+    puts("CE_METADATA_PASS inherited_host_label=persistent_readonly proc_fd=virtual canonical_path=correct");
+}
 static void sql(sqlite3* db,const char* text){int rc=sqlexec(db,text,0,0,0);if(rc){fprintf(stderr,"SQL_FAIL code=%d %s\n",rc,sqlerror(db));exit(1);}}
 static void sqlite_test(int verify) {
     void* library=dlopen("libsqlite.so",RTLD_NOW);if(!library){fprintf(stderr,"SQL_LOAD %s\n",dlerror());exit(1);}
@@ -36,6 +59,31 @@ static void sqlite_test(int verify) {
 }
 int main(int argc,char** argv) {
     setbuf(stdout,NULL);REQUIRE(argc==2);
+    if(!strcmp(argv[1],"metadata") || !strcmp(argv[1],"metadata-verify")){metadata_test(!strcmp(argv[1],"metadata-verify"));return 0;}
+    if(!strncmp(argv[1],"vendor-",7)) {
+        REQUIRE(syscall(SYS_getpid,0x504c2001UL,5UL)==0x504c3202UL);
+        if(!strcmp(argv[1],"vendor-locked")) {
+            int fd=open("/data/vendor_ce/0/seed",O_RDONLY);REQUIRE(fd<0 && errno==EACCES);
+            fd=open("/data/vendor_ce/1/plaintext-fallback",O_CREAT|O_RDWR,0600);REQUIRE(fd<0 && errno==EOPNOTSUPP);
+            puts("CE_VENDOR_LOCKED_PASS loader_layout=12L additional_users_fail_closed=1");return 0;
+        }
+        int fd=open("/data/vendor_ce/0/seed",O_RDONLY);REQUIRE(fd>=0);char bytes[32]={0};
+        REQUIRE(read(fd,bytes,sizeof(bytes))==23 && !strcmp(bytes,"vendor-migration-canary"));REQUIRE(close(fd)==0);
+        int verify=!strcmp(argv[1],"vendor-verify");
+        if(!verify) {
+            REQUIRE(mkdir("/data/vendor_ce/0/drm",0700)==0);
+            fd=open("/data/vendor_ce/0/drm/key",O_RDWR|O_CREAT|O_EXCL,0600);REQUIRE(fd>=0);
+            REQUIRE(write(fd,"vendor-key-canary",17)==17 && fsync(fd)==0 && close(fd)==0);
+        }
+        REQUIRE(chdir("/data/vendor_ce/0/drm")==0);char cwd[128];REQUIRE(getcwd(cwd,sizeof(cwd)) && !strcmp(cwd,"/data/vendor_ce/0/drm"));
+        fd=openat(AT_FDCWD,"key",O_RDONLY);REQUIRE(fd>=0);memset(bytes,0,sizeof(bytes));
+        REQUIRE(read(fd,bytes,sizeof(bytes))==17 && !strcmp(bytes,"vendor-key-canary"));struct stat st;
+        REQUIRE(fstat(fd,&st)==0 && st.st_uid==0 && (st.st_mode&0777)==0600 && close(fd)==0 && chdir("/")==0);
+        pid_t app=fork();REQUIRE(app>=0);
+        if(!app){if(setgid(19990)||setuid(19990))_exit(2);fd=open("/data/vendor_ce/0/drm/key",O_RDONLY);_exit(fd<0 && errno==EACCES?0:3);}
+        int status;REQUIRE(waitpid(app,&status,0)==app && WIFEXITED(status) && WEXITSTATUS(status)==0);
+        puts(verify?"CE_VENDOR_REOPEN_PASS persistence=1 owner=0 private_mode=0600 app_access=denied":"CE_VENDOR_FILESYSTEM_PASS migration=1 read_write=1 fsync=1 cwd=virtual app_access=denied");return 0;
+    }
     if(!strcmp(argv[1],"locked")){int fd=open("/data/user/0/private",O_RDONLY);REQUIRE(fd<0 && errno==EACCES);fd=open("/data/user/1/plaintext-fallback",O_CREAT|O_RDWR,0600);REQUIRE(fd<0 && errno==EOPNOTSUPP);puts("CE_LOCKED_PASS additional_users_fail_closed=1");return 0;}
     if(!strcmp(argv[1],"verify")){int fd=open("/data/user/0/app/renamed",O_RDONLY);REQUIRE(fd>=0);char data[8]={0};REQUIRE(read(fd,data,8)==8 && data[1]=='Q');close(fd);sqlite_test(1);
         fd=open("/data/user/0/app/buffered/value",O_RDONLY);REQUIRE(fd>=0);REQUIRE(read(fd,data,8)==5 && !memcmp(data,"batch",5));struct stat st;REQUIRE(fstat(fd,&st)==0 && (st.st_mode&0777)==0640);

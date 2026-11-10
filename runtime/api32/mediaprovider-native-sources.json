@@ -1,0 +1,168 @@
+{
+  "projects": {
+    "mediaprovider": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84"
+    },
+    "libfuse": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475"
+    }
+  },
+  "files": {
+    "mediaprovider/jni/Android.bp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 3642,
+      "sha256": "292e1927f1183ce01f9ed4eabcf43db1647feb8aafa253014d1f2c2eb0115356"
+    },
+    "mediaprovider/jni/FuseDaemon.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 74385,
+      "sha256": "aa7f4b1dafaf48b06a46746e8a568e12683625c2c33dbf324ed25582e550c56a"
+    },
+    "mediaprovider/jni/FuseDaemon.h": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 2137,
+      "sha256": "d63c36f9b3e1e23a3e179cd33ca21da206b45f1a23ba510ecb037f1f06bbe9ca"
+    },
+    "mediaprovider/jni/FuseUtils.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 1854,
+      "sha256": "bca3fcabe994d7a1d7013bb32db66f032be1acd6ffb660d0651b36fcff754559"
+    },
+    "mediaprovider/jni/MediaProviderWrapper.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 24575,
+      "sha256": "fcb2ecb33d1645797b5fbc4024a132db3c4635437ae4f4eda33f76a84a6a7493"
+    },
+    "mediaprovider/jni/MediaProviderWrapper.h": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 11862,
+      "sha256": "c3f75266bd6fb71e8207be352292603b8de04f319b354db362410d5130117b88"
+    },
+    "mediaprovider/jni/ReaddirHelper.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 2060,
+      "sha256": "aa85a71426b54a1b8e5c9a7ef490cb14393fe6927df03a0247d78e35cba69ca2"
+    },
+    "mediaprovider/jni/RedactionInfo.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 7985,
+      "sha256": "bd9983c80da89aafc56906e33fc7de8ccd79836631d174581c2c022d0ae73462"
+    },
+    "mediaprovider/jni/com_android_providers_media_FuseDaemon.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 7089,
+      "sha256": "c8d09d3246e9615b52ae715cdc89f75c03f054da424e4aa509932c2a62ee3933"
+    },
+    "mediaprovider/jni/include/libfuse_jni/FuseUtils.h": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 1160,
+      "sha256": "2d71ce68415ba7f468585212cc7b8303c125b7893bbda73406973dbc9173f367"
+    },
+    "mediaprovider/jni/include/libfuse_jni/ReaddirHelper.h": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 1903,
+      "sha256": "d28c37a7a89f010e3a215fed78af483c1bac7fb52d0c371d50c97ea9dc1c088a"
+    },
+    "mediaprovider/jni/include/libfuse_jni/RedactionInfo.h": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 3731,
+      "sha256": "be113a5170d951e1815f91d8a09a08316fa6940228f7366d97c9713277d85b98"
+    },
+    "mediaprovider/jni/jni_init.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 1148,
+      "sha256": "f6158b5dac466b9d62a67ee734d350c09f4a7e1929986c031f3a370f14de2b54"
+    },
+    "mediaprovider/jni/node-inl.h": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 20495,
+      "sha256": "c969edac4018a214fb0d72decab3a28f0cedac2f4787911896afa4569d78a631"
+    },
+    "mediaprovider/jni/node.cpp": {
+      "repository": "https://android.googlesource.com/platform/packages/providers/MediaProvider",
+      "commit": "fa1b55b1274ca7bc939112f3a4068436adb11d84",
+      "bytes": 3917,
+      "sha256": "657abbe725166b7309a9505c3a77efd08f68de2ca997ca67f716f1c95254374e"
+    },
+    "libfuse/include/cuse_lowlevel.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 2573,
+      "sha256": "8898c9f5375575852458718e35b54b2c45b14d43b91803195bf8f743ceb94959"
+    },
+    "libfuse/include/fuse.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 44455,
+      "sha256": "3f6156787517061c5aa6e85a278cbb5624bd7af9c267af1a7e0a57fe689c1fc0"
+    },
+    "libfuse/include/fuse_common.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 26411,
+      "sha256": "8ef74941e647873582a8309b55c85d65de9cdec66a6e07817e5d00baa4ba8b02"
+    },
+    "libfuse/include/fuse_kernel.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 19425,
+      "sha256": "f9927271b03ccc0440a97cec6514fd29a84ef78810e879f290037ad613af9471"
+    },
+    "libfuse/include/fuse_log.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 1968,
+      "sha256": "7f79a177c6ad78e0c5b5e3773c9e923286308c1dba1ece3a22cb278299d9bcdc"
+    },
+    "libfuse/include/fuse_lowlevel.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 67931,
+      "sha256": "443463cba8d67ff12623d5feac08c1b461c5e12cd6168f0f588a1db2cc8ff1aa"
+    },
+    "libfuse/include/fuse_opt.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 7549,
+      "sha256": "472c9ee7a84bb9c20e58957a3ff47f34c18b4a159ad63b4db7f90aad1e8ff4ce"
+    },
+    "libfuse/lib/fuse_i.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 3401,
+      "sha256": "8e7008cc694830710f522d49b63ac68a16e359e38a9eec071c41c8fe89fb8bbe"
+    },
+    "libfuse/lib/fuse_misc.h": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 2028,
+      "sha256": "81a21dbc4b0af561dbc55734312912a99918f43a5387da4bc182c8568568beeb"
+    },
+    "libfuse/Android.bp": {
+      "repository": "https://android.googlesource.com/platform/external/libfuse",
+      "commit": "6136a9ddff228dc0c21b148acf2515eee6080475",
+      "bytes": 2720,
+      "sha256": "ee92fd23662d12c6d1d0853f3fafd47aad33c0afb81964d26570104258a49138"
+    }
+  },
+  "scope": "Pinned unchanged native source/build inputs; rootless adaptation is a separately reviewed source patch. Runtime compatibility remains to validate.",
+  "baseApkSha256": "914df3a1bb6942aaced446c3d7aaf0650cc2ab068f5a712d3bd8035ffdbfe523",
+  "baseLibfuseSha256": "3e97c7bea3a4479ff5643a14ccd37c86f9682ba7a2e29b9dbe853f4da350dd54",
+  "certificateSha256": "465983f7791f2abeb43ea2cbdc7f21a8260b72bc08a55c839fc1a43bc741a81e"
+}

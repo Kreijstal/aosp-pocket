@@ -20,6 +20,7 @@ final class CeStorage implements AutoCloseable {
     // Linux arm64 UAPI values hidden from the public SDK stubs.
     private static final int O_DIRECTORY=0x4000,O_PATH=0x200000,AT_SYMLINK_NOFOLLOW=0x100,AT_REMOVEDIR=0x200;
     final File root;
+    private final String[] roots;
     private final LocalSocket bound=new LocalSocket();
     private final LocalServerSocket server;
     private final ThreadPoolExecutor workers=new ThreadPoolExecutor(8,8,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(128));
@@ -29,14 +30,18 @@ final class CeStorage implements AutoCloseable {
     private volatile boolean closed;
     private volatile CeNamespace namespace;
     private volatile CeFuse fuse;
+    private final Runnable transportDead;
+    private volatile boolean deadTransport;
     private byte[] diskSecret,preparedSecret;
     private volatile boolean captureArmed;
     private final Map<Integer,Integer> opened=new HashMap<>();
     private final Set<Integer> touched=new HashSet<>();
     private volatile boolean draining;
     static boolean enabled(File root){return new File(root,".pocket-ce-enabled").isFile();}
-    CeStorage(File root)throws Exception {
-        this.root=root;
+    CeStorage(File root)throws Exception{this(root,()->{});}
+    CeStorage(File root,Runnable transportDead)throws Exception {
+        this.transportDead=transportDead;
+        this.root=root;roots=CeMigration.roots(root);
         CeMigration.sealPlaceholders(root);
         File cache=new File(root,".pocket-ce-dirs");
         File[] cached=cache.listFiles();
@@ -44,11 +49,32 @@ final class CeStorage implements AutoCloseable {
         Path endpoint=new File(root,"dev/socket/pocket_ce").toPath();Files.deleteIfExists(endpoint);
         bound.bind(new LocalSocketAddress(endpoint.toString(),LocalSocketAddress.Namespace.FILESYSTEM));
         Os.chmod(endpoint.toString(),0600);server=new LocalServerSocket(bound.getFileDescriptor());
-        fuse=new CeFuse(this);
-        Path device=new File(root,".pocket-ce-device").toPath(),next=new File(root,".pocket-ce-device.new").toPath();
-        Files.write(next,le(8).putLong(fuse.device).array());Files.move(next,device,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+        fuse=new CeFuse(this);publishDevice(fuse.device);
         new Thread(this::accept,"PocketCeRpc").start();
         checkpoints.scheduleWithFixedDelay(this::checkpoint,250,250,TimeUnit.MILLISECONDS);
+    }
+    private void publishDevice(long id)throws IOException {
+        Path device=new File(root,".pocket-ce-device").toPath(),next=new File(root,".pocket-ce-device.new").toPath();
+        Files.write(next,le(8).putLong(id).array());Files.move(next,device,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+    }
+    private ParcelFileDescriptor openContent(int id,int mode)throws Exception {
+        CeFuse current=fuse;if(current==null)throw new FsException(5);
+        try{return current.open(id,mode);}
+        catch(IOException failure){transportFailed(current);throw failure;}
+    }
+    // The host AppFuse mount can stop serving under a live guest: after an
+    // app update killed the previous process, every later open was refused
+    // until the guest restarted. A new mount cannot be swapped in, because
+    // every guest process (zygote's children included) caches the mount's
+    // device id in the loader; fcntl locks on new descriptors then break, and
+    // a framework-only restart leaves netd, input and audio state stale. So
+    // ask for a full guest restart, once. Only a mount proven dead by its
+    // callback-free root inode counts; one file's error never restarts.
+    private void transportFailed(CeFuse failed) {
+        if(closed || draining || deadTransport || fuse!=failed || failed.alive())return;
+        synchronized(this){if(deadTransport)return;deadTransport=true;}
+        android.util.Log.e("PocketCE","Encrypted file transport stopped; restarting the guest");
+        transportDead.run();
     }
     private void checkpoint() {
         CeNamespace ns=namespace;
@@ -108,9 +134,13 @@ final class CeStorage implements AutoCloseable {
         try {
             if(namespace!=null){if(!MessageDigest.isEqual(diskSecret,supplied))throw new FsException(13);return;}
             EncryptedStore store=EncryptedStore.open(new File(root,".pocket-ce-v1").toPath(),supplied);
-            try{CeNamespace ns=new CeNamespace(store,false);ns.autoCommit=false;diskSecret=supplied.clone();namespace=ns;}
+            try{
+                CeNamespace ns=new CeNamespace(store,false);
+                if(!Arrays.equals(ns.roots(),roots))throw new IOException("CE vault layout does not match the guest profile");
+                ns.autoCommit=false;diskSecret=supplied.clone();namespace=ns;
+            }
             catch(Exception error){store.close();throw error;}
-            synchronized(rootAttrs){synchronized(namespace){for(int id=3;id<=6;id++)mirrorRoot(namespace.node(id));}}
+            synchronized(rootAttrs){synchronized(namespace){for(int id=3;id<roots.length+3;id++)mirrorRoot(namespace.node(id));}}
         }finally{if(supplied!=secret)Arrays.fill(supplied,(byte)0);}
     }
     synchronized void prepareAuth(byte[] secret)throws Exception {
@@ -151,6 +181,10 @@ final class CeStorage implements AutoCloseable {
         else if(value.startsWith(root.getPath()+"/"))value=value.substring(root.getPath().length());
         return CeNamespace.alias(value);
     }
+    private int rootId(String path) {
+        for(int i=0;i<roots.length;i++)if(path.equals(roots[i]) || path.startsWith(roots[i]+"/"))return i+3;
+        return 0;
+    }
     private Node fdNode(Request r)throws IOException {
         CeNamespace ns=unlocked();String directory=root.getPath()+"/.pocket-ce-dirs/";
         if(r.p.startsWith(directory))try{return ns.node(Integer.parseInt(r.p.substring(directory.length())));}catch(NumberFormatException bad){throw new FsException(9);}
@@ -188,7 +222,7 @@ final class CeStorage implements AutoCloseable {
           else {
             if(!n.regular())throw new FsException(40);
             if((flags&OsConstants.O_TRUNC)!=0) {if(mode==0)throw new FsException(13);CeNamespace ns=unlocked();synchronized(ns){ns.store.resize(CeNamespace.content(n.id),0);n.mtime=n.ctime=System.currentTimeMillis();ns.markDirty();}}
-            ParcelFileDescriptor data=fuse.open(n.id,mode==0?ParcelFileDescriptor.MODE_READ_ONLY:mode==1?ParcelFileDescriptor.MODE_WRITE_ONLY:ParcelFileDescriptor.MODE_READ_WRITE);
+            ParcelFileDescriptor data=openContent(n.id,mode==0?ParcelFileDescriptor.MODE_READ_ONLY:mode==1?ParcelFileDescriptor.MODE_WRITE_ONLY:ParcelFileDescriptor.MODE_READ_WRITE);
             reply.fds.add(data);reply.fds.add(lockFile(n));
           }
           reply.data=stat(n);return reply;
@@ -201,6 +235,10 @@ final class CeStorage implements AutoCloseable {
             if(r.nr==1){unlock(r.data);return new Reply(0);}
             if(r.nr==3){prepareAuth(r.data);return new Reply(0);}
             if(r.nr==9){CeDefaultKey.fixate(root);return new Reply(0);}
+            // Test hook: stop the live AppFuse server, reproducing a dead
+            // transport so the next open triggers the guest restart.
+            if(r.nr==11){CeFuse current=fuse;if(current==null)throw new FsException(5);current.close();return new Reply(0);}
+            if(r.nr==10)return new Reply(captureArmed?1:0);
             if(r.nr==4) {
                 if(enabled(root) || !captureArmed || r.data.length<32)throw new FsException(22);
                 synchronized(this){if(preparedSecret!=null)Arrays.fill(preparedSecret,(byte)0);preparedSecret=r.data.clone();}
@@ -217,15 +255,22 @@ final class CeStorage implements AutoCloseable {
             throw new FsException(95);
         }
         boolean descriptor=r.op==2;Node n=null;String p=descriptor?"":path(r.p),q=r.q.isEmpty()?"":path(r.q);
-        if(!descriptor && CeNamespace.root(p)==0)for(String base:new String[]{"/data/user/","/data/system_ce/","/data/misc_ce/","/data/media/","/storage/emulated/"})
+        if(!descriptor && rootId(p)==0)for(String base:new String[]{"/data/user/","/data/system_ce/","/data/misc_ce/","/data/vendor_ce/","/data/media/","/storage/emulated/"})
             if(p.startsWith(base) && p.length()>base.length() && Character.isDigit(p.charAt(base.length())))throw new FsException(95);
         if(namespace==null && !descriptor && r.nr==79) {
-            int id=CeNamespace.root(p);if(id>=3 && id<=6 && p.equals(CeNamespace.ROOTS[id-3])) {
-                n=new Node();n.id=id;n.mode=CeNamespace.DIR|0771;n.uid=n.gid=1000;n.links=2;Reply reply=new Reply(0);reply.data=stat(n);return reply;
+            int id=rootId(p);if(id>=3 && id<roots.length+3 && p.equals(roots[id-3])) {
+                n=new Node();n.id=id;n.mode=CeNamespace.DIR|0771;n.uid=n.gid=1000;n.links=2;
+                if(roots.length==5) {
+                    if(id==4)n.mode=CeNamespace.DIR|0770;
+                    if(id==5){n.mode=CeNamespace.DIR|01771;n.gid=9998;}
+                    if(id==6){n.mode=CeNamespace.DIR|02770;n.uid=n.gid=1023;}
+                    if(id==7)n.uid=n.gid=0;
+                }
+                Reply reply=new Reply(0);reply.data=stat(n);return reply;
             }
         }
         if(namespace==null && !descriptor && (r.nr==8 || r.nr==9)) { // getxattr, lgetxattr
-            int id=CeNamespace.root(p);if(id>=3 && id<=6 && p.equals(CeNamespace.ROOTS[id-3])) {
+            int id=rootId(p);if(id>=3 && id<roots.length+3 && p.equals(roots[id-3])) {
                 byte[] value=lockedRootXattr(id,r.q);if(value==null)throw new FsException(61);
                 Reply reply=new Reply(value.length);reply.data=value;return reply;
             }
@@ -251,9 +296,14 @@ final class CeStorage implements AutoCloseable {
         case 36:ns.create(p,CeNamespace.LNK|0777,r.uid,r.gid,r.groups,new String(r.data,"UTF-8"));return new Reply(0);
         case 37:ns.link(p,q,r.uid,r.gid,r.groups);return new Reply(0);
         case 38:case 276:if(r.nr==276 && (r.a[4]&~1L)!=0)throw new FsException(95);ns.rename(p,q,r.nr==276&&(r.a[4]&1)!=0,r.uid,r.gid,r.groups);return new Reply(0);
-        case 78: {n=ns.resolve(p,r.uid,r.gid,r.groups,false);if(!n.symlink())throw new FsException(22);Reply reply=new Reply(0);reply.data=n.target.getBytes("UTF-8");reply.value=reply.data.length;return reply;}
+        case 78: {
+            Reply reply=new Reply(0);
+            if(descriptor)reply.data=ns.path(n.id).getBytes("UTF-8");
+            else {n=ns.resolve(p,r.uid,r.gid,r.groups,false);if(!n.symlink())throw new FsException(22);reply.data=n.target.getBytes("UTF-8");}
+            reply.value=reply.data.length;return reply;
+        }
         case 49: {n=ns.resolve(p,r.uid,r.gid,r.groups,true);if(!n.directory())throw new FsException(20);CeNamespace.access(n,r.uid,r.gid,r.groups,1);Reply cwd=new Reply(0);cwd.fds.add(directory(n));return cwd;}
-        case 17: {Reply cwd=new Reply(0);cwd.data=(ns.path(n.id)+"\0").getBytes("UTF-8");return cwd;}
+        case 17: {if(!n.directory())throw new FsException(20);Reply cwd=new Reply(0);cwd.data=(ns.path(n.id)+"\0").getBytes("UTF-8");return cwd;}
         case 46:case 45: {
             long size=descriptor?r.a[2]:r.a[1];if(!descriptor){n=ns.resolve(p,r.uid,r.gid,r.groups,true);CeNamespace.access(n,r.uid,r.gid,r.groups,2);}
             if(!n.regular())throw new FsException(21);ns.store.resize(CeNamespace.content(n.id),size);n.mtime=n.ctime=System.currentTimeMillis();ns.markDirty();return new Reply(0);
@@ -307,7 +357,7 @@ final class CeStorage implements AutoCloseable {
                         n.xattrs.put(r.q,r.data.clone());
                     }
                     n.ctime=System.currentTimeMillis();ns.markDirty();
-                    if(n.id<3 || n.id>6)return new Reply(0);
+                    if(n.id<3 || n.id>=roots.length+3)return new Reply(0);
                 } else {
                     CeNamespace.access(n,r.uid,r.gid,r.groups,4);Reply reply=new Reply(0);
                     if(list) {ByteArrayOutputStream names=new ByteArrayOutputStream();for(String name:n.xattrs.keySet()){names.write(name.getBytes("UTF-8"));names.write(0);}reply.data=names.toByteArray();}

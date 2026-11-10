@@ -1,0 +1,225 @@
+{
+  "schema": 1,
+  "status": "BASIC_MANAGER_SESSION_PASS_BROADER_API32_COMPLETION_PENDING",
+  "guestSdk": 32,
+  "hostSdk": 36,
+  "hostVmInstance": 73,
+  "scope": "Actual Manager service, normal startup, composer presentation, real PackageInstaller/launch, physical host touch and guest navigation, scoped crash transport, and supervised stop. One passing prepared-profile session.",
+  "runId": "9ec0fa9e573449108dd58d8e59789eda",
+  "candidatePath": "out/api32/manager-session-v3-candidate.json",
+  "candidateSha256": "d881d95341df09ba9931b11b1b5cf5d2bb30d19bb0e101af496f56f15563e740",
+  "reportPath": "out/api32/manager-session-v3-report.json",
+  "reportSha256": "a2980a61a4e127552ca9a9bc1c77943e559b3693d391feccca43284ca523205a",
+  "apk": {
+    "apk": "/home/kreijstal/git/aosp-pocket/out/api32/session-manager-v3/api32-session-manager-probe.apk",
+    "sha256": "eb0e8b9e1b254e05ea0fb88e00ccb4209bf219f0ec8ddbf3bbe4286244e4d687",
+    "bytes": 2619254,
+    "probe": true,
+    "guestImagesBundled": 0,
+    "hostNativeLibrariesUnchanged": true,
+    "guestSdks": [
+      28,
+      29,
+      32
+    ],
+    "runtimeValidated": false
+  },
+  "image": {
+    "version": "0.78.2",
+    "sha256": "56ecff67a0c45adba79fe5d1aaf89d09fcb088f978b3b38561d5a08c8184e78b",
+    "bytes": 589712553,
+    "unpacked_bytes": 1300942621,
+    "manifest_sha256": "22dca3fe8e64c52ade7038846edd51084a5142c2f561af2e1724c048d0e9433f"
+  },
+  "imageFiles": 2631,
+  "sourceHashes": {
+    "tools/build_api29_manager.py": "a35b1ef2684be588c0197f2a632cd78ce9d777d1a677edc345ea43495d551a0b",
+    "tools/build_api32_image.py": "611e95d21892adad51b24816e223848131c13d9678b3b10b7f4bcdf54f007152",
+    "tools/build_api32_manager_tools.py": "3e304bded71c462fc60c7f733fbcb778ea2a8b7eb3125d4f3d63cb0f0df3de0d",
+    "tools/test_api32_manager_on_pi.py": "2e71a2ee5facc75291308f18df5584302b3aa480a6a0dd9b12f3841f54b6f67c",
+    "runtime/api32/ManagerTools32.java": "4ae4830bf8d9679f7c07a3fde1ca73a560c676ed6fb97173c4c8eb7519e02cfb",
+    "runtime/direct/HostDevices.java": "0a9d8244a7c6465fbf015eef1f3b54acdaad17b7e29a57b3572bbc8ef1fe4804",
+    "runtime/tests/api32/ManagerSessionProbe32.java": "204135812cacac0ba7a1710ab5140623f275f7409152484439e5b68cffe8f9a2",
+    "runtime/tests/api32/NativeLog.java": "314981c759951581dfcae71e35e436e66452b4b8e7d40487c819032ebfef8f75",
+    "tools/build_api32_android_probe.py": "fb7062c4ec6ecff5d0974370aac1cce4ad036ad5311414297d9bf2fb96593df6",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/DirectSession.java": "a68f057777dafbea66f90ab3752ccddf002f4ae67e0c9ad59f50cc65d547a2b5",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestService.java": "c17c0206ff07a4cc7ef97a219de41c1e9bbcef72ff45ed6c8799bee3447436a6",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/RuntimeActivity.java": "5ae2024d51383b47dbbfed30b922ceab39364198ec6a17283b9a334529992b77",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/SettingsActivity.java": "e01509178cc03dc18b454beb45786cd2566ebecf0e36d6e8082eacc723d51c3e",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestActivity.java": "5a319aca1138c4cd40b83ae7f7952bc4b61e83aa811781570200a50eeab39709",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestInput32.java": "0343c8d9e382c6b98b1da4509bb70829d072b131ddf043f5b2652c8915ce02e3",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestLog32.java": "b93cee2a42aef3b78a1bf9456b3abecdd7e30cc641eaf305c01c2f52af6ace17",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/HostAudio.java": "f16dbe385f4d42adbd793a0cbfa3a9976b366f319c445b9053785de1e97c9233",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/RemoteImage.java": "8067d8ea53b1fa826809d35a9fae272f951916593b705983b093d461874845b2",
+    "runtime/app/src/dev/kreijstal/aosppocket/runtime/DirectImage.java": "610e3e3cc12280f12a758c4749ebc994828dce14d317217e9289e598a263e4ca",
+    "runtime/api32/tombstoned_scope.cpp": "750f3dcaa41cc786109c3c07772c9a7da23ee0b995dd7735ed33062c5d4d1a9d",
+    "tools/validate_download_manager.py": "f1e0ae80f72ddeccff8d26622509621b5126e2aa7e57d47a029d149cf72bf5e6",
+    "runtime/tests/DirectDataPathFixture.java": "8bf67769b923942434121c474f9ad3c104b4b0d459145d5b4d00dbcf99ed70ab"
+  },
+  "results": {
+    "functionalPassed": true,
+    "strictPassed": true,
+    "validation": "PASS",
+    "anrs": [],
+    "javaFatalHeaders": [],
+    "nativeFatals": [],
+    "systemUiStarts": [
+      "32655"
+    ],
+    "nativeLogWithinLimit": true,
+    "initStop": [
+      [
+        "15",
+        "0",
+        "0"
+      ]
+    ],
+    "hostTap": {
+      "x": 240,
+      "y": 280,
+      "runId": "9ec0fa9e573449108dd58d8e59789eda"
+    },
+    "selinuxBefore": "Enforcing",
+    "selinuxAfter": "Enforcing",
+    "phantomLimitBefore": "null",
+    "phantomLimitAfter": "null",
+    "phantomMonitoringBefore": "null",
+    "phantomMonitoringAfter": "null"
+  },
+  "presentation": {
+    "transport": "composer-rgba",
+    "backing": "anonymous",
+    "codec": "none",
+    "pixel_bytes_over_socket": 0,
+    "target_fps": 38,
+    "screenshot_calls": 0,
+    "presenter": "ahardwarebuffer-egl",
+    "host_gl_renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 16.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+    "host_gl_vendor": "Google Inc. (Google)",
+    "gpu_fallback_reason": "",
+    "gpu_buffers": 2,
+    "width": 480,
+    "height": 800,
+    "shared_bytes": 4608000,
+    "frames_presented": 155,
+    "frames_received": 153,
+    "composer_sequence": 219,
+    "interval_fps": 0,
+    "mean_capture_ms": 1.920272,
+    "mean_copy_ms": 1.920272,
+    "max_capture_ms": 31.320685,
+    "mean_present_ms": 121.870795
+  },
+  "input": {
+    "touchEventsAccepted": 2,
+    "keyEventsAccepted": 2,
+    "inputEventsAccepted": 4,
+    "inputEventsRejected": 0
+  },
+  "supervisedStop": true,
+  "stoppedSession": {
+    "sdk": 32,
+    "runId": "471e25e9c6d949779a964d2c0446a3e6",
+    "ready": false,
+    "running": false,
+    "closed": true,
+    "input": {
+      "touchEventsAccepted": 2,
+      "keyEventsAccepted": 2,
+      "inputEventsAccepted": 4,
+      "inputEventsRejected": 0
+    },
+    "audio": {
+      "hostPcmBytesWritten": 0,
+      "completedStreams": 0,
+      "streamErrors": 0,
+      "microphoneRequested": false
+    },
+    "ownerAlive": false,
+    "ownerExitCode": 0
+  },
+  "crashTransport": {
+    "roleDenied": "API32_TOMBSTONED_ROLE_DENIED_PASS uid=39999 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12",
+    "outsideProfileDenied": "API32_TOMBSTONED_OUTSIDE_PROFILE_DENIED_PASS uid=0 requests=24 transferred_fds=closed daemon_fd_before=12 daemon_fd_after=12",
+    "securityLogicUnchangedFromValidatedSourceExceptMarker": true
+  },
+  "effectiveBudget": {
+    "path": "out/api32/manager-session-effective-phantom-settings.json",
+    "sha256": "e8f73cf3a606fd1c2de982404d9dbe6793350f88ab24bb8db2f579ed890d4880",
+    "maxPhantomProcessesObservedAfterRun": 32,
+    "peakAndHeadroomVerified": false
+  },
+  "priorFailures": {
+    "fixtureOnlyCrashMarker": {
+      "path": "out/api32/manager-session-first-report.json",
+      "sha256": "f2577ea1646be53178e8b47e9ca4f1aa3a5f2b5dabd80dc1eef88036e98025e2",
+      "ownerExitCode": 1,
+      "daemonExitCode": 125
+    },
+    "relativeInstallParentMismatch": {
+      "path": "out/api32/manager-session-v2-report.json",
+      "sha256": "5b20be30c0f1e0a84d8dc1368fbdd8a444af002645d17ae10b6fdadf8c30cf03",
+      "underlyingError": "mkdir: EEXIST",
+      "reportedError": "INSTALL_FAILED_INSUFFICIENT_STORAGE: Failed rename"
+    }
+  },
+  "aospInstallTraversal": {
+    "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-platform-12.1.0_r23/services/core/java/com/android/server/pm/PackageManagerServiceUtils.java",
+    "path": "out/api32/PackageManagerServiceUtils.java",
+    "sha256": "d550d4359452b6644a5107d09317d4adf9d580c5ef841c4ba662ffbd1cfb9e1c",
+    "method": "makeDirRecursive"
+  },
+  "checks": [
+    {
+      "command": "python3 /home/pi/pocket-api32-vm/manager-session-validation/test_api32_manager_on_pi.py",
+      "result": "PASS: strictPassed=true, exit 0"
+    },
+    {
+      "command": "python3 tools/build_api32_tombstoned.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api32_image.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/api32/session-image-v2 --version 0.78.2 --url http://127.0.0.1:8794/pocket-api32-arm64-0.78.2.zip --probe",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --api32-catalog out/api32/session-image-v2/pocket-images.json --session-probe32 --out out/api32/session-manager-v3",
+      "result": "PASS"
+    },
+    {
+      "command": "java -cp out/api32/direct-data-test:out/api32/session-manager-v3/classes:/home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar dev.kreijstal.aosppocket.runtime.DirectDataPathFixture",
+      "result": "PASS: relative traversal, repeat preparation, legacy layout, data and foreign-link preservation"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/session-manager-v3/api32-session-manager-probe.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --allow-image-probe32",
+      "result": "PASS"
+    },
+    {
+      "command": "javac --release 8 -cp out/api32/session-manager-probe/classes:/home/kreijstal/git/helloworldandroid/vendor/android-platforms/android-36/android.jar -d out/api32/shared-fixture-compile runtime/tests/api32/NativeLog.java runtime/tests/api32/MainActivity.java runtime/tests/api29/HostBinder.java runtime/tests/api32/HostHardware.java runtime/tests/api32/HostDisplay32.java",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/build_api29_manager.py --catalog runtime/images/api29-arm64.json --out out/api32/legacy-data-regression",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 tools/validate_download_manager.py out/api32/legacy-data-regression/aosp-pocket-manager-0.77.apk --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+      "result": "PASS"
+    }
+  ],
+  "notEstablished": {
+    "repeatedFreshStartupStability": true,
+    "offlineManagerRestartAndAppDataPersistence": true,
+    "unmodifiedThirdPartyAppRequiringApi32": true,
+    "phoneValidation": true,
+    "completeNetworkAndStorageApiSupport": true,
+    "api32CeEncryption": true
+  },
+  "broaderCompletionFlags": {
+    "fullGuestBootVerified": false,
+    "pocketManagerApi32Supported": false,
+    "normalStartupStabilityVerified": false,
+    "normalStartupDefaultProcessBudgetVerified": false,
+    "usableLauncherVerified": false
+  }
+}

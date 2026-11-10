@@ -1,0 +1,3 @@
+# Only start with an owner-installed adb_keys file. The listener stays on loopback.
+ro.adb.secure=1
+service.adb.listen_addrs=tcp:localhost:5555
