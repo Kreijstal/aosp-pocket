@@ -184,10 +184,10 @@ public:
     explicit Files(Channel& channel,const std::string& lowerRoot=""):channel_(channel),namespace_(channel),lowerRoot_(lowerRoot){}
     Files(const Files&)=delete;
     ~Files(){closeAll();}
-    int initialize(Identity caller) {
+    int initialize(Identity caller,int timeoutMs=0) {
         int expected=0;if(!initialized_.compare_exchange_strong(expected,1))return -EALREADY;
         struct {uint32_t major,minor,readahead,flags;} init{7,31,0,FUSE_DO_READDIRPLUS};std::vector<char> out;
-        int rc=call(FUSE_INIT,0,caller,init,&out);if(rc<0)return rc;
+        int rc=channel_.call(FUSE_INIT,0,caller,&init,sizeof(init),&out,timeoutMs);if(rc<0)return rc;
         // Through max_write, compatible with the negotiated7.31 reply.
         if(out.size()<24)return -EPROTO;
         uint32_t fields[6];memcpy(fields,out.data(),sizeof(fields));

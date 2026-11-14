@@ -158,41 +158,97 @@ public final class CeAppInspector32 {
             finally{callbacks.quitSafely();callbacks.join(1000);}
         }
     }
+    private static org.json.JSONObject keyguardState(Context context,String mode)throws Exception {
+        android.app.KeyguardManager keyguard=context.getSystemService(android.app.KeyguardManager.class);
+        org.json.JSONObject state=new org.json.JSONObject().put("secure",keyguard.isDeviceSecure())
+            .put("deviceLocked",keyguard.isDeviceLocked()).put("keyguardLocked",keyguard.isKeyguardLocked())
+            .put("interactive",context.getSystemService(PowerManager.class).isInteractive())
+            .put("uptimeMillis",SystemClock.uptimeMillis()).put("externalStorage",externalStorage(context,false));
+        if(mode.equals("keyguard-ui")) {
+            state.put("ui",passwordEntry());
+            // Accessibility connection/window retrieval may span the
+            // keyguard's sleep timeout. Gate input on the current state.
+            state.put("interactive",context.getSystemService(PowerManager.class).isInteractive())
+                .put("uiObservationUptimeMillis",SystemClock.uptimeMillis());
+        }
+        if(mode.equals("keyguard-diagnostic"))powerDiagnostic(context,state);
+        if(mode.equals("keyguard-power"))state.put("powerDump",dump("power"));
+        if(mode.equals("keyguard-await")) {
+            long started=SystemClock.elapsedRealtime(),deadline=started+30000;int polls=1;
+            while(!(state.getBoolean("secure") && !state.getBoolean("deviceLocked") && !state.getBoolean("keyguardLocked")
+                    && state.getBoolean("interactive")) && SystemClock.elapsedRealtime()<deadline) {
+                Thread.sleep(50);polls++;
+                state.put("secure",keyguard.isDeviceSecure()).put("deviceLocked",keyguard.isDeviceLocked())
+                    .put("keyguardLocked",keyguard.isKeyguardLocked()).put("interactive",context.getSystemService(PowerManager.class).isInteractive())
+                    .put("uptimeMillis",SystemClock.uptimeMillis());
+            }
+            boolean unlocked=state.getBoolean("secure") && !state.getBoolean("deviceLocked") && !state.getBoolean("keyguardLocked") && state.getBoolean("interactive");
+            state.put("unlockObserved",unlocked).put("keyguardObservationWaitMillis",SystemClock.elapsedRealtime()-started).put("keyguardObservationPolls",polls)
+                .put("externalStorage",externalStorage(context,false));
+            if(!unlocked)state.put("powerDump",dump("power"));
+        }
+        return state;
+    }
+    private static boolean keyguardOperation(String mode) {
+        return mode.equals("keyguard") || mode.equals("keyguard-ui") || mode.equals("keyguard-diagnostic")
+            || mode.equals("keyguard-power") || mode.equals("keyguard-await");
+    }
+    private static void keyguardObserver(Context context,String runId,String nonce)throws Exception {
+        if(!runId.matches("[a-f0-9]{32}") || !nonce.matches("[a-f0-9]{32}"))throw new IOException("Invalid observer identity");
+        // Load the real services before the host sends WAKEUP. UI inspection is
+        // separately warmed before the gesture, never inferred from this read.
+        keyguardState(context,"keyguard");
+        System.out.println("POCKET_CE32_KEYGUARD_READY 1 "+runId+" "+nonce+" "+Os.getuid()+" "+Os.getpid());System.out.flush();
+        BufferedReader requests=new BufferedReader(new InputStreamReader(System.in,"US-ASCII"));int sequence=0;
+        for(String line;(line=requests.readLine())!=null;) {
+            if(line.length()>160)throw new IOException("Observer request exceeds its bound");
+            String[] fields=line.split(" ");
+            if(fields.length!=5 || !fields[0].equals("1") || !fields[1].equals(runId) || !fields[2].equals(nonce)
+                    || !fields[3].equals(Integer.toString(sequence+1)) || sequence>=256)throw new IOException("Invalid observer request identity/sequence");
+            sequence++;String mode=fields[4],body;
+            if(mode.equals("close"))body="closed";
+            else {
+                if(!keyguardOperation(mode))throw new IOException("Unsupported read-only observer request");
+                org.json.JSONObject state=keyguardState(context,mode);
+                state.put("observerRunId",runId).put("observerNonce",nonce).put("observerSequence",sequence)
+                    .put("observerUid",Os.getuid()).put("observerPid",Os.getpid()).put("readOnly",true)
+                    .put("passwordTextRead",false).put("inputInjected",false).put("observerOperation",mode);
+                body=state.toString();
+            }
+            byte[] bytes=body.getBytes("UTF-8");if(bytes.length>65536)throw new IOException("Observer reply exceeds its bound");
+            System.out.println("POCKET_CE32_KEYGUARD_RESPONSE 1 "+runId+" "+nonce+" "+sequence+" "+Os.getuid()+" "+Os.getpid()+" "+android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP));System.out.flush();
+            if(mode.equals("close"))return;
+        }
+    }
     public static void main(String[] args) {
         try {
-            if(Build.VERSION.SDK_INT!=32 || Os.getuid()!=0 || args.length!=1)throw new IllegalStateException();
+            if(Build.VERSION.SDK_INT!=32 || Os.getuid()!=0 || !(args.length==1 || args.length==3 && args[0].equals("keyguard-observer")))throw new IllegalStateException();
             Os.setgid(1000);Os.setuid(1000);Looper.prepare();
             Class<?> activity=Class.forName("android.app.ActivityThread");Object thread=activity.getMethod("systemMain").invoke(null);
             Context context=(Context)activity.getMethod("getSystemContext").invoke(thread);
-            if(args[0].equals("keyguard") || args[0].equals("keyguard-ui") || args[0].equals("keyguard-diagnostic") || args[0].equals("keyguard-power") || args[0].equals("keyguard-await")) {
-                android.app.KeyguardManager keyguard=context.getSystemService(android.app.KeyguardManager.class);
-                org.json.JSONObject state=new org.json.JSONObject().put("secure",keyguard.isDeviceSecure())
-                    .put("deviceLocked",keyguard.isDeviceLocked()).put("keyguardLocked",keyguard.isKeyguardLocked())
-                    .put("interactive",context.getSystemService(PowerManager.class).isInteractive())
-                    .put("uptimeMillis",SystemClock.uptimeMillis()).put("externalStorage",externalStorage(context,false));
-                if(args[0].equals("keyguard-ui")) {
-                    state.put("ui",passwordEntry());
-                    // Accessibility connection/window retrieval may span the
-                    // keyguard's sleep timeout. Gate input on the current state.
-                    state.put("interactive",context.getSystemService(PowerManager.class).isInteractive())
-                        .put("uiObservationUptimeMillis",SystemClock.uptimeMillis());
-                }
-                if(args[0].equals("keyguard-diagnostic"))powerDiagnostic(context,state);
-                if(args[0].equals("keyguard-power"))state.put("powerDump",dump("power"));
-                if(args[0].equals("keyguard-await")) {
-                    long started=SystemClock.elapsedRealtime(),deadline=started+30000;int polls=1;
-                    while(!(state.getBoolean("secure") && !state.getBoolean("deviceLocked") && !state.getBoolean("keyguardLocked")
-                            && state.getBoolean("interactive")) && SystemClock.elapsedRealtime()<deadline) {
-                        Thread.sleep(50);polls++;
-                        state.put("secure",keyguard.isDeviceSecure()).put("deviceLocked",keyguard.isDeviceLocked())
-                            .put("keyguardLocked",keyguard.isKeyguardLocked()).put("interactive",context.getSystemService(PowerManager.class).isInteractive())
-                            .put("uptimeMillis",SystemClock.uptimeMillis());
+            if(args[0].equals("keyguard-observer")){keyguardObserver(context,args[1],args[2]);System.exit(0);return;}
+            if(args[0].equals("inventory")) {
+                android.content.pm.PackageManager packages=context.getPackageManager();
+                java.util.List<android.content.pm.PackageInfo> entries=packages.getInstalledPackages(
+                    android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES|android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES);
+                java.util.Collections.sort(entries,(a,b)->a.packageName.compareTo(b.packageName));
+                org.json.JSONArray inventory=new org.json.JSONArray();
+                for(android.content.pm.PackageInfo entry:entries) {
+                    java.util.List<String> certificates=new java.util.ArrayList<>();
+                    if(entry.signingInfo!=null)for(android.content.pm.Signature signature:entry.signingInfo.getApkContentsSigners()) {
+                        byte[] hash=java.security.MessageDigest.getInstance("SHA-256").digest(signature.toByteArray());StringBuilder text=new StringBuilder();
+                        for(byte value:hash)text.append(String.format(java.util.Locale.ROOT,"%02x",value&255));certificates.add(text.toString());
                     }
-                    boolean unlocked=state.getBoolean("secure") && !state.getBoolean("deviceLocked") && !state.getBoolean("keyguardLocked") && state.getBoolean("interactive");
-                    state.put("unlockObserved",unlocked).put("keyguardObservationWaitMillis",SystemClock.elapsedRealtime()-started).put("keyguardObservationPolls",polls)
-                        .put("externalStorage",externalStorage(context,false));
-                    if(!unlocked)state.put("powerDump",dump("power"));
+                    java.util.Collections.sort(certificates);
+                    inventory.put(new org.json.JSONObject().put("package",entry.packageName).put("uid",entry.applicationInfo.uid)
+                        .put("versionCode",entry.getLongVersionCode()).put("installed",(entry.applicationInfo.flags&android.content.pm.ApplicationInfo.FLAG_INSTALLED)!=0)
+                        .put("certificates",new org.json.JSONArray(certificates)));
                 }
+                System.out.println("POCKET_CE32_INVENTORY "+new org.json.JSONObject().put("packages",inventory).put("includesKeptData",true));
+                System.out.flush();System.exit(0);return;
+            }
+            if(args[0].equals("keyguard") || args[0].equals("keyguard-ui") || args[0].equals("keyguard-diagnostic") || args[0].equals("keyguard-power") || args[0].equals("keyguard-await")) {
+                org.json.JSONObject state=keyguardState(context,args[0]);
                 System.out.println("POCKET_CE32_KEYGUARD "+state);System.out.flush();System.exit(0);return;
             }
             // Decrypting the filesystem precedes UserController's asynchronous

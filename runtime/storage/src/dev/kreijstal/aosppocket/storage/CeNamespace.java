@@ -25,6 +25,10 @@ public final class CeNamespace {
         public int id,parent,mode,uid,gid,links;
         public long atime,mtime,ctime;
         public String target="";
+        // Session-only dentry ancestry for held descriptors after unlink.
+        // Unlinked nodes are discarded when the encrypted namespace reopens.
+        public int removedParent;
+        public String removedName="";
         public final TreeMap<String,Integer> children=new TreeMap<>();
         public final TreeMap<String,byte[]> xattrs=new TreeMap<>();
         public boolean directory(){return (mode&0170000)==DIR;}
@@ -41,6 +45,22 @@ public final class CeNamespace {
     private byte[][] serializedChunks=new byte[0][];
     private boolean metadataDirty;
     private long metadataRevision;
+    private final ThreadLocal<ExternalMediaView> externalMediaView=new ThreadLocal<>();
+    /** A pathname RPC can see an outer emulated mount above this encrypted store.
+     * Keep that choice on the request thread: provider backing requests and
+     * concurrent callers must continue to resolve the lower encrypted tree. */
+    public final class ExternalMediaView implements AutoCloseable {
+        private final ExternalMediaView previous;
+        private final Thread owner=Thread.currentThread();
+        private boolean closed;
+        private ExternalMediaView(){previous=externalMediaView.get();externalMediaView.set(this);}
+        @Override public void close() {
+            if(closed || Thread.currentThread()!=owner || externalMediaView.get()!=this)
+                throw new IllegalStateException("CE pathname view closed out of order");
+            closed=true;if(previous==null)externalMediaView.remove();else externalMediaView.set(previous);
+        }
+    }
+    public ExternalMediaView externalMediaView(){return new ExternalMediaView();}
     public boolean autoCommit=true;
     public CeNamespace(EncryptedStore store,boolean create)throws IOException,GeneralSecurityException {
         this(store,create,false);
@@ -102,6 +122,13 @@ public final class CeNamespace {
         for(Map.Entry<String,Integer> item:parent.children.entrySet())if(item.getValue()==id){name=item.getKey();break;}
         if(name==null)throw new FsException(2);return path(parent.id)+"/"+name;
     }
+    private String heldPath(Node n)throws IOException {
+        if(n.links==0 && !n.removedName.isEmpty())return heldPath(node(n.removedParent))+"/"+n.removedName;
+        return path(n.id);
+    }
+    public synchronized String descriptorPath(int id)throws IOException {
+        Node n=node(id);return heldPath(n)+(n.links==0?" (deleted)":"");
+    }
     public static void access(Node n,int uid,int gid,int[] groups,int bits)throws FsException {
         if(uid==0)return;int shift=n.uid==uid?6:n.gid==gid?3:0;
         if(shift==0)for(int group:groups)if(group==n.gid){shift=3;break;}
@@ -110,8 +137,24 @@ public final class CeNamespace {
     public synchronized Node resolve(String path,int uid,int gid,int[] groups,boolean follow)throws IOException {
         return resolve(path,uid,gid,groups,follow,0);
     }
+    private static String publicMediaPath(String path,int uid) {
+        String[] aliases={"/storage/emulated","/mnt/runtime/default/emulated","/mnt/runtime/read/emulated",
+            "/mnt/runtime/write/emulated","/mnt/user/0/emulated","/mnt/user/0/primary","/sdcard","/storage/self/primary"};
+        for(int i=0;i<aliases.length;i++)if(path.equals(aliases[i]) || path.startsWith(aliases[i]+"/"))
+            return (i<5?"/storage/emulated":"/storage/emulated/0")+path.substring(aliases[i].length());
+        if(uid!=0 && uid!=1000)for(String lower:new String[]{"/data/media","/system-data/media"})
+            if(path.equals(lower) || path.startsWith(lower+"/"))return "/storage/emulated"+path.substring(lower.length());
+        return null;
+    }
     private Node resolve(String path,int uid,int gid,int[] groups,boolean follow,int depth)throws IOException {
-        if(depth>40)throw new FsException(40);path=alias(path);int root=rootId(path);if(root==0)throw new Outside(path);
+        if(depth>40)throw new FsException(40);
+        if(externalMediaView.get()!=null) {
+            String visible=publicMediaPath(path,uid);
+            // Preserve the suffix, including '..'. The outer provider walks
+            // it after the symlink target and authenticates this same caller.
+            if(visible!=null)throw new Outside(visible);
+        }
+        path=alias(path);int root=rootId(path);if(root==0)throw new Outside(path);
         Node current=node(root);String tail=path.substring(roots[root-3].length());String[] parts=tail.split("/",-1);
         for(int i=0;i<parts.length;i++) {
             String part=parts[i];if(part.isEmpty())continue;
@@ -138,7 +181,10 @@ public final class CeNamespace {
     }
     private Node parent(String path,int uid,int gid,int[] groups)throws IOException {
         int slash=path.lastIndexOf('/');if(slash<0)throw new FsException(22);
-        Node parent=resolve(path.substring(0,slash),uid,gid,groups,true);if(!parent.directory())throw new FsException(20);
+        Node parent;
+        try{parent=resolve(path.substring(0,slash),uid,gid,groups,true);}
+        catch(Outside outside){throw new Outside(outside.path+"/"+path.substring(slash+1));}
+        if(!parent.directory())throw new FsException(20);
         access(parent,uid,gid,groups,3);return parent;
     }
     private static String basename(String path)throws FsException {
@@ -148,7 +194,13 @@ public final class CeNamespace {
     }
     public Node create(String path,int mode,int uid,int gid,int[] groups,String target)throws IOException,GeneralSecurityException {
         Node n;synchronized(this) {
-        path=alias(path);Node parent=parent(path,uid,gid,groups);String name=basename(path);
+        path=alias(path);
+        // The encrypted roots already exist in this namespace. Their parents
+        // belong to the outer filesystem, so parent() would redirect creation
+        // of an existing root back to this same path instead of returning EEXIST.
+        int root=rootId(path);
+        if(root!=0 && path.equals(roots[root-3]))throw new FsException(17);
+        Node parent=parent(path,uid,gid,groups);String name=basename(path);
         if(parent.children.containsKey(name))throw new FsException(17);
         if(next==Integer.MAX_VALUE || nodes.size()>=9999)throw new FsException(28);
         n=newNode(next++,parent.id,mode,uid,(parent.mode&02000)!=0?parent.gid:gid);
@@ -165,6 +217,7 @@ public final class CeNamespace {
         path=alias(path);Node p=parent(path,uid,gid,groups);String name=basename(path);Integer id=p.children.get(name);if(id==null)throw new FsException(2);
         n=node(id);if(n.directory()!=directory)throw new FsException(n.directory()?21:20);
         sticky(p,n,uid);if(n.directory() && !n.children.isEmpty())throw new FsException(39);
+        if(n.directory() || n.links==1){n.removedParent=p.id;n.removedName=name;}
         p.children.remove(name);if(n.directory()){p.links--;n.links=0;}else n.links--;
         p.mtime=p.ctime=n.ctime=now();markDirty();}commit();
         // Keep unlinked inodes until the session ends. FUSE mappings may outlive
@@ -193,7 +246,8 @@ public final class CeNamespace {
             if(other.directory() && !other.children.isEmpty())throw new FsException(39);
         }
         if(n.directory())for(Node p=b;p.parent!=0;p=node(p.parent))if(p.id==n.id)throw new FsException(22);
-        if(target!=null) {Node other=node(target);if(other.directory()){b.links--;other.links=0;}else other.links--;other.ctime=now();}
+        if(target!=null) {Node other=node(target);if(other.directory() || other.links==1){other.removedParent=b.id;other.removedName=newName;}
+            if(other.directory()){b.links--;other.links=0;}else other.links--;other.ctime=now();}
         a.children.remove(oldName);b.children.put(newName,n.id);
         if(n.directory()){a.links--;b.links++;n.parent=b.id;}
         a.mtime=a.ctime=b.mtime=b.ctime=n.ctime=now();markDirty();}commit();

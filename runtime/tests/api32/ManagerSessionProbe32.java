@@ -45,6 +45,7 @@ public class ManagerSessionProbe32 extends RuntimeActivity {
     }
     @Override public boolean dispatchKeyEvent(KeyEvent event){if(runtime!=null && runtime.fullKey(event))return true;return super.dispatchKeyEvent(event);}
     @Override public void dump(String prefix,FileDescriptor fd,PrintWriter writer,String[] args) {
+        if(args.length==2 && args[0].equals("pocket-storage-threads32") && runId!=null && args[1].equals(runId)){dumpStorageThreads(writer);return;}
         String value=finished==null?progress:finished;
         writer.println("POCKET_SESSION32="+Base64.encodeToString(value.getBytes(java.nio.charset.StandardCharsets.UTF_8),Base64.NO_WRAP));
     }
@@ -304,5 +305,39 @@ public class ManagerSessionProbe32 extends RuntimeActivity {
                 Files.write(new File(getFilesDir(),"manager32-session-result.json").toPath(),finished.getBytes("UTF-8"));
             }catch(Exception error){try{result.put("validation","FAIL").put("reportError",error.toString());finished=result.toString();}catch(Exception ignored){}}
         }
+    }
+    // Test-only DUMP observation: no filesystem, plaintext, key or credential
+    // access, no runtime command, and no change to the ordinary workload.
+    private void dumpStorageThreads(PrintWriter writer) {
+        JSONObject trace=new JSONObject();
+        try {
+            trace.put("schema",1).put("runId",runId).put("hostPid",android.os.Process.myPid())
+                .put("hostUid",android.os.Process.myUid()).put("elapsedRealtimeMillis",SystemClock.elapsedRealtime())
+                .put("stage",new JSONObject(progress).optString("stage","starting"))
+                .put("readOnly",true).put("readsGuestData",false);
+            Map<Thread,StackTraceElement[]> all=Thread.getAllStackTraces();
+            JSONArray threads=new JSONArray();int selected=0;
+            for(Map.Entry<Thread,StackTraceElement[]> entry:all.entrySet()) {
+                Thread thread=entry.getKey();boolean storage=thread.getName().equals("PocketCeCheckpoint");
+                for(StackTraceElement frame:entry.getValue()) {
+                    String name=frame.getClassName();
+                    storage|=name.startsWith("dev.kreijstal.aosppocket.storage.")
+                        || name.startsWith("dev.kreijstal.aosppocket.runtime.Ce")
+                        || name.startsWith("dev.kreijstal.aosppocket.runtime.External");
+                }
+                if(!storage)continue;
+                if(selected++>=128)continue;
+                JSONArray frames=new JSONArray();int count=0;
+                for(StackTraceElement frame:entry.getValue()) {
+                    if(count++==48)break;
+                    frames.put(frame.toString());
+                }
+                threads.put(new JSONObject().put("id",thread.getId()).put("name",thread.getName())
+                    .put("state",thread.getState().toString()).put("frames",frames));
+            }
+            trace.put("hostThreadCount",all.size()).put("threads",threads).put("truncated",selected>128)
+                .put("validation","PASS");
+        }catch(Exception error){try{trace.put("validation","FAIL").put("error",error.getClass().getName());}catch(Exception ignored){}}
+        writer.println("POCKET_STORAGE_THREADS32="+Base64.encodeToString(trace.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8),Base64.NO_WRAP));
     }
 }

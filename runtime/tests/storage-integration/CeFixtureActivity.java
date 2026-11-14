@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.security.MessageDigest;
 import dev.kreijstal.aosppocket.storage.*;
 import org.json.JSONObject;
 /** Isolated production-adapter test. Never accesses Manager's root or user data. */
@@ -59,15 +60,65 @@ public final class CeFixtureActivity extends Activity {
         while((n=p.getInputStream().read(data))!=-1){bytes.write(data,0,n);if(bytes.size()>65536)throw new IOException("CE test output bound");}
         int result=p.waitFor();String output=bytes.toString("UTF-8");if(result!=0)throw new IOException("Native CE test "+mode+" exit="+result+" "+output);return output;
     }
+    private String seedCheckpointMigration(File source,boolean sourceHardlink)throws Exception {
+        for(int i=0;i<96;i++)Files.write(new File(source,"checkpoint-seed-"+i).toPath(),("seed-"+i).getBytes("UTF-8"),StandardOpenOption.CREATE_NEW);
+        File large=new File(source,"large-checkpoint-file");MessageDigest hash=MessageDigest.getInstance("SHA-256");
+        byte[] buffer=new byte[65536];long offset=0,size=17L*1024*1024+13;
+        try(OutputStream output=Files.newOutputStream(large.toPath(),StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
+            while(offset<size) {
+                int count=(int)Math.min(buffer.length,size-offset);
+                for(int i=0;i<count;i++)buffer[i]=(byte)((offset+i)*31+7);
+                output.write(buffer,0,count);hash.update(buffer,0,count);offset+=count;
+            }
+        }
+        if(sourceHardlink)Files.createLink(new File(source,"large-checkpoint-hardlink").toPath(),large.toPath());
+        return android.util.Base64.encodeToString(hash.digest(),android.util.Base64.NO_WRAP);
+    }
+    private JSONObject verifyCheckpointMigration(byte[] secret,String expected,boolean sourceHardlink)throws Exception {
+        Path vault=new File(root,".pocket-ce-v1").toPath();
+        try(EncryptedStore store=EncryptedStore.open(vault,secret)) {
+            CeNamespace ns=new CeNamespace(store,false);int[] groups={};
+            CeNamespace.Node file=ns.resolve("/data/user/0/large-checkpoint-file",0,0,groups,true);
+            if(sourceHardlink) {
+                CeNamespace.Node link=ns.resolve("/data/user/0/large-checkpoint-hardlink",0,0,groups,true);
+                if(file.id!=link.id || file.links!=2)throw new IOException("Migration did not preserve the hardlink inode");
+            }
+            String name=CeNamespace.content(file.id);long size=store.size(name),offset=0;
+            if(size!=17L*1024*1024+13)throw new IOException("Migrated large file size differs");
+            MessageDigest hash=MessageDigest.getInstance("SHA-256");byte[] bytes=new byte[65536];
+            while(offset<size) {
+                int count=store.read(name,offset,bytes,0,(int)Math.min(bytes.length,size-offset));
+                if(count<=0)throw new IOException("Short migrated large-file read");hash.update(bytes,0,count);offset+=count;
+            }
+            if(!android.util.Base64.encodeToString(hash.digest(),android.util.Base64.NO_WRAP).equals(expected))throw new IOException("Migration checkpoint content differs");
+            long before=0,after=0;
+            try(DirectoryStream<Path> paths=Files.newDirectoryStream(vault.resolve("objects"))){for(Path path:paths)before++;}
+            store.collectGarbage();
+            try(DirectoryStream<Path> paths=Files.newDirectoryStream(vault.resolve("objects"))){for(Path path:paths)after++;}
+            if(before!=after)throw new IOException("Migration retained obsolete ciphertext generations");
+            if(!sourceHardlink) {
+                ns.link("/data/user/0/large-checkpoint-file","/data/user/0/large-checkpoint-hardlink",0,0,groups);
+                ns.sync();store.collectGarbage();
+            }
+            CeNamespace.Node link=ns.resolve("/data/user/0/large-checkpoint-hardlink",0,0,groups,true);
+            if(link.id!=file.id || file.links!=2)throw new IOException("Encrypted hardlink inode differs");
+            return new JSONObject().put("bytesVerified",size).put("sourceHardlinkPresentBeforeMigration",sourceHardlink)
+                .put("sourceHardlinkPreserved",sourceHardlink).put("logicalHardlinkVerified",true)
+                .put("ciphertextObjects",after).put("obsoleteCiphertextObjects",before-after).put("sha256Base64",expected);
+        }
+    }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);TextView text=new TextView(this);setContentView(text);text.setText("Testing credential-encrypted filesystem…");
         final boolean api32=getIntent().getBooleanExtra("api32_layout",false);
+        final boolean checkpoints=getIntent().getBooleanExtra("checkpoint_migration",false);
+        final boolean sourceHardlink=getIntent().getBooleanExtra("source_hardlink",true);
         final String runId=getIntent().getStringExtra("probe_run_id");
         new Thread(()-> {
             JSONObject report=new JSONObject();
             try {
                 concurrentSyncTransport();report.put("readDuringBlockedSync","PASS: real AppFuse bridge permits reads before fsync finishes");
-                root=new File(getFilesDir(),"fixture");if(root.exists())remove(root.toPath());root.mkdirs();
+                root=new File(getFilesDir(),"fixture");if(root.exists())throw new IOException("Preserved fixture already exists; use a fresh fixture package");
+                if(!root.mkdir())throw new IOException("Cannot create fixture directory");
                 for(String path:getAssets().list("root/system/bin"))extract("system/bin/"+path);
                 for(String path:getAssets().list("root/system/lib64"))extract("system/lib64/"+path);
                 for(String path:getAssets().list("root/system/usr/icu"))extract("system/usr/icu/"+path);
@@ -79,12 +130,20 @@ public final class CeFixtureActivity extends Activity {
                     File source=new File(root,"system-data/user/0");source.mkdirs();Files.write(new File(source,"seed").toPath(),"migration-canary".getBytes("UTF-8"));
                     File vendor=new File(root,"system-data/vendor_ce/0");
                     if(api32){vendor.mkdirs();Files.write(new File(vendor,"seed").toPath(),"vendor-migration-canary".getBytes("UTF-8"));}
+                    String largeDigest=checkpoints?seedCheckpointMigration(source,sourceHardlink):null;
+                    CeMigrationSpace.Plan plan=CeMigration.preflight(root);
+                    report.put("spacePreflight",new JSONObject().put("plaintextBytes",plan.plaintextBytes).put("requiredBytes",plan.requiredBytes).put("dataChunks",plan.dataChunks));
+                    if(checkpoints && (plan.plaintextBytes<17L*1024*1024 || plan.plaintextBytes>18L*1024*1024))throw new IOException("Preflight counted a hardlink twice");
                     CeMigration.perform(root,secret);
                     if((Os.stat(source.getPath()).st_mode&0777)!=0 || !CeStorage.enabled(root))throw new IOException("CE migration did not seal the plaintext source root");
                     report.put("migration","verified ciphertext; plaintext source removed");
+                    if(checkpoints)report.put("checkpointMigration",verifyCheckpointMigration(secret,largeDigest,sourceHardlink));
                     try(CeStorage storage=new CeStorage(root)) {
                         report.put("locked",run("locked"));if(api32)report.put("vendorLocked",run("vendor-locked"));
-                        storage.unlock(secret);report.put("metadata",run("metadata"));report.put("native",run("exercise"));if(api32)report.put("vendorNative",run("vendor-exercise"));
+                        storage.unlock(secret);report.put("metadata",run("metadata"));
+                        report.put("procFdReopen",run("proc-reopen"));
+                        report.put("removedDirectory",run("removed-dir"));
+                        report.put("native",run("exercise"));if(api32)report.put("vendorNative",run("vendor-exercise"));
                     }
                     try(CeStorage storage=new CeStorage(root)){storage.unlock(secret);report.put("metadataReopened",run("metadata-verify"));report.put("reopened",run("verify"));if(api32)report.put("vendorReopened",run("vendor-verify"));}
                     try(CeStorage storage=new CeStorage(root)){storage.unlock(secret);storage.prepareAuth(new byte[0]);CeDefaultKey.fixate(root);}
@@ -106,13 +165,9 @@ public final class CeFixtureActivity extends Activity {
             }catch(Throwable error){try{report.put("validation","FAIL").put("error",error.toString());}catch(Exception ignored){}}
             try{report.put("runId",runId).put("api32Layout",api32).put("scope","Encrypted VFS, migration and native ARM64 file transport; not Android12L framework credential lifecycle");}catch(Exception ignored){}
             final String result=report.toString();finished=result;
-            try(FileOutputStream out=openFileOutput("report.json",MODE_PRIVATE)){out.write(result.getBytes("UTF-8"));}catch(Exception ignored){}
+            String reportId=runId!=null && runId.matches("[a-f0-9]{32}")?runId:UUID.randomUUID().toString();
+            try{Files.write(new File(getFilesDir(),"report-"+reportId+".json").toPath(),result.getBytes("UTF-8"),StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE);}catch(Exception ignored){}
             runOnUiThread(()->text.setText(result));
         },"CeIntegrationTest").start();
-    }
-    private static void remove(Path p)throws IOException {
-        if(!Files.isSymbolicLink(p) && Files.isDirectory(p))try{Os.chmod(p.toString(),0700);}catch(Exception error){throw new IOException(error);}
-        if(!Files.isSymbolicLink(p) && Files.isDirectory(p))try(DirectoryStream<Path> children=Files.newDirectoryStream(p)){for(Path c:children)remove(c);}
-        Files.delete(p);
     }
 }

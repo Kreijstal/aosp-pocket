@@ -134,11 +134,28 @@ public final class AppInspector32 {
             if(primary)try{queryExternalPrimary(result);}
             catch(Exception error){while(error instanceof InvocationTargetException && error.getCause() instanceof Exception)error=(Exception)error.getCause();result.put("externalPrimaryQuery",false).put("externalPrimaryQueryError",error.toString());}
             if(info.packageName.equals("dev.kreijstal.pocketvolume32")) {
-                String activity=dump("activity",info.packageName+"/.MainActivity");
-                for(String line:activity.split("\n"))if(line.trim().startsWith("POCKET_VOLUME_APP32=")) {
-                    result.put("externalVolumeApp",new JSONObject(new String(android.util.Base64.decode(line.trim().substring("POCKET_VOLUME_APP32=".length()),android.util.Base64.DEFAULT),"UTF-8")));
-                }
-                if(!result.has("externalVolumeApp"))result.put("externalVolumeAppError","Registered storage Activity returned no report").put("externalVolumeAppDump",activity.substring(0,Math.min(activity.length(),8192)));
+                // The ordinary Activity starts its workload on a worker. Focus
+                // does not mean that its native/storage proof has finished.
+                File request=new File("/tmp/pocket-volume-app-run");
+                if(request.length()!=32)throw new IOException("Invalid storage observation request");
+                String nonce=new String(Files.readAllBytes(request.toPath()),"US-ASCII");
+                if(!nonce.matches("[0-9a-f]{32}"))throw new IOException("Invalid storage observation nonce");
+                long started=SystemClock.elapsedRealtime(),deadline=started+30000;int observations=0;
+                JSONObject proof=null;String activity="";boolean terminal=false;
+                do {
+                    activity=dump("activity",info.packageName+"/.MainActivity");observations++;
+                    for(String line:activity.split("\n"))if(line.trim().startsWith("POCKET_VOLUME_APP32="))
+                        proof=new JSONObject(new String(android.util.Base64.decode(line.trim().substring("POCKET_VOLUME_APP32=".length()),android.util.Base64.DEFAULT),"UTF-8"));
+                    terminal=proof!=null && nonce.equals(proof.optString("nonce"))
+                        && (proof.optString("validation").equals("PASS") || proof.optString("validation").equals("FAIL"));
+                    if(terminal)break;
+                    Thread.sleep(250);
+                }while(SystemClock.elapsedRealtime()<deadline);
+                result.put("externalVolumeAppObservation",new JSONObject().put("nonce",nonce).put("terminal",terminal)
+                    .put("timeoutMillis",30000).put("observations",observations).put("waitedMillis",SystemClock.elapsedRealtime()-started));
+                if(proof!=null)result.put("externalVolumeApp",proof);
+                else result.put("externalVolumeAppError","Registered storage Activity returned no report").put("externalVolumeAppDump",activity.substring(0,Math.min(activity.length(),8192)));
+                result.put("activities",dump("activity","activities")).put("windows",dump("window","windows"));
             }
             if(info.packageName.equals("dev.kreijstal.pocketvolumeowner32")) {
                 String activity=dump("activity",info.packageName+"/.MainActivity");

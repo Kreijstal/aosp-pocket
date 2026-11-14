@@ -1,7 +1,64 @@
 # Android 12L bring-up
 
-The API 32 port is in development. The experimental Manager can select and
-download it. Image0.78.47 with freshly source-built host libraries passes the dedicated Pi tests for a validated network,
+Deployment remains blocked by the failed full lifecycle and unresolved Binder
+cleanup issue. See the [deployment checklist](android12l-deployment-checklist.md)
+and its preserved evidence manifest; the build is **unqualified**.
+
+The API32 port is in development. Its experimental Manager downloads the image
+on demand. On current image0.78.136, complete AV137, all nine namespace groups
+in144, and genuine Play Signal139 pass their independent Pi checks. They retain
+the normal default process limit32, with sampled peaks30/30/29 and strict native
+cleanup. The Manager production classes and five host libraries used for these
+tests are retained in the current credential-test build. These are finite
+observations, with no hard process-bound claim.
+
+The original 143-app encrypted profile, its app keys/data and five private
+canaries remain preserved. CE155 corrected the public test fixture and then
+failed when a cold keyguard observer returned after the screen timed out.
+Scoped recovery159 removed that run's own test lock, and cold verification161
+passed a fresh host/guest restart without a password channel. The original
+password-free encrypted profile, apps, keys and canaries are restored.
+
+The corrected test prepares a read-only observer before host input and keeps
+state/UI queries in the same process. Its transport passes 50 focused assertions;
+production classes, image and five native libraries remain unchanged. CE162
+verified awake state promptly on three boots and closed every warm observer
+cleanly. It passed two strict cycles, including the first encrypted boot and
+password change. The next encrypted boot verified the original data and removed
+the test password, but its captured log exposed an android.process.acore native
+crash in BinderProxy_destroy/RefBase::decStrong. That full run remains failed:
+347 process samples peaked at31 and all guests/helpers stopped. Independent
+cold check165 then passed without any password or input channel, preserving
+all143 original entries, the UID10113 app key/data and all storage canaries.
+Its106 samples peaked at30; the exact Manager base was restored with no guest
+left running. The complete six-cycle/offline restart/seventh cold lifecycle
+remains unqualified, and the Binder reference-lifetime fault is unresolved.
+
+A normal rebuild156 of the current downloadable image matches its entire
+591137677-byte archive, manifest and2652 payload entries exactly. This reuses
+pinned reference artifacts and generated dependency caches; it is not a
+clean-room AOSP source-build claim. Production-package preparation catches a
+stale native42 whole source-lock hash. Fresh host build158 succeeds, with two
+libraries byte-identical and two differing in loadable sections. Those new
+libraries remain local candidates; the Pi keeps its qualified native libraries.
+Repeat163 from the retained original source/build root reproduced all four
+qualified host libraries byte-for-byte with all23 source pins verified. This
+retains compiler/dependency caches and does not resolve the current whole-lock
+packaging guard or establish clean-room reproducibility.
+See the current summary and exact receipts in
+[source/image validation](api32-source-image-validation.json).
+
+Current normal-profile credential completion, fresh migration qualification,
+Android9/10 regression, physical phone and final HTTPS/source/license delivery
+remain incomplete. Full failed trials119 and131 remain failures despite later
+passing namespace/media runs. `full_guest_boot_verified` and
+`pocket_manager_api32_supported` remain false in `sources.lock.json`.
+
+Older evidence below records intermediate builds. Image58 media and Signal
+repeats passed with sampled peaks30/29 under the unchanged host limit32. Its
+separate retained encrypted-profile repeat passed six cycles; the later
+normal-profile migration lifecycle failed and remains tracked. Image0.78.47
+with freshly source-built host libraries passes the dedicated Pi tests for a validated network,
 public asynchronous DNS, unmodified Play Signal startup, Home/reopen and clean
 shutdown. See the [current Signal evidence](api32-manager-signal-validation.json).
 It is not yet offered by the default production catalog:
@@ -4549,19 +4606,1702 @@ remain open. Enforcing/default32, denied host media grants and retained
 profiles/data/keys are preserved. Both production support flags remain false.
 
 
-### Full audio/camera repeat on image56
+### Full audio/camera repeats on images56–58
 
-The unchanged ordinary AV APK from the passing48 workload is running against
-the exact cached image56 and all770 source pins validated by namespace56. This
-retains both all-camera rounds, Camera2 YUV/JPEG, microphone AAC plus Surface
-AVC MP4 recording, actual decoded frames/PCM/timestamps/EOS, playback/capture,
-Home/reopen and the typed source-built installd data/permission/dexopt checks.
-The original app build sources remain in the48 snapshot; it is not presented
-as a fresh rebuild with the later generic packaging helper. The new Manager
-package preserves production Java and all five JNI libraries.
+The first full image56 repeat failed as run
+`f084c67a80094229b5e6343bb38153d5`: the initial AudioTrack creation lost
+AudioFlinger after a native `TimeCheck timeout for IAudioFlinger command 1`.
+Both cameras, microphone, MP4 AAC/AVC recording and decode passed in both
+rounds, and playback passed on reopen. This remains a full workload failure.
+The failure audit and stopped-owner guard are retained in
+`out/api32/av-repeat56-app-result/failure-audit.json` and
+`out/api32/av-repeat56-terminal-state.json`. A bounded test-only read mode
+collected that run's saved tombstone without booting or overwriting its report.
 
-The exact supervisor and observers are recorded under
-`out/api32/av-repeat56-app-*-job.json`; the result is pending. The image is
-already cached, so historical install statistics do not prove a new download
-or upgrade in this trial. Enforcing/default32 and complete process accounting
-remain required, with host media grants restored after strict shutdown.
+Later runs `712cfd5c93a04439ab42f411154a00b1` on56 and
+`7f160b09ffc2497eb123c25a3e5286ad` on57 passed both full AV rounds,
+typed installd, network and strict shutdown without an audioserver restart.
+Their independent functional checks are under
+`out/api32/av-repeat56b-app-result/functional-only-check.json` and
+`out/api32/av-repeat57-app-result/functional-only-check.json`.
+Neither had process-budget observers, so they do not close the sampled-budget
+gate. The57 audio-only adapter gives the native watchdog a20-second floor;
+it still aborts expired requests. This is a bounded timeout mitigation, not
+proof that cold-start latency or every possible deadlock is fixed.
+
+Image58 integrates that adapter into the normal source image builder, with
+source hashes and an audioserver-only init configuration check. Missing or
+duplicate audio services, unknown preloads and loading the adapter into another
+service are rejected. Five focused layout tests pass. Its2,651 runtime payloads
+are byte-identical to57; the archive version and manifest differ. The image
+SHA-256 is `7652a1a3d9b4a7254bfe73a3719db3afa823971b431d61933caee3f65e21691f`.
+All payload hashes and the unchanged original-certificate MediaProvider were
+verified in `out/api32/audio58-image-check.json`.
+
+The reuse validator now accepts a valid all-files-reused install while checking
+nonnegative integer counters, complete file/byte totals and image identity.
+Four focused tests pass. A no-replacement install is not evidence of payload
+replacement or a new code upgrade. The ordinary AV APK remains the original
+passing48 artifact; its original sources and checksum are retained.
+
+The full image58 AV repeat passed as `cdf1e7984dbd4005b00ea8568181198d`,
+with214 process samples peak30 and nine AMS samples. Both complete all-camera
+rounds, typed installd/network and strict shutdown passed without native
+fatal, ANR or audioserver restart. Independent and terminal evidence are
+`out/api32/av-repeat58-app-result/independent-check.json` and
+`out/api32/av-repeat58-terminal-state.json`.
+Exact supervisor/observer handles are under `out/api32/av-repeat58-app-*-job.json`;
+its774 source pins, Manager/package checks and full verifier are retained in
+`out/api32/av-repeat58-app-candidate.json`,
+`out/api32/audio58-package-check.json` and
+`out/api32/verify_av_repeat58_app_result.py`. Every helper/tracing process is
+counted under Enforcing/default32. Strict native cleanup and restored host media
+grants remain required. Both production support flags stay false.
+
+The image58 Signal repeat also passed, as
+`85b782e400ba4d5a81bda6fae3cfaf59`: the unmodified Play ARM64 app retained its
+UID and certificate, reached registration, and reopened after Home. DNS,
+NXDOMAIN, network-bound HTTPS, fwmark recovery and strict shutdown passed.
+There were145 process samples with peak29 and ten AMS samples. This verifies
+startup and networking; registration, messaging and calls were not exercised.
+Evidence is `out/api32/signal-repeat58-result/independent-check.json` and
+`out/api32/signal-repeat58-terminal-state.json`.
+
+### Migration capacity and incremental image space
+
+`CeMigrationSpace` sizes the actual five plaintext roots without following
+symlinks, counts physical hardlinks once, checks encrypted-store format bounds,
+and budgets ciphertext authentication, filesystem allocation, metadata and
+64 MiB headroom. Migration checks capacity before creating its staging copy.
+It also checkpoints after8 MiB of copied data or32 files and collects obsolete
+ciphertext after each checkpoint. The verified-copy/commit boundary remains
+before plaintext removal. This estimate is not a space reservation, and an
+actual offline migration still performs its own check.
+
+The real-filesystem host test passed for physical hardlinks, symlinks,4 KiB
+and16 KiB allocation, format bounds, and insufficient-space rejection without
+writes. The first Android fixture failed while creating a physical source
+hardlink, before migration. Its data and failure remain preserved. A separate
+fixture explicitly used a logical encrypted hardlink; it passed as
+`e8f137ee3833425c802a2fa622b09a6a`, including the existing full native VFS
+workload, five roots,96 small files and a17 MiB+13-byte file. The decrypted
+hash matched and no obsolete ciphertext objects remained after migration.
+Its measured plan required123,363,328 bytes for17,826,506 source bytes.
+Evidence is `out/api32/ce-checkpoint60-fixture-result/independent-check.json`
+and `out/api32/ce-checkpoint60-terminal-state.json`. This separate seeded
+fixture does not establish retained Pocket plaintext migration or the Android
+framework credential lifecycle.
+
+The next retained CE3 lifecycle run, `690a3fc291204f798b2b3d0b0ea7cf85`,
+stopped before boot because the image download guard reserved a replacement
+temporary file for the largest payload even though that payload was reusable.
+There were no guest cycles or credential changes. The stopped-owner audit,
+report and unused owner-only recovery file remain preserved; the recovery
+file was inspected only with filesystem metadata, never read.
+
+Image space planning now uses the installer's exact hash, size and mode match.
+Only files needing replacement contribute temporary space and positive size
+growth. The63 download/archive assertions include unchanged large files,
+corrupt bytes, changed permissions, growth, symlinks and userdata preservation.
+Four retry-guard tests require the exact terminal pre-boot failure and reject
+any credential, cycle or live-guest progress. The new Manager package validates
+with the same five host JNI libraries, ordinary CE app, image58 and typed
+installd client. Its migration classes match the passing Android fixture.
+
+The separate `ce3-repeat58-space61` trial passed as
+`9e2d148d61254ba8b602428714cd5116`. Its complete six-cycle independent check
+verified the image48-to58 upgrade with the original app UID, private data,
+non-exportable key and all five root/public-media canaries. Password set,
+change, wrong-password rejection, removal, automatic unlock, restoration,
+two lock-screen UI unlocks and an offline outer Manager restart passed.
+The original password-free lock state was restored and only this successful
+run's new recovery credentials were removed. The unused690 recovery file
+remains preserved without being read. All six cycles passed typed installd,
+mounted storage and strict native/kernel teardown checks. The632 process
+samples peaked at30;24 AMS samples had no observer errors. The terminal
+guard found no guest owner and unchanged Enforcing/default32 policy and
+denied host media grants. Evidence is
+`out/api32/ce3-repeat58-space61-result/independent-check.json` and
+`out/api32/ce3-repeat58-space61-terminal-state.json`.
+
+The combined image58 media, Signal and CE evidence covers eight starts and
+991 process samples, peak30. Every helper/tracing process is counted. The
+same image and five JNI libraries were used; the source snapshots distinguish
+the777-source CE host from the774-source media/Signal hosts. This is sampled
+budget evidence, not a hard process bound. The CE3 profile was already
+encrypted, so retained normal-profile plaintext migration remains open,
+alongside legacy profiles, physical-phone validation and distribution.
+
+An explicit retained-plaintext test mode is now implemented and builds as
+`out/api32/retained62b-manager-probe/api32-ce-manager-probe.apk`. After the
+complete CE3 terminal audit, `retained62` was installed and started on VM73
+with both observers. Its initial root/image/encryption/collision guards
+passed, followed by actual insecure-keyguard/readiness and capacity checks.
+The pre-migration inventory contains143 retained packages. Its measured
+31,631,283-byte plaintext tree required171,986,944 bytes free before the
+credential change. The initial plaintext-to-five-root-encrypted migration
+completed, and the first stopped cycle independently passed native/kernel
+and mounted-storage teardown checks. This partial boundary evidence is in
+`out/api32/retained62-migration-boundary-result/independent-check.json`.
+Four stopped cycles passed strict checks. The four encrypted app observations
+preserved all five root/public-media canaries, the original key witness and
+the143-package retained inventory through password changes, removal,
+automatic unlock and restoration. The first physical lock-screen unlock
+also passed. Cycle4 then failed: the first external-volume mount returned
+`-5` after a framework `StorageUserConnection` startup timeout; a later reset
+mounted successfully with a second provider session. That retry remains a
+failure under the existing strict validator. The offline outer restart and
+full six-cycle lifecycle did not pass. The693 process samples peaked at32,
+with24 AMS observations and no observer errors. Failure snapshots are preserved
+in `out/api32/retained62-failure-diagnostics/`. Both
+`--ce-probe32 --ce-retained-plaintext32` and
+the matching runtime intent are required. The ordinary CE builder strips this
+mode's asset from its input APK, so it cannot be inherited accidentally. The
+driver requires the exact completed normal-Manager plaintext baseline and
+installed APK, and rejects all encrypted-profile recovery flags in this mode.
+
+Before guest start it checks the existing root and exact image identity,
+rejects encryption/staging/checkpoint state, existing CE witness data or
+observer artifacts, and rejects symlinked root/data/observer parents. After
+boot it observes insecure keyguard and actual app readiness, inventories
+installed and kept-data packages with UID/version/signing certificates, and
+checks migration capacity before creating its own witness or canaries. All
+five canaries use exclusive creation. A second capacity check precedes the
+first LockSettings change. Every encrypted phase checks the retained app
+inventory and the new ordinary app's original non-exportable key. The intended
+outer restart authenticates this run's checkpoint and restores the original
+password-free lock state while retaining encrypted storage.
+
+The real-filesystem guard test passes for encryption state, dangling symlink
+collisions, directory redirects, checkpoint/observer collisions, exclusive
+seeds and retained data preservation. Four baseline-rejection unit tests and
+three CLI rejection checks pass. The full Manager rebuild and distribution
+validator pass; existing production runtime classes match the61 build, with
+only the test controller and its test helpers changed. The780 source pins and
+exact validation commands are in `out/api32/retained62-candidate.json`. Its
+full six-cycle verifier is prepared. The terminated supervisor and observer
+handles are recorded in `out/api32/retained62-*-job.json`. These build and host
+checks do not establish the missing full runtime lifecycle.
+
+The failed trial exposed two driver defects: this new plaintext mode had not
+persisted its own temporary recovery credentials, and a rejected stopped cycle
+was not saved before validation. The driver now durably saves each new trial's
+owner-only credentials before startup, retains them until verified restoration,
+and writes raw stopped-cycle evidence before applying strict checks. Six focused
+real-filesystem regression tests pass with
+`python3 -m unittest discover -s tools/tests -p test_api32_credential_recovery.py -v`.
+
+Only this failed run's temporary credentials were recovered from its still-live
+Activity through a same-signature, shell-permission-protected no-kill split.
+The base APK, original Activity and host policy were unchanged; no historical
+credential file or host root was used. A separate scoped recovery split then
+authenticated that credential, restored the original password-free lock, and
+verified automatic unlock in another boot. Both boots preserved the original
+app UID, non-exportable key, ciphertext witness and all five root/public canaries;
+both independently passed the existing native/kernel/mounted-storage shutdown
+checks. The exact own credential file was removed only after that verification.
+The public audit is `out/api32/own-restore67-result/independent-check.json`.
+This recovery does not change the failed retained62 lifecycle result. Temporary
+recovery splits remain installed pending the next guarded APK update; the
+normal package currently has three APK paths rather than one.
+
+The startup investigation found that the transport queued FUSE INIT with the
+ordinary15s file-operation deadline before the framework had bound its cold
+provider. The pinned12L `StorageUserConnection` source gives the complete bind
+and session-start operation20s. A real socket-peer regression with a16s delayed
+service connection fails against the old native code (the provider writes to
+an already closed socket) and passes with a startup-only20s INIT deadline.
+Ordinary requests retain15s; a rejected framework callback still cancels INIT
+before joining its worker. Elapsed INIT/checking diagnostics now make that
+boundary visible. This reproduces the deadline defect; the original failed
+cycle has no elapsed telemetry proving its exact timing, so runtime repetition
+is still required to establish that the observed race is resolved.
+
+The focused native commands
+`g++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread runtime/tests/api32/fuse_transport.cpp -o out/api32/storage-startup68-reference/fuse-transport-after`
+and the matching `external_volume.cpp` build pass. Both resulting probes pass,
+including unchanged ordinary deadlines, callback cancellation, malformed
+replies, adapter rollback, detach retry and zero descriptor leaks. The current
+Android core rebuild with
+`python3 tools/build_api32_core.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --reuse-generated --installd --out out/api32/storage-startup68-core`
+passes. Before/after regression output is retained in
+`out/api32/storage-startup68-reference/`.
+
+The complete0.78.68 image builds with SHA256
+`d7fc31ff8947d84a788730620f3a1c399959d92b7058713deacf3a6401bb83a4`.
+Its2651 payloads differ from58 only in `system/bin/pocket-core-api32`; all
+remaining2650 payloads are byte-identical. The test Manager is
+`a1dc884b0a865be14e37bbe88b6dbfd27b20436c0ac6d42ccbb4a4421b8ec167`,
+with the same five host JNI libraries and107 shared production classes as
+retained62. Its image-free distribution/package validator passes. The fresh
+781-source snapshot and complete archive verification are recorded in
+`out/api32/storage68-av-candidate.json`. Full AV and typed installd validation
+on the preserved encrypted normal profile is running as
+`c666d95df4234658aa611fd778c53cc6`, supervised by Pi PID1562 with the exact
+script in `out/api32/storage68-av-job.json`. Both process observers are live.
+The guarded signed full APK update succeeded without clearing data; the probe
+observed the existing encrypted five-root layout before setup. The image
+download and setup reached100%; boot and workload results remain pending.
+Poll the existing job with `python3 out/api32/snapshot_storage68_av.py`; do not
+relaunch on observation timeout. This does not turn the old failed migration
+lifecycle into a pass.
+
+Run `c666d95df4234658aa611fd778c53cc6` has now terminated. Both full media
+rounds, both cameras' AVC+AAC recording/decoding, playback/microphone, network,
+typed installd data/caller/boot-dexopt and native/kernel cleanup passed on the
+retained encrypted normal profile. The initial FUSE handshake completed
+at9937ms and the framework callback at10976ms; there was exactly one mount and
+one provider session. The315 process samples peaked at28, ended at zero and
+reported no observer errors. The strict overall result is nevertheless FAIL:
+the expected private-provider activation marker was not observed. Both app
+observations matched the exact provider APK, and the only FUSE opcode was INIT.
+Unlike the earlier plaintext run, this retained AV workload did not perform
+any FUSE file operations. The failure remains preserved in
+`out/api32/storage68-av-result/failure-audit.json`; the activation gate has not
+been removed or bypassed.
+
+The ordinary AV fixture now performs exclusive file creation, a completed
+fsync, close/reopen readback and SHA256 verification in its own primary-emulated
+private directory. Its second media round also verifies the first file after
+Home. These are public file APIs under the ordinary app's own UID, without
+additional permissions. Both witnesses remain preserved. Every existing media
+stage still runs even if this new stage fails. The specification and verifier
+require the two real I/O results and prior-file continuity; the existing
+provider marker and all original AV/network/native gates remain required.
+`python3 tools/build_api32_av_app.py --out out/api32/av70-external-io-app` passes.
+The same-signature new fixture APK is
+`bdb35691524840e720aca85bef5249c3c2343a7abcc31392617151ba91316b86`.
+Manager `839ed07cd22ad5783dc1c171b404846e92862aca89a4ebf61810e13b6b8804a2`
+builds and passes the image-free package validator. Its only changed payload
+from the previous test Manager is the ordinary app specification; host DEX,
+five JNI libraries and image68 remain byte-identical. The783-source candidate
+is `out/api32/av70-external-io-candidate.json`. The complete rerun is supervised
+by Pi PID10237 with both observers; poll the exact existing job with
+`python3 out/api32/snapshot_av70_external_io.py`.
+
+A separate explicit recovered-profile CE mode is also built for the upcoming
+six-boot lifecycle. Before APK/password changes its driver authenticates the
+original failed migration report, original app/inventory snapshot, four raw
+passed cycles and both hash-pinned recovery cycles, as well as the current
+completed encrypted baseline. It rejects symlinked/out-of-scope reports,
+changed app keys, a secure/active guest or any remaining own recovery
+credential file. A matching APK asset, runtime intent and nonce-bound evidence
+channel are all required. The guest checks the original app key and all
+retained package UID/version/certificates before setting its new test password,
+in each encrypted phase and after the offline outer restart. Its own new
+credentials remain durably owner-only until verified return to the original
+password-free state. It never reads historical credentials and does not claim
+the previous failed migration lifecycle passed.
+
+The six focused guard tests pass with
+`python3 -m unittest discover -s tools/tests -p test_api32_recovered_retained.py -v`;
+the existing credential-recovery and plaintext-baseline tests also pass.
+Seven actual CLI rejection checks pass before VM/APK access. The explicit CE
+Manager build and package validator pass as
+`out/api32/recovered69-ce-manager-probe/api32-ce-manager-probe.apk` with SHA256
+`02c380a0759a82745553feef7258cda1049857e86a38e1a9beee6febff489e03`.
+This CE mode has not been installed or started; it requires a completed strict
+encrypted app baseline first.
+The driver also retains its new recovery credentials through a seventh,
+read-only cold authless boot after the six credential cycles. That boot uses
+the existing authless probe branch before credential loading, verifies the
+original app/key and all root/public canaries, and must pass the same strict
+stopped-cycle checks. Only then may this run's hash-pinned owner-only credential
+file be removed. This additional protocol is compiled and awaits runtime
+validation with the new recovered-profile trial.
+
+The AV70 rerun terminated as `42f03937847548c082a068780b24abfc`, with two
+real external-directory failures. Both rounds still completed their individual
+audio/camera/recording stages. The new API call reached only eight root GETATTR
+requests, each returning ENOENT; ContextImpl rejected the lower canonical path
+`/data/media/0/Android/data/dev.kreijstal.pocketav32test/files` as an unknown app
+mkdir path. It also captured a separate Launcher3 `UiThreadHelper` null-array
+crash in `SystemUiProxy.getRecentTasks`. Neither failure is suppressed. Native
+cleanup and the mounted session passed;170 samples peaked at29 and ended at
+zero without observer errors. The exact failure audit is
+`out/api32/av70-external-io-result/failure-audit.json`.
+
+The CE dispatcher ran before the external namespace and accepted public
+emulated aliases as direct encrypted paths. Its directory descriptor replies
+also returned lower `/data/media` canonical paths in MediaProvider's explicit
+PASS_THROUGH view. The new pure path policy defers public emulated paths to
+MediaProvider whenever that namespace is selected. Ordinary apps' direct lower
+media paths defer too; privileged runtime lower accesses and MediaProvider's
+PASS_THROUGH backing accesses retain CE. Directory-descriptor canonical replies
+in that provider view now use `/storage/emulated`, with component boundaries and
+buffer bounds checked. The five internal encrypted roots and profiles without
+the external namespace keep their previous routing.
+
+`cc -std=c11 -O2 -Wall -Wextra -Werror runtime/tests/ce_external_route_host.c -o out/api32/ce-external72/route-test`
+and `out/api32/ce-external72/route-test` pass606 checks across all five storage
+views, namespace selection and root/system/ordinary identities. The existing
+visible-path regression probe also passes. The actual freestanding ARM64 loader
+build and ELF/config validation pass. The complete0.78.72 image builds with
+SHA256 `70ac824df799301c52c0b69ed160a3673eff87c70e3ed872ab789be9079660a9`.
+Only `system/bin/pocket-loader` differs from68; the other2650 payloads are
+identical. This is a candidate fix for the observed external-directory failure;
+it makes no claim to fix the independent Launcher3 crash.
+
+Manager `b078324130463172e592b8914da507a215700cb1f26adcc640ed10a4343d728f`
+builds and passes the image-free distribution validator. Its host DEX, five JNI
+libraries and ordinary AV APK are unchanged from70; only the image catalog
+changes. All785 frozen sources and the entire new archive are verified in
+`out/api32/ce-external73-av-candidate.json`. The full unchanged external-I/O and
+media trial is now supervised by Pi PID19270, with both process observers.
+Poll `python3 out/api32/snapshot_ce_external73_av.py`; do not restart on an
+observation timeout. The original data and password-free lock remain preserved.
+The prepared69/71 CE APKs target the older68 image and are not installed; rebuild
+that mode with the72 catalog after a current strict encrypted baseline passes.
+
+
+## Encrypted external storage verification and alias coverage
+
+Run `082f7b5d26a84241883dbde204a6e347` passed the full image0.78.72
+ordinary AV test on the retained five-root encrypted normal profile.
+`python3 out/api32/verify_ce_external73_av_result.py --run-id 082f7b5d26a84241883dbde204a6e347`
+passes independently against785 frozen source pins and raw results. Actual
+external-private create/fsync/readback and persistence across Home, both
+cameras, AVC/AAC recording and decoding, playback/microphone, network and
+typed installd operations passed.271 process observations peaked at29 under
+the unchanged actual default32. The separate terminal audit confirmed the
+exact supervisor/observers ended, no guest native owners remain, the expected
+APK is installed, SELinux is Enforcing and camera/microphone grants are
+denied. The earlier image68/70 failures remain preserved. This successful
+boot does not establish a fix for the historical Launcher recents NPE.
+
+Further host reproduction showed six aliases still depended on the raw
+lower directory when encrypted storage was selected. The loader now maps
+runtime/user aliases to the public provider view before lower filesystem
+probing; ordinary lower-media aliases follow the same route while provider
+PASS_THROUGH and privileged backing access retain their original behavior.
+All six before cases failed; all six after cases and component/length bounds
+pass. The existing symlink regression and actual ARM64 loader build pass.
+Image0.78.74 is built, SHA256
+`4af37b7bbc771d723904c588b9cb4e5f7127b79b03028f902b20d15e84d0eefa`;
+only its loader payload changes from72. Android validation is still pending.
+The new ordinary fixture retains all nine native namespace groups and40
+private-path denials, adding six alias inode/content/canonical-path reads
+and40 runtime/user alias cross-UID denials. Its Java/ARM64 build passes; the
+new Manager uses the same107 production classes and five host JNI libraries.
+No profile/data/key resets, phone operations or publication are involved.
+
+
+## Launcher recents null-result backport prototype
+
+The earlier certificate audit checked only the platform key. Additional
+public certificate comparisons prove the stock Launcher APK uses AOSP's
+public `testkey`, certificate SHA256
+`a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc`.
+This permits a caller-side backport with the original signing identity; no
+Binder reply rewriting or certificate-policy relaxation is needed. The
+local prototype adds a null-result branch after `IRecentTasks.getRecentTasks`
+and before `Arrays.asList`, returning through the existing empty-list path.
+It leaves non-null arrays and the existing RemoteException handling in place,
+following the upstream Launcher null-array guard.
+
+The patched APK verifies for SDK32 with the original certificate. Only
+`classes4.dex` changes among APK payloads. Disassembly of all5181 classes in
+that DEX shows the one method change plus omission of three equivalent
+explicit default-false field encodings by the DEX writer. Raw original and
+patched APKs, instruction/disassembly differences, exact public AOSP key
+provenance and hashes are preserved in
+`out/api32/launcher75-reference/null-guard-prototype-receipt.json`.
+This is a local prototype: it has not been installed or tested by Android
+ART. Reproducible build integration, original-versus-patched null/empty/
+nonempty/error fault injection and real Launcher/Home/recent-task validation
+remain required. The historical crash and strict no-fatal gate remain.
+
+
+The image74 namespace candidate now has786 frozen source pins and Manager
+SHA256 `9cdfe3bbcda78d9cb88d9e8e4b13043cf9152dc864bf2706e47c521a6f8551a8`.
+Its supervisor/observers are recorded in `out/api32/namespace75-app-job.json`
+and matching observer job files. The original native namespace library is
+byte-identical to56; only the ordinary fixture's Java adds the six reads and
+40 additional denials. Package validation and the focused real-host alias,
+symlink and606-case CE policy regressions pass. The strict test is running;
+no Android namespace result is claimed yet.
+
+The recovered76b credential fixture has also compiled and passed package
+validation against image74, APK SHA256
+`08599be6e3028da620cc519990eac978f1883668d65c38b73de7d923d98b8dee`.
+It records the full already-queried retained package inventory before the
+first password change and after each encrypted boot, so the independent
+verifier can compare all143 original entries rather than only booleans.
+The six recovery-provenance unit tests pass. It has not been installed or
+started; no new credential exists. Its guarded run script requires a strict
+completed encrypted namespace75 baseline before installation.
+
+The local Android ART Launcher null-result fault-injection JAR also builds
+(`out/api32/launcher75-reference/android-null-probe/build.json`). It will
+load the actual original and patched APK DEX in separate class loaders,
+require the original null NPE, then check null/empty/disconnected fallbacks,
+non-null object identity/order and unchanged RemoteException/SecurityException/
+state-error behavior. It has not executed on Android.
+
+
+## Encrypted namespace75 failure and CE symlink handoff repair
+
+Run `3b52b7cd667d41e382b8a0f41f307460` is a strict FAIL, preserved in
+`out/api32/namespace75-app-result/failure-audit.json`. All six actual alias
+reads returned the same68 bytes/inode/public canonical path, and both40-case
+cross-UID denial matrices passed. The original native test then failed at
+line60, `symlink-before-dotdot`, errno13 after `relativeDotdot`. The remaining
+eight groups/Home/reopen are unverified; this run is not relabeled a pass.
+There were no ANRs or Java/native fatals, all native services/children stopped
+cleanly, and292 observations peaked at29 with final0. The recovered76
+credential test was not prepared, staged or launched.
+
+An actual host reproduction of `CeNamespace.resolve` returns the sameEACCES:
+an internal encrypted symlink points into public storage, which the resolver
+aliases into privileged lower media before the external provider can enforce
+its view. The repair adds pathname operation4 using the unchanged v1 wire
+layout. It scopes outer public-media resolution to this request thread;
+original path1/FD2/control3 and provider PASS_THROUGH continue using the
+encrypted lower view. Following an internal symlink preserves its remaining
+suffix (including dotdot) and hands the public target through the existing
+Outside/EXDEV response to the authenticated provider. Parent traversal is
+checked before following the link. Redirected parent mutations also retain
+the final requested filename.
+
+`CeExternalMediaViewTest` passes against the real encrypted store, covering
+the original failure, nofollow, denied parent traversal, relative/loop/missing/
+non-directory paths, nine public/lower aliases, private-target handoff,
+mutation leaf preservation, privileged lower access, concurrent provider
+request isolation and nested/legacy view restoration. The existing complete
+`CeNamespaceTest` passes, including persistence/concurrent commits/failed
+commit recovery. The actual freestanding ARM64 loader build passes. Exact
+commands/hashes are recorded in
+`out/api32/ce-symlink77/regression-receipt.json`.
+Image0.78.77 and a matching CE-server Manager rebuild are in progress.
+No Pi runtime validation of this repair is claimed. Launcher null handling
+is a separate, not-installed prototype and is not included in this image.
+
+
+Image0.78.77 build completed:2651 payload files,591141266 bytes, SHA256
+`2dea029e42b854b5361307723ccf4f209a9463300262a89148bddf8365d0f0a6`.
+Manifest comparison confirms only `system/bin/pocket-loader` changes from74.
+The matching normal test Manager built and passed package validation, SHA256
+`d7ffa74d386299a60e03ba474eae3eaf530381f4b4f9625e05c07c16092da0a4`.
+It changes exactly `CeStorage.class`, `CeNamespace.class` and two new namespace
+view helper classes;105 previously shared production classes and all five
+host JNI libraries remain identical. The namespace78 candidate freezes787
+source pins and the unchanged alias75 ordinary APK/native namespace library.
+Its stage guard checks the exact failed75 supervisor and observers are
+terminal, report/APK hashes match, no native owners remain and the actual
+Enforcing/default32/denied camera/microphone policy is intact.
+The raw permission dumps are saved before and after the new no-media-grant
+fixture so policy verification does not depend on optional AV-only fields.
+The full Android rerun remains pending at this build/staging point.
+
+
+Namespace78 has now started as durable supervisor PID8087, token
+`6fccac9a7aa14d2d8b1367305928f22a`, with budget observer8202 and AMS
+observer8201. The exact PID/cmdline poll confirms it is live and its terminal
+record is absent. Job files and pending independent verifier/collector are
+under `out/api32/*namespace78*`; no Android result is claimed yet. Do not
+restart merely because observation takes time. All nine original groups,
+six positive alias reads,80 private denials, Home/network/installd/strict
+cleanup/default32 remain required. Recovery76b still targets74 and remains
+uninstalled; the later credential trial must be rebuilt/frozen against the
+current image and host classes after this full namespace baseline passes.
+
+
+## Reproducible Launcher null-result package and pending Android probe
+
+`tools/build_api32_launcher.py` now pins the original Launcher APK, SDK
+dexlib/baksmali dependencies and public AOSP development key bytes. It
+backports the caller null guard, verifies all5181 disassembled classes,
+permits only the one method branch and three equivalent default-false field
+encoding normalizations, preserves the original signing certificate and
+verifies16KiB ZIP alignment. The actual package build passed, APK SHA256
+`ab0636f0447bc2d6016569a9384aa0fef0f6cf34ae6693256ef50092b6a6aae7`.
+The new explicit `build_api32_image.py --launcher-dir` input validates that
+receipt against the immutable source APK. Image0.78.80 builds, SHA256
+`b5bb9dc64dcfec2c13172a07f2b5097a2dc4fd661773f5cb72c0ee41bca41dd3`;
+only the Launcher APK payload changes from77. It has not booted on Android.
+
+The tracked actual-ART fault probe and builder are
+`runtime/tests/api32/LauncherRecentsProbe32.java` and
+`tools/build_api32_launcher_probe.py`. Its nonce-bound JAR builds, SHA256
+`56e08a7f20121387ec056f40de97f3a13d7494c8a44eec240257510a2d571908`.
+An explicit test-only Manager option packages this fixture only when the
+ordinary app specification requires it. Three invalid mode combinations
+reject before APK construction. The Manager will load the actual original
+and patched Launcher DEX in separate class loaders, require the original
+NPE and repaired null fallback, preserve nonnull task identity/order,
+query arguments, RemoteException handling and permission/state errors.
+The host controller independently requires this current-nonce proof; an
+absent proof is rejected. This controlled interface test does not claim real
+Binder authorization or actual task UI; those retain separate integration
+gates. No Binder response filtering was introduced.
+
+## Namespace78 startup regression and existing-root repair
+
+Run `fefdc014940a4648952b5105f417e9c8` is a preserved FAIL before the native
+namespace app. Android never completed automatic user unlock: vold
+`prepareUserStorage` failed with EOPNOTSUPP95.261 process observations
+peaked at26 and ended at0, with no ANR/Java/native fatal and clean native
+shutdown. The failing readiness state and full logs are retained in
+`out/api32/namespace78-app-result/failure-audit.json`.
+
+The prior mutation-leaf repair exposed a real root case: creation of an
+existing CE root resolved its outside parent and redirected back to that
+same CE root. The loader correctly rejected the self redirect. A real
+`CeNamespace.create` host reproduction confirms this for all five roots.
+Creation now returns EEXIST for these actual existing roots before resolving
+their outside parent, preserving root ownership/mode/links. The extended
+`CeExternalMediaViewTest` verifies all five roots in ordinary and scoped
+views, root aliases and unchanged metadata, alongside the existing symlink/
+mutation/request-isolation cases. It and the complete `CeNamespaceTest` pass.
+No readiness timeout or permission gate was relaxed.
+
+The new normal Manager builds and passes package validation, SHA256
+`3901f28a5e27ac49ad05aba7efb85cc006bd38348a66793f28fe594701efc04a`.
+Namespace83 freezes791 source pins and runs the same installed image77
+(no image payload change), with all nine groups, alias6, private80,
+network/installd/Home and strict cleanup/default32 still required. Supervisor
+PID16513/token `dc7ea2be981445dbb185d2353560bf7f` and observers16911/16906
+are recorded in its job files. That run is now a preserved FAIL at the later
+`cwd-relative` assertion (errno71). Root preparation, automatic user unlock
+and app readiness passed on Android, alongside the first six native groups,
+six alias reads and eighty private-directory denials. All three exact jobs
+are terminal;160 process samples peaked at29 and ended at0, with no fatal
+and clean native/kernel shutdown. The whole nine-group/Home gate remains
+failed. Raw evidence is in `namespace83-app-result/failure-audit.json`.
+Recovery76b remains uninstalled and obsolete.
+
+The pending root-fixed Launcher/full-AV Manager84 also builds and passes
+package validation, SHA256
+`23de734797207e127a7f76fad8a9b8f1c4508372560780e9ac15b6e737124719`.
+All115 compiled classes, host DEX, manifest and five JNI libraries are
+byte-identical to namespace83. Only the image/app catalog assets change and
+three explicit Launcher proof assets are added. The original all-camera
+AV fixture APK is unchanged; full PCM/AVC/AAC/decode/external-file/Home
+workloads remain required in addition to the actual ART proof. Manager84
+has not been installed; strict namespace83 is its prerequisite.
+
+## CE directory descriptors and working-directory repair85
+
+The real external descriptor client reproduces EPROTO71 when its directory
+search receives the CE backend's O_RDONLY directory FD. The protocol requires
+an actual O_PATH FD, and its validator remains strict. CE directory opens now
+honor O_PATH in the kernel descriptor. Loader emulation preserves EBADF for
+data/iteration/mutation/lock operations and checks the guest's execute
+permission before fchdir; the physical directory's host permissions alone
+cannot enforce the guest identity. Regular CE content/proxy lifetime handling
+is unchanged.
+
+CE getcwd now applies the selected public mount view and preserves its
+counted terminating NUL. Held descriptor links retain removed names while
+getcwd still reports ENOENT for an unlinked directory. Removed ancestry is
+session metadata only; the persisted namespace format is unchanged.
+Encrypted-store tests cover removed files/directories, renamed ancestors and
+replaced targets.729 routing/bounds cases, a real SCM_RIGHTS/O_PATH client
+test with kernel EBADF comparisons and FD-leak check, the encrypted namespace
+tests and the ARM64 loader build pass. The new ordinary fixture retains all
+nine original groups and adds real CE O_PATH/permission checks, with separate
+stages for chdir/getcwd/path comparison.
+
+Image0.78.85 builds (591142805 bytes), SHA256
+`fb27a35ca3af1649bb8086710677044c67f9b0df9e26f55fa9f235bde1126d50`;
+only the loader payload changes from77. Matching normal Manager87 builds,
+SHA256 `55918fd72cee33a991bd4c3d63c845bd67a132eb1ddd96bb77d869050a2a2633`.
+Its manifest, all native test clients and five JNI libraries are byte-identical
+to83. Only catalogs and host Java code change, with four changed compiled CE
+classes (including a compiler-adjusted nested-scope accessor). The793-pin
+namespace87 trial ran on VM73 under supervisor29326/token
+`348706f5fa2847118f427b7e2b62847c`, with budget/AMS observers29450/29451.
+It is now a preserved FAIL at app readiness, run
+`29812e791c5a4985a97583ca4c44ab8b`. Automatic user unlock and the primary mount
+completed, but the actual UserController boot-broadcast-completion flag stayed
+false through the existing180-second bound (440 queries). The namespace app
+was never reached, so the CWD repair remains unverified on Android.258 process
+samples peaked at29 and ended at0, without observer errors, ANR/Java/native
+fatal or leftover native guest processes. All three exact jobs are terminal.
+The raw report and `namespace87-app-result/failure-audit.json` preserve this
+failure. The next diagnostic must capture the pending BOOT_COMPLETED
+receiver/queue through the existing authenticated system_server; no readiness
+gate or deadline was relaxed. The original nine groups, new O_PATH checks,
+aliases/private denials/network/Home and strict cleanup/default32 all remain
+required. The current installed normal Manager is87 and its image is85.
+Launcher84 is also obsolete after these host/loader changes and remains
+uninstalled. No credential trial, phone operation or release is implied.
+
+The rebuilt pending Launcher image0.78.88 has SHA256
+`42d9340c0c7d278c99f19fc3db4bfd47a8e3f746e8a800c1dbbee2a99817a08d`.
+Only the original-certificate Launcher APK differs from85; the repaired loader
+is identical. Matching Manager89 builds and passes package checks, SHA256
+`a171e16985e3f6256df669a84641c60a12e828785997e3dd54424a98feed9bb8`.
+All115 compiled classes, DEX, manifest, native clients and JNI match87. Two
+catalog assets change and three explicit ART-proof assets are added. Neither
+this image nor Manager89 has been installed; actual ART/real-Home/full-AV
+validation remains pending.
+
+## Boot-broadcast diagnostics90 and fresh namespace91 trial
+
+The preserved87 failure reached unlocked user0 and a mounted primary volume,
+but not the actual UserController BOOT_COMPLETED completion callback. The
+pinned framework reference is commit
+`159ab48288c45267fe5e7898c6b5dd7d66c3306a`; its UserController, BroadcastQueue,
+BroadcastDispatcher, BroadcastRecord and ProcessRecord sources were inspected.
+The existing180-second observer deadline and app-readiness conditions remain
+unchanged.
+
+`BootBroadcasts32` now snapshots bounded queue/receiver metadata under the
+real AMS lock. It reports active/pending receivers, process/UID, queue state,
+receiver age, timeout/deferred state and split completion refcounts. It reads
+no Intent extras or URI and never changes delivery. Delivery-array slots and
+the remaining receiver-list size are separate because the pinned dispatcher
+can split/defer receivers without shrinking the original delivery array.
+The operation requires the existing authenticated system-server owner channel;
+the test observer verifies its fresh nonce, owner PID and SDK/system UID.
+Snapshots are retained every15s while awaiting readiness, and at least once
+before success. Diagnostic failures are retained; the fresh trial additionally
+requires valid diagnostic evidence without weakening any original namespace,
+storage, network, Home, cleanup or resource gate.
+
+The focused command
+`python3 tools/build_api32_manager_tools.py --out out/api32/bootdiag90b-tools`
+passes Java compilation and API32 D8 packaging. Image0.78.90 builds, SHA256
+`e3551b8059bfe7a29954349e951fb934d8ef0ceaf145fab02fb98b2f1d636387`;
+only `system/framework/pocket-manager.jar` changes from85. Matching Manager91
+builds, SHA256
+`860568050dfbf398f30b0424fcc68c4e839f0c7c6c962f9aa24c6a445896ddaa`.
+Only its test observer class and catalogs change from87; manifest, native
+clients, production host classes and five JNI libraries are identical.
+
+Namespace91 freezes794 source pins and ran on VM73 under supervisor6316,
+token `2ae1a7beb41942c5a8ef4551a982e269`, with budget/AMS observers6422/6423.
+The ordinary signed app/native fixture is unchanged from86; the specification
+adds the diagnostic-proof requirement. No credentials, root, reset, phone or
+publication is involved. The broadcast diagnostic is now Android-verified:
+nine nonce/PID-checked snapshots, no diagnostic errors, and the actual framework
+completion callback logged. Readiness completed after136884ms of recorded
+state transitions within the unchanged deadline. The queue advanced through49
+BOOT_COMPLETED receivers; Signal's BootReceiver was active for at least15692ms
+before its remaining11 receivers appeared in a deferred fragment. This is
+timing evidence, not proof that the prior87 timeout is fully resolved.
+
+The whole91 trial is a preserved FAIL: the inspector sampled the ordinary
+storage Activity's asynchronous RUNNING report once, before receiving any
+native namespace result. This does not prove whether that worker was progressing
+or blocked. Typed installd/network passed;325 process samples peaked at29 and
+ended at0, with all three exact jobs terminal, no fatal and clean native stop.
+Raw evidence: `namespace91-app-result/failure-audit.json`. Build/evidence
+receipt: `out/api32/bootdiag90b-receipt.json`. Pending Launcher Manager89 is
+obsolete after these observer changes and remains uninstalled.
+
+## Terminal ordinary storage observation92
+
+The test-only AppInspector32 now polls the ordinary storage Activity for a
+terminal PASS/FAIL report with the current32-hex nonce, using a bounded30s
+report wait inside the unchanged60s observer-process bound. It records attempt
+count/time/terminal status and refreshes focus afterward. Actual proof, cleanup,
+UID, certificate, all nine native groups and Home/reopen requirements remain
+unchanged; RUNNING is never accepted as success.
+
+Manager92 builds, SHA256
+`20b949519bdf30e4886e0ebd1a3e69a295b0693ccdc3f2a2ecfddab540d3a729`.
+Only the compiled AppInspector32 and APK DEX change from91. Every asset,
+manifest, production host class, native client and JNI library is identical.
+The image90 and ordinary app/native fixture86 are reused without any payload
+change. The fresh794-pin namespace92 trial ran under supervisor15499/token
+`4cfcd115c27d4deca73f5153c6a5a484`, with budget/AMS observers15782/15790.
+It captured a fresh terminal native result (one observation,132ms) and is a
+preserved FAIL at line139 of `ce-directory-opath`. Six original groups passed;
+the test incorrectly required the Bionic `fchmod(O_PATH)` wrapper to return
+EBADF. The raw kernel operation and the Android library API differ here.
+This run alone does not prove raw fchmod rejection.191 process observations
+peaked at30 and ended at0, with no fatal and all three exact jobs terminal.
+Raw evidence: `namespace92-app-result/failure-audit.json`. No credential trial,
+root, reset, phone operation or publication is involved. Exact build command
+and evidence: `out/api32/storagewait92-receipt.json`.
+
+## Pinned Bionic O_PATH chmod conformance93
+
+Pinned bionic commit `68898e5a86416e3f5f8bfd1c8119cfc95ed46946` explicitly
+emulates `fchmod(O_PATH)` with chmod on the proc-FD path after raw EBADF. An
+actual host check compiles the unmodified fchmod.cpp and FdPath.h with a symbol
+adapter for host glibc and a real raw-syscall entry. It proves raw EBADF with
+mode unchanged and successful stock Bionic fallback changing the owned
+directory to0100. `out/api32/bionic-opath93/probe` passes; its source hashes,
+full commands and reference commit are in the adjacent receipt.json.
+
+Ordinary fixture93 now checks the raw fchmod syscall and unchanged mode,
+then separately checks Bionic fallback success and mode0100. It restores0000
+before the existing fsync/execute-denial checks, then retains execute-allowed
+fchdir/getcwd and all nine original groups. A separate reported boolean records
+the Bionic case. No loader policy or production API was relaxed. The corrected
+ARM64 fixture build passes.
+
+Matching Manager94 builds, SHA256
+`1f7956b646e75db811ef484614d026a1450608dbad86bce5dee3a6de7b3a8817`.
+All115 compiled host classes, DEX, manifest, native clients and five JNI match92;
+only the pinned app specification changes. In the ordinary APK, only its JNI
+test library changes. The same image90 is reused. The fresh794-pin namespace94
+trial additionally requires the Bionic proof and preserves every original
+namespace/alias/private/network/Home/cleanup/default32 gate. Actual Android
+validation remains pending; failed92 stays failed with its incorrect test
+assumption documented.
+
+Namespace94 ran under supervisor22598/token
+`7040c2e819ef4cf2823e1efa59532f80`, with budget/AMS observers22875/22878.
+Current job/evidence paths and exact build commands/results are saved in
+`out/api32/bionic94-receipt.json`. The same image90 is selected; no image
+download was required. It is now a preserved FAIL before the native workload:
+host Android lmkd killed Manager24001 while foreground (importance100,
+oom_score_adj0), after reclaiming several other host apps. ApplicationExitInfo
+records LOW_MEMORY and the lmkd log records breached minimum watermarks and
+low swap. Host MemTotal is1502756KiB. The old controller then reached its
+original1500s observation deadline; that timeout is secondary to the already
+proven host death. All three exact jobs are now terminal,471 process samples
+peaked at24 and ended at0, and no native guest remains. An abrupt host kill
+does not prove graceful native cleanup. Full native namespace/CWD/permission/
+Home integration remains unverified. Evidence:
+`namespace94-app-result/failure-audit.json`, host exit-info/logs and the saved
+post-failure policy files. Enforcing/default32 and null monitoring overrides
+remain unchanged; no restart, RAM adjustment or OOM-policy change was made.
+
+## Exact host-parent exit observation
+
+The workspace's next controller now checks the pinned Manager PID with a
+complete host process listing every5s during normal trials. Missing/reused PID
+evidence is retained with exit-info and the last actual probe state, and the
+trial fails without restarting it. An ADB/dump timeout or incomplete process
+listing cannot establish parent death. Planned crash-recovery mode retains
+its separate existing protocol. The frozen94 producer was not modified while
+running and remains archived with its original delayed timeout.
+
+`python3 -m unittest discover -s tools/tests -p test_api32_host_exit.py`
+passes six cases: live parent, missing parent/memory evidence, PID reuse,
+ADB/incomplete-listing failures, unavailable exit history and invalid pins.
+A separate read-only invocation of the actual helper on VM73 confirms absent
+PID24001 with the corresponding LOW_MEMORY record. The next runtime action
+must collect only allowlisted stopped-run guest logs through nonbooting
+same-signature diagnostic code, then diagnose guest-owned memory enrollment/
+pressure. No unchanged retry or host memory/protection adjustment is qualified.
+
+The pending local image95 build also passes, SHA256
+`453153485ac41118d495b0b7cc024f2c0665035e4bd4e8ea854b33465110e02b`.
+Only the same-certificate patched Launcher APK differs from90; loader,
+Manager JAR and memory service are identical. It has not been staged or
+installed. Canonical next actions in the journal now reference current94 and
+retain full namespace, Launcher actual ART/Home, full AV, Signal, original143
+CE lifecycle, legacy-profile and on-demand delivery qualification work.
+
+## Nonbooting stopped-console recovery96
+
+The same-signature diagnostic Manager96 reads only the fixed stopped-run
+`logs/manager-init.log`. It disables autostart before service binding and
+returns before the ordinary probe workload. It verifies the exact predecessor
+PID24001 using own-package, same-UID ApplicationExitInfo LOW_MEMORY, the
+unchanged image90 marker, no native leftovers, canonical log containment,
+O_NOFOLLOW, bounded regular-file size and stable inode/device/mtime. It neither
+rewrites the previous report nor starts a guest. Native liblog was held only
+in RAM and cannot be recovered by this diagnostic.
+
+The focused Manager rebuild passes using the94 base APK, image90 catalog,
+source-built native42 directory and exact retained installd client input.
+SHA256 is `c64f705a2072899633ef3a8d49bae473b5fdced3fa1126167fc4264b1a043341`.
+Only ManagerAppProbe32.class and the APK DEX differ from94; all assets,
+manifest, native clients, five JNI and the actual signing certificate match.
+This diagnostic APK is installed in place. The guest image remains90.
+
+`python3 out/api32/read_postmortem96.py stage`, `start` and `observe` all pass.
+Nonce `6857f22a14a24dd196439447be4ba618` yields26905 bytes of the exact console,
+SHA256 `8320f926a31a0cfea13f547cf9fe1a83ccb063030fbbc889051cd9af004018ce`.
+`python3 out/api32/verify_postmortem96.py` passes the independent nonce,
+predecessor, artifact, package, absent-native and process-policy checks.
+Evidence: `out/api32/postmortem96-result/independent-check.json`.
+
+The console records memory-service startup, an authenticated system client
+and six stock framework targets, but no target rejection or guest LMK kill.
+It stops during early system boot, before CE user unlock and ordinary app
+installation. The UID-publication race suspected from older app-start logs
+is therefore not established as the cause of94. Quiescent host evidence is
+saved beside the console: MemTotal1502756KiB, MemAvailable373688KiB,
+SwapFree764348KiB, with host system-server PSS460207KiB and uptime roughly
+255342 seconds. These are post-failure observations, not measurements of
+the pre-kill peak, and do not establish a leak or a guest memory budget.
+
+Failed94 remains failed, with native conformance not reached. No guest was
+restarted, no VM reboot was performed and no RAM, host protection or memory
+policy was changed. The next resource investigation needs independently
+identified host/guest memory telemetry during boot, before selecting a fix.
+
+## Startup memory diagnostic97 and fresh-host control98
+
+`python3 out/api32/run_memory97.py stage`, `launch`, `observe` and `collect`
+run the existing activity-policy-only mode on the same installed96 APK and
+image90. A Pi-side observer records host meminfo and all own-UID process RSS
+every2s, independently of the probe's in-memory report. It also saves bulk
+PSS snapshots, including two timeouts as explicit partial/failed observations.
+There is no test app installation, credential operation, image download,
+host RAM/protection change or guest memory-policy change.
+
+Nonce `99b853efd5a24344a3fc1e2b7d032409`, supervisor9094, Manager32372 reached
+actual boot-broadcast/user-unlock/mounted-volume readiness and completed both
+activity-policy snapshots, then stopped cleanly. Independent validation:
+`python3 out/api32/verify_memory97.py` PASS.201 memory samples have no read
+errors, peak29 native children, minimum MemAvailable199040KiB and minimum
+SwapFree133792KiB. Peak aggregate native RSS is1455204KiB; shared mappings
+make this unsuitable as an exclusive-memory budget. The original encrypted
+layout remains enabled. Twelve rejected LMK registration PIDs appear in live
+host samples; these samples do not capture logical identity at the moment of
+rejection or prove its cause. No guest LMK kill is recorded. The full namespace
+workload was not run. Failed94 remains failed and its cause is not resolved.
+Evidence: `out/api32/memory97-result/independent-check.json`.
+
+After all94/97 jobs and guest owners were terminal, one ordinary VM73 Android
+reboot compared a fresh host baseline without changing userdata, VM RAM,
+configuration, APK, package UID or Enforcing/default32. Commands:
+`python3 out/api32/compare_host98.py before`, `reboot`, and `observe`.
+The changed kernel boot ID and completed host boot are verified. An initial
+ADB observation during reboot was transiently unavailable; no second reboot
+was issued. The global post-boot PSS dump timed out and is preserved. A bounded
+single-process query subsequently measured host system-server PSS141571KiB,
+RSS267988KiB and SwapPSS11551KiB. Settled host MemAvailable403820KiB and
+SwapFree861636KiB provide the new observed baseline. Old global PSS summaries
+exceed RSS and include swapped memory, so they are not a direct comparison
+of resident PSS and do not establish a leak. Evidence:
+`out/api32/host98-comparison/independent-check.json`.
+
+## Combined current namespace and Launcher validation98
+
+The focused Manager rebuild passes:
+`python3 tools/build_api29_manager.py --base-apk out/api32/postmortem96-manager-probe/api32-app-manager-probe.apk --catalog out/api29/release/pocket-images.json --api32-catalog out/api32/launcher95-image/pocket-images.json --external-native-dir out/api32/native-clean-42/external --out out/api32/namespace98-manager-probe --app-probe32 out/api32/namespace98-spec.json --image-probe32-package dev.kreijstal.aosppocket.api32managerimage --installd-client32 out/api32/ce-cwd85/retained-installd-client-input --launcher-recents32 out/api32/launcher81-art-probe`.
+APK SHA256 is `0603036ea25cbb85e8cb71c52f14ad7d385966aec521021888604cd1939b3cd7`.
+All115 compiled host classes and DEX match96; manifest, native clients, five
+JNI and signing certificate match. Changes are the image95 catalog, an app
+specification additionally requiring the Launcher null guard, and the three
+pinned original-APK/ART-probe assets. Image95 changes only the same-certificate
+Launcher payload from90. Its loader, Manager JAR and memory service are
+unchanged. The ordinary fixture93 and all its native group requirements remain.
+
+`python3 out/api32/prepare_namespace98.py` freezes795 source pins and validates
+the packages, archive, manifest delta and retained shared classes. The fresh
+trial uses `run_namespace98_app.py stage` and `launch`, with budget and AMS
+observers. Supervisor15664/token `d9787666f6994dcca77bd7c833e64f3d` and observer
+PIDs15939/15987 are recorded in the journal. The budget observer now includes
+RSS and host meminfo while counting every native helper. Both generated remote
+observer bodies compile before execution. The original strict nine-group,
+raw/Bionic O_PATH, alias6/private80, FD/CWD, typed-installd, network/DNS/fwmark,
+actual Home/reopen, native/kernel cleanup and unchanged host-policy gates are
+retained; actual original-versus-patched Launcher ART proof is additionally
+required. The strengthened independent verifier is prepared, not yet passed.
+No support flag, full workload, release or phone qualification is claimed.
+
+## Namespace98 failure and real-AppFuse descriptor reopen101
+
+Run `6f321ac88a4447d1b29c040b8b75cdc2` is a preserved FAIL at ordinary native
+`proc-reopen-unlinked-file`, line180, errno13. Seven original groups pass,
+including cwdRelative; ceDirectoryOpathVerified and bionicOpathChmodVerified
+are true. The recorded current-nonce Launcher ART comparison passes, as do
+typed installd, network/DNS/fwmark and boot diagnostics. Actual Home/reopen
+was not reached. All three exact jobs are terminal and collected;284 process
+samples peak28 and end0, with no observer error, Java/native fatal or ANR.
+Kernel child ownership and clean native stop are verified. The host foreground
+kill from94 is not repeated in this run and remains a separate preserved
+failure. Evidence: `out/api32/namespace98-app-result/failure-audit.json`.
+
+The old plain-Linux anchor tests do not exercise a real encrypted AppFuse
+descriptor. The isolated CE fixture's native regression now creates an owned
+file, holds data/metadata descriptors, unlinks it, creates different content at
+the old name, then reopens through proc. It checks original inode/content,
+independent offset/CLOEXEC and current-UID deny/grant behavior after a fork.
+A granted descriptor reopen does not require search through an inaccessible
+old parent. The new test runs before the existing SQLite/vendor checks.
+
+Baseline100 builds and runs in fresh package
+`dev.kreijstal.aosppocket.cefixture100`, without accessing the normal Manager
+profile. Its production loader and CE source hashes match failed98. It fails
+on real AppFuse with `CE_PROC_REOPEN_ERROR source=data errno=13`; the exact
+job and native children terminate and the raw failure is preserved.
+
+The production fix intercepts following data open of an exact own proc-FD only
+when the descriptor belongs to the current CE mount/cache. It uses the existing
+FD RPC inode identification, then the CE service's ordinary open permission
+checks to create a fresh AppFuse description. It does not resolve the old or
+replacement name. O_PATH/nofollow/exclusive proc handling stays in the kernel.
+No persistent encryption format or key changes are involved.
+
+Focused fixed rebuild:
+`python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/contacts-0.68/aosp-pocket-manager-0.68.apk --out out/api32/ce-reopen101-fixed --package dev.kreijstal.aosppocket.cefixture101`
+passes native ARM64 -Werror, loader ELF validation, Java/DEX and APK signing.
+Fresh package101, UID10167, nonce `1d75e1f1816c411b98b5a25df18cba1f` passes the
+same native regression on real AppFuse, plus blocked-sync concurrency,
+five-root encryption/migration, locked-access denial, metadata, SQLite WAL and
+cross-process exclusion, file/vendor persistence and local cipher-key-slot
+removal/restoration. This does not change Android framework credentials.
+The native test and AppFuse JNI match100; only CeStorage.java and
+ce_runtime.h production source hashes differ. The fresh fixture packages and
+their failures/data remain preserved.
+
+`python3 out/api32/verify_ce_reopen101.py` passes the independent before/after
+source, artifact, real-transport, permission, unchanged-host-policy and native
+stop checks. Evidence: `out/api32/ce-reopen101-result/independent-check.json`.
+The normal Manager98 APK/image95 remains installed, and its143-app encrypted
+profile is untouched by the isolated fixture tests. A matched full image/host
+rebuild102 is required next. Pending AV99 is obsolete against the changed CE
+host/loader and must be rebuilt after the complete namespace gate passes.
+
+Matched image0.78.102 builds, SHA256
+`a5a8902ae935521bc7d6bf4b650e0596643f1669a303bb75fc6bda175095d926`.
+Only `system/bin/pocket-loader` differs from95. Matching Manager SHA256
+`cf36e58db4b5dd273c74ce50712c69b3e90e627b66f928052ef18a256f268722`
+builds and has only CeStorage.class changed among115 compiled host classes;
+the image catalog and DEX differ in the APK, with all other assets, manifest,
+native clients, five JNI and actual signing certificate unchanged from98.
+Source795 is frozen under `namespace102-app-source-snapshot`.
+
+One rsync SSH timeout interrupted staging after the image/APK/controllers
+were transferred. The existing candidate pin and absent launch were verified;
+the only missing, unchanged ordinary/owner bundles were linked from the exact
+hash-verified98 archives. No APK install or guest restart occurred during that
+recovery. A subsequent single launch started supervisor30213/token
+`d02e212eca8c464d9bc3aae6f1c68af0`, with resource/budget observer30596 and
+AMS observer30648. The installed Manager hash is verified, with the image102
+download underway. Every original namespace/permission/alias/private/network/
+Home/actual Launcher ART/native-kernel/default32 gate remains required; the
+stronger independent verifier additionally binds the101 component/source proof.
+Current jobs, commands and artifact pins: `out/api32/namespace102-receipt.json`.
+No complete guest qualification, recovered CE lifecycle, phone or release
+claim follows from the isolated101 pass or these local builds.
+
+## Removed-directory search105
+
+Namespace102, nonce `ed7f537ac6b24606a89247705b0a7cd4`, is a preserved FAIL at
+`unlinked-held-directory` line195, errno2, after eight original native groups.
+The unlinked-file reopen fix now passes inside the actual guest. Original/
+patched Launcher ART, typed installd, network and boot diagnostics pass; real
+Home/reopen is still not reached. All three exact jobs and native owners are
+terminal.287 process samples peak29 and end0 without observer errors, ANR or
+Java/native fatal. Evidence:
+`out/api32/namespace102-app-result/failure-audit.json`.
+
+The provider anchor searches a removed directory with
+`faccessat(held_fd,".",X_OK,0)`. CE previously converted that to the removed
+pathname, yielding ENOENT. Fresh fixture104 reproduces the exact failure after
+its data-reopen test passes. The new directory native regression is identical
+in fixtures104/105 and checks data/O_PATH directory descriptors, current-UID
+search deny/grant, fchdir/getcwd(ENOENT), denial of creation in a removed
+directory, proc-FD reopen of the same inode and empty getdents.
+
+The loader now routes exact-dot X_OK on a proven CE directory descriptor
+through the existing inode permission request. Other relative names retain
+normal namespace resolution. The CE directory reader returns EOF for an
+unlinked directory, preserving its existing type/permission/offset checks.
+No key, persistent format, current-caller authorization or host policy changes.
+
+Focused rebuild:
+`python3 tools/build_ce_fixture.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --base-apk out/contacts-0.68/aosp-pocket-manager-0.68.apk --out out/api32/ce-dir105-fixed --package dev.kreijstal.aosppocket.cefixture105`
+passes native -Werror/loader ELF and Java/DEX/signing checks. Fresh package105,
+UID10170, nonce `549c966a3625466cbaf4b1b14c5b32cf`, passes both directory and
+file-reopen regressions, existing real-AppFuse blocked-sync concurrency,
+five-root encryption, locked-access denial, metadata, SQLite/file/vendor
+persistence and local cipher-key-slot restoration. These are isolated local
+cipher operations, without changing normal guest framework credentials.
+Only CeStorage.java and ce_runtime.h production sources differ from baseline104;
+the native regression and JNI are identical before/after.
+
+`python3 out/api32/verify_ce_dir105.py` PASS independently binds the old102
+production source hashes, baseline ENOENT, fixed result, native test identity,
+current sources, APK, host policy and native stop. Evidence:
+`out/api32/ce-dir105-result/independent-check.json`.
+
+Local matched image106 builds, SHA256
+`9a8eea94b77a0c5c6279008445efbfe9161e7e4fcf2aaaf1a94975b16f4ba892`.
+Only the loader differs from102. Matching Manager SHA256
+`16d3ecb9f26c010ec69d3ee6346853eb39ef9fb85e05ca1579f3b493a602da13`
+builds; only CeStorage.class changes among115 host classes, with the image
+catalog/DEX changed in the APK. Manifest, other assets, five JNI, native
+clients, ordinary namespace specification and signing certificate match102.
+The paired106 artifacts are frozen with795 source pins. The first staging
+SSH transfer dropped and resumed from its pinned directory. Full106 run
+`8ea3e23cc08247bc8589417f140e175c` then failed at the unchanged image storage
+preflight, with no download requests or native guest children. Its report
+stays FAIL in `out/api32/namespace106-app-result/failure-audit.json`.
+
+DUMP-protected, same-signature diagnostic split109 only lists own top-level
+staging/cache metadata. It finds one obsolete image0.78.10 ZIP of589736470
+bytes. Split111 streams exactly that named cache file to a local Pi receiver,
+which verifies checksum/size, fsyncs the archive, and acknowledges it before
+the Activity rechecks and removes only the cached copy. An independent fresh
+inventory shows identical original top-level file and cache metadata, with
+only that image cache gone. Base106 is reinstalled with the same SHA/UID10157
+and both diagnostic splits removed. No guest starts, profile/credential reads,
+host root, package uninstall/data clear, backing-disk edit or policy change.
+The old image102 marker is unchanged. The full raw archive remains on Pi at
+`/home/pi/pocket-api32-vm/storage111-validation/archive/820889183bc3a7541e9f19459c975bdf19ddf2381ee5b043a1d6c6d048a5cd9a.zip`.
+
+`python3 out/api32/verify_storage111.py` PASS binds both diagnostic builds,
+supervisor source, raw receipts/inventories, archive checksum, exact terminal
+job/no native guest and identical restored base. Free space rises from
+622706688 to1212968960 bytes. Evidence:
+`out/api32/storage111-result/independent-check.json`.
+
+The full112 candidate retains the same795 production source pins, matched106
+host/image and original ordinary93 fixture, and additionally binds the failed
+106 report and durable cache recovery. All original nine-group/Home/Launcher/
+network/native/kernel/default32/resource gates remain required. This corrects
+the environment rather than lowering the updater space gate. Matching AV107
+and Signal108 local builds pass compiled-host/payload/signature checks and
+remain uninstalled. The future full AV113 preparation requires independent
+full namespace112 PASS; AV103/99 are obsolete. Current Signal, recovered normal
+CE lifecycle, legacy, physical-phone and delivery qualification remain open.
+
+## Bounded service readiness116
+
+Full112 nonce `2fd3ff27e92143cab7bc700a83be8cd7` failed during early bootstrap:
+`POCKET_RUNTIME_SERVICE_TIMEOUT name=media.extractor`. It never reached the
+namespace or actual Launcher tests. All10 started services were reaped,
+owner exited67, and135 resource samples peak12/final0 without observer errors,
+recorded ANR/native/Java fatal or a memory kill. Extractor RSS progresses from
+1176 to19388 KiB during the wait and it reaches memory-limit initialization.
+That suggests cold loading; its eventual registration time is not measured.
+The old packed106 readiness binary is byte-matched to its immutable fixture;
+disassembly confirms200 polls sleeping50000 microseconds. Evidence:
+`out/api32/namespace112-app-result/failure-audit.json`.
+
+The new small client uses a monotonic60-second service deadline, requires
+actual publication and a successful Binder ping, and records start/result/
+elapsed time and lookup/ping counts. A response after the deadline fails.
+The existing overall240-second DirectSession boot limit is unchanged. No
+service, native process, tracing, workload, authorization or host policy is
+removed. It replaces only the Manager-image readiness command; the normal
+service graph and source-built core/crypto/loader/Launcher remain identical.
+
+Focused validation:
+`g++ -std=c++17 -O2 -Wall -Wextra -Werror runtime/tests/api32_service_readiness_test.cpp -o out/api32/service-readiness116-test && out/api32/service-readiness116-test`
+PASS covers immediate readiness,12-second publication rejected by the old
+10-second bound but accepted within60 seconds, never-ready service expiry,
+ping recovery, a Binder reply overrunning its budget, the final partial sleep
+and exact-deadline rejection. This is fake-clock policy evidence, not an
+actual Android cold-start result. The ARM64 ABI build also passes:
+`python3 tools/build_api32_service_wait.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --out out/api32/service-readiness116`.
+
+Matched image117 builds with SHA256
+`2da0074519fed17e622640dbfa0be88d273b026d92d3bc99eda93795f7f2503c`.
+Only `system/etc/pocket-runtime-boot.sh` changes; one executable
+`system/bin/pocket-runtime-service-wait-api32` is added. All old image payloads
+otherwise match106 exactly. Matched Manager119 SHA256
+`193dfd655d030801eeeb2ee3d7031c332e44269562de3172fdd1c4f697b6e959`
+has the same115 compiled host classes/DEX/assets/manifest/native clients/five
+JNI as106 except its image catalog. Package/signature checks pass via
+`python3 out/api32/check_namespace119_package.py`.
+
+A DUMP-protected same-signature read-only split118 verifies the installed106
+marker and boot script. Its observed loader matches the complete expected
+bytes after reproducing NativeLoader's three1024-byte configuration fields
+for this app root; no other byte is ignored. The identical signed base106 and
+UID10157 are restored, removing the diagnostic split without starting a guest
+or reading credentials or profile contents. Raw evidence is in
+`out/api32/manifest118-result`.
+
+The full119 candidate freezes799 source files. It retains all original nine
+namespace groups, alias/private-storage and raw/Bionic O_PATH checks, actual
+Launcher ART/Home/reopen, network/DNS/fwmark, typed installd, native/kernel/
+default32/resource gates and adds actual readiness timing validation. It is
+running as producer26807, resource observer27116 and AMS observer27257; no
+full current guest qualification follows from the local build or
+policy tests. Old AV107/Signal108/recoveredCE115 catalogs remain106 and are
+obsolete/uninstalled for the next final-image trials. Full media, genuine
+Signal, recovered normal-profile CE, rootless legacy, phone and on-demand
+release qualification remain incomplete.
+
+## Storage fsync119 failure and diagnostic124
+
+Trial119 is terminal and failed at the first native file fsync/fstat checkpoint
+(namespace.c line46, errno110), before any of the nine namespace groups.
+Registered storage, six aliases,80 private denials, actual Launcher ART, typed
+installd and network passed beforehand. All five readiness clients returned
+within the old10-second window; the actual cold extractor case remains unproven.
+The raw console shows FSYNC1383 eventually succeeding after the FUSE channel
+closed, while intervening lookup/getattr requests completed. The cause of that
+latency is not established. All15 service lifetimes ended and no native guest
+remained, but external-storage cleanup reported ECANCELED. Resource sampling
+recorded256 samples, peak28 and final0. Preserve this as a failed trial:
+`out/api32/namespace119-app-result/failure-audit.json`.
+
+Diagnostic124 uses the identical installed117 image and unchanged full workload.
+Only the host test class ManagerSessionProbe32 changes, adding a nonce-bound
+DUMP-only sample of selected Java storage thread stacks. It reads no guest
+files, credentials or key material and issues no guest commands. The other114
+compiled host classes and all image/JNI/manifest/assets remain identical.
+The focused Manager build and package check pass;799 source files are frozen.
+File-operation deadlines and durability checks are unchanged. The trial and
+resource/AMS/thread observers are running under VM73. Even a successful repeat
+will not by itself resolve the intermittent119 failure. Local AV120, Signal121
+and recoveredCE122 builds remain uninstalled, gated by full qualification and
+now requiring the final source snapshot again. Android12L is not release-ready.
+
+The original124 thread observer stopped after71 valid samples when an activity
+dump returned no trace payload. Its noncomplete/error receipt is preserved.
+A separately named supplemental observer records missing responses explicitly
+and continues read-only sampling while the same exact producer is live. This
+is not a clean diagnostic run; neither observer failure nor gaps are erased or
+converted into a pass by the supplemental observations.
+
+Full124 nonce `1dcd7f80a4fe41b68cba948980fbbc58` has now completed all nine
+namespace groups,80 private denials, six aliases, actual Launcher ART and
+Home/reopen, typed installd, network, strict native/kernel cleanup and unchanged
+default32 host policy. The resource observer has190 samples, peak29/final0.
+`python3 out/api32/verify_namespace124_functional_result.py --run-id 1dcd7f80a4fe41b68cba948980fbbc58`
+passes all functional gates and explicitly binds the original failed trace
+observer and separate94-sample supplement. The original strict diagnostic
+verifier still fails at incomplete trace coverage. No clean diagnostic or
+resolution of119 is claimed. All five jobs are terminal.
+
+The supplemental stacks repeatedly show callers waiting for the commit lease
+while the holder forces ciphertext files or directories. Collection also
+appears in four samples over10.8 seconds; such samples do not prove one
+uninterrupted operation. Read-only pressure samples show Pi I/O pressure
+avg10 some21.29/full8.65 and guest-host some39.33/full21.58 percent. Raw stacks,
+pressure and separate sampled timelines are retained in the124 result folder.
+The unchanged encrypted-backend tests, including eight SIGKILL recovery cycles,
+pass before attempting any batching change. These observations motivate a
+measured isolated comparison, rather than increasing filesystem timeouts.
+
+## Ciphertext commit staging125 and full130 trial
+
+Only EncryptedStore and its Commit class change in the normal Manager relative
+to124; the other113 compiled classes, image117, manifest/assets/native clients
+and five JNI libraries remain identical. File format, cryptography, deadlines,
+service graph and host policy are unchanged. New immutable ciphertext objects
+are written and closed first, then individually reopened and forced before
+the object-directory fsync and durable index publication. Descriptor usage
+stays bounded. No file fsync is removed and failed commits retain pending data.
+
+Focused commands pass:
+
+- `python3 tools/test_encrypted_store.py` (including eight SIGKILL cycles).
+- `java -cp out/api32/storage-batch125/namespace-classes dev.kreijstal.aosppocket.storage.CeNamespaceTest`.
+- `java -cp out/api32/storage-batch125/namespace-classes dev.kreijstal.aosppocket.storage.CeNamespace32Test`.
+- `python3 out/api32/verify_storage_batch125_syscalls.py`.
+- `python3 out/api32/verify_storage_batch125_pi.py`.
+
+The latter binds four fresh isolated benchmark packages126..129 in A-B-B-A
+order, all16 verified reopens, unchanged host policy and stopped own test
+processes, plus exact production class equality to Managers124/130. Old/new
+backends also read each other's committed synthetic state in both directions.
+Raw traces and receipts are in `out/api32/storage-batch125` and the four
+benchmark result folders. No original guest data or credentials are read.
+
+Manager130 builds with SHA256
+`b63fafc7e5b89d692eefc70b79508943a0dd1dcc8d25a1f776898f8499211123`.
+The full candidate freezes801 sources and retains every original nine-group,
+alias/private, raw/Bionic FD/CWD, actual Launcher ART/Home, network/DNS/fwmark,
+typed installd, native/kernel/default32/resource gate. The read-only thread
+observer records missing responses explicitly and continues; it cannot turn
+a coverage gap into a clean diagnostic claim. Full130 runtime verification
+is pending. Collection does not itself resolve119 or qualify media/Signal/CE.
+
+Matched local follow-up builds131/132/133 now pass package/signature/class
+checks. AV131 and Signal132 retain all115 compiled host classes from130;
+only the app specification (and removal of unused Launcher proof assets for
+AV) changes. Recovered CE133 shares all109 common classes, including the
+current encrypted backend, and retains the five JNI libraries, original CE
+witness, native installd client and explicit recovered-profile protocol.
+The source tree still matches all801 frozen130 pins. These builds remain
+uninstalled; preparation/install guards require full130, then fullAV131, then
+genuine Signal132, with all exact owners and observers terminal. The future
+CE133 trial keeps six complete credential cycles, offline outer restart and
+seventh cold credential-free return, with143 retained app UID/version/cert/
+kept-data checks and its own persisted0600 recovery file. No new credentials
+have been generated or read during this local preparation.
+
+Full130 nonce `d82ede2f64614ec29f7d1bd9c6063fa3` is terminal.
+`python3 out/api32/verify_namespace130_app_result.py --run-id d82ede2f64614ec29f7d1bd9c6063fa3`
+passes all original native namespace, alias/private, actual Launcher ART/Home,
+network, typed installd, native/kernel and host-policy/resource gates. The
+resource observer has184 samples, peak30/final0 and no errors; storage tracing
+has185 valid samples plus two explicitly retained missing responses, so full
+trace coverage is not claimed. The119 failure and124 diagnostic error remain
+failures. Full AV131 candidate now freezes the same801 sources and unchanged
+ordinary70 archive/spec, requires the complete independent130 proof and all
+four exact jobs terminal, and is staging. No media/Signal/CE/release pass follows
+from the namespace result.
+
+AV131 is now live under producer27127, resource observer27237, AMS observer
+27233 and read-only storage observer27232. Exact command lines were confirmed
+live after launch. The same original two-round media workload and all native,
+kernel, host-permission/default32/resource gates remain required. Matched
+Signal132 and recoveredCE133 are local-only and uninstalled.
+
+## Preserved AV131 failure and bounded Codec2 policy135
+
+Full AV131 nonce `48e441cfa9dd432d81be246279203daf` is terminal and failed
+its fourth recording: reopened camera1 MediaRecorder.prepare failed after
+CCodec's start watchdog. The first three MP4 recordings decoded36 video frames
+and AAC/PCM successfully; preview/JPEG, playback/microphone, external-private
+fsync/reopen/hash/persistence and Home/reopen passed in both rounds. Stock
+CCodec reports its start timeout before the same encoder's successful output
+block-pool reply. All15 services and kernel/native owners stop cleanly, host
+media grants return to denied,167 budget samples peak29/final0, no ANR/native/
+Java fatal or resource observer error. The full media gate remains FAIL:
+`python3 out/api32/audit_av131_failure.py` preserves the raw report and audit.
+
+The immutable117 profile already has ro.hw_timeout_multiplier=4 but no Codec2
+timeout multiplier. AOSP12L CCodec.cpp has a separate1500ms named-operation
+deadline multiplied by debug.stagefright.ccodec_timeout_mult (default1), with
+a3300000us watchdog interval. The packaged libsfplugin_ccodec.so matches the
+pinned reference exactly and its exported setDeadline disassembly reads that
+property with default1 and multiplies the duration. Source pins and extracted
+ELF are in `out/api32/codec135-source`; source:
+https://android.googlesource.com/platform/frameworks/av/+/refs/tags/android-12.1.0_r23/media/codec2/sfplugin/CCodec.cpp
+
+Policy135 aligns the official Codec2 multiplier with the existing VM scale4:
+nominal6-second operations, with the stock watchdog and its scheduling retained.
+This is not a hard6-second wall-time guarantee and no actual failed start
+duration was measured. The original app/workload is unchanged. The current
+readiness client verifies and prints the actual loaded hardware/codec scales
+on its existing extractor wait, adding no guest process. File/FUSE timeouts,
+240-second overall boot, audio TimeCheck policy, service graph and host
+RAM/default32/SELinux remain unchanged. Local configuration tests preserve all
+original profile text, check idempotence/scales1..4, reject eight invalid or
+conflicting cases; the ARM64 client rebuild passes -Wall/-Wextra/-Werror.
+Image136 and a full original two-round rerun are still required.
+
+Image136 builds with SHA256
+`86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65`.
+`python3 out/api32/verify_codec135_image136.py` PASS verifies all2652 packed
+payload hashes: only system/etc/pocket-profile.prop and the existing readiness
+client change relative to117. Stock Codec2, all other2650 payloads and service
+graph remain identical. Matched AV137 Manager SHA256
+`effd9fabe3fb7deac2860b3e03b25dcb9c8fb3caac207f1271df2822076be74d`
+retains all115 host compiled classes/DEX/manifest/native clients/fiveJNI and
+ordinary70 workload from131; only its catalog changes. Its candidate freezes
+803 sources and binds the failed131 report, complete historical130 namespace
+proof and focused policy/image verification. It is live with all budget/AMS/
+read-only storage observers. All original four recordings, preview/JPEG, PCM,
+file durability/persistence, Home/network/typed installd/native/kernel/host
+permission/default32/resource gates remain required, plus actual loaded4/4
+codec policy. The image is downloaded/upgraded this run; a media PASS will
+still require final136 combined namespace138, genuine Signal, recovered normal
+CE lifecycle, legacy, phone and on-demand delivery qualification.
+
+Full scoped AV137 nonce `fc681060a63b4cdea47c25181b32ceb7` now passes.
+`python3 out/api32/verify_av137_app_result.py --run-id fc681060a63b4cdea47c25181b32ceb7`
+independently verifies all four AVC+AAC MP4 recordings across both original
+rounds,48 decoded video frames,49152 decoded PCM samples, both-camera preview/
+JPEG, playback/microphone, external-private fsync/reopen/hash/persistence, real
+Home/reopen, network/DNS/fwmark/typed installd/native/kernel cleanup and restored
+host media grants. Loaded codec/hardware4/4 policy is observed, and no Codec2
+watchdog timeout is recorded. Budget292 samples peak30/final0 and no errors;
+302 valid storage-thread samples plus two explicit gaps, no clean continuous
+trace-coverage claim. Original131 remains failed.
+
+Final namespace138 now freezes the same803 sources and selects the identical
+136 image, with115 host classes/DEX and original93 namespace workload unchanged
+from130. Local package/signature checks pass, and staging requires the complete
+independent AV137 proof and all four exact jobs/native owners terminal. Matching
+genuine Signal139 and recovered CE140 builds pass local class/payload/signature
+checks but are uninstalled. Namespace138 must still pass every original nine
+group/actual Launcher ART/Home/alias/private/network/installd/native/kernel/
+default32/resource gate before Signal139. CE140 keeps all six strict credential
+cycles, offline outer restart, original143 app identity/data/key checks and
+seventh cold credential-free authless return before removing only its own new
+protected recovery file. No credential has been generated during preparation.
+
+
+Namespace138 failed before any resource/AMS/storage observer attached. The host
+runner classified PID8618's temporary `<pre-initialized>` name as a dead/reused
+Manager, then withdrew its HTTP server. Read-only kernel identity checks show
+the same UID10157/PID8618/startTimeTicks1877891 remained alive. Its same-nonce
+Activity continued and later failed connecting to that withdrawn server; it
+then stopped its native owners cleanly. Both raw failures and the no-coverage
+qualification remain preserved in namespace138-app-result/failure-audit.json.
+Historical PID29145 permission-change exit history is not a138 parent death.
+
+Host-observer143 now pins UID and kernel PID birth ticks, distinguishes absent,
+reused and zombie processes, and treats denied/malformed reads as inconclusive.
+Mutable process names no longer prove exit. All13 focused regression tests and
+a real read-only VM73 same-parent check pass; parent143-proof.json binds them.
+The runner also writes an exclusive app-launch.json nonce before starting the
+Activity and checks initial/final immutable parent identity before cleanup.
+No runtime Java/native/image/ordinary workload or deadline changes accompany
+this host test fix. Current803-source pins differ from AV137/138 only in the
+host Python runner and its regression test.
+
+Namespace144 freezes those803 sources and reuses the exact138 signed APK and
+136 image. Staging is in progress; no144 guest is launched yet. Its supervisor
+will wait for attached budget/AMS/storage observers, first budget/AMS samples,
+and an atomic launch barrier. Storage observations must match the authoritative
+new app-launch.json nonce, even though the APK equals138. Every original full
+nine-group, Launcher ART/Home, alias/private, network/typed-installd/native/
+kernel/default32/resource gate and the full AV137 proof remains required.
+Signal139 and recoveredCE140 remain uninstalled and pending full144 success.
+
+Namespace144 is now live: exact producer20276 and budget20299, AMS20318,
+storage20311. Initial budget/AMS samples and all exact observer processes were
+verified before the atomic barrier released token dc9e9d18be9f44b5a5456af910bbfb9f.
+No functional or cleanup result is claimed before the trial terminates.
+
+Local legacy145 builds a separate nonce-bound SDK28/29 Manager test adapter
+under out/api32 only. It uses DUMP for results and the offline-server handshake,
+with exact host PID/UID and stopped-session receipts. The original Manager
+frame/install/button-input/network/HTTPS/cached-restart/other-SDK-own-data
+checks remain. Both legacy catalog URLs use own loopback8796; payload manifests
+are unchanged. All106 production compiled classes and five JNI payloads match
+final144, no803 production/test source changes. Build and package check pass:
+`python3 out/api32/check_legacy145_package.py`. No Pi stage/install or legacy
+runtime pass is claimed; actual fresh available bytes and the existing storage
+gate still need checking after the current namespace/Signal/CE qualification.
+
+Full namespace144 nonce ec86ef8bf75b474084e2949243aeb4dd now passes:
+`python3 out/api32/verify_namespace144_app_result.py --run-id ec86ef8bf75b474084e2949243aeb4dd`.
+It verifies every original nine-group/actual Launcher ART/Home/alias/private/
+network/typed-installd/native/kernel/default32 gate on136 and binds fullAV137.
+Initial/final kernel PID birth+UID identity match, and initial budget/AMS samples
+precede the observer barrier and producer execution. All four jobs are terminal;
+191 budget samples peak30/final0/errors[],187 valid storage-thread samples plus
+one explicit gap. No continuous trace or intermittent119-resolution claim.
+Raw138 and every older failure remain preserved. Signal139 now freezes the
+current803 sources and is staging with the exact genuine unchanged Aurora APK
+set; it still requires its own full focus/Home/reopen/network/cleanup proof.
+
+Signal139 is live with producer26865 and budget26898, AMS26899, storage26900;
+all observers and their first resource/AMS samples preceded the atomic barrier.
+The current803 pins include only the two host-observer143 changes since full
+AV137; production host classes/native/codec136 image remain identical. No
+Signal functional, registration or cleanup result is claimed before terminal
+verification. RecoveredCE140 preparation now uses a two-observer prelaunch
+barrier too, with credentials absent before release. It remains unprepared/
+uninstalled and no new credential was generated or read.
+
+Genuine Signal139 nonce e9ca4d2440eb4ae28a38ed0c040dc5a0 now passes:
+`python3 out/api32/verify_signal139_app_result.py --run-id e9ca4d2440eb4ae28a38ed0c040dc5a0`.
+All unmodified Play8.33.2 ARM64/minSDK32/target36 splits/certificate/UID10107,
+actual registration focus/Home/reopen, private provider, current boot diagnostics,
+network/DNS/HTTPS/fwmark/typed-installd/native/kernel/default32/host-permission
+checks pass on identical136 runtime. Immutable parent UID/birth matches before/
+after, and observers with initial budget/AMS samples precede execution. Every
+job is terminal with native owners gone. The initial independent checker had a
+stale nonexistent report-field KeyError; its exact source/error is preserved
+and it now requires the actual before/after Android settings dumps to show32.
+Raw PASS report unchanged; no app rerun. Independent-check receipt records all
+sample counts, memory/RSS and honest trace gaps. No account operations or phone
+validation. RecoveredCE140 now freezes the same803 sources and is staging;
+no credential has been generated/read before its observer barrier release.
+
+RecoveredCE140 is live with producer1276, budget1300 and AMS1296 after initial
+budget/AMS samples and observer barrier release. The driver generated and
+persisted its own new0600 recovery file before starting the guest; progress
+checks only existence/mode and has not read its contents or any historical
+credential. It is booting the preserved already-encrypted normal profile.
+No credential-lifecycle PASS is claimed yet. Six strict cycles, actual keyguard
+input/unlock, wrong/changed/removed/restored password checks, original143 app
+identity/data/key/canaries, offline outer Manager restart, all7 native/kernel
+cleanup proofs, unchanged host98 boot/default32/memory/permissions and seventh
+cold credential-free authless proof are still required before deleting only
+this new own protected recovery file. No install/restart may race this trial.
+
+RecoveredCE140 fails before the first credential write, nonce
+55e23bad3f90441b8431ba042d131af1. The requested v2 test contract includes
+dexopt-postboot and dexopt-postboot-app, but the retained85 native probe input
+predates both modes. Ordinary check/denied/boot-time dexopt pass, then the old
+probe returns usage exit64 and empty output for dexopt-postboot. Raw FAIL and
+audit remain at recovered140-result/failure-audit.json. Original143 inventory
+records remain identical with the existing CE witness UID10113, initial guest
+keyguard is authless/unlocked, and no initialCredential/encryptedBoots/cycle
+record or setting-password stage was reached. Every actual started native
+service (14 lifetimes here, codec not requested), descendants and observer
+stops cleanly;136 budget samples peak30/final0/errors[]. Its own0600 recovery
+file remains protected, unused and unread by progress collection. No six-cycle
+or new cold-return qualification is claimed.
+
+Probe146 narrowly rebuilds the existing current source with
+`python3 tools/build_api32_framework.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --installd-probe-only`.
+It passes -Wall/-Wextra/-Werror and reproduces the previously-current raw
+SHA256 34772053fea6ccbb0e00fbb220fe572ea03137a1fc3e24da2c9ee6d28dfcfae3.
+Manager packaging now rejects a v2 input unless it is an ARM64 ELF containing
+all five operation entry names, before creating build outputs; build metadata
+pins input/packaged hashes and the requested contract. The actual-new/actual-old
+regression tool also rejects eight damaged variants and checks real CLI early
+rejection. No production runtime/image/Java/JNI code changes. Only the packager
+and new focused test alter current source pins (804). RecoveredCE147 is now
+building with the real current native input, retaining the full five-operation
+contract and all six cycles/offline outer/seventh cold gates. Not installed yet.
+
+RecoveredCE147 local build/package/signature check passes, Manager SHA256
+7e158c3ebf9f7b39faa94ca1226fa1314a5fcd56cc5aef3cab67f27c56b37c59.
+The only changed APK payload relative to failed140 is assets/api32-installd-client;
+all compiled host/test Java classes, DEX, five JNI, manifests, other assets and
+codec136 image are byte-identical. It freezes804 sources: only Manager build
+validation changes and one actual-artifact contract test is added since Signal139.
+The fresh current probe is the already-pinned native source, not an image or
+production runtime patch. Staging requires all failed140 jobs/native owners
+terminal and its exact raw FAIL preserved; its own old0600 recovery file remains
+unread and untouched.147 has not generated any credential yet.
+
+The old CE verifier assumed exactly15 service lifetimes by copying the media/
+namespace sample count.140 instead actually starts/reaps14: all13 mandatory
+roles, an idmap restart, with no media workload requesting lazy Codec2.147
+verifies every mandatory core role, unique actual started PIDs and exact full
+start/reap/INIT_STOPPED accounting across all7 boots; unexpected critical-role
+restarts or unknown services fail. Configured disabled pocket-mediaswcodec and
+its lazy HIDL activation must remain byte-identical in136, with fullAV137 codec
+functionality bound separately. No service/workload is removed or process
+subtracted. All original credential/mount/retained143/Keystore/denial/actual-
+keyguard/offline/seventh-cold/native/kernel/default32 gates remain, and both
+post-boot compiler modes now require actual successful outputs plus observed
+ordinary UID12347 compiler workers at real kernel nice10 without changing the
+core's priority.
+
+147 stops at the host baseline APK guard before APK installation, credential
+creation or any guest start. The previous failed140 CE APK remained installed,
+while the unchanged main driver correctly requires the completed Signal139
+baseline. No gate is bypassed: exact147 preflight log/exit, zero-child budget
+and audit are preserved in recovered147-result. Its recovery file never exists.
+The coordinator missed this existing baseline precondition.
+
+A normal same-signature install-r restores exact qualified Signal139 Manager
+SHA1b660471e3e280f191d9f39a8d6ff21e9f457aec20e16ffb0c4d565a305bce8c
+at hostUID10157 without starting a guest, resetting data or reading profile/
+Keystore/credential files. Before/after native absence and unchanged host98
+boot are recorded in signal139-baseline-restored-after147.json. Own unused140
+recovery file remains0600 and untouched. Fresh148 reuses the exact147 current
+five-mode probe APK, freezes804 sources, and is staging with every original
+main baseline guard intact. No new148 credential or guest has started yet.
+
+148 is live with producer10714, budget10738 and AMS10737. All exact observers
+and initial budget/AMS samples preceded its atomic barrier. It passes the
+unchanged qualified-baseline guard, installs the current-probe APK normally,
+and begins preserved encrypted-profile boot. Its new own recovery file exists
+at0600 before guest start; progress only stats it and does not read contents.
+No cycle or post-boot compiler/runtime PASS is claimed yet. Source804 is frozen
+for this trial; old unused140 protected file and all140/147 failures remain.
+
+148 reaches every actual native v2 installer operation successfully on136:
+check, denied, boot-time dexopt, post-boot system dexopt and post-boot ordinary
+UID12347 dexopt. The live stock compiler PID6728 is a child of core2818 with
+real kernel nice10; core priority is0 before/after. Scoped proof is
+recovered148-result/native-installer-focused-check.json, explicitly binding
+the full trial's later FAIL rather than qualifying the credential lifecycle.
+Original143 UID/version/certificate records and ordinary Keystore/data witness
+pass; all five direct encrypted-root canaries pass. Android user is unlocked,
+primary volume mounted, and the ordinary provider query succeeds with0 rows.
+
+148 then fails before setting any password while reading the old synthetic
+canary through /storage/emulated/0. All actual service/descendant/observer jobs
+stop cleanly;134 budget samples peak29/final0/errors[]. Protected unused140 and
+148 recovery files remain;147 never created one. No fixture has been reseeded
+or chmodded and no permission rule or timeout has been relaxed.
+
+Read-only149 compiles/signs a tiny temporary same-package diagnostic split
+which reads only the known last command log from stopped148 (64 bytes). It
+proves the output is `cat: /storage/emulated/0/.pocket-ce32-canary: Permission denied`,
+not changed plaintext data. No guest starts; no credential or ordinary guest
+app data is read. Its exact base7e158c3e... APK is restored normally, split
+removed, UID10157/Enforcing/default32/host98 boot/native absence verified. Raw
+result and receipt are storage149-result. Fresh usable host data is992288768
+bytes of8587837440; rootless legacy download capacity remains to be resolved
+with actual accounting and preserved data, not assumed current ZIP caches.
+
+The rejecting permission layer and the old synthetic canary's actual UID/GID/
+mode are not yet proven. Next use a focused read-only guest stat/id/read of
+the known lower/public paths before choosing runtime vs fixture correction.
+The pinned stock FuseDaemon pf_open checks MediaProvider policy then calls
+ordinary open(io_path); Zygote CalculateCapabilities grants no general DAC
+override to ordinary app UIDs. RetainedPlaintext32 seeds files with a host
+FileChannel/default umask, and CeMigration imports an absent owner marker as
+logicalUID/GID0 while retaining mode. A private synthetic lower canary vs a
+proper public fixture is therefore a hypothesis to verify; do not globally
+elevate MediaProvider, modify original canary permissions, or bypass its checks
+just to get a PASS. Original five private values must remain intact, and all
+full six-cycle/offline/seventh-cold gates remain open.
+
+Read-only command diagnostic150 is live (nonce ce03ef2d4777441fb0d3fd74cdd2218b):
+producer23626, budget23653, AMS23654, initial accounting samples before atomic
+barrier/guest start. A tiny signed temporary split adds a subclass of the
+existing ManagerSessionProbe32; all production classes/image/JNI stay unchanged.
+It boots the existing authless encrypted profile normally (normal boot may
+update Android system state), waits actual boot-completed/user-unlocked/primary-
+mounted owner readiness, then records only guest id, stat of known canary/
+ancestor paths and cat of the existing lower/public synthetic canary. It
+provides no credential channel or password changes. It records nonzero read
+statuses as observations, never reseeds/chmods the original file, stops through
+the ordinary Manager and restores the identical base only after native owners
+are gone. Build command `python3 out/api32/build_canary150.py` PASS javac/D8/
+aapt2/signature; runtime observations and cleanup remain pending.
+
+
+Diagnostic150 completes and independently verifies the actual original synthetic
+media canary: logical root0:0, mode0600,44 bytes, direct read intact and public
+alias EACCES. Owner readiness says user unlocked/primary mounted. Stock pinned
+MediaProvider native code bypasses Java file policy for root/shell but opens the
+lower file as its own UID; it does not impersonate root. The original fixture
+was seeded directly and migrated retaining its private permissions. This proves
+the permission mismatch; a proper public-file paired control is still needed
+before correcting the fixture. Strict native/external cleanup passes, all15
+actual service lifetimes reaped,125 budget samples peak29/final0, identical base
+restored and split removed. Evidence: canary150-result/independent-check.json.
+The first independent checker incorrectly compared compact remote request bytes
+to the indented local candidate hash; corrected to exact local hash plus semantic
+request equality, with the failed assertion recorded and no guest rerun.
+
+151 preserves those private metadata/read observations but its combined Java
+helper command times out at20 seconds before emitting a final result. Native
+logs prove it reached new public-file creation, so a partial own control may
+exist. Do not call this a passing public-storage test or assume the file was
+removed. All14 actual service lifetimes and descendants stop cleanly,123 budget
+samples peak29/final0, identical base restored/split removed. The raw FAIL and
+independent failure audit are canary151-result. No credential was provided or
+original canary reseeded/chmodded. Read-only152 starts no guest and retrieves only
+the exact own helper output log: empty. That observation cannot distinguish the
+last completed file operation; evidence is storage152-result/independent-check.json.
+
+153 adds flushed phase timestamps around the helper's private baseline checks,
+read-only observation of the possible151 partial control, exclusive new public
+creation, write, fsync, reads and own verified cleanup. Its Java process envelope
+is90 seconds, matching existing CeAppInspector32 invocations which perform
+multiple operations; the individual file/FUSE30-second deadlines, boot240s,
+service60s and audio20s policy remain unchanged. No production runtime or ACL
+change is made. Build `python3 out/api32/build_canary153.py` passes javac/D8/aapt2/
+signature. Producer3198 and observers3226/3227 are live on VM73 after exact prior
+terminal/native guards; both initial accounting samples precede the atomic gate.
+Nonce2e6ab090b78048f5a90cdc80df6c5002. Source804/image136/five JNI stay fixed.
+Six credential cycles/offline outer/seventh cold authless, rootless legacy,
+physical-phone and production on-demand distribution gates remain open.
+
+
+153 passes the paired proof with124 budget samples, peak29/final0 and clean
+native shutdown/base restoration. The newly created public file is mode0600,
+UID10101/GID1023, readable through both aliases. Creation266ms, write41ms,
+fsync2371ms; total Java process13795ms. Original root0:0 private0600 file,
+inode and bytes remain identical, with public EACCES retained. The previous151
+own control is also present/readable with correct50 bytes after this cold boot;
+that read-only observation leaves it intact.153's own new file is removed only
+after verified content. Evidence: canary153-result/independent-check.json.
+No individual FUSE deadline was changed;151's timeout remains preserved and
+its exact timing cause remains unqualified. A targeted thread-snapshot request
+arrived after153 had terminated and correctly issued no new trace request.
+
+The CE fixture is corrected in test code: CePublicCanary32 creates a separate
+public file through the real mounted provider with CREATE_NEW/NOFOLLOW_LINKS,
+full writes and force(true); a collision must already contain exact expected
+profile-bound bytes. It never chmods/reseeds the original private canary.
+ManagerCeProbe32 retains all five private canaries, checks proper public denial
+on every locked phase and verifies the retained public value after unlock while
+requiring the old private public alias still returns Permission denied. Initial
+preparation happens only in the main lifecycle; offline outer restart and the
+seventh cold credential-free verifier cannot create/reseed it. The build tool
+includes this test class only in CE probe builds. Production classes/image/5JNI
+and ordinary CE app/current five-mode installer client remain identical.
+
+Focused javac of the two test classes passes. The complete signed Manager build
+and `python3 out/api32/check_recovered_ce155_package.py` pass: only the existing
+CE test class changes and the public fixture class is added; all109 common
+namespace classes are byte-identical, and only classes.dex changes vs148.
+Exact commands and hashes are in active155-handoff.json. Sources805 are frozen
+in recovered155-source-snapshot. Normal same-signature restoration of exact
+qualified Signal139 base before staging is recorded in
+signal139-baseline-restored-after153.json; all prior jobs/native owners were
+terminal, UID/data/keys/boot98/default32/Enforcing/media permissions preserved,
+and unused140/148 recovery files only statted, never read.
+
+155 full lifecycle is live: supervisor8121, budget8141, AMS8142, token
+91b29fd6084a402db2a698a89a8eed59. Both initial samples precede the atomic barrier;
+new own recovery file exists0600 before guest start. No cycle qualifies yet.
+The unchanged six-cycle/wrong/change/remove/restore/two real keyguard/offline
+outer/seventh cold authless/native/kernel/original143 inventory/data/key gates
+remain. Do not install/restart/change source while this exact trial runs.
+
+Isolated space154 source copies pass66 real HTTP/download/archive assertions:
+missing-file extraction already reserves the full new inode in positive growth,
+so rename does not require counting it a second time. Proposed fix retains the
+existing reserve for replacing files and32MiB margin. It is NOT applied to
+production805. Even this correction would leave both fresh legacy images short
+of current observed space; a safe durable verified own-cache archival plan is
+still required. No user data, profile or host installer cache is removed here.
+
+
+Current155 fails after its initial strict cycle on encrypted phase0 before
+wrong/correct credential checks or any subsequent credential changes. The
+first own155 password remains active. Its read-only keyguard observation takes
+15225ms after host WAKEUP; PowerManager records a timeout sleep4944ms after that
+event, with the10s window-manager override. The screen is asleep when the cold
+observer finally samples it. Do not claim an input delivery fault from that
+observation, extend the timeout, or retry the lifecycle unchanged. Raw reports,
+all200 budget samples peak30/final0, accepted two key events/no rejection,
+normal owner cleanup and failure audit are recovered155-result. The public
+fixture/oldprivate denial, initial143 inventory/app key/data, all five native
+installer operations and first stopped cycle passed; the full lifecycle did not.
+
+Image156 reruns the normal current builder including adapters and produces the
+same591137677-byte136 archive, exact catalog and2652 payloads. Both archives'
+size/CRC/mode/SHA and manifest are independently checked by
+`python3 out/api32/verify_repro156.py` PASS. Pinned stock payloads and dependency/
+generated caches are reused; no clean-room source claim is made. Release157
+preflight correctly rejects original42's stale whole sources.lock.json hash.
+Only the guest_api32 metadata differs; all native source code and native-builder
+anbox/proot/boost/talloc configuration are unchanged. Fresh native158 source
+build passes but libpocket_runtime.so and libproot.so differ including loadable
+sections; frames/CE libraries match exactly. Do not claim debug-only differences
+or swap them into the qualified Pi. Native158/current source receipts and all
+original42 artifacts remain intact. Production packaging has not succeeded yet.
+
+Own restoration159 is live after all155 jobs/native owners terminate. A tiny
+signed DUMP split uses ONLY current155's first own test credential to remove
+that test lock, verifies143 retained entries/UIDs/certs plus witness/key/data,
+five old private canaries and separate provider public fixture/oldprivate denial,
+then cold-boots with no password supplied and repeats verification. The155600
+file remains protected even after restoration; it is not deleted because the
+full lifecycle failed. Unused140/148 files remain untouched/unread. Both initial
+budget/AMS samples precede the atomic gate; supervisor17587 and observers17610/
+17613, token429123fe41104d06be126494e0258569. Source805/image136/qualified5JNI
+stay fixed. Exact base5d102c5d... is restored only after native owners disappear.
+Runtime recovery is pending; do not assume authless state until it is proven.
+Next fix the test's cold keyguard observer by preparing it before host input and
+keeping state/UI queries warm, with real host input and existing deadlines.
+
+
+159 phase0 actually passes authenticated own155 p0 removal and original143
+inventory/key/data/five-private/proper-public canary verification, with strict
+15-service/11-descendant cleanup and peak30/final0. Its coordinator then waits
+on a new nonce while Android reuses the finished Activity; only the old nonce
+is present and no guest runs. After independent stopped-guest/stale-Activity
+proof, SIGINT ends only that exact waiting Pi driver. Finally removes reverse
+8795 and supervisor restores identical155 base/split, preserving raw return-2.
+159 is not relabelled a completed two-phase PASS. Protected155 file/inode/hash
+remain unchanged600. Evidence: own-restore159-result/partial-restoration-audit.json.
+
+Fresh161 performs ONLY the cold verify-authless phase: explicit hostforce-stop
+whileguest0, newnonce selected acrossall DUMP rows, no password field/channel
+orcredential-file contentsread. It passes actual cold host/guest restart,
+unlocked/nonsecure keyguard, mounted/queryable provider, UID10113nonexportable
+key/cipher/original143inventory and allcanaries withzero guestinputevents.
+Allnative/kernel cleanup passes,108samplespeak30/final0; base155restored/split
+removed. The standalone recoveryJSON lacks MainCe.app's added userUnlockfield;
+the checker instead binds the actual receiver's unlock-before-provider gate,
+recorded unlockedkeyguard and decrypted/mounted provider/data. No raw field is
+invented or guest rerun; the initial schemaKeyError is preserved. Command
+`python3 out/api32/verify_own_authless161.py` PASS. Failed155/159 remain failures;
+the originalpassword-free encrypted profile is now independently coldverified.
+
+The test observer is corrected in source. KeyguardObserver32 prepares a bounded
+nonce/sequence/UID/PID-bound stdio/file transport beforehostWAKEUP and reuses the
+same guest process for actual keyguardstate/UI/focus/await. Guest input and
+passwordtext are never handled by the observer; all passwordkeys remain on the
+real hosttransport. Existing read-only passwordEntry method is unchanged. UI
+inspection is warmed beforethegesture. The actual15s wake,45s preparation/query
+and30s unlock bounds remain; no displaytimeout/wakelock setting changes. Helpers
+are closed/reaped beforecapture/stop/migration/error and counted normally.
+
+Focused javac and50 actual child-process transport assertions pass readiness,
+warm reuse, partialwriter, identity/sequence, outputbounds, deadline and reaping
+cases. The fake peer supplies no Android behavior. Fullsigned160 Manager build
+passes; all109 commonproduction classes/image/5JNI/ordinaryCE/current5-mode
+nativeclient assets stay byte-identical. Only two CE testclasses change and one
+testtransport class is added; unitrunner is excluded. Source807 is frozen.
+Exact commands/receipts are in active162-handoff.json and ce160-build-proof.json.
+
+After161 alljobs/native terminal, exact qualifiedSignal139 baseline is restored
+normally withretained data andno gueststart; new162 reuses exact160 APK and
+freezes807 sources for the complete original6cycle/offlineouter/7cold lifecycle.
+Producer4951, budget4971, AMS4973, token814144e3a21a4815972f21b2eaab57af; both
+initial samples precede atomicgate. Ownnew162 recoveryfile exists600 beforeguest
+start. Initial warmobserver/app/native checks reach settingpassword, sampled
+peak31 sofar. Actual encrypted wake/UI andallcyclecleanup qualification remain
+pending. No source/APK/guest restart whilethis exact trialruns. Olderunused
+140/148/155 protectedfiles stay untouched; no API32support/releaseflags change.

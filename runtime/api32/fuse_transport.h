@@ -141,11 +141,13 @@ public:
     // Callers join their broker workers before destroying the shared channel.
     ~Channel(){cancel();if(reader_.joinable())reader_.join();close(fd_);}
     void cancel(){fail(ECANCELED);}
-    int call(uint32_t opcode,uint64_t node,Identity identity,const void* body,size_t size,std::vector<char>* output) {
+    // Bootstrap callers can use their enclosing service-start deadline;
+    // ordinary requests retain this channel's file-operation timeout.
+    int call(uint32_t opcode,uint64_t node,Identity identity,const void* body,size_t size,std::vector<char>* output,int timeoutMs=0) {
         if(!output)return -EINVAL;
         output->clear();
-        if(size>MaxBody || (size && !body))return -EINVAL;
-        auto deadline=Clock::now()+std::chrono::milliseconds(timeoutMs_);
+        if(timeoutMs<0 || size>MaxBody || (size && !body))return -EINVAL;
+        auto deadline=Clock::now()+std::chrono::milliseconds(timeoutMs?timeoutMs:timeoutMs_);
         auto pending=std::make_shared<Pending>();uint64_t id;
         std::unique_lock<std::timed_mutex> sending(sending_,std::defer_lock);
         if(!sending.try_lock_until(deadline))return -ETIMEDOUT;

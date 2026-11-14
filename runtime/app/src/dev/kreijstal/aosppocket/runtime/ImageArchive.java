@@ -83,6 +83,19 @@ final class ImageArchive {
         }catch(InterruptedIOException cancelled){throw cancelled;}
         catch(UnsupportedOperationException | IllegalArgumentException | IOException unreadable){return false;}
     }
+    static long requiredFreeSpace(File root,Map<String,Entry> files,long downloadRemaining)throws IOException {
+        if(downloadRemaining<0 || downloadRemaining>LIMIT)throw new IOException("Invalid remaining image download size");
+        long growth=0,largestReplacement=0;
+        for(Map.Entry<String,Entry> item:files.entrySet()) {
+            File file=target(root,item.getKey());Entry spec=item.getValue();
+            // Match the installer's byte-and-mode test. A large unchanged file
+            // needs neither another copy nor a replacement temporary file.
+            if(installedBytesMatch(file,spec))continue;
+            growth+=Math.max(0,spec.size-(file.isFile()?file.length():0));
+            largestReplacement=Math.max(largestReplacement,spec.size);
+        }
+        return downloadRemaining+growth+largestReplacement+32L*1024*1024;
+    }
     static InstallStats install(File archive,File root,Map<String,Entry> files,String manifestSha,String imageSha,ImageDownload.Progress progress)throws IOException {
         if(!root.isDirectory() && !root.mkdirs())throw new IOException("Cannot create guest image directory");
         InstallStats stats=new InstallStats();

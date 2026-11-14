@@ -46,7 +46,7 @@ def build(out,lifecycle=False,reset=False,crash=False,ndk=None):
             'certificateSha256':cert[0],'apkModified':False,'url':'http://127.0.0.1:8794/'+filename,
             'archiveBytes':archive.stat().st_size,'archiveSha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),
             'files':[{'name':'base.apk','bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}]}
-    spec=dict(specs['app'],proof='external-volume-v1',storageOwner=specs['owner'],requireNamespaceSyscalls=True)
+    spec=dict(specs['app'],proof='external-volume-v1',storageOwner=specs['owner'],requireNamespaceSyscalls=True,requireVirtualAliases=True,requireCeDirectoryOpath=True)
     if lifecycle:spec['volumeLifecycle']=True
     if reset:spec['volumeReset']=True
     if crash:spec.update(managerCrashRecovery=True,requireKeyCanary=True)

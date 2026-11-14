@@ -38,8 +38,35 @@ public final class ImageDownloadTest {
         }
         return result;
     }
+    private static void spaceAccounting(Path temp)throws Exception {
+        File root=temp.resolve("space-accounting").toFile();
+        Path system=root.toPath().resolve("system");Files.createDirectories(system);
+        byte[] large=new byte[512*1024],small=new byte[17];new Random(71).nextBytes(large);Arrays.fill(small,(byte)11);
+        Map<String,byte[]> payloads=new TreeMap<>();payloads.put("system/large",large);payloads.put("system/small",small);
+        Map<String,ImageArchive.Entry> entries=specs(payloads);
+        Path big=system.resolve("large"),little=system.resolve("small");Files.write(big,large);Files.write(little,small);
+        Set<java.nio.file.attribute.PosixFilePermission> executable=java.nio.file.attribute.PosixFilePermissions.fromString("rwxr-xr-x");
+        Files.setPosixFilePermissions(big,executable);Files.setPosixFilePermissions(little,executable);
+        Path user=root.toPath().resolve("system-data/user/0/private");Files.createDirectories(user.getParent());Files.write(user,new byte[]{9,8,7});
+        long reserve=32L*1024*1024;
+        check(ImageArchive.requiredFreeSpace(root,entries,100)==reserve+100,"Unchanged files reserved another image copy");
+        Files.write(little,new byte[small.length]);
+        check(ImageArchive.requiredFreeSpace(root,entries,100)==reserve+100+small.length,"Unchanged large file was counted as a replacement temporary");
+        Files.write(little,new byte[3]);
+        check(ImageArchive.requiredFreeSpace(root,entries,100)==reserve+100+14+small.length,"Replacement growth was not reserved");
+        Files.write(little,small);Files.write(big,new byte[large.length]);
+        check(ImageArchive.requiredFreeSpace(root,entries,100)==reserve+100+large.length,"Same-size corrupt large file did not reserve a replacement");
+        Files.write(big,large);Files.setPosixFilePermissions(big,java.nio.file.attribute.PosixFilePermissions.fromString("rw-r--r--"));
+        check(ImageArchive.requiredFreeSpace(root,entries,100)==reserve+100+large.length,"Wrong-mode file was incorrectly reusable");
+        Files.setPosixFilePermissions(big,executable);Files.delete(big);Files.createSymbolicLink(big,user);
+        rejected(()->ImageArchive.requiredFreeSpace(root,entries,100));
+        check(Arrays.equals(Files.readAllBytes(user),new byte[]{9,8,7}),"Space preflight changed app data");
+        rejected(()->ImageArchive.requiredFreeSpace(root,entries,-1));
+        rejected(()->ImageArchive.requiredFreeSpace(root,entries,ImageArchive.LIMIT+1));
+    }
     public static void main(String[] args)throws Exception {
         Path temp=Files.createTempDirectory("pocket-image-test-");
+        spaceAccounting(temp);
         byte[] body=new byte[200000];new Random(17).nextBytes(body);String digest=sha(body);
         AtomicLong range=new AtomicLong(-1);HttpServer server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
         server.createContext("/range",exchange->{

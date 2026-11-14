@@ -21,6 +21,81 @@ static int (*sqlexec)(sqlite3*,const char*,int(*)(void*,int,char**,char**),void*
 static int (*sqlclose)(sqlite3*);
 static const char* (*sqlerror)(sqlite3*);
 static int count(void* out,int columns,char** values,char** names){(void)names;REQUIRE(columns==1);*(int*)out=atoi(values[0]);return 0;}
+static void removed_directory_test(void) {
+    const char* path="/data/user/0/proc-removed-dir";
+    REQUIRE(mkdir(path,0700)==0);
+    int saved=open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC);REQUIRE(saved>=0);
+    int readable=open(path,O_RDONLY|O_DIRECTORY|O_CLOEXEC);REQUIRE(readable>=0);
+    int metadata=open(path,O_PATH|O_DIRECTORY|O_CLOEXEC);REQUIRE(metadata>=0);
+    struct stat before,after;REQUIRE(fstat(readable,&before)==0 && S_ISDIR(before.st_mode));
+    REQUIRE(rmdir(path)==0);
+    for(unsigned source=0;source<2;source++) {
+        int fd=source?metadata:readable;
+        REQUIRE(fstat(fd,&after)==0 && after.st_ino==before.st_ino && !after.st_nlink);
+        errno=0;int search=faccessat(fd,".",X_OK,0);
+        if(search)fprintf(stderr,"CE_REMOVED_DIR_SEARCH_ERROR source=%s errno=%d\n",source?"metadata":"data",errno);
+        REQUIRE(search==0 && fchdir(fd)==0);
+        char cwd[4096];errno=0;REQUIRE(!getcwd(cwd,sizeof(cwd)) && errno==ENOENT);
+        REQUIRE(fchdir(saved)==0);
+        errno=0;int invalid=openat(fd,"new",O_CREAT|O_EXCL|O_RDWR|O_CLOEXEC,0600);REQUIRE(invalid<0 && errno==ENOENT);
+        char link[64],entries[256];snprintf(link,sizeof(link),"/proc/self/fd/%d",fd);
+        int fresh=open(link,O_RDONLY|O_DIRECTORY|O_CLOEXEC);REQUIRE(fresh>=0);
+        REQUIRE(fstat(fresh,&after)==0 && after.st_ino==before.st_ino && !after.st_nlink);
+        REQUIRE(syscall(SYS_getdents64,fresh,entries,sizeof(entries))==0 && close(fresh)==0);
+    }
+    for(unsigned grant=0;grant<2;grant++) {
+        REQUIRE(fchmod(readable,grant?0711:0700)==0);
+        pid_t child=fork();REQUIRE(child>=0);
+        if(!child) {
+            if(setgid(39998) || setuid(39998))_exit(2);
+            errno=0;int result=faccessat(metadata,".",X_OK,0);
+            _exit(grant?(result==0?0:3):(result<0 && errno==EACCES?0:4));
+        }
+        int status=0;REQUIRE(waitpid(child,&status,0)==child && WIFEXITED(status) && WEXITSTATUS(status)==0);
+    }
+    REQUIRE(close(metadata)==0 && close(readable)==0 && close(saved)==0);
+    puts("CE_REMOVED_DIRECTORY_PASS descriptor_search=1 current_uid_permission=1 cwd_enoent=1 new_child_enoent=1 proc_reopen_same_inode=1 empty_readdir=1");
+}
+static void proc_reopen_test(void) {
+    const char* directory="/data/user/0/proc-reopen";
+    const char* name="/data/user/0/proc-reopen/file";
+    REQUIRE(mkdir(directory,0700)==0);
+    int held=open(name,O_CREAT|O_EXCL|O_RDWR|O_CLOEXEC,0600);REQUIRE(held>=0);
+    const char bytes[]="original-unlinked";REQUIRE(write(held,bytes,sizeof(bytes))==sizeof(bytes));
+    off_t offset=lseek(held,0,SEEK_CUR);REQUIRE(offset==sizeof(bytes));
+    int metadata=open(name,O_PATH|O_CLOEXEC);REQUIRE(metadata>=0);
+    struct stat initial,actual;REQUIRE(fstat(held,&initial)==0);
+    REQUIRE(unlink(name)==0);
+    int replacement=open(name,O_CREAT|O_EXCL|O_RDWR|O_CLOEXEC,0600);REQUIRE(replacement>=0);
+    REQUIRE(write(replacement,"replacement",11)==11);
+    for(unsigned source=0;source<2;source++) {
+        char path[64],contents[64]={0};snprintf(path,sizeof(path),"/proc/self/fd/%d",source?metadata:held);
+        errno=0;int fresh=open(path,O_RDONLY|O_CLOEXEC);
+        if(fresh<0)fprintf(stderr,"CE_PROC_REOPEN_ERROR source=%s errno=%d\n",source?"metadata":"data",errno);
+        REQUIRE(fresh>=0 && (fcntl(fresh,F_GETFD)&FD_CLOEXEC));
+        REQUIRE(fstat(fresh,&actual)==0 && actual.st_dev==initial.st_dev && actual.st_ino==initial.st_ino && !actual.st_nlink);
+        REQUIRE(read(fresh,contents,sizeof(contents))==sizeof(bytes) && !memcmp(contents,bytes,sizeof(bytes)));
+        REQUIRE(lseek(held,0,SEEK_CUR)==offset && close(fresh)==0);
+    }
+    // A transferred descriptor still needs current inode access permission.
+    // Search permission on a replacement pathname grants no authority.
+    for(unsigned grant=0;grant<2;grant++) {
+        REQUIRE(fchmod(held,grant?0644:0600)==0);
+        pid_t child=fork();REQUIRE(child>=0);
+        if(!child) {
+            if(setgid(39998) || setuid(39998))_exit(2);
+            char path[64],contents[64]={0};snprintf(path,sizeof(path),"/proc/self/fd/%d",held);
+            errno=0;int fresh=open(path,O_RDONLY|O_CLOEXEC);
+            if(!grant)_exit(fresh<0 && errno==EACCES?0:3);
+            if(fresh<0 || read(fresh,contents,sizeof(contents))!=sizeof(bytes) || memcmp(contents,bytes,sizeof(bytes)))_exit(4);
+            close(fresh);errno=0;fresh=open(name,O_RDONLY|O_CLOEXEC);
+            _exit(fresh<0 && errno==EACCES?0:5);
+        }
+        int status=0;REQUIRE(waitpid(child,&status,0)==child && WIFEXITED(status) && WEXITSTATUS(status)==0);
+    }
+    REQUIRE(close(metadata)==0 && close(held)==0 && close(replacement)==0 && unlink(name)==0 && rmdir(directory)==0);
+    puts("CE_PROC_REOPEN_PASS actual_appfuse=1 removed_inode=1 replacement_not_read=1 independent_offset=1 current_uid_permission=1 parent_search_not_inherited=1");
+}
 static void metadata_test(int verify) {
     char label[256],other[256],path[4096],link[128];
     ssize_t length=getxattr("/data/user/0","security.selinux",label,sizeof(label));REQUIRE(length>0);
@@ -59,6 +134,8 @@ static void sqlite_test(int verify) {
 }
 int main(int argc,char** argv) {
     setbuf(stdout,NULL);REQUIRE(argc==2);
+    if(!strcmp(argv[1],"removed-dir")){removed_directory_test();return 0;}
+    if(!strcmp(argv[1],"proc-reopen")){proc_reopen_test();return 0;}
     if(!strcmp(argv[1],"metadata") || !strcmp(argv[1],"metadata-verify")){metadata_test(!strcmp(argv[1],"metadata-verify"));return 0;}
     if(!strncmp(argv[1],"vendor-",7)) {
         REQUIRE(syscall(SYS_getpid,0x504c2001UL,5UL)==0x504c3202UL);

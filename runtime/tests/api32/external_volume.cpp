@@ -10,11 +10,15 @@ int main() {
     options.directory=root;options.identity=root+"/identity";options.locator=root+"/locator";options.device=root+"/device";
     // A model adapter exercises transaction ordering/rollback. This host test
     // deliberately does not claim a real AppFuse or MediaProvider mount.
-    for(unsigned trial=0;trial<6;trial++) {
+    for(unsigned trial=0;trial<7;trial++) {
         Peer peer;peer.owner.pid=getpid();std::thread daemon;
         std::atomic<bool> callbackDone{false};unsigned attaches=0,detaches=0;uint64_t epoch=0;
         auto checking=[&](int fd) {
             if(trial==1)return -EACCES;
+            // The real framework's20s startup budget includes cold service
+            // binding. INIT must still be usable when binding exceeds the
+            // ordinary15s file-operation timeout, before the framework limit.
+            if(trial==6)std::this_thread::sleep_for(std::chrono::seconds(16));
             int copy=dup(fd);assert(copy>=0);
             daemon=std::thread([&,copy] {
                 // Require INIT before allowing the framework callback to
@@ -57,5 +61,5 @@ int main() {
         for(const char* name:{"pocket_ext","pocket_efs","locator","device"})assert(access((root+"/"+name).c_str(),F_OK)<0 && errno==ENOENT);
     }
     assert(!rmdir(root.c_str()) && descriptorCount()==initial);
-    puts("EXTERNAL_VOLUME_PASS init_during_callback=1 callback_denied=1 init_failed=1 adapter_failed=1 missing_device=1 rollback=1 lost_detach_retry=1 pending_detach_broker_preserved=1 duplicate_mount_denied=1 native_brokers_stopped=1 fd_leaks=0 real_mount_claim=0");
+    puts("EXTERNAL_VOLUME_PASS init_during_callback=1 cold_service_bind_past_io_deadline=1 callback_denied=1 init_failed=1 adapter_failed=1 missing_device=1 rollback=1 lost_detach_retry=1 pending_detach_broker_preserved=1 duplicate_mount_denied=1 native_brokers_stopped=1 fd_leaks=0 real_mount_claim=0");
 }

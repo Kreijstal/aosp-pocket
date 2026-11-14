@@ -28,6 +28,7 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
     private JSONObject crashCheckpoint,crashPreStart;
     private boolean crashResume;
     private boolean readTombstonesOnly;
+    private boolean readStoppedLogsOnly;
     private volatile boolean crashArmed;
     private File crashFile(String suffix){return new File(getFilesDir(),"manager-crash32-"+runId+suffix+".json");}
     private static String processStart(int pid)throws IOException {
@@ -67,6 +68,12 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
             .put("fiveRootEncryptionLayoutBeforeStart",new File(root,CeMigration.LAYOUT32).isFile());
         try(InputStream in=getAssets().open("api32-app-spec.json")) {
             ByteArrayOutputStream bytes=new ByteArrayOutputStream();GuestImage.copy(in,bytes,65536);spec=new JSONObject(bytes.toString("UTF-8"));
+        }
+        if(getIntent().getBooleanExtra("read_stopped_runtime_logs_only",false)) {
+            autoStart=false;readStoppedLogsOnly=true;
+            check(!getIntent().getBooleanExtra("read_failed_tombstones_only",false),"Select one stopped-run diagnostic");
+            check(DirectImage.leftovers(root).isEmpty(),"Cannot read stopped-run logs while a guest is active");
+            return;
         }
         if(getIntent().getBooleanExtra("read_failed_tombstones_only",false)) {
             autoStart=false;readTombstonesOnly=true;
@@ -236,6 +243,64 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
             throw new IOException("Observer returned no result");
         }finally{if(process.isAlive())process.destroyForcibly();}
     }
+    private void checkLauncherRecents()throws Exception {
+        if(!spec.optBoolean("requireLauncherRecentsNullGuard"))return;
+        stage("checking-launcher-recents-null-guard");
+        JSONObject configuration;
+        try(InputStream input=getAssets().open("api32-launcher-recents-spec.json")) {
+            ByteArrayOutputStream bytes=new ByteArrayOutputStream();GuestImage.copy(input,bytes,16384);
+            configuration=new JSONObject(bytes.toString("UTF-8"));
+        }
+        check(configuration.getInt("schema")==1 && configuration.getInt("sdk")==32,"Wrong Launcher proof specification");
+        String installed="/system_ext/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk";
+        check(configuration.getString("installedLauncherPath").equals(installed),"Wrong Launcher path");
+        check(digest(new File(root,installed.substring(1))).equals(configuration.getString("installedLauncherSha256")),"Installed Launcher differs from the patched proof input");
+        check(runId.matches("[a-f0-9]{32}"),"Wrong Launcher proof nonce");
+        File directory=new File(root,"tmp/launcher-recents-"+runId);check(directory.mkdir(),"Launcher proof directory already exists");
+        for(String[] item:new String[][]{{"originalApk","api32-launcher-recents-before.apk","before.apk"},
+                {"probeJar","api32-launcher-recents-probe.jar","probe.jar"}}) {
+            JSONObject pin=configuration.getJSONObject(item[0]);File file=new File(directory,item[2]);
+            check(pin.getLong("bytes")>0 && pin.getLong("bytes")<=32*1024*1024,"Launcher proof input exceeds bound");
+            try(InputStream input=getAssets().open(item[1]);OutputStream output=new FileOutputStream(file)) {
+                GuestImage.copy(input,output,pin.getLong("bytes"));
+            }
+            check(file.length()==pin.getLong("bytes") && digest(file).equals(pin.getString("sha256")),"Launcher proof input differs");
+        }
+        String guest="/tmp/launcher-recents-"+runId;
+        String entry="dev.kreijstal.aosppocket.guest.LauncherRecentsProbe32";
+        check(configuration.getString("mainClass").equals(entry),"Wrong Launcher proof entry point");
+        String shell=". /system/etc/pocket-runtime-env.sh; export LD_PRELOAD=/system/lib64/libpocket_binder_api32.so; exec /system/bin/pocket-app-process-api32 -Xnorelocate -Xnoimage-dex2oat -Ximage:/apex/com.android.art/javalib/boot.art:/system/framework/boot-framework.art -cp "+guest+"/probe.jar /system/bin "+entry+" "+guest+"/before.apk "+installed+" "+guest+"/art "+runId;
+        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",Arrays.asList("/system/bin/sh","-c",shell))).directory(root);
+        builder.environment().clear();builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid(),32));
+        File log=new File(root,"logs/launcher-recents-"+runId+".log");builder.redirectErrorStream(true).redirectOutput(log);
+        java.lang.Process process=builder.start();boolean verified=false;
+        try {
+            check(process.waitFor(180,TimeUnit.SECONDS),"Actual ART Launcher probe timed out");
+            check(log.length()<1024*1024,"Launcher proof log exceeds bound");
+            String output=new String(Files.readAllBytes(log.toPath()),"UTF-8");
+            JSONObject proof=new JSONObject().put("exit",process.exitValue()).put("output",output).put("configuration",configuration);
+            result.put("launcherRecents",proof);
+            check(process.exitValue()==0,"Actual ART Launcher probe failed: "+output.substring(Math.max(0,output.length()-3000)));
+            String prefix="POCKET_LAUNCHER_RECENTS_NULL32 ";JSONObject value=null;
+            for(String line:output.split("\n"))if(line.startsWith(prefix)){check(value==null,"Duplicate Launcher proof result");value=new JSONObject(line.substring(prefix.length()));}
+            check(value!=null && value.getString("validation").equals("PASS") && value.getInt("sdk")==32
+                && value.getInt("pid")>0 && value.getString("nonce").equals(runId),"Missing current Android Launcher proof");
+            JSONObject original=value.getJSONObject("original"),patched=value.getJSONObject("patched");
+            check(!original.getBoolean("patched") && original.getBoolean("originalNullNpeReproduced")
+                && patched.getBoolean("patched") && patched.getBoolean("nullArrayEmptyFallbackVerified"),"Original/patched null control failed");
+            for(JSONObject side:new JSONObject[]{original,patched}) {
+                for(String flag:new String[]{"disconnectedAndEmptyFallbacksVerified","nonnullTaskIdentityAndOrderPreserved",
+                        "remoteExceptionFallbackPreserved","securityAndStateErrorsPreserved","queryArgumentsPreserved"})check(side.getBoolean(flag),"Launcher proof failed: "+flag);
+                check(side.getInt("serviceCalls")==6 && side.getString("loader").equals("dalvik.system.DexClassLoader"),"Wrong Launcher code loader/call count");
+            }
+            proof.put("validation","PASS").put("proof",value);verified=true;
+        }finally {
+            if(process.isAlive())process.destroyForcibly();
+            if(verified)try(java.util.stream.Stream<java.nio.file.Path> paths=Files.walk(directory.toPath())) {
+                for(java.nio.file.Path path:(Iterable<java.nio.file.Path>)paths.sorted(java.util.Comparator.reverseOrder())::iterator)Files.delete(path);
+            }
+        }
+    }
     private JSONObject cryptoFrontend()throws Exception {
         File client=new File(root,"tmp/gatekeeper-frontend-client");
         try(InputStream in=getAssets().open("api32-gatekeeper-client");OutputStream out=new FileOutputStream(client)) {
@@ -267,7 +332,9 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
         Bitmap bitmap=ui(()->runtime.snapshot());check(bitmap!=null,"Missing startup geometry");
         int width=bitmap.getWidth(),height=bitmap.getHeight();bitmap.recycle();
         JSONArray changes=new JSONArray();result.put("startupReadiness",changes);
-        long deadline=SystemClock.elapsedRealtime()+180000;String previous=null;int owner=0,queries=0;
+        JSONArray broadcasts=new JSONArray(),broadcastErrors=new JSONArray();
+        result.put("startupBroadcastSnapshots",broadcasts).put("startupBroadcastDiagnosticErrors",broadcastErrors);
+        long deadline=SystemClock.elapsedRealtime()+180000,nextBroadcastSnapshot=0;String previous=null;int owner=0,queries=0;
         for(;;) {
             JSONObject state=new JSONObject(GuestManager32.execute(root,width,height,java.util.concurrent.ConcurrentHashMap.newKeySet(),
                 ()->false,new File(root,"logs/startup-readiness.log"),new String[]{"startup"}));
@@ -296,8 +363,24 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
                     .put("stateBeforeSend",state).put("stateAfterAccepted",after).put("source","GuestInput32.injectInputEventReply"));
             }
             result.put("startupReadinessQueries",queries).put("startupOwnerPid",owner);
-            if(ready){result.put("appsReady",true);return true;}
             check(!state.getBoolean("credentialRequired"),"Unlock Android before validating apps");
+            if(SystemClock.elapsedRealtime()>=nextBroadcastSnapshot) {
+                String nonce=java.util.UUID.randomUUID().toString().replace("-","");
+                try {
+                    JSONObject snapshot=new JSONObject(GuestManager32.execute(root,width,height,java.util.concurrent.ConcurrentHashMap.newKeySet(),
+                        ()->false,new File(root,"logs/startup-broadcasts.log"),new String[]{"boot-broadcasts",nonce}));
+                    check(snapshot.getInt("schema")==1 && snapshot.getInt("sdk")==32 && snapshot.getInt("uid")==1000
+                        && snapshot.getInt("pid")==owner && snapshot.getString("nonce").equals(nonce)
+                        && snapshot.getString("source").equals("LocalServices.ActivityManagerService.mBroadcastQueues")
+                        && snapshot.getBoolean("metadataOnly") && snapshot.getJSONArray("queues").length()==3,
+                        "Invalid startup broadcast observer");
+                    broadcasts.put(snapshot);progress=result.toString();
+                }catch(Exception error) {
+                    broadcastErrors.put(new JSONObject().put("nonce",nonce).put("error",error.toString()));progress=result.toString();
+                }
+                nextBroadcastSnapshot=SystemClock.elapsedRealtime()+15000;
+            }
+            if(ready){result.put("appsReady",true);return true;}
             check(SystemClock.elapsedRealtime()<deadline,"Actual app startup readiness timed out");Thread.sleep(250);
         }
     }
@@ -664,6 +747,61 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
             check(SystemClock.elapsedRealtime()<deadline,"Guest default-network API or network-bound HTTPS failed");Thread.sleep(1000);
         }
     }
+    private void readStoppedRuntimeLogs() {
+        try {
+            check(!autoStart && android.os.Build.VERSION.SDK_INT>=30 && DirectImage.leftovers(root).isEmpty(),
+                "Stopped-log diagnostic must not start a guest");
+            int predecessor=getIntent().getIntExtra("predecessor_host_pid",0);
+            String image=getIntent().getStringExtra("predecessor_image_sha256");
+            check(predecessor>0 && predecessor!=android.os.Process.myPid() && image!=null && image.matches("[0-9a-f]{64}"),
+                "Invalid stopped-log predecessor");
+            android.app.ActivityManager manager=getSystemService(android.app.ActivityManager.class);
+            android.app.ApplicationExitInfo exit=null;
+            for(android.app.ApplicationExitInfo item:manager.getHistoricalProcessExitReasons(getPackageName(),predecessor,8))
+                if(item.getPid()==predecessor && item.getRealUid()==android.os.Process.myUid()
+                    && item.getProcessName().equals(getPackageName()) && item.getReason()==android.app.ApplicationExitInfo.REASON_LOW_MEMORY) {
+                    check(exit==null,"Ambiguous stopped-log predecessor");exit=item;
+                }
+            check(exit!=null,"No exact same-UID Manager low-memory exit");
+            File marker=new File(root,".pocket-image-id");
+            check(!Files.isSymbolicLink(marker.toPath()) && marker.isFile() && marker.length()<=128
+                && new String(Files.readAllBytes(marker.toPath()),"US-ASCII").trim().equals(image),"Stopped image differs");
+            File logs=new File(root,"logs");
+            check(!Files.isSymbolicLink(logs.toPath()) && logs.isDirectory()
+                && logs.getCanonicalFile().getParentFile().equals(root.getCanonicalFile()),"Unexpected stopped log directory");
+            // Fixed allowlist: no guest data, credential files, prior reports,
+            // or user-selected paths. Native liblog was RAM-only in this run.
+            File file=new File(logs,"manager-init.log");
+            check(file.getCanonicalFile().getParentFile().equals(logs.getCanonicalFile())
+                && file.lastModified()>=exit.getTimestamp()-15*60*1000L
+                && file.lastModified()<=exit.getTimestamp()+60000,"Stopped console does not match exit interval");
+            java.io.FileDescriptor fd=android.system.Os.open(file.getPath(),android.system.OsConstants.O_RDONLY
+                |android.system.OsConstants.O_CLOEXEC|android.system.OsConstants.O_NOFOLLOW,0);
+            JSONObject artifact;
+            try(FileInputStream input=new FileInputStream(fd)) {
+                android.system.StructStat before=android.system.Os.fstat(fd);
+                check((before.st_mode&android.system.OsConstants.S_IFMT)==android.system.OsConstants.S_IFREG
+                    && before.st_size>0 && before.st_size<=2*1024*1024,"Stopped console exceeds capture bound");
+                ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] buffer=new byte[8192];int count;
+                while((count=input.read(buffer))!=-1){check(bytes.size()+count<=2*1024*1024,"Stopped console grew");bytes.write(buffer,0,count);}
+                android.system.StructStat after=android.system.Os.fstat(fd);
+                check(bytes.size()==before.st_size && after.st_size==before.st_size && before.st_ino==after.st_ino
+                    && before.st_dev==after.st_dev && before.st_mtime==after.st_mtime,"Stopped console changed");
+                byte[] data=bytes.toByteArray();StringBuilder hash=new StringBuilder();
+                for(byte value:MessageDigest.getInstance("SHA-256").digest(data))hash.append(String.format(Locale.ROOT,"%02x",value&255));
+                artifact=new JSONObject().put("path","logs/manager-init.log").put("bytes",data.length).put("sha256",hash.toString())
+                    .put("dataBase64",android.util.Base64.encodeToString(data,android.util.Base64.NO_WRAP))
+                    .put("inode",before.st_ino).put("device",before.st_dev).put("mtimeSeconds",before.st_mtime);
+            }
+            check(DirectImage.leftovers(root).isEmpty(),"A guest started during stopped-log observation");
+            result.put("runId",runId).put("probeKind","stopped-runtime-logs").put("guestStarted",false)
+                .put("predecessorHostPid",predecessor).put("predecessorImageSha256",image)
+                .put("exitReason",exit.getReason()).put("exitTimestamp",exit.getTimestamp()).put("exitImportance",exit.getImportance())
+                .put("console",artifact).put("nativeLiblogAvailable",false).put("validation","PASS");
+        }catch(Exception error){try{result.put("runId",runId).put("probeKind","stopped-runtime-logs").put("guestStarted",false)
+                .put("validation","FAIL").put("error",error.toString());}catch(Exception ignored){}}
+        try{stage("finished");finished=result.toString();}catch(Exception ignored){}
+    }
     private void readFailedTombstones() {
         try {
             String predecessor=getIntent().getStringExtra("predecessor_run_id");
@@ -710,6 +848,7 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
         try{stage("finished");finished=result.toString();}catch(Exception ignored){}
     }
     @Override protected void probe() {
+        if(readStoppedLogsOnly){readStoppedRuntimeLogs();return;}
         if(readTombstonesOnly){readFailedTombstones();return;}
         try {
             try(InputStream in=getAssets().open("api32-app-spec.json")) {
@@ -731,6 +870,7 @@ public final class ManagerAppProbe32 extends ManagerSessionProbe32 {
             awaitAppReadiness(startupOnly);
             if(crashResume)verifyCrashRestart();
             checkInstalldFrontend();
+            checkLauncherRecents();
             if(!policyOnly && !cryptoOnly && !startupOnly)checkCrashTransport();
             if(!policyOnly && !cryptoOnly && !startupOnly && spec.optBoolean("requireLateCameraGrant"))awaitHostCameraGrant();
             File imageStats=new File(root,".pocket-image-install-stats.json");

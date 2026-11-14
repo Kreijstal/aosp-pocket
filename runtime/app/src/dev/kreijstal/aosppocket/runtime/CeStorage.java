@@ -198,9 +198,12 @@ final class CeStorage implements AutoCloseable {
         if(children==null || children.length!=0)throw new IOException("Unexpected plaintext in CE directory cache");
     }
     private ParcelFileDescriptor directory(Node n)throws Exception {
+        return directory(n,false);
+    }
+    private ParcelFileDescriptor directory(Node n,boolean pathOnly)throws Exception {
         File dir=new File(root,".pocket-ce-dirs/"+n.id);if(!dir.isDirectory() && !dir.mkdirs())throw new IOException("CE directory cache");
         sealDirectory(dir);
-        FileDescriptor fd=Os.open(dir.getPath(),OsConstants.O_RDONLY|O_DIRECTORY|OsConstants.O_CLOEXEC,0);
+        FileDescriptor fd=Os.open(dir.getPath(),(pathOnly?O_PATH:OsConstants.O_RDONLY)|O_DIRECTORY|OsConstants.O_CLOEXEC,0);
         try{return ParcelFileDescriptor.dup(fd);}finally{Os.close(fd);}
     }
     private ParcelFileDescriptor lockFile(Node n)throws IOException {
@@ -214,11 +217,12 @@ final class CeStorage implements AutoCloseable {
         return s.array();
     }
     private Reply open(Node n,int flags,int uid,int gid,int[] groups)throws Exception {
-        int mode=flags&3;CeNamespace.access(n,uid,gid,groups,mode==0?4:mode==1?2:6);
+        int mode=flags&3;
+        if(!n.directory() || (flags&O_PATH)==0)CeNamespace.access(n,uid,gid,groups,mode==0?4:mode==1?2:6);
         if((flags&O_DIRECTORY)!=0 && !n.directory())throw new FsException(20);
         Reply reply=new Reply(0);
         try {
-          if(n.directory()) {if(mode!=0 && (flags&O_PATH)==0)throw new FsException(21);reply.fds.add(directory(n));}
+          if(n.directory()) {if(mode!=0 && (flags&O_PATH)==0)throw new FsException(21);reply.fds.add(directory(n,(flags&O_PATH)!=0));}
           else {
             if(!n.regular())throw new FsException(40);
             if((flags&OsConstants.O_TRUNC)!=0) {if(mode==0)throw new FsException(13);CeNamespace ns=unlocked();synchronized(ns){ns.store.resize(CeNamespace.content(n.id),0);n.mtime=n.ctime=System.currentTimeMillis();ns.markDirty();}}
@@ -254,6 +258,10 @@ final class CeStorage implements AutoCloseable {
             }
             throw new FsException(95);
         }
+        // Operation4 retains the v1 wire layout and all caller credentials. It
+        // selects pathname resolution beneath an outer emulated-storage view.
+        // Original path/FD/control operations remain compatible with old images.
+        if(r.op!=1 && r.op!=2 && r.op!=4)throw new FsException(95);
         boolean descriptor=r.op==2;Node n=null;String p=descriptor?"":path(r.p),q=r.q.isEmpty()?"":path(r.q);
         if(!descriptor && rootId(p)==0)for(String base:new String[]{"/data/user/","/data/system_ce/","/data/misc_ce/","/data/vendor_ce/","/data/media/","/storage/emulated/"})
             if(p.startsWith(base) && p.length()>base.length() && Character.isDigit(p.charAt(base.length())))throw new FsException(95);
@@ -276,11 +284,15 @@ final class CeStorage implements AutoCloseable {
             }
         }
         CeNamespace ns=unlocked();
+        try(CeNamespace.ExternalMediaView view=r.op==4?ns.externalMediaView():null) {
         if(descriptor)n=fdNode(r);
         // open may enter AppFuse, whose callbacks need the namespace monitor.
         // Metadata operations use the monitor for snapshot consistency;
         // durable flushes run outside it, as does AppFuse open.
-        if(r.nr==56)return openRequest(r,ns,p);
+        // FD requests identify the held inode, including an unlinked node.
+        // open() rechecks current inode permissions and creates an independent
+        // AppFuse description. Never resolve its old or replacement pathname.
+        if(r.nr==56)return descriptor?open(n,(int)r.a[3],r.uid,r.gid,r.groups):openRequest(r,ns,p);
         if(r.nr==35){Node removed=ns.remove(p,(r.a[2]&AT_REMOVEDIR)!=0,r.uid,r.gid,r.groups);reclaimClosed(ns,removed.id);return new Reply(0);}
         if(r.nr==82 || r.nr==83){ns.sync();return new Reply(0);}
         if(r.nr>=5 && r.nr<=16)return xattrs(r,ns,descriptor,p,n);
@@ -290,7 +302,8 @@ final class CeStorage implements AutoCloseable {
             Reply reply=new Reply(0);reply.data=stat(n);return reply;
         }
         case 48: { // faccessat
-            n=ns.resolve(p,r.uid,r.gid,r.groups,true);CeNamespace.access(n,r.uid,r.gid,r.groups,(int)r.a[2]);return new Reply(0);
+            if(!descriptor)n=ns.resolve(p,r.uid,r.gid,r.groups,true);
+            CeNamespace.access(n,r.uid,r.gid,r.groups,(int)r.a[2]);return new Reply(0);
         }
         case 34:ns.create(p,CeNamespace.DIR|((int)r.a[2]&07777),r.uid,r.gid,r.groups,null);return new Reply(0);
         case 36:ns.create(p,CeNamespace.LNK|0777,r.uid,r.gid,r.groups,new String(r.data,"UTF-8"));return new Reply(0);
@@ -298,7 +311,7 @@ final class CeStorage implements AutoCloseable {
         case 38:case 276:if(r.nr==276 && (r.a[4]&~1L)!=0)throw new FsException(95);ns.rename(p,q,r.nr==276&&(r.a[4]&1)!=0,r.uid,r.gid,r.groups);return new Reply(0);
         case 78: {
             Reply reply=new Reply(0);
-            if(descriptor)reply.data=ns.path(n.id).getBytes("UTF-8");
+            if(descriptor)reply.data=ns.descriptorPath(n.id).getBytes("UTF-8");
             else {n=ns.resolve(p,r.uid,r.gid,r.groups,false);if(!n.symlink())throw new FsException(22);reply.data=n.target.getBytes("UTF-8");}
             reply.value=reply.data.length;return reply;
         }
@@ -323,8 +336,12 @@ final class CeStorage implements AutoCloseable {
             n.ctime=now;ns.markDirty();return new Reply(0);}
         case 61: { // getdents64, offset supplied in a2
             if(!n.directory())throw new FsException(20);CeNamespace.access(n,r.uid,r.gid,r.groups,4);
+            int offset=(int)r.a[2],max=(int)Math.min(r.a[3],16384);if(offset<0)throw new FsException(22);
+            // An open, removed directory has no directory entries, including
+            // dot entries. Its held inode remains usable for metadata/search.
+            if(n.links==0)return new Reply(0);
             List<String> names=new ArrayList<>();names.add(".");names.add("..");names.addAll(n.children.keySet());
-            int offset=(int)r.a[2],max=(int)Math.min(r.a[3],16384);if(offset<0)throw new FsException(22);ByteBuffer out=le(Math.max(0,max));
+            ByteBuffer out=le(Math.max(0,max));
             for(int i=offset;i<names.size();i++) {
                 String name=names.get(i);byte[] raw=name.getBytes("UTF-8");int length=(19+raw.length+1+7)&~7;
                 if(out.remaining()<length){if(out.position()==0)throw new FsException(22);break;}
@@ -337,6 +354,7 @@ final class CeStorage implements AutoCloseable {
         case 43:n=ns.resolve(p,r.uid,r.gid,r.groups,true);return new Reply(0);
         default:throw new FsException(95);
         }}
+        }
     }
     private Reply xattrs(Request r,CeNamespace ns,boolean descriptor,String p,Node n)throws Exception {
         // Serialize the durable locked-root mirror, without holding the

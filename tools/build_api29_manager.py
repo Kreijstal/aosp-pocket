@@ -16,6 +16,19 @@ from build_host_native import load_manifest as load_host_native_manifest
 from build_api32_external_host import load_manifest as load_external_manifest,LIBRARY as EXTERNAL_LIBRARY
 
 
+def validate_postboot_installd_client(path):
+    """Reject older test clients before packaging the v2 operation contract."""
+    data=path.read_bytes()
+    if len(data)<64 or data[:6]!=b'\x7fELF\x02\x01' or int.from_bytes(data[18:20],'little')!=183:
+        raise ValueError('Post-boot installd client must be an ARM64 ELF executable')
+    operations=['check','denied','dexopt','dexopt-postboot','dexopt-postboot-app']
+    missing=[name for name in operations if name.encode()+b'\0' not in data]
+    if missing:
+        raise ValueError('Installd client lacks v2 operations '+', '.join(missing)+
+                         '; rebuild with tools/build_api32_framework.py --installd-probe-only')
+    return {'inputSha256':hashlib.sha256(data).hexdigest(),'protocol':2,'operations':operations}
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--base-apk',type=Path,default=ROOT/'out/download-image/release/aosp-pocket-manager-0.76.apk')
@@ -31,6 +44,7 @@ def main():
     p.add_argument('--ce-init-probe32',type=Path,help='Reversible native-init replacement for the preserved CE authless trial')
     p.add_argument('--gatekeeper-client32',type=Path,help='Native credential lifecycle client for a separate app-probe diagnostic')
     p.add_argument('--installd-client32',type=Path,help='Native app-data/permissions/dexopt checks before the full API32 app workload')
+    p.add_argument('--launcher-recents32',type=Path,help='Original-versus-patched actual-ART Launcher fault-injection fixture')
     p.add_argument('--installd-postboot32',action='store_true',help='Require real DEXOPT_BOOTCOMPLETE compilation in the native installd check')
     probes=p.add_mutually_exclusive_group()
     probes.add_argument('--probe',action='store_true')
@@ -42,8 +56,14 @@ def main():
     probes.add_argument('--ce-probe32',action='store_true',help='Validate real12L credential-encrypted app storage in a separate profile')
     probes.add_argument('--media-session-probe32',type=Path,help='Reversible real MediaProvider session trial using an existing cached plaintext profile')
     p.add_argument('--ce-probe32-package',choices=('dev.kreijstal.aosppocket.api32ceimage','dev.kreijstal.aosppocket.api32ceimage2','dev.kreijstal.aosppocket.api32ceimage3'),default='dev.kreijstal.aosppocket.api32ceimage',help='Separate sandbox for a new CE trial while preserving earlier profiles')
+    p.add_argument('--ce-retained-plaintext32',action='store_true',help='Explicit test-only migration mode for the existing normal API32 Manager profile')
+    p.add_argument('--ce-recovered-retained32',action='store_true',help='Explicit test-only encrypted lifecycle after authenticated recovery of the normal API32 Manager profile')
     p.add_argument('--image-probe32-package',choices=('dev.kreijstal.aosppocket.api32managerimage','dev.kreijstal.aosppocket.api32managerimage2','dev.kreijstal.aosppocket.api32managerimage3'),help='Separate non-CE API32 test sandbox, preserving existing profiles')
     args=p.parse_args();args.image_probe32=args.image_probe32 or args.session_probe32 or args.persistence_probe32 or bool(args.app_probe32) or args.ce_probe32 or bool(args.media_session_probe32);args.probe=args.probe or args.app_probe or args.image_probe32
+    if args.ce_retained_plaintext32 and args.ce_recovered_retained32:p.error('Choose only one normal-profile CE mode')
+    if args.ce_retained_plaintext32 or args.ce_recovered_retained32:
+        if not args.ce_probe32 or args.ce_probe32_package!='dev.kreijstal.aosppocket.api32ceimage' or args.ce_init_probe32:p.error('Normal-profile CE mode requires --ce-probe32 without a separate CE package or native init replacement')
+        args.ce_probe32_package='dev.kreijstal.aosppocket.api32managerimage'
     if args.image_probe32_package and (not args.image_probe32 or args.ce_probe32):p.error('--image-probe32-package requires a non-CE API32 probe')
     if args.media_session_patch32 and not args.media_session_probe32:p.error('--media-session-patch32 requires --media-session-probe32')
     if args.media_session_image32 and (not args.media_session_probe32 or args.media_session_patch32):p.error('--media-session-image32 requires --media-session-probe32 and no code patches')
@@ -52,9 +72,16 @@ def main():
     if args.media_session_metrics_probe32 and not args.media_session_image32:p.error('--media-session-metrics-probe32 requires --media-session-image32')
     if args.ce_init_probe32 and not args.ce_probe32:p.error('--ce-init-probe32 requires --ce-probe32')
     if args.gatekeeper_client32 and not args.app_probe32:p.error('--gatekeeper-client32 requires --app-probe32')
+    if args.launcher_recents32 and not args.app_probe32:p.error('--launcher-recents32 requires --app-probe32')
+    if args.app_probe32 and bool(json.loads(args.app_probe32.read_text()).get('requireLauncherRecentsNullGuard'))!=bool(args.launcher_recents32):
+        p.error('Launcher recents proof requires both --launcher-recents32 and requireLauncherRecentsNullGuard in the app specification')
     if args.installd_client32 and not (args.app_probe32 or args.ce_probe32):p.error('--installd-client32 requires --app-probe32 or --ce-probe32')
     if args.installd_postboot32 and not args.installd_client32:p.error('--installd-postboot32 requires --installd-client32')
     if args.image_probe32 and not args.api32_catalog:p.error('--image-probe32 requires --api32-catalog')
+    postboot_client=None
+    if args.installd_postboot32:
+        try:postboot_client=validate_postboot_installd_client(args.installd_client32)
+        except (OSError,ValueError) as error:p.error(str(error))
     out=args.out.resolve();out.mkdir(parents=True,exist_ok=True)
     host_native=load_host_native_manifest(args.host_native_dir) if args.host_native_dir else None
     external_native=load_external_manifest(args.external_native_dir) if args.external_native_dir else None
@@ -76,6 +103,19 @@ def main():
         assert image['profile']=='api'+str(image['sdk'])+'-direct' and image['abi']=='arm64-v8a' and image['runtime']==1
         url=urllib.parse.urlsplit(image['url'])
         assert url.scheme=='https' or args.probe and url.scheme=='http' and url.hostname=='127.0.0.1'
+    launcher_recents=None
+    if args.launcher_recents32:
+        folder=args.launcher_recents32.resolve();launcher_recents=json.loads((folder/'probe-spec.json').read_text())
+        assert launcher_recents['schema']==1 and launcher_recents['sdk']==32
+        assert launcher_recents['mainClass']=='dev.kreijstal.aosppocket.guest.LauncherRecentsProbe32'
+        metadata=json.loads((folder/'build.json').read_text());assert metadata['spec']==launcher_recents
+        for name,pin in metadata['sources'].items():assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==pin
+        image=next(i for i in catalog['images'] if i['sdk']==32)
+        assert launcher_recents['installedLauncherPath']=='/system_ext/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk'
+        assert image['manifest']['entries'][launcher_recents['installedLauncherPath'][1:]]['sha256']==launcher_recents['installedLauncherSha256']
+        for key in ['originalApk','probeJar']:
+            item=launcher_recents[key];assert Path(item['name']).name==item['name']
+            file=folder/item['name'];assert file.stat().st_size==item['bytes'] and hashlib.sha256(file.read_bytes()).hexdigest()==item['sha256']
     tool=ROOT.parent/'helloworldandroid';android=tool/'vendor/android-platforms/android-36/android.jar'
     r8=ROOT.parent/'s20fe-hardware-lab/artifacts/lineage/source/prebuilts/r8/r8.jar'
     def run(*argv):subprocess.run(list(map(str,argv)),cwd=ROOT,check=True)
@@ -89,7 +129,7 @@ def main():
     if args.session_probe32 or args.persistence_probe32 or args.app_probe32 or args.ce_probe32 or args.media_session_probe32:java.append(ROOT/'runtime/tests/api32/ImageProbe32.java')
     if args.persistence_probe32 or args.app_probe32 or args.ce_probe32 or args.media_session_probe32:java.append(ROOT/'runtime/tests/api32/ManagerSessionProbe32.java')
     if args.app_probe32:java += [ROOT/'runtime/tests/api32/AppInspector32.java',ROOT/'runtime/tests/api32/VolumeControl32.java',ROOT/'runtime/tests/api32/MediaPermissions32.java']
-    if args.ce_probe32:java.append(ROOT/'runtime/tests/api32/CeAppInspector32.java')
+    if args.ce_probe32:java += [ROOT/'runtime/tests/api32/CeAppInspector32.java',ROOT/'runtime/tests/api32/CePublicCanary32.java',ROOT/'runtime/tests/api32/KeyguardObserver32.java',ROOT/'runtime/tests/api32/RetainedPlaintext32.java']
     run('javac','--release','8','-cp',android,'-d',out/'classes',*java)
     run('jar','cf',out/'classes.jar','-C',out/'classes','.')
     run('java','-cp',r8,'com.android.tools.r8.D8','--lib',android,'--min-api','28','--output',out/'dex',out/'classes.jar')
@@ -112,6 +152,8 @@ def main():
     run('java','-cp',str(tool/'build/tools')+':'+str(out/'manifest-tools'),'PocketManifest',out/'manifest-source.xml',out/'AndroidManifest.xml','28','28',version_code,version)
     with zipfile.ZipFile(args.base_apk) as base,zipfile.ZipFile(out/'unsigned.apk','w',zipfile.ZIP_DEFLATED,compresslevel=1) as apk:
         for entry in base.infolist():
+            if entry.filename in ['assets/api32-ce-retained-plaintext','assets/api32-ce-recovered-retained']:continue
+            if entry.filename in ['assets/api32-launcher-recents-spec.json','assets/api32-launcher-recents-probe.jar','assets/api32-launcher-recents-before.apk']:continue
             if external_native and entry.filename=='lib/arm64-v8a/'+EXTERNAL_LIBRARY:continue
             if args.ce_probe32 and entry.filename in ['assets/api32-ce-init','assets/api32-ce-init.json','assets/api32-ce-test.apk']:continue
             if entry.filename in ['classes.dex','AndroidManifest.xml','assets/pocket-images.json','assets/licenses/android10-NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz'] or entry.filename.startswith(('META-INF/','assets/api28-rootfs/','assets/default-guest/')):continue
@@ -163,6 +205,8 @@ def main():
         if args.session_probe32 or args.persistence_probe32 or args.app_probe32 or args.ce_probe32:
             if args.ce_probe32:
                 apk.write(ROOT/'out/api32/ce-app/ce-test.apk','assets/api32-ce-test.apk')
+                if args.ce_retained_plaintext32:apk.writestr('assets/api32-ce-retained-plaintext','v1\n')
+                if args.ce_recovered_retained32:apk.writestr('assets/api32-ce-recovered-retained','v1\n')
                 if args.ce_init_probe32:
                     ce_init=out/'ce-native-init';shutil.copyfile(args.ce_init_probe32,ce_init)
                     assert b'API32_INIT_SUBREAPER_READY' in ce_init.read_bytes()
@@ -173,6 +217,10 @@ def main():
             elif args.persistence_probe32:apk.write(ROOT/'out/api32/persistence-app/persistence-test.apk','assets/api32-persistence.apk')
             elif args.app_probe32:
                 apk.write(args.app_probe32,'assets/api32-app-spec.json')
+                if launcher_recents:
+                    apk.write(args.launcher_recents32/'probe-spec.json','assets/api32-launcher-recents-spec.json')
+                    apk.write(args.launcher_recents32/launcher_recents['probeJar']['name'],'assets/api32-launcher-recents-probe.jar')
+                    apk.write(args.launcher_recents32/launcher_recents['originalApk']['name'],'assets/api32-launcher-recents-before.apk')
                 network=out/'network-client'
                 shutil.copyfile(ROOT/'out/api32/network/pocket-network-probe-api32',network)
                 assert reserve_interpreter(network)
@@ -218,6 +266,7 @@ def main():
         if external_native:assert hashlib.sha256(apk.read('lib/arm64-v8a/'+EXTERNAL_LIBRARY)).hexdigest()==external_native['sha256']
     report={'apk':str(target),'package':manifest.getroot().get('package'),'sha256':hashlib.file_digest(target.open('rb'),'sha256').hexdigest(),'bytes':target.stat().st_size,
         'probe':args.probe,'guestImagesBundled':0,'hostNativeLibrariesUnchanged':native_unchanged,'hostNativeBaseApkSha256':hashlib.file_digest(args.base_apk.open('rb'),'sha256').hexdigest(),'guestSdks':[image['sdk'] for image in catalog['images']],'runtimeValidated':False}
+    if postboot_client:report['installdPostbootClient']={**postboot_client,'assetSha256':hashlib.file_digest((out/'installd-client').open('rb'),'sha256').hexdigest()}
     if host_native:report['hostNativeSourceBuild']={'manifestSha256':hashlib.file_digest((args.host_native_dir/'build.json').open('rb'),'sha256').hexdigest(),'libraries':host_native['libraries']}
     if external_native:report['externalHostSourceBuild']={'manifestSha256':hashlib.file_digest((args.external_native_dir/'build.json').open('rb'),'sha256').hexdigest(),**external_native}
     if args.ce_init_probe32:report['ceInitTrial']=ce_init_spec

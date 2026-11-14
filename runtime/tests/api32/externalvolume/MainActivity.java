@@ -25,6 +25,8 @@ public final class MainActivity extends Activity {
     private static final int O_PATH=0x200000;
     private static final int O_DIRECTORY=0x10000;
     private static final String OWNER="dev.kreijstal.pocketvolumeowner32";
+    private static final String[] VIRTUAL_ALIASES={"/mnt/runtime/default/emulated/0","/mnt/runtime/read/emulated/0",
+        "/mnt/runtime/write/emulated/0","/mnt/user/0/primary"};
     private static final byte[] PNG=android.util.Base64.decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1cAAAAASUVORK5CYII=",android.util.Base64.DEFAULT);
     private static void check(boolean value,String why)throws IOException {if(!value)throw new IOException(why);}
     private String data(Uri uri)throws Exception {
@@ -69,6 +71,38 @@ public final class MainActivity extends Activity {
         }
         check(checks.length()==40,"Incomplete private-directory denial matrix");
     }
+    private void virtualAliases(File ownFile,String nonce,JSONObject result)throws Exception {
+        String publicRoot="/storage/emulated/0",original=ownFile.getPath();
+        check(original.startsWith(publicRoot+"/"),"Own external file is outside the public view");
+        android.system.StructStat expected=Os.stat(original);
+        JSONArray reads=new JSONArray(),denials=new JSONArray();
+        result.put("virtualAliasReads",reads).put("virtualAliasPrivateDenials",denials);
+        for(String alias:new String[]{"/mnt/runtime/default/emulated/0","/mnt/runtime/read/emulated/0",
+                "/mnt/runtime/write/emulated/0","/mnt/user/0/primary","/data/media/0","/system-data/media/0"}) {
+            String path=alias+original.substring(publicRoot.length());
+            FileDescriptor fd=Os.open(path,OsConstants.O_RDONLY|OsConstants.O_CLOEXEC,0);
+            try {
+                android.system.StructStat actual=Os.fstat(fd);byte[] bytes=new byte[PNG.length];int count=0;
+                while(count<bytes.length){int n=Os.read(fd,bytes,count,bytes.length-count);check(n>0,"Short alias read: "+path);count+=n;}
+                check(Arrays.equals(PNG,bytes) && actual.st_dev==expected.st_dev && actual.st_ino==expected.st_ino,
+                    "Alias opened different data or inode: "+path);
+                check(new File(path).getCanonicalPath().equals(original),"Alias canonical path lost public view: "+path);
+                reads.put(new JSONObject().put("path",path).put("canonicalPath",original).put("bytes",count)
+                    .put("inode",actual.st_ino).put("device",actual.st_dev).put("readVerified",true));
+            }finally{Os.close(fd);}
+        }
+        for(String area:new String[]{"data","obb"})for(String alias:VIRTUAL_ALIASES) {
+            String directory=alias+"/Android/"+area+"/"+OWNER+(area.equals("data")?"/files":"");
+            String path=directory+"/pocket-canary-"+nonce;
+            denied(path,OsConstants.O_RDONLY,denials);denied(path,O_PATH,denials);
+            denied(directory,OsConstants.O_RDONLY|O_DIRECTORY,denials);denied(directory,O_PATH|O_DIRECTORY,denials);
+            try{Os.stat(path);throw new IOException("Another UID's alias stat succeeded: "+path);}
+            catch(ErrnoException error){check(error.errno==OsConstants.EACCES || error.errno==OsConstants.ENOENT || error.errno==OsConstants.EPERM,
+                "Unexpected alias stat error: "+error);denials.put(new JSONObject().put("path",path).put("operation","stat").put("errno",error.errno));}
+        }
+        check(reads.length()==6 && denials.length()==40,"Incomplete virtual-alias proof");
+        result.put("virtualAliasesVerified",true);
+    }
     private void proof(String nonce,String phase,int iteration) {
         JSONObject result=new JSONObject();JSONArray passed=new JSONArray();
         Uri media=null;File direct=null,privateFile=null,parent=null;FileDescriptor held=null;
@@ -101,6 +135,7 @@ public final class MainActivity extends Activity {
             File privateRoot=getExternalFilesDir(null);check(privateRoot!=null && privateRoot.isDirectory(),"App external-files directory missing");
             privateFile=new File(privateRoot,"pocket-"+nonce);Files.write(privateFile.toPath(),PNG);check(Arrays.equals(PNG,Files.readAllBytes(privateFile.toPath())),"Own app-private external data differs");passed.put("ownExternalFiles");
             crossUidPrivateDenied(nonce,result);passed.put("crossUidPrivateDenied");
+            virtualAliases(privateFile,nonce,result);passed.put("virtualAliases");
             JSONObject namespace=NamespaceProof.run(this,nonce);result.put("namespace",namespace);
             check("PASS".equals(namespace.getString("validation")) && namespace.getBoolean("cleanupComplete"),"Namespace syscall proof failed: "+namespace);
             passed.put("namespaceSyscalls");

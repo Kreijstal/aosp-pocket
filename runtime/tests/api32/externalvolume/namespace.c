@@ -26,8 +26,8 @@ Java_dev_kreijstal_pocketvolume32_NamespaceProof_nativeRun(
     char root[4096],local[4096],a[4096],moved[4096],file[4096];
     char jump[4096],deny[4096],path[4096],link[4096],cwd[4096],buf[128];
     char result[4096],passed[2048]="",entries[4096];
-    const char *stage="paths";int error=0,failedLine=0,ok=0,cleanup=1,reopenVerified=0;
-    int saved=-1,dir=-1,child=-1,held=-1,duplicate=-1,probe=-1,pathDir=-1,pathFile=-1;
+    const char *stage="paths";int error=0,failedLine=0,ok=0,cleanup=1,reopenVerified=0,ceOpathVerified=0,bionicChmodVerified=0;
+    int saved=-1,dir=-1,child=-1,held=-1,duplicate=-1,probe=-1,pathDir=-1,pathFile=-1,metadata=-1;
     int madeRoot=0,madeLocal=0,madeA=0,madeJump=0,madeDeny=0,madeFile=0;
     struct stat initial,st,directoryStat;struct statfs fs={0},dfs={0};
     const char content[]="pocket-namespace32";
@@ -130,10 +130,37 @@ Java_dev_kreijstal_pocketvolume32_NamespaceProof_nativeRun(
 
     stage="cwd-relative";
     saved=open(".",O_RDONLY|O_DIRECTORY|O_CLOEXEC);REQUIRE(saved>=0);
+    stage="ce-directory-opath";
+    REQUIRE(chmod(local,0000)==0);
+    metadata=open(local,O_PATH|O_DIRECTORY|O_CLOEXEC);REQUIRE(metadata>=0);
+    REQUIRE((fcntl(metadata,F_GETFL)&O_PATH) && (fcntl(metadata,F_GETFD)&FD_CLOEXEC));
+    REQUIRE(fstat(metadata,&st)==0 && S_ISDIR(st.st_mode));
+    errno=0;REQUIRE(syscall(__NR_getdents64,metadata,entries,sizeof(entries))<0 && errno==EBADF);
+    stage="ce-opath-raw-fchmod";
+    errno=0;REQUIRE(syscall(__NR_fchmod,metadata,0700)<0 && errno==EBADF);
+    REQUIRE(fstat(metadata,&st)==0 && (st.st_mode&0777)==0000);
+    // 12L Bionic deliberately falls back to chmod(/proc/self/fd/N) for
+    // O_PATH. Verify the Android API separately from the raw kernel gate.
+    stage="ce-opath-bionic-fchmod";
+    REQUIRE(fchmod(metadata,0100)==0);
+    REQUIRE(fstat(metadata,&st)==0 && (st.st_mode&0777)==0100);bionicChmodVerified=1;
+    REQUIRE(chmod(local,0000)==0);
+    stage="ce-opath-noexecute";
+    errno=0;REQUIRE(fsync(metadata)<0 && errno==EBADF);
+    errno=0;REQUIRE(fchdir(metadata)<0 && errno==EACCES);
+    stage="ce-opath-execute";REQUIRE(chmod(local,0100)==0);
+    REQUIRE(fchdir(metadata)==0);
+    REQUIRE(getcwd(cwd,sizeof(cwd)) && !strcmp(cwd,local));
+    REQUIRE(fchdir(saved)==0 && close(metadata)==0);metadata=-1;
+    REQUIRE(chmod(local,0700)==0);ceOpathVerified=1;
     PATH(path,"/proc/self/fd/%d",duplicate);
-    REQUIRE(chdir(path)==0 && getcwd(cwd,sizeof(cwd)) && !strcmp(cwd,moved));
+    stage="cwd-proc-chdir";REQUIRE(chdir(path)==0);
+    stage="cwd-proc-getcwd";REQUIRE(getcwd(cwd,sizeof(cwd)));
+    stage="cwd-proc-visible-path";REQUIRE(!strcmp(cwd,moved));
     REQUIRE(fchdir(saved)==0);
-    REQUIRE(fchdir(duplicate)==0 && getcwd(cwd,sizeof(cwd)) && !strcmp(cwd,moved));
+    stage="cwd-fchdir";REQUIRE(fchdir(duplicate)==0);
+    stage="cwd-fchdir-getcwd";REQUIRE(getcwd(cwd,sizeof(cwd)));
+    stage="cwd-fchdir-visible-path";REQUIRE(!strcmp(cwd,moved));
     probe=open("../moved/canary",O_RDONLY|O_CLOEXEC);REQUIRE(probe>=0);
     REQUIRE(fstat(probe,&st)==0 && st.st_ino==initial.st_ino && st.st_dev==initial.st_dev);
     REQUIRE(close(probe)==0);probe=-1;REQUIRE(fchdir(saved)==0);PASS("cwdRelative");
@@ -196,8 +223,9 @@ Java_dev_kreijstal_pocketvolume32_NamespaceProof_nativeRun(
 done:
     // Restore process cwd before returning to Android, including failure paths.
     if(saved>=0 && fchdir(saved))cleanup=0;
-    int fds[]={probe,pathFile,pathDir,duplicate,held,child,dir,saved};
+    int fds[]={probe,pathFile,pathDir,duplicate,held,child,dir,saved,metadata};
     for(unsigned x=0;x<sizeof(fds)/sizeof(fds[0]);x++)if(fds[x]>=0 && close(fds[x]))cleanup=0;
+    if(madeLocal && chmod(local,0700))cleanup=0;
     if(madeDeny && unlink(deny))cleanup=0;
     if(madeJump && unlink(jump))cleanup=0;
     if(madeFile && unlink(file))cleanup=0;
@@ -207,9 +235,9 @@ done:
     snprintf(result,sizeof(result),
         "{\"validation\":\"%s\",\"stage\":\"%s\",\"errno\":%d,\"failureLine\":%d,\"uid\":%u,"
         "\"fileFilesystemType\":%lld,\"directoryFilesystemType\":%lld,\"fileBlockSize\":%lld,\"directoryBlockSize\":%lld,"
-        "\"passed\":[%s],\"cleanupComplete\":%s,\"directInProcessSyscalls\":true,\"procFdReopenVerified\":%s}",
+        "\"passed\":[%s],\"cleanupComplete\":%s,\"directInProcessSyscalls\":true,\"procFdReopenVerified\":%s,\"ceDirectoryOpathVerified\":%s,\"bionicOpathChmodVerified\":%s}",
         ok&&cleanup?"PASS":"FAIL",stage,error,failedLine,(unsigned)getuid(),
-        (long long)fs.f_type,(long long)dfs.f_type,(long long)fs.f_bsize,(long long)dfs.f_bsize,passed,cleanup?"true":"false",reopenVerified?"true":"false");
+        (long long)fs.f_type,(long long)dfs.f_type,(long long)fs.f_bsize,(long long)dfs.f_bsize,passed,cleanup?"true":"false",reopenVerified?"true":"false",ceOpathVerified?"true":"false",bionicChmodVerified?"true":"false");
     (*env)->ReleaseStringUTFChars(env,ext,e);(*env)->ReleaseStringUTFChars(env,internal,i);
     (*env)->ReleaseStringUTFChars(env,peer,p);(*env)->ReleaseStringUTFChars(env,nonce,n);
     return (*env)->NewStringUTF(env,result);

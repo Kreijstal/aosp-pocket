@@ -58,6 +58,27 @@ static void cancellation(bool malformed) {
     for(auto& thread:callers)thread.join();
     close(fds[1]);
 }
+static void startupDeadline() {
+    int fds[2];assert(!socketpair(AF_UNIX,SOCK_SEQPACKET|SOCK_CLOEXEC,0,fds));
+    Channel client(fds[0],100);
+    std::thread peer([&] {
+        RequestHeader request{};assert(recv(fds[1],&request,sizeof(request),0)==sizeof(request));
+        assert(request.opcode==26);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        ResponseHeader reply{16,0,request.unique};assert(send(fds[1],&reply,sizeof(reply),MSG_NOSIGNAL)==sizeof(reply));
+        assert(recv(fds[1],&request,sizeof(request),0)==sizeof(request) && request.opcode==15);
+        // Withhold the ordinary read reply. The startup override must not
+        // have changed the channel default, and timeout must close the peer.
+        char packet[64];assert(recv(fds[1],packet,sizeof(packet),0)==0);close(fds[1]);
+    });
+    std::vector<char> output;
+    assert(client.call(26,0,{1,2,3},nullptr,0,&output,-1)==-EINVAL);
+    assert(!client.call(26,0,{1,2,3},nullptr,0,&output,2000));
+    auto started=std::chrono::steady_clock::now();
+    assert(client.call(15,1,{1,2,3},nullptr,0,&output)==-ETIMEDOUT);
+    assert(std::chrono::steady_clock::now()-started<std::chrono::seconds(1));
+    peer.join();
+}
 int main() {
     for(int mode=0;mode<6;mode++)fault(mode);
     int fds[2];assert(socketpair(AF_UNIX,SOCK_SEQPACKET|SOCK_CLOEXEC,0,fds)==0);
@@ -72,6 +93,6 @@ int main() {
     });
     std::vector<char> output;assert(client.call(1,1,{1,2,3},nullptr,0,&output)==-ENOENT);
     assert(client.call(1,1,{1,2,3},nullptr,0,&output)==0 && output.empty());peer.join();
-    concurrent();cancellation(false);cancellation(true);
-    std::cout<<"FUSE_TRANSPORT_PASS malformed=4 timeout=1 disconnect=1 error_recovery=1 invalidation=1 out_of_order=1 blocked_sync_read=1 cancel_pending=2 malformed_pending=2\n";
+    concurrent();cancellation(false);cancellation(true);startupDeadline();
+    std::cout<<"FUSE_TRANSPORT_PASS malformed=4 timeout=1 disconnect=1 error_recovery=1 invalidation=1 out_of_order=1 blocked_sync_read=1 cancel_pending=2 malformed_pending=2 startup_deadline=1 ordinary_deadline_unchanged=1\n";
 }

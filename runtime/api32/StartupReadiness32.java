@@ -30,6 +30,7 @@ public final class StartupReadiness32 {
         return true;
     }
     private static final class Observer {
+        final Object service;
         final Object controller;
         final Field completed;
         Observer()throws Exception {
@@ -48,12 +49,13 @@ public final class StartupReadiness32 {
             if(local==null)throw new IOException("Local activity service is unavailable");
             // LocalService is a non-static AMS inner class in the pinned 12L
             // revision. Resolve its typed outer reference, not a compiler name.
-            Object service=null;
+            Object resolved=null;
             for(Field field:local.getClass().getDeclaredFields())if(field.getType()==activity) {
-                if(service!=null)throw new IOException("Ambiguous local activity service");
-                field.setAccessible(true);service=field.get(local);
+                if(resolved!=null)throw new IOException("Ambiguous local activity service");
+                field.setAccessible(true);resolved=field.get(local);
             }
-            if(service==null)throw new IOException("Expected the local Android12L activity service");
+            if(resolved==null)throw new IOException("Expected the local Android12L activity service");
+            service=resolved;
             Field user=activity.getDeclaredField("mUserController");user.setAccessible(true);
             controller=user.get(service);
             if(controller==null)throw new IOException("Local user controller is unavailable");
@@ -88,6 +90,9 @@ public final class StartupReadiness32 {
             .put("credentialRequired",credentialRequired)
             .put("externalVolumeRequired",external).put("primaryVolumeMounted",mounted)
             .put("readyForApps",boot && unlocked && (!external || mounted));
+    }
+    public static JSONObject broadcasts(String nonce)throws Exception {
+        return BootBroadcasts32.snapshot(observer().service,nonce);
     }
     public static void await(Context context,PrintWriter log)throws Exception {
         long start=SystemClock.uptimeMillis(),deadline=start+120000;boolean waiting=false;

@@ -2,6 +2,7 @@
 // Credential-encrypted file transport. All plaintext file bytes stay in RAM;
 // persistent guest names/content are owned by the Manager's encrypted VFS.
 #include <linux/memfd.h>
+#include "ce_fd_policy.h"
 static int ce_enabled;
 static int ce_vendor_enabled;
 static uint64_t ce_fuse_device;
@@ -86,22 +87,8 @@ done:raw(__NR_close,socket,0,0,0,0,0);
     return rc<0?rc:reply->value;
 }
 static void ce_close_reply(struct CeReply* reply) {for(unsigned i=0;i<reply->count;i++)if(reply->fd[i]>=0)raw(__NR_close,reply->fd[i],0,0,0,0,0);}
-static int ce_user_path(const char* path,const char* base) {
-    size_t n=length(base,PATH_LIMIT);return prefix(path,base,n) && path[n]=='/' && path[n+1]>='0' && path[n+1]<='9';
-}
-static int ce_candidate(const char* path) {
-    const char* p=path;
-    if(prefix(p,pocket_loader_config.root,root_size)) {
-        p+=root_size;if(prefix(p,"/.pocket-ce-dirs",16))return 1;
-        if(prefix(p,"/system-data",12)){p+=12;return ce_user_path(p,"/user")||prefix(p,"/data",5)||ce_user_path(p,"/system_ce")||ce_user_path(p,"/misc_ce")||ce_user_path(p,"/media")||(ce_vendor_enabled&&ce_user_path(p,"/vendor_ce"));}
-    }
-    if(ce_user_path(p,"/data/user") || ce_user_path(p,"/data/system_ce") || ce_user_path(p,"/data/misc_ce") || ce_user_path(p,"/data/media") || ce_user_path(p,"/storage/emulated"))return 1;
-    if(ce_vendor_enabled && ce_user_path(p,"/data/vendor_ce"))return 1;
-    if(ce_user_path(p,"/mnt/runtime/default/emulated") || ce_user_path(p,"/mnt/runtime/read/emulated") || ce_user_path(p,"/mnt/runtime/write/emulated"))return 1;
-    if(ce_user_path(p,"/mnt/user")){const char* tail=p+10;while(*tail>='0'&&*tail<='9')tail++;if(prefix(tail,"/primary",8))return 1;}
-    const char* paths[]={"/data/user/0","/data/data","/data/system_ce/0","/data/misc_ce/0","/data/media/0","/sdcard","/storage/emulated/0","/storage/self/primary","/mnt/user/0/primary","/mnt/runtime/default/emulated/0","/mnt/runtime/read/emulated/0","/mnt/runtime/write/emulated/0"};
-    for(unsigned i=0;i<sizeof(paths)/sizeof(*paths);i++)if(prefix(p,paths[i],length(paths[i],PATH_LIMIT)))return 1;return 0;
-}
+static int external_namespace_enabled; // Shared tentative declaration; initialized by external_files_start.
+#include "ce_path_policy.h"
 static long ce_path(int dir,uintptr_t source,char* out,char* temporary) {
     long rc=copy_path(temporary,source);if(rc<0)return rc;
     if(temporary[0]=='/')memcpy(out,temporary,(size_t)rc+1);
@@ -176,7 +163,7 @@ fail:raw(__NR_close,memory,0,0,0,0,0);return rc;
 static int ce_dispatch(long nr,__u64* r,ucontext_t* context) {
     if(!ce_enabled)return 0;
     switch(nr) {
-    case __NR_fstat:case __NR_ftruncate:case __NR_fchmod:case __NR_fchown:case __NR_getdents64:case __NR_getcwd:
+    case __NR_fstat:case __NR_ftruncate:case __NR_fchmod:case __NR_fchown:case __NR_getdents64:case __NR_getcwd:case __NR_fchdir:
     case __NR_fsync:case __NR_fdatasync:case __NR_fcntl:case __NR_close:case __NR_dup:case __NR_dup3:case __NR_mmap:
     case __NR_openat:case __NR_newfstatat:case __NR_faccessat:case __NR_readlinkat:case __NR_chdir:case __NR_truncate:
     case __NR_mkdirat:case __NR_unlinkat:case __NR_renameat:case __NR_renameat2:case __NR_linkat:case __NR_symlinkat:
@@ -190,6 +177,37 @@ static int ce_dispatch(long nr,__u64* r,ucontext_t* context) {
     long memory=raw(__NR_mmap,0,bytes,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(memory<0){r[0]=memory;return 1;}
     struct CeReply* reply=(void*)memory;char* p=(char*)(reply+1),*q=p+PATH_LIMIT,*temp=q+PATH_LIMIT,*scratch=temp+PATH_LIMIT;
     int fd=-1,handled=0;long rc=0;
+    // AppFuse does not expose a reopenable backing pathname. Obtain a fresh
+    // data description from the encrypted inode owner instead of opening its
+    // /mnt/appfuse link or resolving the old (possibly replaced) name. Keep
+    // proc's O_PATH/nofollow/exclusive behavior in the kernel.
+    if(nr==__NR_openat && !(r[2]&(O_PATH|O_NOFOLLOW)) &&
+       (r[2]&(O_CREAT|O_EXCL))!=(O_CREAT|O_EXCL) &&
+       copy_path(temp,r[1])>=0 && (fd=ce_self_fd_link(temp))>=0) {
+        rc=ce_fd_path(fd,p);
+        if(rc>=0 && ce_descriptor(fd,p)) {
+            handled=1;rc=ce_fd_request(nr,fd,r,reply,p);if(rc<0)goto close_reply;
+            if(!reply->count){rc=-EIO;goto close_reply;}
+            int opened=reply->fd[0];reply->fd[0]=-1;
+            raw(__NR_fcntl,opened,F_SETFD,(r[2]&O_CLOEXEC)?FD_CLOEXEC:0,0,0,0);
+            raw(__NR_fcntl,opened,F_SETFL,r[2]&(O_APPEND|O_NONBLOCK),0,0,0);
+            if(reply->count==2){ce_attach_lock(opened,reply->fd[1],r[2]);reply->fd[1]=-1;}
+            rc=opened;goto close_reply;
+        }
+    }
+    // Searching an exact dot uses the held directory inode. Resolving its
+    // pathname instead fails after rmdir even though the descriptor remains
+    // valid. Other relative names keep normal namespace resolution.
+    if(nr==__NR_faccessat && (int)r[0]>=0 && r[2]==1 &&
+       copy_path(temp,r[1])==1 && temp[0]=='.') {
+        fd=(int)r[0];rc=ce_fd_path(fd,p);
+        if(rc>=0 && ce_descriptor(fd,p)) {
+            handled=1;struct stat st;rc=raw(__NR_fstat,fd,(long)&st,0,0,0,0);if(rc<0)goto done;
+            if(!S_ISDIR(st.st_mode)){rc=-ENOTDIR;goto done;}
+            __u64 args[6]={0};args[1]=1;
+            rc=ce_fd_request(nr,fd,args,reply,p);goto close_reply;
+        }
+    }
     // Bionic realpath reads the final /proc/self/fd link after opening O_PATH.
     // That link names the virtual inode; dereferencing it as a CE path first
     // incorrectly turns readlink(directory) into EINVAL (or leaks AppFuse paths).
@@ -199,6 +217,7 @@ static int ce_dispatch(long nr,__u64* r,ucontext_t* context) {
             handled=1;
             if(!r[3] || r[3]>INT32_MAX){rc=-EINVAL;goto done;}
             rc=ce_fd_request(nr,fd,r,reply,p);
+            if(rc>=0)rc=ce_external_visible(reply->data,&reply->size,sizeof(reply->data));
             if(rc>=0){size_t count=reply->size<r[3]?reply->size:r[3];rc=ce_copy_out(r[2],reply->data,count)<0?-EFAULT:(long)count;}
             goto close_reply;
         }
@@ -214,10 +233,20 @@ static int ce_dispatch(long nr,__u64* r,ucontext_t* context) {
             }
         }
     }
-    if(nr==__NR_fstat || nr==__NR_ftruncate || nr==__NR_fchmod || nr==__NR_fchown || nr==__NR_getdents64 || nr==__NR_getcwd || nr==__NR_fsync || nr==__NR_fdatasync || nr==__NR_fcntl || nr==__NR_close || nr==__NR_dup || nr==__NR_dup3 || nr==__NR_mmap || nr==__NR_fstatfs || nr==__NR_fgetxattr || nr==__NR_fsetxattr || nr==__NR_flistxattr || nr==__NR_fremovexattr) {
+    if(nr==__NR_fstat || nr==__NR_ftruncate || nr==__NR_fchmod || nr==__NR_fchown || nr==__NR_getdents64 || nr==__NR_getcwd || nr==__NR_fchdir || nr==__NR_fsync || nr==__NR_fdatasync || nr==__NR_fcntl || nr==__NR_close || nr==__NR_dup || nr==__NR_dup3 || nr==__NR_mmap || nr==__NR_fstatfs || nr==__NR_fgetxattr || nr==__NR_fsetxattr || nr==__NR_flistxattr || nr==__NR_fremovexattr) {
         if(nr==__NR_getcwd)rc=raw(__NR_getcwd,(long)p,PATH_LIMIT,0,0,0,0);
         else {fd=(int)r[nr==__NR_mmap?4:0];if(nr==__NR_mmap && (r[3]&MAP_ANONYMOUS))goto done;rc=ce_fd_path(fd,p);}
         if(rc<0 || !ce_descriptor(fd,p))goto done;handled=1;
+        long descriptorFlags=fd>=0?raw(__NR_fcntl,fd,F_GETFL,0,0,0,0):0;
+        int pathOnly=descriptorFlags>=0 && (descriptorFlags&O_PATH);
+        if(pathOnly && !ce_path_only_operation(nr,r[1])){rc=-EBADF;goto done;}
+        if(nr==__NR_fchdir) {
+            struct stat st;rc=raw(__NR_fstat,fd,(long)&st,0,0,0,0);if(rc<0)goto done;
+            if(!S_ISDIR(st.st_mode)){rc=-ENOTDIR;goto done;}
+            __u64 args[6]={0};args[1]=1; // X_OK, encoded as the FD request's a2.
+            rc=ce_fd_request(__NR_faccessat,fd,args,reply,p);
+            if(!rc)rc=raw(__NR_fchdir,fd,0,0,0,0,0);goto close_reply;
+        }
         if(nr==__NR_fstatfs){memcpy(q,pocket_loader_config.root,root_size);memcpy(q+root_size,"/system-data",13);rc=raw(__NR_statfs,(long)q,r[1],0,0,0,0);goto done;}
         if(nr==__NR_fgetxattr || nr==__NR_fsetxattr || nr==__NR_flistxattr || nr==__NR_fremovexattr) {
             q[0]=0;if(nr!=__NR_flistxattr){rc=copy_path(q,r[1]);if(rc<0)goto done;}
@@ -245,19 +274,19 @@ static int ce_dispatch(long nr,__u64* r,ucontext_t* context) {
             }
             rc=raw(nr,r[0],r[1],r[2],r[3],r[4],r[5]);
             if(rc>=0 && command==F_SETFD && lock>=0)raw(__NR_fcntl,lock,F_SETFD,r[2],0,0,0);
-            if(rc>=0 && (command==F_DUPFD || command==F_DUPFD_CLOEXEC))goto duplicated;goto done;
+            if(rc>=0 && (command==F_DUPFD || command==F_DUPFD_CLOEXEC)){if(pathOnly)goto done;goto duplicated;}goto done;
         }
         if(nr==__NR_close) {
             int lock=ce_find_lock(fd,scratch);rc=raw(nr,fd,0,0,0,0,0);if(rc==0 && lock>=0)raw(__NR_close,lock,0,0,0,0,0);goto done;
         }
         if(nr==__NR_dup || nr==__NR_dup3) {
             int replaced=nr==__NR_dup3?ce_find_lock((int)r[1],scratch):-1;
-            rc=raw(nr,r[0],r[1],r[2],0,0,0);if(rc<0)goto done;if(replaced>=0)raw(__NR_close,replaced,0,0,0,0,0);
+            rc=raw(nr,r[0],r[1],r[2],0,0,0);if(rc<0)goto done;if(replaced>=0)raw(__NR_close,replaced,0,0,0,0,0);if(pathOnly)goto done;
 duplicated: {long target=rc;__u64 args[6]={0};rc=ce_fd_request(__NR_fcntl,fd,args,reply,p);if(rc<0){raw(__NR_close,target,0,0,0,0,0);goto done;}
                 if(reply->count!=1){raw(__NR_close,target,0,0,0,0,0);rc=-EIO;goto done;}
                 ce_attach_lock(target,reply->fd[0],raw(__NR_fcntl,target,F_GETFD,0,0,0,0)&FD_CLOEXEC?O_CLOEXEC:0);rc=target;goto done;}
         }
-        if(nr==__NR_getcwd) {struct CeRequest h={.op=2,.nr=__NR_getcwd};rc=ce_rpc(&h,p,0,0,reply);if(rc>=0){if(reply->size>r[1])rc=-ERANGE;else rc=copy_to_user(r[0],reply->data,reply->size)<0?-EFAULT:(long)reply->size;}goto close_reply;}
+        if(nr==__NR_getcwd) {struct CeRequest h={.op=2,.nr=__NR_getcwd};rc=ce_rpc(&h,p,0,0,reply);if(rc>=0)rc=ce_external_cwd(reply->data,&reply->size,sizeof(reply->data));if(rc>=0){if(reply->size>r[1])rc=-ERANGE;else rc=copy_to_user(r[0],reply->data,reply->size)<0?-EFAULT:(long)reply->size;}goto close_reply;}
         if(nr==__NR_fsync || nr==__NR_fdatasync) {
             // Flush dirty kernel FUSE pages before committing metadata.
             rc=raw(nr,fd,0,0,0,0,0);if(rc<0)goto done;
@@ -279,7 +308,9 @@ duplicated: {long target=rc;__u64 args[6]={0};rc=ce_fd_request(__NR_fcntl,fd,arg
         if(nr==__NR_renameat || nr==__NR_renameat2 || nr==__NR_linkat) {rc=ce_path((int)r[2],r[3],q,temp);if(rc<0)goto done;}else q[0]=0;
         if(!ce_candidate(p) && !ce_candidate(q))goto done;handled=1;
         if(q[0] && (!ce_candidate(p)||!ce_candidate(q))){rc=-EXDEV;goto done;}
-        struct CeRequest h={.op=1,.nr=(uint32_t)nr};for(unsigned i=0;i<6;i++)h.a[i]=r[i];
+        // The server must preserve the selected outer view when following a
+        // symlink stored inside CE. PASS_THROUGH keeps the encrypted lower view.
+        struct CeRequest h={.op=external_namespace_enabled && external_storage_mode!=3?4:1,.nr=(uint32_t)nr};for(unsigned i=0;i<6;i++)h.a[i]=r[i];
         if(nr==__NR_openat && (r[2]&O_CREAT))h.a[3]&=~ce_umask(scratch);
         if(nr==__NR_mkdirat)h.a[2]&=~ce_umask(scratch);
         if(nr==__NR_getxattr || nr==__NR_lgetxattr || nr==__NR_setxattr || nr==__NR_lsetxattr || nr==__NR_removexattr || nr==__NR_lremovexattr){rc=copy_path(q,r[1]);if(rc<0)goto done;}

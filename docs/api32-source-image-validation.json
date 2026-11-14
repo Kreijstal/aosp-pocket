@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "CORE48_POSTBOOT_STORAGE_RESET_NORMAL_CRASH_MEDIA_SIGNAL_SIX_CE_PASS_OTHER_GATES_OPEN",
+  "status": "CODEC136_FULL_AV_NAMESPACE_SIGNAL_IMAGE_REPEAT_AND_AUTHLESS_RECOVERY161_PASS_WARM_CE162_LIVE",
   "productionReleaseReady": false,
   "scope": "Complete source-packaged image in retained VM73 profile; download/boot/unmodified Signal/network; no userdata reset or duplicate root",
   "image": {
@@ -7431,5 +7431,1967 @@
     "listedAllScopeSamples": 2556,
     "listedAllScopeSampledPeak": 32,
     "listedAllScopeStarts": 20
+  },
+  "currentSummary": {
+    "updatedAt": "2026-11-12T20:28:46.513140+00:00",
+    "note": "Earlier top-level image/manager/packageValidation/builds records are historical0.78.23; current image and scopes are in this summary. All failed trials remain preserved.",
+    "image": {
+      "version": "0.78.136",
+      "sdk": 32,
+      "sha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+      "bytes": 591137677,
+      "unpacked_bytes": 1304970796,
+      "manifest_sha256": "4ceb2801790919abdba2ca02c1c96445a79e1e6cd515d32f4c973f67f970c2df"
+    },
+    "fullAv137": {
+      "path": "out/api32/av137-app-result/independent-check.json",
+      "sha256": "c178157152f325d3b44e553c4ea11cd88f4c9ce6d3a7682f9501a159454723c8",
+      "receipt": {
+        "status": "PASS_SCOPED_AV137_CODEC136_FULL_TWO_ROUND_CAMERA_AAC_AVC_PCM_EXTERNAL_IO_HOME_NETWORK_DEFAULT32",
+        "runId": "fc681060a63b4cdea47c25181b32ceb7",
+        "reportSha256": "c4cac487012d0f412f6a6e5e3434718458476e987df411c5da0576d79076100b",
+        "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+        "managerSha256": "effd9fabe3fb7deac2860b3e03b25dcb9c8fb3caac207f1271df2822076be74d",
+        "sourcePinsVerified": 803,
+        "phases": [
+          {
+            "phase": "firstLaunch",
+            "uid": 10112,
+            "pid": 5921,
+            "nonce": "cae4b615-66fd-4da3-bd26-3562d01d15fb",
+            "generation": 1,
+            "playback": {
+              "sampleRate": 48000,
+              "channels": 2,
+              "writtenFrames": 96000,
+              "playedFrames": 96000,
+              "elapsedMillis": 3435,
+              "underruns": 0,
+              "validation": "PASS"
+            },
+            "microphone": {
+              "sampleRate": 48000,
+              "channels": 1,
+              "samples": 96000,
+              "reads": 43,
+              "rms": 18952.76887892637,
+              "timestampFrame": 97920,
+              "timestampNanos": 18313161707547,
+              "elapsedMillis": 4135,
+              "validation": "PASS"
+            },
+            "cameras": [
+              {
+                "cameraId": "0",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "previewWidth": 160,
+                "previewHeight": 120,
+                "previewFrames": [
+                  {
+                    "timestampNanos": 18320953599486,
+                    "minLuma": 35,
+                    "maxLuma": 251,
+                    "sampleSum": 275300
+                  },
+                  {
+                    "timestampNanos": 18320980544709,
+                    "minLuma": 35,
+                    "maxLuma": 251,
+                    "sampleSum": 275422
+                  },
+                  {
+                    "timestampNanos": 18320998681560,
+                    "minLuma": 35,
+                    "maxLuma": 251,
+                    "sampleSum": 277041
+                  }
+                ],
+                "captureCompletions": 5,
+                "jpeg": {
+                  "bytes": 7797,
+                  "width": 160,
+                  "height": 120,
+                  "sampledColors": 103,
+                  "timestampNanos": 18321082454097,
+                  "sha256": "1e4888f8f8628b8a49ab334bff9ed1aaf7f3bccf31c2d7af72fa05ee5beb49ca"
+                },
+                "validation": "PASS"
+              },
+              {
+                "cameraId": "1",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "previewWidth": 320,
+                "previewHeight": 240,
+                "previewFrames": [
+                  {
+                    "timestampNanos": 18322908375967,
+                    "minLuma": 30,
+                    "maxLuma": 251,
+                    "sampleSum": 1067676
+                  },
+                  {
+                    "timestampNanos": 18323036958781,
+                    "minLuma": 27,
+                    "maxLuma": 251,
+                    "sampleSum": 1058730
+                  },
+                  {
+                    "timestampNanos": 18323053741837,
+                    "minLuma": 19,
+                    "maxLuma": 251,
+                    "sampleSum": 990372
+                  }
+                ],
+                "captureCompletions": 5,
+                "jpeg": {
+                  "bytes": 10923,
+                  "width": 320,
+                  "height": 240,
+                  "sampledColors": 142,
+                  "timestampNanos": 18323249478966,
+                  "sha256": "728e8ed64d16b15fcb45e8d856f98b4c2eb20907df6b5d4109c7962cf76cae0c"
+                },
+                "validation": "PASS"
+              }
+            ],
+            "recordings": [
+              {
+                "bytes": 30770,
+                "sha256": "bdad8d5a7a7ec8119f050f1a00f9dbdfaba3386bebd99da0dcfac82c2305cec9",
+                "container": "mp4",
+                "mime": "video/avc",
+                "width": 160,
+                "height": 120,
+                "durationUs": 4318966,
+                "packets": 27,
+                "initialSync": true,
+                "firstPresentationTimeUs": 0,
+                "lastPresentationTimeUs": 4216300,
+                "decoder": "c2.android.avc.decoder",
+                "decodedFrames": 12,
+                "pixels": [
+                  {
+                    "presentationTimeUs": 0,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 231.125,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 278922,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 231.145,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 668200,
+                    "minLuma": 34,
+                    "maxLuma": 253,
+                    "meanLuma": 228.30666666666667,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 875866,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 229.035,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1358833,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 231.0875,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1764577,
+                    "minLuma": 34,
+                    "maxLuma": 254,
+                    "meanLuma": 230.72833333333332,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1816722,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 229.35083333333333,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1885800,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 228.57333333333332,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1892755,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 231.55166666666668,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 2132966,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 229.63416666666666,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 2285122,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 228.61083333333335,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 2339266,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 230.775,
+                    "sampledPixels": 1200
+                  }
+                ],
+                "endOfStream": true,
+                "audio": {
+                  "mime": "audio/mp4a-latm",
+                  "sampleRate": 48000,
+                  "channels": 1,
+                  "durationUs": 1339270,
+                  "packets": 30,
+                  "encodedBytes": 5535,
+                  "firstPresentationTimeUs": 699291,
+                  "lastPresentationTimeUs": 1317958,
+                  "decoder": "c2.android.aac.decoder",
+                  "decodedSamples": 12288,
+                  "decoderOutputs": 12,
+                  "decodedPresentationTimesUs": [
+                    699291,
+                    720625,
+                    741958,
+                    763291,
+                    784625,
+                    805958,
+                    827291,
+                    848625,
+                    869958,
+                    891291,
+                    912625,
+                    933958
+                  ],
+                  "minPcm": -27550,
+                  "maxPcm": 32767,
+                  "rms": 5947.456074044225,
+                  "endOfStream": true,
+                  "videoOverlapUs": 618667
+                },
+                "cameraId": "0",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "captureCompletions": 27,
+                "requestedFrameRate": 30,
+                "shutdownFlushedFrames": 0,
+                "validation": "PASS"
+              },
+              {
+                "bytes": 77282,
+                "sha256": "318cc1ca981733d3728b6e15456951a0a9dd1b80173556fa1916c6371a3dd0cb",
+                "container": "mp4",
+                "mime": "video/avc",
+                "width": 320,
+                "height": 240,
+                "durationUs": 4842066,
+                "packets": 49,
+                "initialSync": true,
+                "firstPresentationTimeUs": 0,
+                "lastPresentationTimeUs": 4752777,
+                "decoder": "c2.android.avc.decoder",
+                "decodedFrames": 12,
+                "pixels": [
+                  {
+                    "presentationTimeUs": 0,
+                    "minLuma": 29,
+                    "maxLuma": 252,
+                    "meanLuma": 224.068125,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 94311,
+                    "minLuma": 26,
+                    "maxLuma": 253,
+                    "meanLuma": 222.69416666666666,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 633633,
+                    "minLuma": 20,
+                    "maxLuma": 253,
+                    "meanLuma": 210.790625,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 861100,
+                    "minLuma": 20,
+                    "maxLuma": 252,
+                    "meanLuma": 209.009375,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 897444,
+                    "minLuma": 14,
+                    "maxLuma": 253,
+                    "meanLuma": 197.77354166666666,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 929200,
+                    "minLuma": 14,
+                    "maxLuma": 253,
+                    "meanLuma": 196.41333333333333,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 938333,
+                    "minLuma": 14,
+                    "maxLuma": 253,
+                    "meanLuma": 196.41270833333334,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1067033,
+                    "minLuma": 16,
+                    "maxLuma": 254,
+                    "meanLuma": 200.73645833333333,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1110977,
+                    "minLuma": 16,
+                    "maxLuma": 254,
+                    "meanLuma": 200.61333333333334,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1200788,
+                    "minLuma": 16,
+                    "maxLuma": 252,
+                    "meanLuma": 196.25125,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1287600,
+                    "minLuma": 14,
+                    "maxLuma": 252,
+                    "meanLuma": 197.47041666666667,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1378100,
+                    "minLuma": 15,
+                    "maxLuma": 254,
+                    "meanLuma": 198.566875,
+                    "sampledPixels": 4800
+                  }
+                ],
+                "endOfStream": true,
+                "audio": {
+                  "mime": "audio/mp4a-latm",
+                  "sampleRate": 48000,
+                  "channels": 1,
+                  "durationUs": 3726916,
+                  "packets": 120,
+                  "encodedBytes": 20664,
+                  "firstPresentationTimeUs": 1166895,
+                  "lastPresentationTimeUs": 3705562,
+                  "decoder": "c2.android.aac.decoder",
+                  "decodedSamples": 12288,
+                  "decoderOutputs": 12,
+                  "decodedPresentationTimesUs": [
+                    1166895,
+                    1188229,
+                    1209562,
+                    1230895,
+                    1252229,
+                    1273562,
+                    1294895,
+                    1316229,
+                    1337562,
+                    1358895,
+                    1380229,
+                    1401562
+                  ],
+                  "minPcm": -30037,
+                  "maxPcm": 31203,
+                  "rms": 6592.690040816711,
+                  "endOfStream": true,
+                  "videoOverlapUs": 2538667
+                },
+                "cameraId": "1",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "captureCompletions": 49,
+                "requestedFrameRate": 30,
+                "shutdownFlushedFrames": 1,
+                "validation": "PASS"
+              }
+            ],
+            "externalStorage": {
+              "uid": 10112,
+              "path": "/storage/emulated/0/Android/data/dev.kreijstal.pocketav32test/files/pocket-av-cae4b615-66fd-4da3-bd26-3562d01d15fb",
+              "nonce": "cae4b615-66fd-4da3-bd26-3562d01d15fb",
+              "bytes": 56,
+              "sha256": "1c3bbf8188125cef9a39006d0d442542d23213b2a9b71a51d90696f9b7a701d5",
+              "exclusiveCreate": true,
+              "syncCompleted": true,
+              "readbackVerified": true,
+              "validation": "PASS"
+            }
+          },
+          {
+            "phase": "reopened",
+            "uid": 10112,
+            "pid": 5921,
+            "nonce": "c2ac2340-05cc-4a49-a54b-41773266d919",
+            "generation": 2,
+            "playback": {
+              "sampleRate": 48000,
+              "channels": 2,
+              "writtenFrames": 96000,
+              "playedFrames": 96000,
+              "elapsedMillis": 2813,
+              "underruns": 0,
+              "validation": "PASS"
+            },
+            "microphone": {
+              "sampleRate": 48000,
+              "channels": 1,
+              "samples": 96000,
+              "reads": 43,
+              "rms": 18968.822694782175,
+              "timestampFrame": 97920,
+              "timestampNanos": 18417425377670,
+              "elapsedMillis": 2665,
+              "validation": "PASS"
+            },
+            "cameras": [
+              {
+                "cameraId": "0",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "previewWidth": 160,
+                "previewHeight": 120,
+                "previewFrames": [
+                  {
+                    "timestampNanos": 18419473187224,
+                    "minLuma": 35,
+                    "maxLuma": 251,
+                    "sampleSum": 274621
+                  },
+                  {
+                    "timestampNanos": 18419767845372,
+                    "minLuma": 35,
+                    "maxLuma": 251,
+                    "sampleSum": 275242
+                  },
+                  {
+                    "timestampNanos": 18419789277705,
+                    "minLuma": 35,
+                    "maxLuma": 251,
+                    "sampleSum": 274407
+                  }
+                ],
+                "captureCompletions": 5,
+                "jpeg": {
+                  "bytes": 8071,
+                  "width": 160,
+                  "height": 120,
+                  "sampledColors": 103,
+                  "timestampNanos": 18419969289687,
+                  "sha256": "3a40a7413eeb2f43b728d4391c46000c059537aac643cb7698dd763208d44f9b"
+                },
+                "validation": "PASS"
+              },
+              {
+                "cameraId": "1",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "previewWidth": 320,
+                "previewHeight": 240,
+                "previewFrames": [
+                  {
+                    "timestampNanos": 18421135781575,
+                    "minLuma": 30,
+                    "maxLuma": 251,
+                    "sampleSum": 1072545
+                  },
+                  {
+                    "timestampNanos": 18421183471260,
+                    "minLuma": 27,
+                    "maxLuma": 251,
+                    "sampleSum": 1064535
+                  },
+                  {
+                    "timestampNanos": 18421186385427,
+                    "minLuma": 25,
+                    "maxLuma": 251,
+                    "sampleSum": 1044561
+                  }
+                ],
+                "captureCompletions": 4,
+                "jpeg": {
+                  "bytes": 10764,
+                  "width": 320,
+                  "height": 240,
+                  "sampledColors": 137,
+                  "timestampNanos": 18421355121186,
+                  "sha256": "2f458d1bb6c95c16321965662a8822c6ae00d95a16bf15b48ec2d3687d53e09e"
+                },
+                "validation": "PASS"
+              }
+            ],
+            "recordings": [
+              {
+                "bytes": 54877,
+                "sha256": "cdbbd7cbfc543cb6b5a24a3fc550c96cb983cb38f3d8520732ca656c7f79e5b8",
+                "container": "mp4",
+                "mime": "video/avc",
+                "width": 160,
+                "height": 120,
+                "durationUs": 4145255,
+                "packets": 35,
+                "initialSync": true,
+                "firstPresentationTimeUs": 0,
+                "lastPresentationTimeUs": 4027388,
+                "decoder": "c2.android.avc.decoder",
+                "decodedFrames": 12,
+                "pixels": [
+                  {
+                    "presentationTimeUs": 0,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 229.36833333333334,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 138544,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 229.20583333333335,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 242755,
+                    "minLuma": 34,
+                    "maxLuma": 253,
+                    "meanLuma": 230.64166666666668,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 360522,
+                    "minLuma": 34,
+                    "maxLuma": 253,
+                    "meanLuma": 231.31166666666667,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 476911,
+                    "minLuma": 34,
+                    "maxLuma": 253,
+                    "meanLuma": 231.095,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 601977,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 228.55916666666667,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 717355,
+                    "minLuma": 34,
+                    "maxLuma": 252,
+                    "meanLuma": 229.6175,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 835322,
+                    "minLuma": 34,
+                    "maxLuma": 254,
+                    "meanLuma": 231.32,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 946633,
+                    "minLuma": 34,
+                    "maxLuma": 254,
+                    "meanLuma": 230.87333333333333,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1064200,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 229.6275,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1180655,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 228.60333333333332,
+                    "sampledPixels": 1200
+                  },
+                  {
+                    "presentationTimeUs": 1296811,
+                    "minLuma": 35,
+                    "maxLuma": 252,
+                    "meanLuma": 231.3275,
+                    "sampledPixels": 1200
+                  }
+                ],
+                "endOfStream": true,
+                "audio": {
+                  "mime": "audio/mp4a-latm",
+                  "sampleRate": 48000,
+                  "channels": 1,
+                  "durationUs": 3194020,
+                  "packets": 140,
+                  "encodedBytes": 24085,
+                  "firstPresentationTimeUs": 207291,
+                  "lastPresentationTimeUs": 3172625,
+                  "decoder": "c2.android.aac.decoder",
+                  "decodedSamples": 12288,
+                  "decoderOutputs": 12,
+                  "decodedPresentationTimesUs": [
+                    207291,
+                    228625,
+                    249958,
+                    271291,
+                    292625,
+                    313958,
+                    335291,
+                    356625,
+                    377958,
+                    399291,
+                    420625,
+                    441958
+                  ],
+                  "minPcm": -32767,
+                  "maxPcm": 32385,
+                  "rms": 6205.616197909113,
+                  "endOfStream": true,
+                  "videoOverlapUs": 2965334
+                },
+                "cameraId": "0",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "captureCompletions": 37,
+                "requestedFrameRate": 30,
+                "shutdownFlushedFrames": 0,
+                "validation": "PASS"
+              },
+              {
+                "bytes": 66373,
+                "sha256": "3e9002856c1dc2c7614c3d7b3367482ead4c703b28fb92da12d527ca2bbda2d7",
+                "container": "mp4",
+                "mime": "video/avc",
+                "width": 320,
+                "height": 240,
+                "durationUs": 4226644,
+                "packets": 45,
+                "initialSync": true,
+                "firstPresentationTimeUs": 0,
+                "lastPresentationTimeUs": 4138755,
+                "decoder": "c2.android.avc.decoder",
+                "decodedFrames": 12,
+                "pixels": [
+                  {
+                    "presentationTimeUs": 0,
+                    "minLuma": 25,
+                    "maxLuma": 251,
+                    "meanLuma": 220.83375,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 22111,
+                    "minLuma": 25,
+                    "maxLuma": 251,
+                    "meanLuma": 218.81375,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 330711,
+                    "minLuma": 22,
+                    "maxLuma": 251,
+                    "meanLuma": 216.24104166666666,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 437988,
+                    "minLuma": 21,
+                    "maxLuma": 252,
+                    "meanLuma": 210.60541666666666,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 688155,
+                    "minLuma": 20,
+                    "maxLuma": 253,
+                    "meanLuma": 206.380625,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 692866,
+                    "minLuma": 19,
+                    "maxLuma": 253,
+                    "meanLuma": 208.32604166666667,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 749611,
+                    "minLuma": 15,
+                    "maxLuma": 253,
+                    "meanLuma": 201.35895833333333,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 842966,
+                    "minLuma": 15,
+                    "maxLuma": 253,
+                    "meanLuma": 199.98708333333335,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 959644,
+                    "minLuma": 16,
+                    "maxLuma": 253,
+                    "meanLuma": 200.63541666666666,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 980888,
+                    "minLuma": 16,
+                    "maxLuma": 253,
+                    "meanLuma": 201.28,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1100066,
+                    "minLuma": 16,
+                    "maxLuma": 252,
+                    "meanLuma": 201.37604166666668,
+                    "sampledPixels": 4800
+                  },
+                  {
+                    "presentationTimeUs": 1243844,
+                    "minLuma": 16,
+                    "maxLuma": 252,
+                    "meanLuma": 197.54895833333333,
+                    "sampledPixels": 4800
+                  }
+                ],
+                "endOfStream": true,
+                "audio": {
+                  "mime": "audio/mp4a-latm",
+                  "sampleRate": 48000,
+                  "channels": 1,
+                  "durationUs": 2900562,
+                  "packets": 102,
+                  "encodedBytes": 17595,
+                  "firstPresentationTimeUs": 724604,
+                  "lastPresentationTimeUs": 2879270,
+                  "decoder": "c2.android.aac.decoder",
+                  "decodedSamples": 12288,
+                  "decoderOutputs": 12,
+                  "decodedPresentationTimesUs": [
+                    724604,
+                    745937,
+                    767270,
+                    788604,
+                    809937,
+                    831270,
+                    852604,
+                    873937,
+                    895270,
+                    916604,
+                    937937,
+                    959270
+                  ],
+                  "minPcm": -28718,
+                  "maxPcm": 31790,
+                  "rms": 6214.212711612208,
+                  "endOfStream": true,
+                  "videoOverlapUs": 2154666
+                },
+                "cameraId": "1",
+                "advertisedCameras": [
+                  "0",
+                  "1"
+                ],
+                "captureCompletions": 46,
+                "requestedFrameRate": 30,
+                "shutdownFlushedFrames": 1,
+                "validation": "PASS"
+              }
+            ],
+            "externalStorage": {
+              "uid": 10112,
+              "previousWitness": {
+                "nonce": "cae4b615-66fd-4da3-bd26-3562d01d15fb",
+                "path": "/storage/emulated/0/Android/data/dev.kreijstal.pocketav32test/files/pocket-av-cae4b615-66fd-4da3-bd26-3562d01d15fb",
+                "bytes": 56,
+                "sha256": "1c3bbf8188125cef9a39006d0d442542d23213b2a9b71a51d90696f9b7a701d5"
+              },
+              "path": "/storage/emulated/0/Android/data/dev.kreijstal.pocketav32test/files/pocket-av-c2ac2340-05cc-4a49-a54b-41773266d919",
+              "nonce": "c2ac2340-05cc-4a49-a54b-41773266d919",
+              "bytes": 56,
+              "sha256": "4836ef41e04cca46389fbb8631c02e2eb7e7950363ddcc73d28f7a556e281dc7",
+              "exclusiveCreate": true,
+              "syncCompleted": true,
+              "readbackVerified": true,
+              "validation": "PASS"
+            }
+          }
+        ],
+        "nativeCleanup": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "1883"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true,
+          "descendantStop": [
+            [
+              "12",
+              "8",
+              "0",
+              "0"
+            ]
+          ],
+          "kernelChildOwnershipVerified": true,
+          "externalVolumeVerified": true
+        },
+        "sampledPeakChildren": 30,
+        "observerSamples": 292,
+        "amsSamples": 13,
+        "minimumHostMemAvailableKB": 336132,
+        "minimumHostSwapFreeKB": 305272,
+        "hostClassesIdenticalToNamespace130": true,
+        "codec135PolicyLoadedAndWatchdogRetained": true,
+        "failedAv131Preserved": true,
+        "fullNamespaceOnFinal136StillPending": true,
+        "fullMediaAndExternalPrivateIoBothRoundsVerified": true,
+        "sourceBuiltPrivateProviderActivationVerified": true,
+        "typedInstalldAndNetworkVerified": true,
+        "bootBroadcastDiagnosticsVerified": true,
+        "actualServiceReadinessWaitDurationsMs": {
+          "installd": 5,
+          "android.system.keystore2.IKeystoreService/default": 1810,
+          "media.extractor": 1988,
+          "media.player": 1092,
+          "media.camera": 7
+        },
+        "allServiceWaitsPublishedAndPingable": true,
+        "hostMediaGrantsRestored": true,
+        "default32EnforcingUnchanged": true,
+        "imageDownloadedThisRun": true,
+        "imageInstallStatisticsHistorical": false,
+        "retainedNormalEncryptedProfileUsed": true,
+        "recoveredNormalSixCycleCeLifecycleVerified": false,
+        "physicalPhoneVerified": false,
+        "readOnlyStorageThreadSamples": 302,
+        "storageThreadObservationGaps": 2,
+        "storageThreadCoverageComplete": false,
+        "prior119FailureNotClaimedResolved": true,
+        "productionReleaseReady": false
+      }
+    },
+    "namespace144": {
+      "path": "out/api32/namespace144-app-result/independent-check.json",
+      "sha256": "1b37b3a24a91dec499eca40eb5df0b3d54f4ee4abae35ece2a06839ab6dc52de",
+      "receipt": {
+        "status": "PASS_NAMESPACE144_CODEC136_NINE_GROUPS_ACTUAL_ART_HOME_FULL_AV137_BOUND_DEFAULT32",
+        "runId": "ec86ef8bf75b474084e2949243aeb4dd",
+        "reportSha256": "76cca3575f5fc30bf9b8f9f22711b36154fa7a682712a9ce6fbad97f9de70d61",
+        "imageVersion": "0.78.136",
+        "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+        "managerSha256": "6fe3a6b9a4196b7cd8d26b01cbd31f415d89d36bb0fc7dc6b3499c170f714905",
+        "sourcePinsVerified": 803,
+        "namespaceProofs": {
+          "firstLaunch": {
+            "namespace": {
+              "validation": "PASS",
+              "stage": "proc-reopen-unlinked-directory",
+              "errno": 0,
+              "failureLine": 0,
+              "uid": 10083,
+              "fileFilesystemType": 1702057286,
+              "directoryFilesystemType": 1702057286,
+              "fileBlockSize": 4096,
+              "directoryBlockSize": 4096,
+              "passed": [
+                "relativeDotdot",
+                "symlinkBeforeDotdot",
+                "symlinkPrivateDenied",
+                "trailingSlash",
+                "pollAndFstatfs",
+                "renamedDirectoryAndProcFd",
+                "cwdRelative",
+                "unlinkedHeldFile",
+                "unlinkedHeldDirectory"
+              ],
+              "cleanupComplete": true,
+              "directInProcessSyscalls": true,
+              "procFdReopenVerified": true,
+              "ceDirectoryOpathVerified": true,
+              "bionicOpathChmodVerified": true
+            },
+            "pid": 17995,
+            "phase": "initial",
+            "iteration": 1
+          },
+          "reopened": {
+            "namespace": {
+              "validation": "PASS",
+              "stage": "proc-reopen-unlinked-directory",
+              "errno": 0,
+              "failureLine": 0,
+              "uid": 10083,
+              "fileFilesystemType": 1702057286,
+              "directoryFilesystemType": 1702057286,
+              "fileBlockSize": 4096,
+              "directoryBlockSize": 4096,
+              "passed": [
+                "relativeDotdot",
+                "symlinkBeforeDotdot",
+                "symlinkPrivateDenied",
+                "trailingSlash",
+                "pollAndFstatfs",
+                "renamedDirectoryAndProcFd",
+                "cwdRelative",
+                "unlinkedHeldFile",
+                "unlinkedHeldDirectory"
+              ],
+              "cleanupComplete": true,
+              "directInProcessSyscalls": true,
+              "procFdReopenVerified": true,
+              "ceDirectoryOpathVerified": true,
+              "bionicOpathChmodVerified": true
+            },
+            "pid": 17995,
+            "phase": "initial",
+            "iteration": 1
+          }
+        },
+        "allNineGroupsBothObservations": true,
+        "nativeWorkOncePerProcessPhase": true,
+        "homeReopenDoesNotClaimSecondNativeExecution": true,
+        "exactProcFdReopenVerified": true,
+        "privateUnlinkedDataProviderHandleVerified": true,
+        "procExactStatAndChdirVerified": true,
+        "removedNormalAndOpathDirectoryCwdVerified": true,
+        "crossUidPrivateStorageVerified": true,
+        "homeReopenVerified": true,
+        "serviceLifetimesReaped": 15,
+        "adoptedDescendantsReaped": 13,
+        "nativeCleanup": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "13774"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true,
+          "descendantStop": [
+            [
+              "13",
+              "7",
+              "0",
+              "0"
+            ]
+          ],
+          "kernelChildOwnershipVerified": true
+        },
+        "sampledPeakChildren": 30,
+        "observerSamples": 191,
+        "amsSamples": 15,
+        "sampledPeakWithinDefault32": true,
+        "hardProcessBoundVerified": false,
+        "sameInstalledImageReusedWithoutDownload": true,
+        "imageInstallStatsHistorical": true,
+        "sameCodec136ImageAsFullAv137": true,
+        "allHostClassesAndDexIdenticalToNamespace130": true,
+        "fullMedia137SameSourceAndImageBound": true,
+        "codec135LoadedPolicyVerified": true,
+        "readinessWaitDurationsMs": {
+          "installd": 4,
+          "android.system.keystore2.IKeystoreService/default": 1375,
+          "media.extractor": 2054,
+          "media.player": 1769,
+          "media.camera": 11
+        },
+        "coldExtractorBeyondOld10SecondWindowObserved": false,
+        "allPublishedServicesActuallyPingable": true,
+        "failed112BootstrapTimeoutPreserved": true,
+        "failed106StoragePreflightPreserved": true,
+        "storage111DurableSingleCacheArchiveBound": true,
+        "failed102DirectorySearchPreserved": true,
+        "realProductionDirectory105ComponentProofBound": true,
+        "failed98ProcFdReopenPreserved": true,
+        "actualLauncherDexAndRealHomeReopenVerified": true,
+        "historical94HostMemoryKillPreserved": true,
+        "minimumHostMemAvailableKB": 355116,
+        "minimumHostSwapFreeKB": 332524,
+        "freshTerminalStorageObservationVerified": true,
+        "actualBroadcastDiagnosticsVerified": true,
+        "ceDirectoryOpathAndExecutePermissionVerified": true,
+        "existingEncryptedRootsPreparedAndUserUnlocked": true,
+        "failed92BionicTestAssumptionPreserved": true,
+        "rawOpathFchmodAndBionicFallbackSeparatelyVerified": true,
+        "alreadyEncryptedNormalProfileVerified": true,
+        "sixAliasContentInodeAndCanonicalReadsVerified": true,
+        "additionalAliasCrossUidDenials": 40,
+        "freshPlaintextMigrationVerified": false,
+        "physicalPhoneVerified": false,
+        "intermittent119StorageFailureResolved": false,
+        "readOnlyStorageThreadSamples": 187,
+        "diagnosticCoverageComplete": false,
+        "missingTraceResponses": 1,
+        "traceObserverReceipt": {
+          "complete": true,
+          "samples": 187,
+          "missingTraceResponses": 1,
+          "errors": [],
+          "runId": "ec86ef8bf75b474084e2949243aeb4dd",
+          "hostPid": 12129,
+          "nativeGuestCommandsIssued": false,
+          "guestContentsOrCredentialsRead": false
+        },
+        "prior124DiagnosticFailurePreserved": true,
+        "isolatedBatch125ProofBound": true,
+        "productionReleaseReady": false,
+        "hostKernelBirthUidIdentityVerified": true,
+        "failed138FalseParentExitPreserved": true,
+        "observersAttachedAndInitialBudgetAmsSampledBeforeExecution": true,
+        "storageTracePinnedToNewLaunchNonce": true,
+        "onlyHostHarnessSourcesChangedSinceFullAv137": [
+          "tools/test_api32_app_on_pi.py",
+          "tools/tests/test_api32_host_exit.py"
+        ]
+      }
+    },
+    "genuineSignal139": {
+      "path": "out/api32/signal139-app-result/independent-check.json",
+      "sha256": "95058833ebd8da1358fb948e3ac26da27e0295c7216e45889ebeb4555cd39ccf",
+      "receipt": {
+        "status": "PASS_SIGNAL139_GENUINE_PLAY_API32_HOME_REOPEN_NETWORK_INSTALLD_CURRENT136_DEFAULT32",
+        "runId": "e9ca4d2440eb4ae28a38ed0c040dc5a0",
+        "reportSha256": "a8639b7d1b89a0780534f3b647d60199a8a5929eff99520b6b2df2fbc4644e51",
+        "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+        "managerSha256": "1b660471e3e280f191d9f39a8d6ff21e9f457aec20e16ffb0c4d565a305bce8c",
+        "sourcePinsVerified": 803,
+        "appArchiveSha256": "1c3563cb0505d8e288fde38c967e870291b2acb6476ec1ebddb4f4eabf0991f4",
+        "appModified": false,
+        "retainedSignalUid": 10107,
+        "phases": [
+          {
+            "sdk": 32,
+            "package": "org.thoughtcrime.securesms",
+            "uid": 10107,
+            "minSdk": 32,
+            "targetSdk": 36,
+            "versionCode": 177201,
+            "splitCount": 2,
+            "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+            "phase": "firstLaunch",
+            "focus": "mCurrentFocus=Window{b0531ea u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+          },
+          {
+            "sdk": 32,
+            "package": "org.thoughtcrime.securesms",
+            "uid": 10107,
+            "minSdk": 32,
+            "targetSdk": 36,
+            "versionCode": 177201,
+            "splitCount": 2,
+            "certificateSha256": "29f34e5f27f211b424bc5bf9d67162c0eafba2da35af35c16416fc446276ba26",
+            "phase": "reopened",
+            "focus": "mCurrentFocus=Window{b0531ea u0 org.thoughtcrime.securesms/org.signal.registration.RegistrationActivity}"
+          }
+        ],
+        "nativeCleanup": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "21352"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "15",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true,
+          "descendantStop": [
+            [
+              "12",
+              "8",
+              "0",
+              "0"
+            ]
+          ],
+          "kernelChildOwnershipVerified": true,
+          "externalVolumeVerified": true
+        },
+        "serviceLifetimesReaped": 15,
+        "sampledPeakChildren": 29,
+        "observerSamples": 224,
+        "amsSamples": 18,
+        "minimumHostMemAvailableKB": 327092,
+        "minimumHostSwapFreeKB": 287832,
+        "sameCodec136ImageAndFinal144HostClasses": true,
+        "qualifiedNamespace144LauncherAndFullAv137Bound": true,
+        "genuineRegistrationFocusHomeReopenVerified": true,
+        "sourceBuiltPrivateProviderActivationVerified": true,
+        "typedInstalldAndNetworkVerified": true,
+        "bootBroadcastDiagnosticsVerified": true,
+        "actualServiceReadinessWaitDurationsMs": {
+          "installd": 4,
+          "android.system.keystore2.IKeystoreService/default": 1496,
+          "media.extractor": 2004,
+          "media.player": 1949,
+          "media.camera": 8
+        },
+        "allServiceWaitsPublishedAndPingable": true,
+        "hostCameraAndMicrophoneDeniedBeforeAfter": true,
+        "default32EnforcingUnchanged": true,
+        "imageDownloadedThisRun": false,
+        "imageInstallStatisticsHistorical": true,
+        "retainedNormalEncryptedProfileUsed": true,
+        "accountRegistrationMessagesCallsVerified": false,
+        "recoveredNormalSixCycleCeLifecycleVerified": false,
+        "hardProcessBoundVerified": false,
+        "physicalPhoneVerified": false,
+        "readOnlyStorageThreadSamples": 216,
+        "storageThreadObservationGaps": 2,
+        "storageThreadCoverageComplete": false,
+        "prior119FailureNotClaimedResolved": true,
+        "failedAv131Preserved": true,
+        "currentCodec135PolicyVerified": true,
+        "productionReleaseReady": false,
+        "hostKernelBirthUidIdentityVerified": true,
+        "observersAttachedAndInitialBudgetAmsSampledBeforeExecution": true,
+        "storageTracePinnedToNewLaunchNonce": true
+      }
+    },
+    "currentFixturePackageCheck": {
+      "status": "PASS_LOCAL_CE155_ONLY_TEST_FIXTURE_CLASSES_CHANGED_SAME_PRODUCTION_IMAGE_NATIVE_NOT_INSTALLED",
+      "managerSha256": "5d102c5d0975895502b626882b0686888c2672edf3685959c0a6ba128bde8a91",
+      "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+      "commonCompiledClassesIdenticalTo138": 109,
+      "commonCompiledClassPaths": [
+        "dev/kreijstal/aosppocket/bridge/AndroidVersions.class",
+        "dev/kreijstal/aosppocket/bridge/AnonymousFrames.class",
+        "dev/kreijstal/aosppocket/bridge/DisplayGeometry.class",
+        "dev/kreijstal/aosppocket/bridge/HostWire.class",
+        "dev/kreijstal/aosppocket/bridge/SharedFrames.class",
+        "dev/kreijstal/aosppocket/runtime/AdminServer$Backend.class",
+        "dev/kreijstal/aosppocket/runtime/AdminServer.class",
+        "dev/kreijstal/aosppocket/runtime/AppImportActivity$1.class",
+        "dev/kreijstal/aosppocket/runtime/AppImportActivity$2.class",
+        "dev/kreijstal/aosppocket/runtime/AppImportActivity$Entry.class",
+        "dev/kreijstal/aosppocket/runtime/AppImportActivity.class",
+        "dev/kreijstal/aosppocket/runtime/BootBattery$1.class",
+        "dev/kreijstal/aosppocket/runtime/BootBattery.class",
+        "dev/kreijstal/aosppocket/runtime/CeDefaultKey.class",
+        "dev/kreijstal/aosppocket/runtime/CeFuse.class",
+        "dev/kreijstal/aosppocket/runtime/CeMigration.class",
+        "dev/kreijstal/aosppocket/runtime/CeMigrationSpace$1.class",
+        "dev/kreijstal/aosppocket/runtime/CeMigrationSpace$Metadata.class",
+        "dev/kreijstal/aosppocket/runtime/CeMigrationSpace$Plan.class",
+        "dev/kreijstal/aosppocket/runtime/CeMigrationSpace.class",
+        "dev/kreijstal/aosppocket/runtime/CeStorage$1.class",
+        "dev/kreijstal/aosppocket/runtime/CeStorage$Reply.class",
+        "dev/kreijstal/aosppocket/runtime/CeStorage$Request.class",
+        "dev/kreijstal/aosppocket/runtime/CeStorage.class",
+        "dev/kreijstal/aosppocket/runtime/DirectImage.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$1.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$Command.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$ComposerConnection.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$Connection.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$FrameReport.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$Listener.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession$ToolOperation.class",
+        "dev/kreijstal/aosppocket/runtime/DirectSession.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalFiles32$1.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalFiles32$Reply.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalFiles32$Slot.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalFiles32.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalFuse32$Callbacks.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalFuse32.class",
+        "dev/kreijstal/aosppocket/runtime/ExternalVolume32.class",
+        "dev/kreijstal/aosppocket/runtime/GuestActivity$1.class",
+        "dev/kreijstal/aosppocket/runtime/GuestActivity$BackApi33.class",
+        "dev/kreijstal/aosppocket/runtime/GuestActivity$Reveal$1.class",
+        "dev/kreijstal/aosppocket/runtime/GuestActivity$Reveal.class",
+        "dev/kreijstal/aosppocket/runtime/GuestActivity.class",
+        "dev/kreijstal/aosppocket/runtime/GuestBinder$1.class",
+        "dev/kreijstal/aosppocket/runtime/GuestBinder$Endpoint.class",
+        "dev/kreijstal/aosppocket/runtime/GuestBinder.class",
+        "dev/kreijstal/aosppocket/runtime/GuestDisplay.class",
+        "dev/kreijstal/aosppocket/runtime/GuestImage$Progress.class",
+        "dev/kreijstal/aosppocket/runtime/GuestImage.class",
+        "dev/kreijstal/aosppocket/runtime/GuestInput32$Packet.class",
+        "dev/kreijstal/aosppocket/runtime/GuestInput32.class",
+        "dev/kreijstal/aosppocket/runtime/GuestLog32.class",
+        "dev/kreijstal/aosppocket/runtime/GuestManager32.class",
+        "dev/kreijstal/aosppocket/runtime/GuestPower.class",
+        "dev/kreijstal/aosppocket/runtime/GuestProfile.class",
+        "dev/kreijstal/aosppocket/runtime/GuestService$1.class",
+        "dev/kreijstal/aosppocket/runtime/GuestService$2.class",
+        "dev/kreijstal/aosppocket/runtime/GuestService$FrameListener.class",
+        "dev/kreijstal/aosppocket/runtime/GuestService$Listener.class",
+        "dev/kreijstal/aosppocket/runtime/GuestService$LocalBinder.class",
+        "dev/kreijstal/aosppocket/runtime/GuestService.class",
+        "dev/kreijstal/aosppocket/runtime/HostAudio.class",
+        "dev/kreijstal/aosppocket/runtime/HostBroker$1.class",
+        "dev/kreijstal/aosppocket/runtime/HostBroker$Reading.class",
+        "dev/kreijstal/aosppocket/runtime/HostBroker.class",
+        "dev/kreijstal/aosppocket/runtime/HostDns.class",
+        "dev/kreijstal/aosppocket/runtime/HostDnsPacket$Api29$1.class",
+        "dev/kreijstal/aosppocket/runtime/HostDnsPacket$Api29.class",
+        "dev/kreijstal/aosppocket/runtime/HostDnsPacket.class",
+        "dev/kreijstal/aosppocket/runtime/HostMedia$1$1.class",
+        "dev/kreijstal/aosppocket/runtime/HostMedia$1.class",
+        "dev/kreijstal/aosppocket/runtime/HostMedia$2$1$1.class",
+        "dev/kreijstal/aosppocket/runtime/HostMedia$2$1.class",
+        "dev/kreijstal/aosppocket/runtime/HostMedia$2.class",
+        "dev/kreijstal/aosppocket/runtime/HostMedia.class",
+        "dev/kreijstal/aosppocket/runtime/ImageArchive$Entry.class",
+        "dev/kreijstal/aosppocket/runtime/ImageArchive$InstallStats.class",
+        "dev/kreijstal/aosppocket/runtime/ImageArchive.class",
+        "dev/kreijstal/aosppocket/runtime/ImageDownload$Progress.class",
+        "dev/kreijstal/aosppocket/runtime/ImageDownload.class",
+        "dev/kreijstal/aosppocket/runtime/ImageProbe32$1.class",
+        "dev/kreijstal/aosppocket/runtime/ImageProbe32.class",
+        "dev/kreijstal/aosppocket/runtime/InputCommandQueue$Pending.class",
+        "dev/kreijstal/aosppocket/runtime/InputCommandQueue.class",
+        "dev/kreijstal/aosppocket/runtime/MainActivity$ScreenCard.class",
+        "dev/kreijstal/aosppocket/runtime/MainActivity.class",
+        "dev/kreijstal/aosppocket/runtime/ManagerSessionProbe32.class",
+        "dev/kreijstal/aosppocket/runtime/Native.class",
+        "dev/kreijstal/aosppocket/runtime/NativeLoader.class",
+        "dev/kreijstal/aosppocket/runtime/PeripheralsActivity.class",
+        "dev/kreijstal/aosppocket/runtime/RemoteImage.class",
+        "dev/kreijstal/aosppocket/runtime/RuntimeActivity$1.class",
+        "dev/kreijstal/aosppocket/runtime/RuntimeActivity.class",
+        "dev/kreijstal/aosppocket/runtime/RuntimeLog.class",
+        "dev/kreijstal/aosppocket/runtime/SettingsActivity$1.class",
+        "dev/kreijstal/aosppocket/runtime/SettingsActivity.class",
+        "dev/kreijstal/aosppocket/runtime/SyscallBackend.class",
+        "dev/kreijstal/aosppocket/storage/CeNamespace$1.class",
+        "dev/kreijstal/aosppocket/storage/CeNamespace$ExternalMediaView.class",
+        "dev/kreijstal/aosppocket/storage/CeNamespace$FsException.class",
+        "dev/kreijstal/aosppocket/storage/CeNamespace$Node.class",
+        "dev/kreijstal/aosppocket/storage/CeNamespace$Outside.class",
+        "dev/kreijstal/aosppocket/storage/CeNamespace.class",
+        "dev/kreijstal/aosppocket/storage/EncryptedStore$1.class",
+        "dev/kreijstal/aosppocket/storage/EncryptedStore$Commit.class",
+        "dev/kreijstal/aosppocket/storage/EncryptedStore$Entry.class",
+        "dev/kreijstal/aosppocket/storage/EncryptedStore.class"
+      ],
+      "retained62UnchangedSharedClassCount": 101,
+      "ceStorageMatchesCurrent105Fix": true,
+      "allFiveJniAndInstalldClientRetained": true,
+      "ordinaryCeAppSha256": "c802e740dfd7db3990895eb55678a246b363cb1746942b858b71074e33d54320",
+      "explicitRecoveredRetainedMode": true,
+      "plaintextMigrationOrNativeInitReplacementSelected": false,
+      "signingCertificateSha256": "b04ea6cd081f4b5afb30b25f5492ccd044c821fd1e17d18c72067f1b9fcf6916",
+      "guestTestCredentialsGeneratedOrRead": false,
+      "androidValidated": false,
+      "installRequires": "Current strict namespace138, full AV137 and genuine Signal139 qualification plus exact terminal jobs/native owners; original62 failure and own67 recovery reports pinned before any new credential.",
+      "sameAllCompiledClassesAs140": false,
+      "changedApkEntriesSince140": [
+        "assets/api32-installd-client",
+        "classes.dex"
+      ],
+      "installdPostbootClient": {
+        "inputSha256": "34772053fea6ccbb0e00fbb220fe572ea03137a1fc3e24da2c9ee6d28dfcfae3",
+        "protocol": 2,
+        "operations": [
+          "check",
+          "denied",
+          "dexopt",
+          "dexopt-postboot",
+          "dexopt-postboot-app"
+        ],
+        "assetSha256": "311655224f1d7ae4d913e6050d96179e22e1091efebef6df7013c35da0812ddc"
+      },
+      "certificateSha256": "b04ea6cd081f4b5afb30b25f5492ccd044c821fd1e17d18c72067f1b9fcf6916",
+      "nativeProbe146BuildProof": {
+        "status": "NARROW_CURRENT_NATIVE_TEST_CLIENT_BUILD_PASS_NOT_VM_VERIFIED",
+        "command": "python3 tools/build_api32_framework.py --ndk /home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c --installd-probe-only",
+        "result": "PASS -Wall -Wextra -Werror",
+        "rawSha256": "34772053fea6ccbb0e00fbb220fe572ea03137a1fc3e24da2c9ee6d28dfcfae3",
+        "rawBytes": 139056,
+        "sameAsPreviouslyCurrentProbe": true,
+        "probeSourceSha256": "6a61744d31138197fda067cac824d4d6e10a5189ba57a467f737f5cc14c301a6",
+        "buildToolSha256": "e57f668f6d63532c817bf1da7a2586318192674bc47960451480b73458545aa8",
+        "currentSourceModes": [
+          "check",
+          "denied",
+          "dexopt",
+          "dexopt-postboot",
+          "dexopt-postboot-app"
+        ],
+        "failed140AuditSha256": "db8e455db9718f71e4f763db4d51e7905fcd880dbed37776bcde078c37d103d5",
+        "runtimeImageOrHostClassesChanged": false
+      },
+      "nativeProbe146BuildProofSha256": "98c9d43c7f88b21a79dfec7d83c094a79c19a6096c02f22f37a97155b8517e95",
+      "failed140Audit": {
+        "status": "FAIL_RECOVERED140_STALE_NATIVE_TEST_PROBE_MISSING_POSTBOOT_MODES_EXIT64_BEFORE_PASSWORD_WRITE_PRESERVED",
+        "runId": "55e23bad3f90441b8431ba042d131af1",
+        "reportSha256": "9af98150e1ee7bc2269894b05d2d74fd917b693e88aa4c942871958b487473a1",
+        "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+        "managerSha256": "b2e31dddf5c10884a9d9c436f9184fd5abd4b28adc431e988a40f6ca68f799cc",
+        "oldBundledNativeProbeSha256": "ff815e436131247e084275c9af04026e09ed44346b15fcb50c72197cc2d40eef",
+        "missingModes": [
+          "dexopt-postboot",
+          "dexopt-postboot-app"
+        ],
+        "checkDeniedBootDexoptPassed": true,
+        "firstMissingModeExit": 64,
+        "firstMissingModeOutput": "",
+        "currentPinnedProbeSourceSupportsBothModes": true,
+        "original143AppInventoryUnchanged": true,
+        "existingWitnessUidUnchanged": 10113,
+        "initialNormalProfileAuthlessUnlockedVerified": true,
+        "failureBeforeFirstCredentialSetCall": true,
+        "credentialCyclesCompleted": 0,
+        "allActualStartedNativeServicesReaped": true,
+        "serviceLifetimesReaped": 14,
+        "mediaCodecNotRequestedByThisFailedCredentialWorkload": true,
+        "allActualJobsTerminal": true,
+        "sampledPeakChildren": 30,
+        "observerSamples": 136,
+        "finalChildren": 0,
+        "own0600RecoveryFileRetainedWithoutReadingContents": true,
+        "fullSixCycleLifecycleQualified": false,
+        "freshColdReturnAfterFailureNotClaimed": true,
+        "next": "Fresh narrow build of current native test probe; reject incompatible --installd-postboot32 input during packaging. Keep full requested5-operation workload, same verified136 runtime/image/classes and all original six cycles/offline+seventh cold gates. No unchanged retry."
+      },
+      "failed140AuditSha256": "db8e455db9718f71e4f763db4d51e7905fcd880dbed37776bcde078c37d103d5",
+      "sourcePinsExpected": 804,
+      "sameApkAs147": true,
+      "previous147PackageCheckSha256": "94111bfd50fa06c16c4b8463376979d7e59c1c7261f18c5ed2d0c294ad96bf7f",
+      "onlyCeFixtureCompiledClassesChangedSince148": true,
+      "changedClassPathsSince148": [
+        "dev/kreijstal/aosppocket/runtime/ManagerCeProbe32.class"
+      ],
+      "addedClassPathsSince148": [
+        "dev/kreijstal/aosppocket/guest/CePublicCanary32.class"
+      ],
+      "changedApkEntriesSince148": [
+        "classes.dex"
+      ],
+      "allProductionCompiledClassesAndImageAndFiveJniUnchanged": true,
+      "paired153ProofSha256": "0c97ee2d7077ff56266f9b0018f374f1dd491234132369ed9cade695d5f3ccf4"
+    },
+    "currentSourcePins": 807,
+    "sourceSnapshot": "out/api32/recovered162-source-snapshot",
+    "ce155Status": "FAIL preserved; own155p0 removed159 and coldverified161",
+    "ce155InitialFixtureProof": {
+      "status": "PASS_SCOPED_155_INTEGRATED_PUBLIC_FIXTURE_AND_INITIAL_STRICT_STOP_NOT_FULL_LIFECYCLE",
+      "runId": "798db69257a4422f96ad9fe9344b6533",
+      "supervisorToken": "91b29fd6084a402db2a698a89a8eed59",
+      "cycle0Path": "/home/pi/pocket-api32-vm/recovered155-validation/ce-manager-cycle-798db69257a4422f96ad9fe9344b6533-0.json",
+      "cycle0Sha256": "8f68030ce93fa2aa134ae618d9f447d44ac19538cc82a74b7e1347b2740d0939",
+      "stage": "booting-encrypted",
+      "publicMediaCanaryFixture": {
+        "schema": 1,
+        "profileNonce": "07de97f764eb483e8b32ad58baf725a5",
+        "publicPath": "/storage/emulated/0/.pocket-ce32-public-07de97f764eb483e8b32ad58baf725a5",
+        "lowerPath": "/data/media/0/.pocket-ce32-public-07de97f764eb483e8b32ad58baf725a5",
+        "createdExclusively": true,
+        "existingFixtureVerifiedWithoutWrite": false,
+        "createdThroughMediaProvider": true,
+        "publicFsyncMillis": 1605,
+        "publicStat": {
+          "mode": 384,
+          "uid": 10101,
+          "gid": 1023,
+          "size": 51,
+          "inode": 2117
+        },
+        "lowerStat": {
+          "mode": 384,
+          "uid": 10101,
+          "gid": 1023,
+          "size": 51,
+          "inode": 2117
+        },
+        "originalPrivateBefore": {
+          "mode": 384,
+          "uid": 0,
+          "gid": 0,
+          "size": 44,
+          "inode": 970
+        },
+        "originalPrivateAfter": {
+          "mode": 384,
+          "uid": 0,
+          "gid": 0,
+          "size": 44,
+          "inode": 970
+        },
+        "originalPrivateBytesPreserved": true,
+        "originalPrivatePublicAliasDenied": true,
+        "validation": "PASS"
+      },
+      "originalReadableCanariesVerified": 5,
+      "originalPublicMediaCanaryVerified": true,
+      "originalPrivatePublicAliasDenied": true,
+      "retainedAppsVerified": true,
+      "retainedOriginalPackageCount": 143,
+      "installdFrontendValidation": "PASS",
+      "initialCredentialSetOperationCompleted": true,
+      "initialCycleStrictValidatedByMainDriver": true,
+      "fullCredentialLifecycleQualified": false,
+      "stillLive": true,
+      "noCredentialFileContentsRead": true
+    },
+    "repeatImage156": {
+      "status": "PASS_REPRO156_CURRENT136_IMAGE_BYTE_IDENTICAL_NORMAL_ADAPTER_BUILD_AND_PACKAGING_REPEAT",
+      "imageVersion": "0.78.136",
+      "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+      "imageBytes": 591137677,
+      "unpackedBytes": 1304970796,
+      "payloadEntriesVerifiedPerArchive": 2652,
+      "bothArchivesEveryPayloadSizeCrcModeShaAndManifestVerified": true,
+      "catalogByteIdentical": true,
+      "exactBuildCommand": [
+        "/usr/bin/python3",
+        "tools/build_api32_image.py",
+        "--fixture-root",
+        "out/api32/gralloc-paired-fixture/root",
+        "--out",
+        "out/api32/repro156-image",
+        "--version",
+        "0.78.136",
+        "--url",
+        "http://127.0.0.1:8794/pocket-api32-arm64-0.78.136.zip",
+        "--probe",
+        "--ndk",
+        "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+        "--external-volume",
+        "--installd-in-core",
+        "--mediaprovider-dir",
+        "out/api32/mediaprovider-reopen56-package",
+        "--launcher-dir",
+        "out/api32/launcher-null79-package"
+      ],
+      "buildSeconds": 90.45940852165222,
+      "buildLogSha256": "772fbca1e0f2da109f864432c214e55b9ac03704e5417d1d3481ddaba9401613",
+      "source805StillFrozen": true,
+      "sameAlreadyQualifiedGuestRuntimeImage": {
+        "av137-app": {
+          "status": "PASS_SCOPED_AV137_CODEC136_FULL_TWO_ROUND_CAMERA_AAC_AVC_PCM_EXTERNAL_IO_HOME_NETWORK_DEFAULT32",
+          "evidence": "out/api32/av137-app-result/independent-check.json",
+          "sha256": "c178157152f325d3b44e553c4ea11cd88f4c9ce6d3a7682f9501a159454723c8"
+        },
+        "namespace144-app": {
+          "status": "PASS_NAMESPACE144_CODEC136_NINE_GROUPS_ACTUAL_ART_HOME_FULL_AV137_BOUND_DEFAULT32",
+          "evidence": "out/api32/namespace144-app-result/independent-check.json",
+          "sha256": "1b37b3a24a91dec499eca40eb5df0b3d54f4ee4abae35ece2a06839ab6dc52de"
+        },
+        "signal139-app": {
+          "status": "PASS_SIGNAL139_GENUINE_PLAY_API32_HOME_REOPEN_NETWORK_INSTALLD_CURRENT136_DEFAULT32",
+          "evidence": "out/api32/signal139-app-result/independent-check.json",
+          "sha256": "95058833ebd8da1358fb948e3ac26da27e0295c7216e45889ebeb4555cd39ccf"
+        }
+      },
+      "scope": "Normal image builder rerun including adapter compilation with pinned stock fixture/provider/Launcher artifacts and generated dependency caches reused. Not a clean-room AOSP source build or proof of host-native reproducibility.",
+      "phoneOrLivePiStateChanged": false,
+      "cleanRoomRebuildClaim": false,
+      "currentCe155FullLifecycleQualified": false,
+      "productionReleaseReady": false
+    },
+    "hostNative158Candidate": {
+      "status": "NATIVE158_SOURCE_BUILD_PASS_TWO_LIBRARIES_CHANGED_RUNTIME_QUALIFICATION_PENDING",
+      "evidence": "out/api32/native158-host/independent-check.json",
+      "nativeBuilderSourceLockOnlyGuestApi32MetadataDiff": true,
+      "twoLibrariesLoadableSectionsDiffer": true,
+      "currentPiNativeUnchanged": true,
+      "newLibrariesRuntimeQualified": false
+    },
+    "productionPackaging157PreflightFailure": {
+      "evidence": "out/api32/delivery157/preparation-failure.json",
+      "reason": "Existing native42 source manifest pins an older whole sources.lock.json; the guard remains unchanged.",
+      "managerBuilt": false,
+      "nativeSourceManifestBypassedOrEdited": false
+    },
+    "productionReleaseReady": false,
+    "physicalPhoneVerified": false,
+    "fullCurrentCeLifecycleVerified": false,
+    "currentLegacyRegressionVerified": false,
+    "ce155FailureAudit": {
+      "status": "FAIL_RECOVERED155_ENCRYPTED_PHASE0_COLD_KEYGUARD_WAKE_OBSERVER_AFTER_INITIAL_STRICT_CYCLE",
+      "runId": "798db69257a4422f96ad9fe9344b6533",
+      "reportSha256": "833dd7d4928eaf38cce54d8bfb3de8b1f84001fc8dc399ee128e0ed927b7ed55",
+      "initialStrictCyclesCompleted": 1,
+      "fullLifecycleQualified": false,
+      "publicFixtureAndOriginalFiveCanariesVerified": true,
+      "original143InventoryAndOrdinaryKeyDataVerifiedBeforeCredentialSet": true,
+      "initialOwnTestPasswordSet": true,
+      "activeOwnTestPasswordIndex": 0,
+      "credentialChangedOrRemovedAfterFirstSet": false,
+      "currentKnownProfileState": "Stopped normally, still protected by first own155 credential; must deliberately restore original authless state or explicitly resume exact owned phase before any fresh lifecycle.",
+      "ownProtectedCredentialFile": "Pi /home/pi/pocket-api32-vm/recovered155-validation/test-credentials.json",
+      "credentialContentsCopiedOrPrinted": false,
+      "unused140And148FilesRemainUntouched": true,
+      "keyguardObservationAfterWakeMillis": 15225,
+      "sleepAfterHostWakeMillis": 4944,
+      "keyguardScreenTimeoutOverrideMillis": 10000,
+      "wakeObserverColdStartCanOutlastScreenTimeout": true,
+      "actualInputWakeFailureProven": false,
+      "twoHostKeyEventsAcceptedWithoutRejection": true,
+      "failedBootServiceLifetimesReaped": 14,
+      "allPriorJobsAndNativeOwnersTerminal": true,
+      "observerSamples": 200,
+      "sampledPeakChildren": 30,
+      "finalChildren": 0,
+      "next": "Temporary owner-only recovery159 uses ONLY current155 first credential, authenticates and removes that test lock, verifies original143 inventory/keys/five old canaries/new public fixture and a cold no-credential guest boot. Keep155600 recovery file after restoration since full lifecycle failed. Then fix test-only cold keyguard observation by preparing/keeping a read-only observer warm before real host input; keep actual wake/UI gates and timeouts."
+    },
+    "ce159PartialRestoration": {
+      "status": "PASS_SCOPED_OWN159_155_TEST_LOCK_REMOVED_AND_ORIGINAL_DATA_VERIFIED_WITH_INTERRUPTED_COORDINATOR_COLD_PHASE_PENDING",
+      "phase0RunId": "ea0f8ca2bd7549acb3cc233f098ffc2c",
+      "phase0ReportSha256": "b624ac1ba0ddd9f70a56de588b471d379d1cc906ce352b57fe04106b6993e414",
+      "nativeCleanup": {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "31382"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "15",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true,
+        "descendantStop": [
+          [
+            "11",
+            "8",
+            "0",
+            "0"
+          ]
+        ],
+        "kernelChildOwnershipVerified": true,
+        "externalVolumeVerified": true
+      },
+      "serviceLifetimesReaped": 15,
+      "sampledPeakChildren": 30,
+      "observerSamples": 461,
+      "sourceCredentialIndex": 0,
+      "originalPasswordFreeLockRestored": true,
+      "original143InventoryAndKeyDataAndFivePrivateAndPublicCanariesVerified": true,
+      "identicalBaseRestoredSplitRemoved": true,
+      "source155ProtectedCredentialFileUnchangedAndRetained": true,
+      "coordinatorStatus": "Interrupted withSIGINT after proven stale Activity reuse, no guest; raw returncode-2 preserved. Only phase0 passed.",
+      "coldAuthlessBootVerified": false,
+      "fullCredentialLifecycleQualified": false,
+      "productionReleaseReady": false
+    },
+    "ce161ColdAuthless": {
+      "status": "PASS_OWN_AUTHLESS161_COLD_GUEST_AND_HOST_RESTART_ORIGINAL143_KEYS_FIVE_PRIVATE_PUBLIC_CANARY_NO_PASSWORD",
+      "runId": "4779253b8677451d974fdc9ccffc3831",
+      "reportSha256": "481d83d53a25455021eb504594759ba8db815ce4c712af652fe307301e91a836",
+      "candidateSha256": "fe043f81e2f5a0fe17487d65f0cb6efd8c9ff44a3cb0ca64c191b5430d16bb07",
+      "source807StillFrozen": true,
+      "baseCompiledSourceSnapshot": "out/api32/recovered155-source-snapshot",
+      "prior159RestorationProofSha256": "d0ce10e31d13762442bc0052c52d979c3ba84ed10d6773fd201ea68bc62e5539",
+      "originalPasswordFreeStateRestoredAndColdVerified": true,
+      "original143InventoryAndWitnessUid10113KeyDataPreserved": true,
+      "ordinaryAppKeyNonExportableAndCryptoValid": true,
+      "fiveOriginalPrivateAndProperPublicFixtureVerified": true,
+      "zeroGuestInputEvents": true,
+      "passwordChannelProvided": false,
+      "testCredentialFileContentsRead": false,
+      "hostProcessRestartedOnlyWithNoGuest": true,
+      "nativeCleanup": {
+        "anrs": [],
+        "javaFatalHeaders": [],
+        "nativeFatals": [],
+        "systemUiStarts": [
+          "9567"
+        ],
+        "nativeLogWithinLimit": true,
+        "initStop": [
+          [
+            "14",
+            "0",
+            "0"
+          ]
+        ],
+        "strictPassed": true,
+        "descendantStop": [
+          [
+            "12",
+            "10",
+            "0",
+            "0"
+          ]
+        ],
+        "kernelChildOwnershipVerified": true,
+        "externalVolumeVerified": true
+      },
+      "serviceLifetimesReaped": 14,
+      "sampledPeakChildren": 30,
+      "observerSamples": 108,
+      "allActualChildrenCounted": true,
+      "identical155BaseRestoredSplitRemoved": true,
+      "protected155RecoveryFileRetained": true,
+      "previous155FullLifecycleStillFailed": true,
+      "previous159CoordinatorStillInterrupted": true,
+      "newWarm160ObserverRuntimeVerified": false,
+      "fullCredentialLifecycleQualified": false,
+      "productionReleaseReady": false
+    },
+    "warmObserver160Build": {
+      "evidence": "out/api32/ce160-build-proof.json",
+      "managerSha256": "9483c38d6daa5fe808ade871deb0551f9015930bd948fe45346447ecb84f66c1",
+      "sourcePins": 807,
+      "transportAssertions": 50,
+      "allProductionImageAndFiveJniUnchanged": true,
+      "displayTimeoutChanged": false,
+      "runtimeTrial": "live162"
+    },
+    "ce162Status": {
+      "status": "LIVE_FULL_PRESERVED_NORMAL_CREDENTIAL_LIFECYCLE_WARM_OBSERVER",
+      "jobs": {
+        "producer": {
+          "pid": 4951,
+          "token": "814144e3a21a4815972f21b2eaab57af",
+          "script": "/home/pi/pocket-api32-vm/recovered162-validation/run-814144e3a21a4815972f21b2eaab57af.py",
+          "log": "/home/pi/pocket-api32-vm/recovered162-validation/run-814144e3a21a4815972f21b2eaab57af.log",
+          "exit": "/home/pi/pocket-api32-vm/recovered162-validation/run-814144e3a21a4815972f21b2eaab57af.exit.json"
+        },
+        "budget": {
+          "pid": 4971,
+          "script": "/home/pi/pocket-api32-vm/recovered162-validation/observe-budget.py",
+          "log": "/home/pi/pocket-api32-vm/recovered162-validation/process-budget-observer.log",
+          "sourceSha256": "4a52e1e975560a080aaa6574ceeca7ed616add79278621ba3f32399f28ee9362"
+        },
+        "ams": {
+          "pid": 4973,
+          "script": "/home/pi/pocket-api32-vm/recovered162-validation/observe-ams.py",
+          "sourceSha256": "8fba5ec426558775abbc44ce9f064852b0b85b38b59094608a4ed3b63b6d7b7a"
+        }
+      },
+      "candidate": "out/api32/recovered162-candidate.json",
+      "candidateSha256": "8454fd06d8e9459128d4001eed7a5a30e8f2c56fdc8f2b7712ac9f8620981a6b",
+      "sourcePins": 807,
+      "sourceSnapshot": "out/api32/recovered162-source-snapshot",
+      "apkSha256": "9483c38d6daa5fe808ade871deb0551f9015930bd948fe45346447ecb84f66c1",
+      "imageVersion": "0.78.136",
+      "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+      "sameExactApkAs160": true,
+      "initialObserversBeforeAtomicGate": true,
+      "ownNewCredentialRecoveryFileExistsMode0600": true,
+      "credentialFileContentsReadByProgress": false,
+      "latestObservedStage": "setting-password, after initial warm-state/app/shared-installd checks",
+      "latestObservedSampledPeak": 31,
+      "cyclesQualifiedAtLastObservation": 0,
+      "fullLifecycleQualified": false,
+      "productionReleaseReady": false,
+      "currentTerminalStatus": "FAIL_ACORE_NATIVE_CRASH_COLD_AUTHLESS165_PASSED",
+      "historicalLiveObservationSupersededBy": "failedRecovered162 and coldAuthless165"
+    },
+    "failedRecovered162": {
+      "path": "out/api32/recovered162-result/failure-audit.json",
+      "sha256": "16a6c794fb38327d597fba46e8d63169e08e7ac68af94e88a9b5729dad9c3657",
+      "receipt": {
+        "status": "FAILED_RECOVERED162_ACORE_BINDER_PROXY_NATIVE_CRASH_TWO_PRIOR_STRICT_CYCLES_PRESERVED",
+        "runId": "182e3ad9cec0419cb30677049f69a95e",
+        "reportSha256": "4fb9487164bd360e85da9f2f11057dd5e72b6efa1649f2d422cd00da2f9da948",
+        "cycles": [
+          {
+            "index": 0,
+            "sha256": "85a8b18bcd6b890fa7ccc4574bc1e022b49b75fa37e4821f01e82fb3b3a23485",
+            "strictPassed": true,
+            "nativeFatals": [],
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "descendantStop": [
+              [
+                "12",
+                "4",
+                "0",
+                "0"
+              ]
+            ],
+            "keyguardObserverReaped": true
+          },
+          {
+            "index": 1,
+            "sha256": "5b9b017e440972e16c50efe21a259ddee977f2f91bfd62c402a563d32a448a80",
+            "strictPassed": true,
+            "nativeFatals": [],
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "descendantStop": [
+              [
+                "11",
+                "3",
+                "0",
+                "0"
+              ]
+            ],
+            "keyguardObserverReaped": true
+          },
+          {
+            "index": 2,
+            "sha256": "0dc127fbbffeec4e8376d7d007d38f64908106283fee6cd07ced5ebb8f439265",
+            "strictPassed": false,
+            "nativeFatals": [
+              "DEBUG:signal 0 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr --------"
+            ],
+            "initStop": [
+              [
+                "15",
+                "0",
+                "0"
+              ]
+            ],
+            "descendantStop": [
+              [
+                "12",
+                "6",
+                "0",
+                "0"
+              ]
+            ],
+            "keyguardObserverReaped": true
+          }
+        ],
+        "sampledPeakChildren": 31,
+        "observerSamples": 347,
+        "allActualChildrenCounted": true,
+        "warmWakeChecksPassed": 3,
+        "warmObserversClosedCleanly": 3,
+        "firstEncryptedPasswordChanged": true,
+        "secondEncryptedPasswordRemoved": true,
+        "original143AndWitnessKeysFivePrivateProperPublicCanariesVerifiedInBothEncryptedBoots": true,
+        "nativeCrashProcess": "android.process.acore",
+        "nativeCrashLogicalUid": 10036,
+        "nativeCrashThread": "ReferenceQueueD",
+        "nativeCrashFrames": [
+          "RefBase::decStrong+16",
+          "BinderProxy_destroy+60"
+        ],
+        "coldAuthlessRestorationAfter162Verified": false,
+        "fullLifecycleQualified": false,
+        "own162CredentialFileRetainedMode0600": true,
+        "credentialFileContentsRead": false,
+        "allJobsTerminalAndNativeAbsent": true,
+        "productionReleaseReady": false,
+        "next": "Cold verify current authless marker/data with no password channel; retain162 secret and failure. Investigate actual Binder reference lifetime corruption, do not suppress crash gate or retry unchanged full lifecycle."
+      }
+    },
+    "coldAuthless165": {
+      "path": "out/api32/own-authless165-result/independent-check.json",
+      "sha256": "4767e045045a9e6f7f8b49076fb7569da0b3622fd74ca55e77c5be7b5432c07c",
+      "receipt": {
+        "status": "PASS_AUTHLESS165_COLD_AFTER162_PASSWORD_REMOVAL_ORIGINAL143_KEYS_FIVE_PRIVATE_PUBLIC_CANARIES_NO_PASSWORD",
+        "runId": "9705668a84e04565984518c5000ab45f",
+        "candidateSha256": "ee828122f1c8608f2cb256a710890fb57b2c4be9e225bb35fc964e4ca8579341",
+        "reportSha256": "6b5ab934bb334c032b4902eeb2caa45d0e5e266735616d8102ad79587d96badd",
+        "original143InventoryWitnessUid10113KeyDataPreserved": true,
+        "passwordChannelProvided": false,
+        "credentialFileContentsRead": false,
+        "coldOriginalPasswordFreeStateVerified": true,
+        "zeroGuestInputEvents": true,
+        "source807Unchanged": true,
+        "same162WarmManagerBaseRestoredSplitRemoved": true,
+        "protected162FileRetainedMode0600": true,
+        "strictCleanup": {
+          "anrs": [],
+          "javaFatalHeaders": [],
+          "nativeFatals": [],
+          "systemUiStarts": [
+            "27279"
+          ],
+          "nativeLogWithinLimit": true,
+          "initStop": [
+            [
+              "14",
+              "0",
+              "0"
+            ]
+          ],
+          "strictPassed": true,
+          "descendantStop": [
+            [
+              "14",
+              "12",
+              "0",
+              "0"
+            ]
+          ],
+          "kernelChildOwnershipVerified": true,
+          "externalVolumeVerified": true
+        },
+        "reapedServiceLifetimes": 14,
+        "sampledPeakChildren": 30,
+        "observerSamples": 106,
+        "failed162FullLifecycleStillFailed": true,
+        "nativeAcoreCrashFixed": false,
+        "fullCredentialLifecycleQualified": false,
+        "productionReleaseReady": false
+      }
+    },
+    "qualifiedNative163Repeat": {
+      "path": "out/api32/native163-repro/independent-check.json",
+      "sha256": "be1f28d675415c21058a2fb2358343fe99acfd74dece32b342ad6e0d23d8d1a3",
+      "receipt": {
+        "status": "PASS_NATIVE163_FOUR_QUALIFIED42_HOST_LIBRARIES_BYTE_IDENTICAL_REPEAT_FROM_ORIGINAL_SOURCE_ROOT",
+        "exactBuildCommand": [
+          "/usr/bin/python3",
+          "/home/kreijstal/git/aosp-pocket/out/api32/native-clean-42/source/tools/build_host_native.py",
+          "--ndk",
+          "/home/kreijstal/.local/share/android-neutral-test/sdk/ndk/android-ndk-r27c",
+          "--out",
+          "/home/kreijstal/git/aosp-pocket/out/api32/native163-repro",
+          "--jobs",
+          "8"
+        ],
+        "exit": {
+          "returncode": 0,
+          "seconds": 5.729783773422241
+        },
+        "sourcePinsVerified": 23,
+        "sourceRoot": "/home/kreijstal/git/aosp-pocket/out/api32/native-clean-42/source",
+        "strictOriginalSourceManifestLoadVerified": true,
+        "libraries": {
+          "libpocket_runtime.so": {
+            "bytes": 22231968,
+            "sha256": "aa93d2ee78ea5fd904a587bcf10f7b3d8b5c50716625c3d2b7939e15b5c4272f"
+          },
+          "libproot.so": {
+            "bytes": 223216,
+            "sha256": "d0de9311c8adc0b8839a4ac15f221dca5181560893f591e5cd103e91973674ea"
+          },
+          "libpocket_frames.so": {
+            "bytes": 7312,
+            "sha256": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936"
+          },
+          "libpocket_ce.so": {
+            "bytes": 14512,
+            "sha256": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2"
+          }
+        },
+        "allFourBytesIdentical": true,
+        "currentNativeSourceFilesUnchangedExceptWholeSourceLock": true,
+        "sourceLockOnlyChangedTopLevelKey": [
+          "guest_api32"
+        ],
+        "originalManifestSha256": "3941209aa336ab68b24aa9dcb4525dcf4871c949eaf8649db854aa9337aca56f",
+        "rebuiltManifestSha256": "9aed6f35373dc05217df18a18bb4892c990915a6bd516e82fbdab12abd5a6f87",
+        "cachesRetained": true,
+        "cleanRoomReproducibilityClaim": false,
+        "fullCurrentLockProvenanceGuardResolved": false,
+        "phoneOrPiTouched": false,
+        "current807SourcesEdited": false,
+        "qualified42LibrariesRetained": true,
+        "scope": "Original23 native source pins and original build root, retained compiler/dependency caches. Repeated builder commands produced exact four qualified libraries. Current full source-lock guard remains stale due only guest_api32 metadata; packaging not changed or bypassed."
+      }
+    },
+    "nativeAcore164Diagnostic": {
+      "path": "out/api32/acore164-diagnostic/analysis.json",
+      "sha256": "83be3e5c613640354566b8f62aef1de880c6df26ef60dece58970f9827f0e224",
+      "receipt": {
+        "status": "ACTUAL_ACORE162_FINALIZER_CRASH_LOCAL_ABI_DISASSEMBLY_PRESERVED_CAUSE_UNPROVEN",
+        "failedRunId": "182e3ad9cec0419cb30677049f69a95e",
+        "cycleIndex": 2,
+        "crashExcerptSha256": "6b0fcb25fa862395734c7d18cdf7b6174b359429608b6783244e6b35f7df48e2",
+        "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+        "stockLibrariesUnmodified": {
+          "libandroid_runtime.so": "95be4af0ef14450e209ce70a3b652b9898e0fe37cf7ce0bcb7c57c2d38d35521",
+          "libutils.so": "382d6f541397c254f79719f8328e9f709f45cda6f94019bf22f540e12ede4aea"
+        },
+        "actualFrames": [
+          "RefBase::decStrong+16 at libutils.so:0xddac",
+          "BinderProxy_destroy+60 at libandroid_runtime.so:0x169c24"
+        ],
+        "verifiedInstructionSequence": "Finalizer releases mOrgue at nativeData+8 first; then loads mObject, loads virtual RefBase adjustment from vtable-24, computes x0 and calls decStrong. Faulting instruction is load x19 from x0+8. Actual x0 equals recorded x8+x9.",
+        "recordedRegisters": {
+          "nativeData_x19": "b400006e0ac268b0",
+          "mObject_x8": "b400006e8ac18110",
+          "virtualBaseAdjustment_x9": "00000070a6e578f0",
+          "computedRefBase_x0": "b40000df31a6fa00"
+        },
+        "nativeObjectLifetimeCorruptionHypothesis": true,
+        "rootCauseProven": false,
+        "disablingContactsOrIgnoringCrashGate": false,
+        "runtimeOrSourceEdited": false,
+        "next": "After cold authless proof, collect only the exact known acore tombstone_07 plus mapped object evidence through authorized owner diagnostic if available; build a targeted real Binder-proxy/Contacts GC lifecycle reproducer before modifying lifetime handling."
+      }
+    },
+    "fullCredentialLifecycleQualified": false,
+    "currentQuiescentState": "165 terminal0 exact warm162 base restored split removed; no native guest; cold original password-free profile/143 inventory/UID10113 keys/fiveprivate/properpublic canaries independently verified; old140148155162 recovery files retained600 unread"
   }
 }

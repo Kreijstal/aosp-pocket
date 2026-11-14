@@ -19,6 +19,7 @@ final class CeMigration {
     private final Map<String,String> hardlinks=new HashMap<>();
     private final Map<Integer,byte[]> hashes=new HashMap<>();
     private int files;
+    private long pendingBytes;
     private CeMigration(File root,CeNamespace namespace){this.root=root;this.namespace=namespace;namespace.autoCommit=false;}
     private static File source(File root,String guest){return new File(root,"system-data/"+guest.substring(6));}
     static boolean api32(File root)throws IOException {
@@ -79,6 +80,7 @@ final class CeMigration {
         finishVerified(root);if(CeStorage.enabled(root))throw new IOException("CE migration is already complete");
         Path finalVault=new File(root,VAULT).toPath();if(Files.exists(finalVault))throw new IOException("Uncommitted CE vault needs owner recovery; plaintext has been preserved");
         boolean layout32=api32(root);String[] roots=roots(root);
+        preflight(root);
         Path stage=new File(root,".pocket-ce-stage-"+UUID.randomUUID()).toPath();boolean verified=false;
         try {
             Map<Integer,byte[]> expected;
@@ -93,7 +95,7 @@ final class CeMigration {
                         migration.attributes(namespace.node(i+3),Os.lstat(plain.getPath()),plain);
                     }
                 }
-                namespace.sync();expected=migration.hashes;
+                migration.checkpoint();expected=migration.hashes;
             }
             try(EncryptedStore store=EncryptedStore.open(stage,secret)) {
                 CeNamespace ns=new CeNamespace(store,false);byte[] data=new byte[65536];
@@ -115,6 +117,28 @@ final class CeMigration {
             if(!verified && Files.exists(stage))remove(stage);
         }
     }
+    static CeMigrationSpace.Plan preflight(File root)throws Exception {
+        String[] names=roots(root);Path[] paths=new Path[names.length];
+        for(int i=0;i<names.length;i++)paths[i]=source(root,names[i]).toPath();
+        StructStatVfs space=Os.statvfs(root.getPath());
+        CeMigrationSpace.Plan plan=CeMigrationSpace.inspect(paths,space.f_frsize,(path,attributes)->{
+            if(attributes.isSymbolicLink())return 0;
+            long bytes=0;int count=0;
+            try {
+                for(String name:Os.listxattr(path.toString()))if(name.startsWith("user.") || name.equals("security.selinux")) {
+                    int size=Os.getxattr(path.toString(),name).length;
+                    if(++count>64 || size>16384)throw new IOException("CE migration attribute bound");
+                    if(name.equals("user.inode_cache") || name.equals("user.inode_code_cache"))size=Math.max(size,8);
+                    bytes=Math.addExact(bytes,6L+3L*name.length()+size);
+                }
+            }catch(ErrnoException error){throw new IOException("Cannot inspect CE migration attributes",error);}
+            return bytes;
+        });
+        plan.requireAvailable(Math.multiplyExact(space.f_bavail,space.f_frsize));return plan;
+    }
+    private void checkpoint()throws Exception {
+        namespace.sync();namespace.store.collectGarbage();pendingBytes=0;
+    }
     private void children(File directory,String guest)throws Exception {
         try(DirectoryStream<Path> paths=Files.newDirectoryStream(directory.toPath())) {
             for(Path path:paths)copy(path.toFile(),guest+"/"+path.getFileName());
@@ -133,11 +157,14 @@ final class CeMigration {
         if(type==CeNamespace.REG) {
             MessageDigest digest=MessageDigest.getInstance("SHA-256");byte[] data=new byte[65536];long offset=0;
             try(InputStream input=new FileInputStream(file)) {
-                int n;while((n=input.read(data))!=-1){namespace.store.write(CeNamespace.content(node.id),offset,data,0,n);digest.update(data,0,n);offset+=n;}
+                int n;while((n=input.read(data))!=-1){
+                    namespace.store.write(CeNamespace.content(node.id),offset,data,0,n);digest.update(data,0,n);offset+=n;
+                    pendingBytes+=n;if(pendingBytes>=8L*1024*1024)checkpoint();
+                }
             }finally{Arrays.fill(data,(byte)0);}
             if(offset!=st.st_size)throw new IOException("CE source changed during offline migration");hashes.put(node.id,digest.digest());
         }
-        if(++files%32==0)namespace.sync();
+        if(++files%32==0)checkpoint();
     }
     private void attributes(Node node,StructStat st,File file)throws Exception {
         int uid=0,gid=0;

@@ -20,6 +20,7 @@ def build(out):
     def run(*argv):subprocess.run(list(map(str,argv)),check=True)
     run('javac','--release','8','-cp',android,'-d',out/'classes',ROOT/'runtime/api32/ManagerTools32.java',
         ROOT/'runtime/api32/StartupReadiness32.java',
+        ROOT/'runtime/api32/BootBroadcasts32.java',
         ROOT/'runtime/api32/PackageEvents32.java',
         ROOT/'runtime/api32/GuestCredential32.java',
         ROOT/'runtime/direct/HostDevices.java',ROOT/'runtime/app/src/dev/kreijstal/aosppocket/bridge/HostWire.java')

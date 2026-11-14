@@ -44,7 +44,7 @@ public final class MainActivity extends Activity {
                 }
                 report.put("cameraPermission",true).put("microphonePermission",true);
                 boolean passed=true;
-                for(String stage:new String[]{"playback","microphone","camera","recorder"}) {
+                for(String stage:new String[]{"externalStorage","playback","microphone","camera","recorder"}) {
                     report.put("stage",stage);snapshot=report.toString();JSONObject result;
                     try {
                         if(stage.equals("recorder")) {
@@ -70,6 +70,8 @@ public final class MainActivity extends Activity {
                                 snapshot=report.toString();
                             }
                             result=cameras.getJSONObject(0);
+                        }else if(stage.equals("externalStorage")) {
+                            result=ExternalPrivateIo.run(this,report.getString("nonce")).put("validation","PASS");
                         } else {
                             result=(stage.equals("playback")?DeviceWorkload.playback():DeviceWorkload.microphone()).put("validation","PASS");
                         }

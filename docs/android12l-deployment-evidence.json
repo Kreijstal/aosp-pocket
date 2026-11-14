@@ -1,0 +1,526 @@
+{
+  "schema": 1,
+  "recordedAt": "2026-11-14T14:10:48.691496+00:00",
+  "qualificationStatus": "UNQUALIFIED",
+  "releaseBlocked": true,
+  "productionReleaseReady": false,
+  "build": {
+    "sdk": 32,
+    "android": "12L",
+    "imageVersion": "0.78.136",
+    "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+    "managerPackage": "dev.kreijstal.aosppocket.api32managerimage",
+    "managerSha256": "9483c38d6daa5fe808ade871deb0551f9015930bd948fe45346447ecb84f66c1",
+    "managerIsTestProbe": true,
+    "fiveJni": {
+      "lib/arm64-v8a/libpocket_runtime.so": "aa93d2ee78ea5fd904a587bcf10f7b3d8b5c50716625c3d2b7939e15b5c4272f",
+      "lib/arm64-v8a/libproot.so": "d0de9311c8adc0b8839a4ac15f221dca5181560893f591e5cd103e91973674ea",
+      "lib/arm64-v8a/libpocket_frames.so": "28f0633f65a0a79d67ee5a5bdc5373d6473f3e53973a2d42103c809c8695b936",
+      "lib/arm64-v8a/libpocket_ce.so": "a824db156d10ece003be4b719a856a076b38fa82f0543e280fa1b2f430c2b2f2",
+      "lib/arm64-v8a/libpocket_external32.so": "8f3b7970c7bf00e0554d3c5b7e3e171d5944a6c34e88f2ad67e1b0c5cee7b078"
+    }
+  },
+  "failedFullLifecycle": {
+    "runId": "182e3ad9cec0419cb30677049f69a95e",
+    "validation": "FAIL",
+    "reportPath": "out/api32/recovered162-result/ce-manager-report.json",
+    "reportSha256": "4fb9487164bd360e85da9f2f11057dd5e72b6efa1649f2d422cd00da2f9da948",
+    "strictCycleIndices": [
+      0,
+      1
+    ],
+    "failedCapturedCycleIndex": 2,
+    "sixCycleLifecycleCompleted": false,
+    "offlineOuterAndPhysicalUiChecksCompleted": false,
+    "seventhColdPartOfFullRunCompleted": false,
+    "crashProcess": "android.process.acore",
+    "crashLogicalUid": 10036,
+    "crashThread": "ReferenceQueueD",
+    "crashFrames": [
+      "RefBase::decStrong+16",
+      "BinderProxy_destroy+60"
+    ],
+    "budgetSamples": 347,
+    "sampledPeakChildren": 31,
+    "defaultProcessLimit": 32
+  },
+  "separateColdRecovery": {
+    "runId": "9705668a84e04565984518c5000ab45f",
+    "status": "PASS_AUTHLESS165_COLD_AFTER162_PASSWORD_REMOVAL_ORIGINAL143_KEYS_FIVE_PRIVATE_PUBLIC_CANARIES_NO_PASSWORD",
+    "fullLifecycleQualified": false,
+    "nativeAcoreCrashFixed": false,
+    "scope": "Cold original password-free state, original143 inventory and UID10113 key/data, five private and proper public canaries; no password channel. Does not replace the failed lifecycle result."
+  },
+  "sourceSnapshot": {
+    "path": "out/api32/recovered162-source-snapshot",
+    "pinFile": "out/api32/recovered162-candidate.json",
+    "pinField": "sources",
+    "verifiedFileCount": 807
+  },
+  "preservation": {
+    "originalFilesModified": false,
+    "protectedCredentialFilesIncluded": false,
+    "existingFailuresRemainFailures": true,
+    "archiveBeforeCleanupOrDeployment": true,
+    "rootSha256sumsAndUnrelatedArtifactsUntouched": true,
+    "protectedRecoveryFilePolicy": "Keep private in place with mode0600; excluded from this manifest and release archives. Existing mode observations are historical evidence, not a fresh remote check."
+  },
+  "files": {
+    "out/api32/acore164-diagnostic/analysis.json": {
+      "bytes": 1609,
+      "sha256": "83be3e5c613640354566b8f62aef1de880c6df26ef60dece58970f9827f0e224"
+    },
+    "out/api32/acore166-result/acore166-supervisor.py": {
+      "bytes": 4178,
+      "sha256": "fe05b98dc105be3412aad8a5966f4f4c072317ca4e794af03e87fdf2ecb7140c"
+    },
+    "out/api32/acore166-result/diagnostic-error.json": {
+      "bytes": 20,
+      "sha256": "8423c0598f83bed54ba05f4c6ee146ca20db440bf0128417fb2fd631fff52ea9"
+    },
+    "out/api32/acore166-result/exit.json": {
+      "bytes": 167,
+      "sha256": "b57999336db0494d3f461c7a01c12b9654254eaf0d4e35f987eb8efcdde4dd92"
+    },
+    "out/api32/acore166-result/failure-audit.json": {
+      "bytes": 639,
+      "sha256": "1298d73ec2c13a66f8fd565706f9146cc863167491a4fdb58fa094d1c9520364"
+    },
+    "out/api32/acore166-result/request.json": {
+      "bytes": 435,
+      "sha256": "e6cf9f55401b22e63213fe47ff229c346dc32344216caa8073f3a20aab4c9a72"
+    },
+    "out/api32/acore166-result/start.txt": {
+      "bytes": 303,
+      "sha256": "1cb9072da8f6a184968c919da83c746550e0864b386740186fa52b3c5e7d42d9"
+    },
+    "out/api32/acore166-result/supervisor.log": {
+      "bytes": 364,
+      "sha256": "4a483e2dc346156e1d6c6aee36b563a0585aa89179e27088f868768156d1e365"
+    },
+    "out/api32/acore167-result/BinderProxy.platform-12.1.0_r23.java": {
+      "bytes": 28106,
+      "sha256": "6a707236285d0a76da21e899be645fedb874aaa1c864ecf7adb1f51f3e89f301"
+    },
+    "out/api32/acore167-result/acore167-supervisor.py": {
+      "bytes": 4242,
+      "sha256": "137e598accbed3269efde6fe360c4a23b3ee7dc27818495e65fcd07f2c844b3e"
+    },
+    "out/api32/acore167-result/exit.json": {
+      "bytes": 167,
+      "sha256": "2f81f325090f86fcb948fd6ac412b80b51c9e8c424165d065bfc3c25d5b3bf90"
+    },
+    "out/api32/acore167-result/independent-check.json": {
+      "bytes": 1255,
+      "sha256": "a1e4f801049218face3931e3909af33f5f29b9ebba71d539edffe1f021eac064"
+    },
+    "out/api32/acore167-result/request.json": {
+      "bytes": 435,
+      "sha256": "d0d073b844bea90fabe8bf546a502aeb2a2894f48721a51ab7783932196dbf0e"
+    },
+    "out/api32/acore167-result/result.json": {
+      "bytes": 274571,
+      "sha256": "a4cc994ab58cf399f718894d5c54720e7d4ed84cac5c6a406e3e4c6f223c79da"
+    },
+    "out/api32/acore167-result/start.txt": {
+      "bytes": 303,
+      "sha256": "fad2b1636f5fc23bbd716fe2625e3b64b3e157247f9867cb0116856f04f18901"
+    },
+    "out/api32/acore167-result/supervisor.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "out/api32/acore167-result/tombstone_07.txt": {
+      "bytes": 271666,
+      "sha256": "4a912681e72b2822d1054f2ffe91dcd3f0768b8a1aa1d4e616ef5c48b1b828be"
+    },
+    "out/api32/av137-app-result/independent-check.json": {
+      "bytes": 26415,
+      "sha256": "c178157152f325d3b44e553c4ea11cd88f4c9ce6d3a7682f9501a159454723c8"
+    },
+    "out/api32/ce160-build-proof.json": {
+      "bytes": 107231,
+      "sha256": "c0d31ed045af480b5962a7aaa6a94d727e88779f6c04d409d7097910cb63f4f2"
+    },
+    "out/api32/codec136-image/pocket-api32-arm64-0.78.136.zip": {
+      "bytes": 591137677,
+      "sha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65"
+    },
+    "out/api32/codec136-image/pocket-images.json": {
+      "bytes": 445679,
+      "sha256": "c6694aae54c67f57b753d58f511e92d2d0ab7b9f6e464837d5b0def0865570f2"
+    },
+    "out/api32/delivery157/preparation-failure.json": {
+      "bytes": 414,
+      "sha256": "73befeb18bf5d84f1063a3812c7a0d6df94e4efc022e3a06633a7b312fbdb6f9"
+    },
+    "out/api32/namespace144-app-result/independent-check.json": {
+      "bytes": 5863,
+      "sha256": "1b37b3a24a91dec499eca40eb5df0b3d54f4ee4abae35ece2a06839ab6dc52de"
+    },
+    "out/api32/native158-host/independent-check.json": {
+      "bytes": 3260,
+      "sha256": "19151963c469fb7e0e213b193adce23c729871ed5204ee4bc69068cea289dfb3"
+    },
+    "out/api32/native163-repro/build.json": {
+      "bytes": 4647,
+      "sha256": "9aed6f35373dc05217df18a18bb4892c990915a6bd516e82fbdab12abd5a6f87"
+    },
+    "out/api32/native163-repro/build.log": {
+      "bytes": 10178,
+      "sha256": "0afc4d10413914521758444b3e4e90ed7e8838f17b52d2b6556ef43f9bc2519b"
+    },
+    "out/api32/native163-repro/exit.json": {
+      "bytes": 48,
+      "sha256": "56aaff7761a318956a717595340fdad594bb49580fde86f4fe64fc3ea92788b0"
+    },
+    "out/api32/native163-repro/independent-check.json": {
+      "bytes": 2134,
+      "sha256": "be1f28d675415c21058a2fb2358343fe99acfd74dece32b342ad6e0d23d8d1a3"
+    },
+    "out/api32/own-authless161-result/independent-check.json": {
+      "bytes": 1846,
+      "sha256": "705acffbc98fbda3c9ca31cf0f812c7ddcc7b2ea5db189a157ef9f47ab9a13cf"
+    },
+    "out/api32/own-authless165-result/ams-accounting/exit.json": {
+      "bytes": 50,
+      "sha256": "fb184a3ce13b498fd8847fd84931a272422342fec64abe77bb57f683182fc534"
+    },
+    "out/api32/own-authless165-result/ams-accounting/observations.json": {
+      "bytes": 24228,
+      "sha256": "5647c00ebf803e946b30b02d5184c29eb96fe59d9cb0825239778be1fd9061a1"
+    },
+    "out/api32/own-authless165-result/ams-accounting/sample-0.txt": {
+      "bytes": 127968,
+      "sha256": "e7243fa45f735b5071ffc07028240be242ef4b2db36538eb17776f19242971cf"
+    },
+    "out/api32/own-authless165-result/ams-accounting/sample-1.txt": {
+      "bytes": 138295,
+      "sha256": "318077ae1dc807650368cdfb7abae49ff2ea1ca276efc6351dfaaaf94098f1b5"
+    },
+    "out/api32/own-authless165-result/ams-accounting/sample-2.txt": {
+      "bytes": 136154,
+      "sha256": "07a4b29627576cf94c5e8d3bc43e7b8eff499e1fb7d70894fd36b7bc77f1535e"
+    },
+    "out/api32/own-authless165-result/ams-accounting/sample-3.txt": {
+      "bytes": 133668,
+      "sha256": "86a3b2bab7f794fd7a7c8b23f8bc53e93dbcb13101b81ff08cdd4d3a229a0b0b"
+    },
+    "out/api32/own-authless165-result/ams-accounting/sample-4.txt": {
+      "bytes": 132945,
+      "sha256": "14cbb3dacc561f9f3feb4f31b312204edb391ea25df5ce58a3fdb4331890f91f"
+    },
+    "out/api32/own-authless165-result/ams-accounting/sample-5.txt": {
+      "bytes": 132332,
+      "sha256": "f5712cc39698a14a3ba5a1112be3697719aac0ba67d3681da0d6b7ea50451981"
+    },
+    "out/api32/own-authless165-result/ams-observer.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "out/api32/own-authless165-result/build.json": {
+      "bytes": 534,
+      "sha256": "e4b917eb5ad5336eeda21b5720f20034a83434235f21a9296cd62a90a2926064"
+    },
+    "out/api32/own-authless165-result/candidate.json": {
+      "bytes": 1404,
+      "sha256": "8ae6ecb765e84911f6919a89c45ac1c765785a82c1a2b3b616e1e66f4829baa5"
+    },
+    "out/api32/own-authless165-result/candidate.pin": {
+      "bytes": 64,
+      "sha256": "34fe72383d7880a8586ad32704894358b903336193a3c2fd3f097a937973258c"
+    },
+    "out/api32/own-authless165-result/driver.py": {
+      "bytes": 9040,
+      "sha256": "493628b553d833b3208bc760b96e5c5e5479842e16a76ef6dfdfa3db59f21183"
+    },
+    "out/api32/own-authless165-result/execution-start.json": {
+      "bytes": 160,
+      "sha256": "1304672c3bba8927018c814f17dcff736e301496bfbb791cd864bf405fa11431"
+    },
+    "out/api32/own-authless165-result/exit.json": {
+      "bytes": 161,
+      "sha256": "f343118e0b39be5940af0103808111c152f10d6469214609557feee1f45bd682"
+    },
+    "out/api32/own-authless165-result/host-boot-id-after.txt": {
+      "bytes": 37,
+      "sha256": "5390f09bb2c39c0bc18c2f6987603ae79eb7a880577ecc9133ddfad7b440eb3c"
+    },
+    "out/api32/own-authless165-result/host-package-after.txt": {
+      "bytes": 5925,
+      "sha256": "ae8274683cb788a4d9a784d224ca3df5ce2d6e8d6cb9bb1e7cdc10ae567329dd"
+    },
+    "out/api32/own-authless165-result/host-package-before.txt": {
+      "bytes": 6411,
+      "sha256": "8b972f22da29cfc6b59527a2dbc55dda118e568d7464a510ce31452e6f1dc7cc"
+    },
+    "out/api32/own-authless165-result/host-policy-after.txt": {
+      "bytes": 4195,
+      "sha256": "4ca3e396d267bcddafdda898e924064d3fae1795124eb0a9a3fefcffd49f0780"
+    },
+    "out/api32/own-authless165-result/host-policy-before.txt": {
+      "bytes": 4195,
+      "sha256": "4ca3e396d267bcddafdda898e924064d3fae1795124eb0a9a3fefcffd49f0780"
+    },
+    "out/api32/own-authless165-result/independent-check.json": {
+      "bytes": 1395,
+      "sha256": "4767e045045a9e6f7f8b49076fb7569da0b3622fd74ca55e77c5be7b5432c07c"
+    },
+    "out/api32/own-authless165-result/observers-ready.json": {
+      "bytes": 810,
+      "sha256": "4d312ce918abd07e61b5ff9c475781922b17e3b274bd16681ade53bce3d849dc"
+    },
+    "out/api32/own-authless165-result/phase-1-intent.json": {
+      "bytes": 172,
+      "sha256": "7b583b947f96d47612510042647d5233e431feb17dd275f07f12d9dc27d642f7"
+    },
+    "out/api32/own-authless165-result/phase-1-result.json": {
+      "bytes": 1192615,
+      "sha256": "6b5ab934bb334c032b4902eeb2caa45d0e5e266735616d8102ad79587d96badd"
+    },
+    "out/api32/own-authless165-result/post-stop-processes.txt": {
+      "bytes": 74207,
+      "sha256": "58ce092dad321e4522894023d4b2562dc33ed5aa5fada0fd2f6f460d339f0fdd"
+    },
+    "out/api32/own-authless165-result/process-budget-observer.exit.json": {
+      "bytes": 51,
+      "sha256": "fe732c41ac08b681e0fbb9c6a94656b6276c9f5466988c496d60b8ca1d9c4ad7"
+    },
+    "out/api32/own-authless165-result/process-budget-observer.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "out/api32/own-authless165-result/process-budget.json": {
+      "bytes": 377909,
+      "sha256": "2fc107d79f7660d69a4359b65927f853b80806d43f03652e34c38dd274f0df8b"
+    },
+    "out/api32/own-authless165-result/restore-report.json": {
+      "bytes": 1275,
+      "sha256": "cf0423387ee23a554718804071accad7cadd24b5d0abd5fc9eb5b31dda14cb2d"
+    },
+    "out/api32/own-authless165-result/supervisor.log": {
+      "bytes": 566,
+      "sha256": "2d7389c63927ae617d8855db46334f01ba3ec756da9d6d8b8be453c3ebf923b7"
+    },
+    "out/api32/own-authless165-result/supervisor.py": {
+      "bytes": 3791,
+      "sha256": "364b687cbcfbc53655503a328679cde1fa936ad853546ee4ebbd248ec63f810e"
+    },
+    "out/api32/own-restore159-result/partial-restoration-audit.json": {
+      "bytes": 1344,
+      "sha256": "d0ce10e31d13762442bc0052c52d979c3ba84ed10d6773fd201ea68bc62e5539"
+    },
+    "out/api32/recovered-ce162-manager-probe/api32-ce-manager-probe.apk": {
+      "bytes": 7563800,
+      "sha256": "9483c38d6daa5fe808ade871deb0551f9015930bd948fe45346447ecb84f66c1"
+    },
+    "out/api32/recovered-ce162-package-check.json": {
+      "bytes": 12646,
+      "sha256": "e8db4aeac88dce457287994e37952252f90a81859f816cddbd88f19e0930230b"
+    },
+    "out/api32/recovered155-result/failure-audit.json": {
+      "bytes": 1895,
+      "sha256": "6c0d2f0afc7773a071054f178f9c01cbbf299bf6a1ae9eba63eeb26f99180c6c"
+    },
+    "out/api32/recovered162-candidate.json": {
+      "bytes": 781727,
+      "sha256": "8454fd06d8e9459128d4001eed7a5a30e8f2c56fdc8f2b7712ac9f8620981a6b"
+    },
+    "out/api32/recovered162-result/acore-native-crash-excerpt.txt": {
+      "bytes": 4238,
+      "sha256": "6b0fcb25fa862395734c7d18cdf7b6174b359429608b6783244e6b35f7df48e2"
+    },
+    "out/api32/recovered162-result/ams-accounting/exit.json": {
+      "bytes": 51,
+      "sha256": "df15ab41688929640aea29ad065bdfb3be0a35f7b148d9b29038c5bd1df96a0c"
+    },
+    "out/api32/recovered162-result/ams-accounting/observations.json": {
+      "bytes": 90180,
+      "sha256": "25888d9ff1a62969e7841343cee909c5c699819182df737a451c7ec965bd5f03"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-0.txt": {
+      "bytes": 136448,
+      "sha256": "1dca16309463187b3299b76c9466e8a6d43fd60aed632538e862b047354290b8"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-1.txt": {
+      "bytes": 144906,
+      "sha256": "a6447b690823cdb178e389253eb27557c8efb8bac0d5570a9478ccf054548838"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-10.txt": {
+      "bytes": 128010,
+      "sha256": "76a2728364666cd011dc1e1e8495f5a4559098ee7506fe5f941673b91a7a2ac4"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-11.txt": {
+      "bytes": 128022,
+      "sha256": "c36467f3ddb917b6039146ee068f1e55e1af48b175eee4ed94eb58fa22abf2fa"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-12.txt": {
+      "bytes": 128048,
+      "sha256": "3fee335f098886319ea6e1ba4f837a80b0834745957aecf39ce5be043ccae87f"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-13.txt": {
+      "bytes": 128243,
+      "sha256": "f95a6a77bc8d5870b97213703cbae264f6b79e507facb45897f2808bda291c21"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-14.txt": {
+      "bytes": 128270,
+      "sha256": "0be2a21e5b6e49bcc64e1edf77e61fd281f3e2b09d7010b5220e057ea1e8c203"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-15.txt": {
+      "bytes": 133239,
+      "sha256": "65b64d1d0206246d14ebb836528b056dc7d5a09e2cb299dc71861bdbec209ceb"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-16.txt": {
+      "bytes": 133075,
+      "sha256": "a5b75235a99d08d7067114f91b699f6d43fd9216c07b48e0166a1e0a97243fe2"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-17.txt": {
+      "bytes": 128098,
+      "sha256": "ea96498d16ae9e11ad549ba3b5367a161114434be8d4854513e7ecf6e099f633"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-18.txt": {
+      "bytes": 132625,
+      "sha256": "1806836cef0fccdf40613de674003a80d00e1879a7027c8640b6c776ef0bb8b8"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-19.txt": {
+      "bytes": 132255,
+      "sha256": "710f884d0cd88a9dd9002f5238986160cdba4766c474a018f7741eefc4ca936f"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-2.txt": {
+      "bytes": 132373,
+      "sha256": "8b00a3d0de790cfc696bba72a59a5c89dcc7f7aec465916345fb5f6a7c5a15c3"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-20.txt": {
+      "bytes": 133127,
+      "sha256": "471a188bd7783ae66ecc1a8e7dce04ab63c97731e862c289fde33cdc455b8e85"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-21.txt": {
+      "bytes": 133172,
+      "sha256": "214951829a7e4b4d66e80ca8411e08c02cabf740189eb89c8fb9a583dd54ce61"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-3.txt": {
+      "bytes": 131555,
+      "sha256": "290cdb626f2c55027bf3950a58ab30c2561a86c5b7dfe325d0ca8dc92030858b"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-4.txt": {
+      "bytes": 130741,
+      "sha256": "2b1f09b64771839ad90a10390a797793b7962b2fdb04ebbadc78f1d64180019b"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-5.txt": {
+      "bytes": 136131,
+      "sha256": "fae79435160272bef07e27429c43b7fbc479acb294897423c0b4c0d226338245"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-6.txt": {
+      "bytes": 136301,
+      "sha256": "ec0e6cd3260fd6e50e7c2380bb37a24f9df491a38a9cbf987815e251768ec460"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-7.txt": {
+      "bytes": 132074,
+      "sha256": "4dc503f49613c063dbcc0b36023fcd79437ffe6a7ccccf964bbdb2692611d93c"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-8.txt": {
+      "bytes": 131256,
+      "sha256": "18d7a486353529305de662f12f6d770595dff5a6ab2b79a77422ef75475cdc44"
+    },
+    "out/api32/recovered162-result/ams-accounting/sample-9.txt": {
+      "bytes": 130559,
+      "sha256": "e4cbcaef14b880511fb4184cb94819165c1ed60ae25f5430cb269af851234734"
+    },
+    "out/api32/recovered162-result/ams-observer.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "out/api32/recovered162-result/candidate.pin": {
+      "bytes": 64,
+      "sha256": "434f1e0e10c198f00641a99378e9edbd95cce7fbf3759942b46d2c37bc9745bc"
+    },
+    "out/api32/recovered162-result/ce-manager-cycle-182e3ad9cec0419cb30677049f69a95e-0.json": {
+      "bytes": 1488588,
+      "sha256": "85a8b18bcd6b890fa7ccc4574bc1e022b49b75fa37e4821f01e82fb3b3a23485"
+    },
+    "out/api32/recovered162-result/ce-manager-cycle-182e3ad9cec0419cb30677049f69a95e-1.json": {
+      "bytes": 1444100,
+      "sha256": "5b9b017e440972e16c50efe21a259ddee977f2f91bfd62c402a563d32a448a80"
+    },
+    "out/api32/recovered162-result/ce-manager-cycle-182e3ad9cec0419cb30677049f69a95e-2.json": {
+      "bytes": 1349822,
+      "sha256": "0dc127fbbffeec4e8376d7d007d38f64908106283fee6cd07ced5ebb8f439265"
+    },
+    "out/api32/recovered162-result/ce-manager-report.json": {
+      "bytes": 194475,
+      "sha256": "4fb9487164bd360e85da9f2f11057dd5e72b6efa1649f2d422cd00da2f9da948"
+    },
+    "out/api32/recovered162-result/execution-start.json": {
+      "bytes": 160,
+      "sha256": "928406408df5cdd6f62550659680b0618dcf443ffee417a306e3d5e12544e4ca"
+    },
+    "out/api32/recovered162-result/failure-audit.json": {
+      "bytes": 2613,
+      "sha256": "16a6c794fb38327d597fba46e8d63169e08e7ac68af94e88a9b5729dad9c3657"
+    },
+    "out/api32/recovered162-result/failure-auditor-schema-correction.json": {
+      "bytes": 297,
+      "sha256": "2355fe913c8c398a486845a32a7816e9eda99f32f327951e899b1e83123eddf2"
+    },
+    "out/api32/recovered162-result/host-boot-id-after.txt": {
+      "bytes": 37,
+      "sha256": "5390f09bb2c39c0bc18c2f6987603ae79eb7a880577ecc9133ddfad7b440eb3c"
+    },
+    "out/api32/recovered162-result/host-boot-id-before.txt": {
+      "bytes": 37,
+      "sha256": "5390f09bb2c39c0bc18c2f6987603ae79eb7a880577ecc9133ddfad7b440eb3c"
+    },
+    "out/api32/recovered162-result/host-package-after.txt": {
+      "bytes": 6411,
+      "sha256": "8b972f22da29cfc6b59527a2dbc55dda118e568d7464a510ce31452e6f1dc7cc"
+    },
+    "out/api32/recovered162-result/host-package-before.txt": {
+      "bytes": 5924,
+      "sha256": "a4dc04641c632f114bbc4109c6cc0ea3f46bdadcd0ca65637042ba24b90289ce"
+    },
+    "out/api32/recovered162-result/host-policy-after.txt": {
+      "bytes": 4195,
+      "sha256": "4ca3e396d267bcddafdda898e924064d3fae1795124eb0a9a3fefcffd49f0780"
+    },
+    "out/api32/recovered162-result/host-policy-before.txt": {
+      "bytes": 4195,
+      "sha256": "4ca3e396d267bcddafdda898e924064d3fae1795124eb0a9a3fefcffd49f0780"
+    },
+    "out/api32/recovered162-result/observers-ready.json": {
+      "bytes": 798,
+      "sha256": "7c68e98c99dabe4552fd69542bf00077a4e9f224d1607171175104c397d0dc09"
+    },
+    "out/api32/recovered162-result/post-stop-processes.txt": {
+      "bytes": 85314,
+      "sha256": "0db74608cff2f665b5219a7505e004aa364d205a365a865ffacb2823b663de95"
+    },
+    "out/api32/recovered162-result/process-budget-observer.exit.json": {
+      "bytes": 51,
+      "sha256": "fe732c41ac08b681e0fbb9c6a94656b6276c9f5466988c496d60b8ca1d9c4ad7"
+    },
+    "out/api32/recovered162-result/process-budget-observer.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "out/api32/recovered162-result/process-budget.json": {
+      "bytes": 1387178,
+      "sha256": "e2ea0726e04c5301ae9ff9d81304f6bc6526f6e2b906ef8213c002d4bb25ac43"
+    },
+    "out/api32/recovered162-result/run-814144e3a21a4815972f21b2eaab57af.exit.json": {
+      "bytes": 17,
+      "sha256": "64a1526b099d75eed9d9da41a5562dcc164b6ffddeb729dd371c4496bbcded05"
+    },
+    "out/api32/recovered162-result/run-814144e3a21a4815972f21b2eaab57af.log": {
+      "bytes": 3077,
+      "sha256": "d45525874413199e58982e4798bd6e7511ef7e610c251e93919e667c5d5ce63f"
+    },
+    "out/api32/repro156-image/independent-check.json": {
+      "bytes": 2511,
+      "sha256": "e221049d82f29eab549a266accee1ac68bbf3da91328bddbc306ba81ab25e8a5"
+    },
+    "out/api32/signal139-app-result/independent-check.json": {
+      "bytes": 3499,
+      "sha256": "95058833ebd8da1358fb948e3ac26da27e0295c7216e45889ebeb4555cd39ccf"
+    }
+  }
+}

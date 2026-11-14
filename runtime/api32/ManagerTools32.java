@@ -117,6 +117,7 @@ public final class ManagerTools32 {
         check(Build.VERSION.SDK_INT==32 && Os.getuid()==1000 && context!=null && args.length>=1 && args.length<=2,"Expected SDK32 system-role command");
         switch(args[0]) {
             case "startup":check(embedded && args.length==1 && StartupReadiness32.selected(),"Startup state requires the matching system-server owner channel");return StartupReadiness32.state(context).toString();
+            case "boot-broadcasts":check(embedded && args.length==2 && StartupReadiness32.selected(),"Broadcast state requires the matching system-server owner channel");return StartupReadiness32.broadcasts(args[1]).toString();
             case "install":check(args.length==1,"Unexpected install argument");if(embedded && StartupReadiness32.selected())StartupReadiness32.await(context,log);return install(context,log);
             case "open":check(args.length==2,"Package name required");check(args[1].matches("[a-zA-Z][a-zA-Z0-9_]*(?:\\.[a-zA-Z0-9_]+)+"),"Invalid package name");if(embedded && StartupReadiness32.selected())StartupReadiness32.await(context,log);open(context,args[1]);return "Opened "+args[1];
             case "dialer":check(args.length==1,"Unexpected dialer argument");if(embedded && StartupReadiness32.selected())StartupReadiness32.await(context,log);launch(new Intent(Intent.ACTION_DIAL,Uri.parse("tel:")));return "Dialer opened";

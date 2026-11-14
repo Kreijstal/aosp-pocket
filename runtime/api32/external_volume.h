@@ -70,9 +70,19 @@ public:
         if(channel_ || adapterRequested_)return -EBUSY;
         if(!checking || !adapter_ || options_.hostPid<=0 || !options_.hostStart)return -EINVAL;
         int pair[2];if(socketpair(AF_UNIX,SOCK_SEQPACKET|SOCK_CLOEXEC,0,pair))return -errno;
+        const auto started=std::chrono::steady_clock::now();
+        auto trace=[&](const char* stage,int result) {
+            auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count();
+            fprintf(stderr,"API32_EXTERNAL_VOLUME_START stage=%s elapsed_ms=%lld result=%d\n",stage,static_cast<long long>(elapsed),result);
+        };
         channel_=std::make_unique<Channel>(pair[0],15000);files_=std::make_unique<Files>(*channel_,options_.lower);
-        int initialized=-EIO;std::thread initialization([&]{initialized=files_->initialize(initializer);});
-        int accepted=checking(pair[1]);close(pair[1]);
+        // Stock12L StorageUserConnection budgets20s for binding the provider
+        // and starting its session. INIT is queued before that cold bind; a
+        // normal15s I/O deadline can close the socket before the provider sees
+        // it. Only INIT shares the startup budget. A rejected/timed-out
+        // framework callback still cancels it immediately, before joining.
+        int initialized=-EIO;std::thread initialization([&]{initialized=files_->initialize(initializer,20000);trace("init",initialized);});
+        int accepted=checking(pair[1]);trace("checking",accepted);close(pair[1]);
         if(accepted<0)channel_->cancel();
         initialization.join();
         auto fail=[&](int error){stopLocked();return error;};

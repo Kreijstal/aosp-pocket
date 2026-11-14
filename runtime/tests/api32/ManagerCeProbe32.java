@@ -20,6 +20,55 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
     private int initMode;
     private String originalInitSha;
     private JSONObject initTrial;
+    private boolean retainedPlaintext;
+    private JSONObject retainedInventory;
+    private boolean recoveredRetained;
+    private JSONObject recoveredOriginal;
+    private KeyguardObserver32 keyguardObserver;
+    private JSONObject keyguardObserverReceipt;
+    @Override protected void beforeSessionStart()throws Exception {
+        boolean asset=false;
+        try(InputStream in=getAssets().open("api32-ce-retained-plaintext")) {
+            ByteArrayOutputStream bytes=new ByteArrayOutputStream();GuestImage.copy(in,bytes,32);
+            check(bytes.toString("US-ASCII").equals("v1\n"),"Unknown retained plaintext test protocol");asset=true;
+        }catch(FileNotFoundException absent){}
+        boolean recoveredAsset=false;
+        try(InputStream in=getAssets().open("api32-ce-recovered-retained")) {
+            ByteArrayOutputStream bytes=new ByteArrayOutputStream();GuestImage.copy(in,bytes,32);
+            check(bytes.toString("US-ASCII").equals("v1\n"),"Unknown recovered retained test protocol");recoveredAsset=true;
+        }catch(FileNotFoundException absent){}
+        retainedPlaintext=getIntent().getBooleanExtra("ce_retained_plaintext",false);
+        check(asset==retainedPlaintext,"Retained plaintext asset and explicit intent must match");
+        check(recoveredAsset==getIntent().getBooleanExtra("ce_recovered_retained",false),"Recovered retained asset and explicit intent must match");
+        if(getIntent().getBooleanExtra("ce_recovered_retained",false))check(!retainedPlaintext
+            && getPackageName().equals(RetainedPlaintext32.PACKAGE) && getIntent().getBooleanExtra("ce_preserved_lifecycle",false),
+            "Recovered retained mode requires the explicit normal encrypted lifecycle");
+        if(!retainedPlaintext)return;
+        check(getPackageName().equals(RetainedPlaintext32.PACKAGE),"Retained migration requires the normal Manager package");
+        for(String flag:new String[]{"ce_preserved_lifecycle","ce_authless_verify","ce_keyguard_resume"})
+            check(!getIntent().getBooleanExtra(flag,false),"Retained plaintext mode cannot reuse an encrypted-profile recovery mode");
+        check(DirectImage.leftovers(root).isEmpty(),"A guest still owns the retained profile");
+        if(getIntent().getBooleanExtra("ce_outer_resume",false)) {
+            File checkpoint=new File(getFilesDir(),"ce32-restart-state.json");
+            check(Files.isRegularFile(checkpoint.toPath(),LinkOption.NOFOLLOW_LINKS) && checkpoint.length()<65536,"Missing retained migration restart checkpoint");
+            JSONObject saved=new JSONObject(new String(Files.readAllBytes(checkpoint.toPath()),"UTF-8"));
+            check(saved.getBoolean("retainedPlaintext") && saved.getString("runId").equals(runId),"Wrong retained migration checkpoint");
+        }else {
+            RetainedPlaintext32.requireCandidate(root,getFilesDir());
+            check(CeMigration.api32(root),"Retained profile is not Android12L");
+            File marker=new File(root,".pocket-image-id");
+            check(Files.isRegularFile(marker.toPath(),LinkOption.NOFOLLOW_LINKS) && marker.length()<128,"Missing retained image identity");
+            JSONObject catalog;
+            try(InputStream in=getAssets().open("pocket-images.json")) {
+                ByteArrayOutputStream bytes=new ByteArrayOutputStream();GuestImage.copy(in,bytes,4*1024*1024);catalog=new JSONObject(bytes.toString("UTF-8"));
+            }
+            String expected=null;JSONArray images=catalog.getJSONArray("images");
+            for(int i=0;i<images.length();i++)if(images.getJSONObject(i).getInt("sdk")==32)expected=images.getJSONObject(i).getString("sha256");
+            check(expected!=null && new String(Files.readAllBytes(marker.toPath()),"US-ASCII").trim().equals(expected),"Retained image must already match the exact completed baseline");
+            result.put("storageEncryptionEnabledBeforeStart",false).put("fiveRootEncryptionLayoutBeforeStart",false);
+        }
+        result.put("retainedPlaintextMigration",true).put("freshProfile",false).put("guestDataReset",false);
+    }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         if(getIntent().getBooleanExtra("ce_authless_verify",false))autoStart=false;
@@ -69,23 +118,44 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
     private final String[] passwords={password(),password(),password()};
     private static String password(){return "P32"+UUID.randomUUID().toString().replace("-","").substring(0,14);}
     private String redact(String text){for(String value:passwords)text=text.replace(value,"<redacted>");return text;}
-    private void loadTestPasswords()throws Exception {
-        java.net.URL url=new java.net.URL(getIntent().getStringExtra("ce_secret_url"));
-        check(url.getProtocol().equals("http") && url.getHost().equals("127.0.0.1") && url.getPort()==8795
-            && url.getPath().equals("/"+runId) && url.getUserInfo()==null && url.getQuery()==null,"Expected isolated test credential channel");
+    private JSONObject testInput(java.net.URL url,int limit)throws Exception {
         java.net.HttpURLConnection connection=(java.net.HttpURLConnection)url.openConnection();
         connection.setConnectTimeout(10000);connection.setReadTimeout(10000);connection.setInstanceFollowRedirects(false);
         try {
             check(connection.getResponseCode()==200,"Test credential channel unavailable");
             ByteArrayOutputStream bytes=new ByteArrayOutputStream();
-            try(InputStream in=connection.getInputStream()){GuestImage.copy(in,bytes,4096);}
-            JSONObject value=new JSONObject(bytes.toString("UTF-8"));
-            check(value.getString("runId").equals(runId),"Wrong test credential nonce");
-            JSONArray entries=value.getJSONArray("passwords");check(entries.length()==passwords.length,"Wrong test credential count");
-            String[] received=new String[passwords.length];
-            for(int i=0;i<received.length;i++){received[i]=entries.getString(i);check(received[i].matches("P32[a-f0-9]{14}"),"Invalid test credential format");}
-            System.arraycopy(received,0,passwords,0,passwords.length);
+            try(InputStream in=connection.getInputStream()){GuestImage.copy(in,bytes,limit);}
+            return new JSONObject(bytes.toString("UTF-8"));
         }finally{connection.disconnect();}
+    }
+    private void loadTestPasswords()throws Exception {
+        java.net.URL url=new java.net.URL(getIntent().getStringExtra("ce_secret_url"));
+        check(url.getProtocol().equals("http") && url.getHost().equals("127.0.0.1") && url.getPort()==8795
+            && url.getPath().equals("/"+runId) && url.getUserInfo()==null && url.getQuery()==null && url.getRef()==null,"Expected isolated test credential channel");
+        JSONObject value=testInput(url,4096);check(value.getString("runId").equals(runId),"Wrong test credential nonce");
+        JSONArray entries=value.getJSONArray("passwords");check(entries.length()==passwords.length,"Wrong test credential count");
+        String[] received=new String[passwords.length];
+        for(int i=0;i<received.length;i++){received[i]=entries.getString(i);check(received[i].matches("P32[a-f0-9]{14}"),"Invalid test credential format");}
+        System.arraycopy(received,0,passwords,0,passwords.length);
+        recoveredRetained=getIntent().getBooleanExtra("ce_recovered_retained",false);
+        check(recoveredRetained==value.has("preservedRetained"),"Recovered profile requires matching explicit evidence");
+        if(recoveredRetained) {
+            check(getPackageName().equals(RetainedPlaintext32.PACKAGE) && getIntent().getBooleanExtra("ce_preserved_lifecycle",false),"Wrong recovered profile mode");
+            JSONObject proof=value.getJSONObject("preservedRetained");String source=proof.getString("sourceRunId");
+            check(source.matches("[a-f0-9]{32}") && !source.equals(runId) && source.equals(getIntent().getStringExtra("ce_preserved_nonce")),"Wrong recovered profile nonce");
+            recoveredOriginal=proof.getJSONObject("originalApp");
+            JSONObject inventory=testInput(new java.net.URL(url.toString()+"/retained-inventory"),128*1024);
+            check(inventory.getString("runId").equals(runId) && inventory.getString("sourceRunId").equals(source),"Wrong retained inventory nonce");
+            retainedInventory=inventory.getJSONObject("inventory");
+            check(retainedInventory.getBoolean("includesKeptData") && retainedInventory.getJSONArray("packages").length()>0,"Incomplete recovered retained inventory");
+            result.put("recoveredRetainedProfile",true).put("retainedInventoryBefore",retainedInventory);
+        }
+    }
+    private void verifyRecoveredOriginal(JSONObject current)throws Exception {
+        if(!recoveredRetained)return;
+        for(String field:new String[]{"token","cipherDigest","canonicalDataPath"})
+            check(current.getString(field).equals(recoveredOriginal.getString(field)),"Recovered original app/key changed: "+field);
+        check(current.getLong("uid")==recoveredOriginal.getLong("uid"),"Recovered original app UID changed");
     }
     @Override public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -139,17 +209,72 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         }
         throw new IOException("Ordinary app observer returned no result");
     }
+    private JSONObject inventory()throws Exception {
+        JSONObject response=command(Arrays.asList("/system/bin/sh","-c",javaShell("/tmp/manager-ce-observer.apk","dev.kreijstal.aosppocket.guest.CeAppInspector32","inventory")),null,90);
+        check(response.getInt("exit")==0,"Retained package inventory failed");
+        for(String line:response.getString("output").split("\n"))if(line.startsWith("POCKET_CE32_INVENTORY ")) {
+            JSONObject value=new JSONObject(line.substring("POCKET_CE32_INVENTORY ".length()));
+            check(value.getBoolean("includesKeptData") && value.getJSONArray("packages").length()>0,"Incomplete retained package inventory");return value;
+        }
+        throw new IOException("Missing retained package inventory");
+    }
+    private void verifyInventory(JSONObject current)throws Exception {
+        JSONArray before=retainedInventory.getJSONArray("packages"),after=current.getJSONArray("packages");
+        check(after.length()==before.length()+1,"Retained package inventory size changed");int kept=0,witness=0;
+        for(int i=0;i<after.length();i++) {
+            JSONObject entry=after.getJSONObject(i);
+            if(entry.getString("package").equals(RetainedPlaintext32.TEST_PACKAGE)) {
+                check(entry.getBoolean("installed") && entry.getJSONArray("certificates").length()>0,"New CE witness is not installed and signed");witness++;continue;
+            }
+            check(kept<before.length(),"Unexpected retained app package");JSONObject expected=before.getJSONObject(kept++);
+            check(entry.getString("package").equals(expected.getString("package"))
+                && entry.getLong("uid")==expected.getLong("uid") && entry.getLong("versionCode")==expected.getLong("versionCode")
+                && entry.getBoolean("installed")==expected.getBoolean("installed"),"Retained app UID/version/install state changed");
+            check(entry.getJSONArray("certificates").toString().equals(expected.getJSONArray("certificates").toString()),"Retained app signing certificates changed");
+        }
+        check(kept==before.length() && witness==1,"Retained package inventory is incomplete");
+    }
     private JSONObject keyguard()throws Exception{return keyguard(false);}
     private JSONObject keyguard(boolean inspectUi)throws Exception {
         return keyguardMode(inspectUi?"keyguard-ui":"keyguard");
     }
-    private JSONObject keyguardMode(String mode)throws Exception {
-        JSONObject response=command(Arrays.asList("/system/bin/sh","-c",javaShell("/tmp/manager-ce-observer.apk","dev.kreijstal.aosppocket.guest.CeAppInspector32",mode)),null,45);
-        String output=redact(response.getString("output"));
-        check(response.getInt("exit")==0,"Keyguard observation failed: "+output.substring(Math.max(0,output.length()-3000)));
-        String tag="POCKET_CE32_KEYGUARD ";
-        for(String line:response.getString("output").split("\n"))if(line.startsWith(tag))return new JSONObject(line.substring(tag.length()));
-        throw new IOException("Keyguard observer returned no state");
+    private void ensureKeyguardObserver()throws Exception {
+        if(keyguardObserver!=null){check(keyguardObserver.isAlive(),"Existing keyguard observer exited unexpectedly");return;}
+        String nonce=UUID.randomUUID().toString().replace("-","");
+        File log=new File(root,"logs/keyguard-warm-"+runId+"-"+nonce+".log");
+        ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",Arrays.asList("/system/bin/sh","-c",
+            javaShell("/tmp/manager-ce-observer.apk","dev.kreijstal.aosppocket.guest.CeAppInspector32","keyguard-observer "+runId+" "+nonce)))).directory(root);
+        builder.environment().clear();builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid(),32));
+        KeyguardObserver32 observer=new KeyguardObserver32(builder,log,runId,nonce,45000);
+        JSONObject receipt=new JSONObject().put("observerPid",observer.pid()).put("observerNonce",nonce)
+            .put("readyHostUptimeMillis",SystemClock.uptimeMillis()).put("startupMillis",observer.startupMillis())
+            .put("readOnly",true).put("passwordTextRead",false).put("inputInjected",false)
+            .put("closed",false).put("logName",log.getName());
+        JSONArray all=result.optJSONArray("keyguardObserverSessions");if(all==null){all=new JSONArray();result.put("keyguardObserverSessions",all);}
+        all.put(receipt);keyguardObserver=observer;keyguardObserverReceipt=receipt;
+    }
+    private JSONObject keyguardMode(String mode)throws Exception{return keyguardMode(mode,45000);}
+    private JSONObject keyguardMode(String mode,long timeoutMillis)throws Exception {
+        ensureKeyguardObserver();
+        JSONObject state=new JSONObject(keyguardObserver.query(mode,timeoutMillis));
+        check(state.getString("observerRunId").equals(runId) && state.getString("observerNonce").equals(keyguardObserver.nonce())
+            && state.getInt("observerPid")==keyguardObserver.pid() && state.getInt("observerUid")==1000
+            && state.getInt("observerSequence")==keyguardObserver.requests() && state.getString("observerOperation").equals(mode)
+            && state.getBoolean("readOnly") && !state.getBoolean("passwordTextRead") && !state.getBoolean("inputInjected"),"Wrong read-only keyguard observer response");
+        keyguardObserverReceipt.put("requests",keyguardObserver.requests()).put("lastQueryMillis",keyguardObserver.lastQueryMillis());
+        state.put("observerQueryMillis",keyguardObserver.lastQueryMillis());return state;
+    }
+    private void closeKeyguardObserver()throws Exception {
+        if(keyguardObserver==null)return;
+        try{keyguardObserver.close();}
+        finally {
+            keyguardObserverReceipt.put("closed",!keyguardObserver.isAlive()).put("closedCleanly",keyguardObserver.closedCleanly())
+                .put("requests",keyguardObserver.requests()).put("closedHostUptimeMillis",SystemClock.uptimeMillis());
+            if(!keyguardObserver.isAlive()){keyguardObserver=null;keyguardObserverReceipt=null;}
+        }
+    }
+    @Override protected void stop()throws Exception {
+        try{closeKeyguardObserver();}finally{super.stop();}
     }
     private void keyguardSwipe()throws Exception {
         long down=SystemClock.uptimeMillis();
@@ -180,6 +305,9 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
             && (!focus || entry.optBoolean("focused"));
     }
     private JSONObject wakeKeyguard(String purpose)throws Exception {
+        // ART/service preparation finishes before input starts the unchanged
+        // 15s wake observation. Reuse the same observer for subsequent UI reads.
+        ensureKeyguardObserver();
         long deadline=SystemClock.elapsedRealtime()+15000;JSONObject state;
         JSONArray observations=result.optJSONArray("keyguardWakeAttempts");
         if(observations==null){observations=new JSONArray();result.put("keyguardWakeAttempts",observations);}
@@ -187,8 +315,12 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
             long sent=SystemClock.uptimeMillis();
             if(!result.has("hostWakeUptimeMillis"))result.put("hostWakeUptimeMillis",sent);
             ui(()->{runtime.key(android.view.KeyEvent.KEYCODE_WAKEUP);return null;});
-            state=keyguard();
-            observations.put(new JSONObject().put("purpose",purpose).put("hostUptimeMillis",sent).put("state",state));
+            long remaining=deadline-SystemClock.elapsedRealtime();check(remaining>0,"Wake observation deadline expired");
+            state=keyguardMode("keyguard",remaining);
+            check(SystemClock.elapsedRealtime()<=deadline,"Wake observation exceeded the unchanged15s deadline");
+            check(keyguardObserverReceipt.getLong("readyHostUptimeMillis")<=sent && state.getLong("uptimeMillis")>=sent,"Observer was not ready before wake input");
+            observations.put(new JSONObject().put("purpose",purpose).put("hostUptimeMillis",sent).put("state",state)
+                .put("observerReadyHostUptimeMillis",keyguardObserverReceipt.getLong("readyHostUptimeMillis")));
             stage("observing-keyguard-wake");
             if(state.optBoolean("interactive"))return state;
             // WAKEUP is a no-op while already awake. If Android's timeout
@@ -200,6 +332,11 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         throw new IOException("Guest display did not wake before "+purpose);
     }
     private JSONObject unlockWithKeyguard(String password)throws Exception {
+        stage("preparing-readonly-keyguard-ui-observer");
+        JSONObject warmup=keyguardMode("keyguard-ui");
+        result.put("keyguardUiObserverPrepared",new JSONObject().put("observerPid",warmup.getInt("observerPid"))
+            .put("observerNonce",warmup.getString("observerNonce")).put("observedUptimeMillis",warmup.getLong("uptimeMillis"))
+            .put("readOnly",true).put("passwordTextRead",false).put("inputInjected",false));
         stage("waking-keyguard-before-frame");
         JSONObject before=wakeKeyguard("the first keyguard frame");
         result.put("keyguardBeforeInput",before);
@@ -244,11 +381,14 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         check(input.getLong("keyEventsAccepted")>=keys.length+2 && input.getLong("touchEventsAccepted")>=2 && input.getLong("inputEventsRejected")==0,"Keyguard input transport failed");
         return new JSONObject().put("before",before).put("after",after).put("physicalInput",true).put("cliCorrectPasswordUsed",false).put("input",input)
             .put("passwordEntryVerified",true).put("uiBeforeEntry",ready).put("uiAttempts",attempts)
-            .put("wakeAttempts",result.getJSONArray("keyguardWakeAttempts"));
+            .put("wakeAttempts",result.getJSONArray("keyguardWakeAttempts"))
+            .put("warmObserverPid",keyguardObserver.pid()).put("warmObserverNonce",keyguardObserver.nonce())
+            .put("observerPreparedBeforePhysicalInput",true).put("readOnlyObserverUsedForAllQueries",true);
     }
     private void install()throws Exception {
         File apk=new File(getFilesDir(),"ce32-test.apk");
-        try(InputStream in=getAssets().open("api32-ce-test.apk");OutputStream out=new FileOutputStream(apk)){GuestImage.copy(in,out,1024*1024);}
+        try(InputStream in=getAssets().open("api32-ce-test.apk");OutputStream out=retainedPlaintext?
+                Files.newOutputStream(apk.toPath(),StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE):new FileOutputStream(apk)){GuestImage.copy(in,out,1024*1024);}
         ui(()->{runtime.installApps(Collections.singletonMap("base.apk",Uri.fromFile(apk)));return null;});
         long until=SystemClock.elapsedRealtime()+180000;
         while(true) {
@@ -263,11 +403,42 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
             if(readable)check(response.getInt("exit")==0 && response.getString("output").equals(expected),"CE canary missing or changed: "+base);
             else check(response.getInt("exit")!=0 && !response.getString("output").contains(expected),"CE root was readable before unlock: "+base);
         }
+        if(!readable && ExternalVolume32.selected(root)) {
+            JSONObject visible=command(Arrays.asList("/system/bin/toybox","cat",publicMediaCanaryPath()),null,20);
+            check(visible.getInt("exit")!=0 && !visible.getString("output").contains(publicMediaCanaryValue()),"Locked public emulated path exposed the public canary");
+            result.put("lockedExternalCanaryDenied",true);
+        }
+    }
+    private String publicMediaCanaryNonce()throws Exception {
+        String nonce=canaryRunId==null?runId:canaryRunId;
+        check(nonce!=null && nonce.matches("[a-f0-9]{32}"),"Invalid public canary profile nonce");return nonce;
+    }
+    private String publicMediaCanaryPath()throws Exception {
+        return "/storage/emulated/0/.pocket-ce32-public-"+publicMediaCanaryNonce();
+    }
+    private String publicMediaCanaryValue()throws Exception {
+        return "ce32-public-canary-"+publicMediaCanaryNonce();
+    }
+    private void preparePublicMediaCanary()throws Exception {
+        if(!ExternalVolume32.selected(root))return;
+        JSONObject response=command(Arrays.asList("/system/bin/sh","-c",javaShell("/tmp/manager-ce-observer.apk",
+            "dev.kreijstal.aosppocket.guest.CePublicCanary32",publicMediaCanaryNonce())),null,90);
+        check(response.getInt("exit")==0,"Cannot prepare provider-created public canary: "+response.getString("output"));
+        String tag="POCKET_CE32_PUBLIC ";JSONObject fixture=null;
+        for(String line:response.getString("output").split("\n"))if(line.startsWith(tag))fixture=new JSONObject(line.substring(tag.length()));
+        check(fixture!=null && fixture.getString("validation").equals("PASS") && fixture.getInt("schema")==1
+            && fixture.getString("profileNonce").equals(publicMediaCanaryNonce()) && fixture.getString("publicPath").equals(publicMediaCanaryPath())
+            && fixture.getBoolean("createdThroughMediaProvider") && fixture.getBoolean("originalPrivateBytesPreserved")
+            && fixture.getBoolean("originalPrivatePublicAliasDenied"),"Public canary preparation returned no matching proof");
+        result.put("publicMediaCanaryFixture",fixture);
     }
     private boolean publicMediaCanary()throws Exception {
         if(!ExternalVolume32.selected(root))return false;
-        JSONObject visible=command(Arrays.asList("/system/bin/toybox","cat","/storage/emulated/0/.pocket-ce32-canary"),null,20);
-        check(visible.getInt("exit")==0 && visible.getString("output").equals("ce32-canary-"+(canaryRunId==null?runId:canaryRunId)),"Public emulated CE canary differs");
+        JSONObject privateAlias=command(Arrays.asList("/system/bin/toybox","cat","/storage/emulated/0/.pocket-ce32-canary"),null,20);
+        check(privateAlias.getInt("exit")!=0 && privateAlias.getString("output").contains("Permission denied"),"Original private canary lost its public-path denial");
+        JSONObject visible=command(Arrays.asList("/system/bin/toybox","cat",publicMediaCanaryPath()),null,20);
+        check(visible.getInt("exit")==0 && visible.getString("output").equals(publicMediaCanaryValue()),"Public emulated CE canary differs");
+        result.put("publicMediaCanaryPath",publicMediaCanaryPath()).put("originalPrivatePublicAliasDenied",true);
         return true;
     }
     private void awaitCanaries()throws Exception {
@@ -308,8 +479,9 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         return state.put("lockedAppOperationRejected",true).put("openRejectionMillis",SystemClock.uptimeMillis()-start);
     }
     private void capture(int index,boolean migrating)throws Exception {
+        closeKeyguardObserver();
         if(migrating) {
-            ui(()->{runtime.stopGuest();return null;});long until=SystemClock.elapsedRealtime()+180000;
+            ui(()->{runtime.stopGuest();return null;});long until=SystemClock.elapsedRealtime()+(retainedPlaintext?1200000:180000);
             while(ui(()->runtime.running() || runtime.starting() || runtime.stopping())) {
                 check(SystemClock.elapsedRealtime()<until,"Verified CE migration did not finish");Thread.sleep(100);
             }
@@ -323,7 +495,7 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         check(nativeText.length()<2*1024*1024,"Native log reached capture limit");
         JSONObject displayState=new JSONObject(new String(Files.readAllBytes(new File(root,"logs/display-performance.json").toPath()),"UTF-8"));
         check(displayState.getLong("frames_presented")>0,"No host frames presented");
-        pendingCycle=new JSONObject().put("runId",runId).put("index",index).put("session",state).put("nativeLog",nativeText)
+        pendingCycle=new JSONObject().put("runId",runId).put("index",index).put("session",state).put("nativeLog",nativeText).put("keyguardObserverAliveAfterStop",keyguardObserver!=null)
             .put("console",redact(console())).put("display",displayState).put("migration",migrating);
         result.put("cycleIndex",index);stage("cycle-stopped");long until=SystemClock.elapsedRealtime()+120000;
         while(acknowledged!=index){check(SystemClock.elapsedRealtime()<until,"Host did not validate the stopped cycle");Thread.sleep(100);}
@@ -335,6 +507,11 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         JSONObject saved=new JSONObject(new String(Files.readAllBytes(file.toPath()),"UTF-8"));
         check(saved.getString("runId").equals(runId) && saved.getInt("verifiedBoots")==5
             && saved.getInt("hostPid")!=android.os.Process.myPid(),"Wrong outer restart owner");
+        check(saved.optBoolean("recoveredRetainedProfile")==recoveredRetained,"Wrong recovered-profile outer restart mode");
+        if(saved.optBoolean("retainedPlaintext")) {
+            check(retainedPlaintext,"Retained migration restart requires its explicit test mode");
+            retainedInventory=saved.getJSONObject("retainedInventory");
+        }
         if(saved.optBoolean("preservedLifecycle")) {
             canaryRunId=saved.getString("canaryRunId");
             check(canaryRunId.matches("[a-f0-9]{32}") && canaryRunId.equals(getIntent().getStringExtra("ce_preserved_nonce")),"Wrong preserved outer-restart profile");
@@ -349,8 +526,10 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         check(current.getString("token").equals(original.getString("token")) && current.getString("cipherDigest").equals(original.getString("cipherDigest"))
             && current.getInt("uid")==original.getInt("uid") && current.getInt("pid")!=original.getInt("pid"),"App data/keystore changed across the outer restart");
         result.put("keyguardUi",keyguard).put("app",current).put("ordinaryAppPersisted",true);
+        verifyRecoveredOriginal(current);
+        if(retainedInventory!=null){JSONObject inventory=inventory();verifyInventory(inventory);result.put("retainedInventoryAfter",inventory).put("retainedAppsVerified",true);}
         canaries(true);result.put("readableCanariesVerified",5).put("unlockedExternalCanaryVerified",publicMediaCanary());
-        if(saved.optBoolean("preservedLifecycle")) {
+        if(saved.optBoolean("preservedLifecycle") || saved.optBoolean("retainedPlaintext")) {
             stage("restoring-original-password-free-state");credential("set",passwords[2]+"\n\n",false);
             check(new File(root,".pocket-ce-authless").isFile() && !keyguard().getBoolean("secure"),"Original password-free state was not restored");
             result.put("originalPasswordFreeStateRestored",true);
@@ -376,9 +555,7 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         result.put("app",current).put("authlessBootUnlocked",true).put("keyguard",lock);
         canaries(true);result.put("readableCanariesVerified",5);
         if(ExternalVolume32.selected(root)) {
-            JSONObject visible=command(Arrays.asList("/system/bin/toybox","cat","/storage/emulated/0/.pocket-ce32-canary"),null,20);
-            check(visible.getInt("exit")==0 && visible.getString("output").equals("ce32-canary-"+canaryRunId),"Password-free public emulated canary differs");
-            result.put("unlockedExternalCanaryVerified",true);
+            result.put("unlockedExternalCanaryVerified",publicMediaCanary());
         }
         capture(0,false);result.put("validation","PASS").put("fullCredentialLifecycleVerified",false)
             .put("scope","Preserved password-free encrypted profile: actual Android user unlock, five-root canaries and ordinary app/keystore persistence after the failed provider-readiness check; no password changes or data reset"+(initTrial==null?"":"; reversible native-init replacement restored after shutdown"));
@@ -410,7 +587,7 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         checkCrashTransport();
         Files.copy(new File(getApplicationInfo().sourceDir).toPath(),new File(root,"tmp/manager-ce-observer.apk").toPath(),StandardCopyOption.REPLACE_EXISTING);
         canaries(false);result.put("lockedCanariesDenied",5);
-        JSONObject locked=command(Arrays.asList("/system/bin/toybox","cat","/storage/emulated/0/.pocket-ce32-canary"),null,20);
+        JSONObject locked=command(Arrays.asList("/system/bin/toybox","cat",publicMediaCanaryPath()),null,20);
         check(locked.getInt("exit")!=0,"Locked public emulated path exposed the encrypted media canary");
         result.put("lockedExternalCanaryDenied",true);
         result.put("keyguardUi",unlockWithKeyguard(passwords[2]));
@@ -420,9 +597,7 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
         stage("verifying-preserved-keyguard-app");JSONObject current=app("verify");result.put("app",current);
         check(current.getJSONObject("externalStorage").getBoolean("primaryEmulatedMounted")
             && current.getJSONObject("externalStorage").getBoolean("externalPrimaryQuery"),"Unlocked emulated volume is not mounted/queryable");
-        JSONObject visible=command(Arrays.asList("/system/bin/toybox","cat","/storage/emulated/0/.pocket-ce32-canary"),null,20);
-        check(visible.getInt("exit")==0 && visible.getString("output").equals("ce32-canary-"+canaryRunId),"Unlocked public emulated canary differs");
-        result.put("unlockedExternalCanaryVerified",true);
+        result.put("unlockedExternalCanaryVerified",publicMediaCanary());
         if(saved!=null) {
             JSONObject original=saved.getJSONObject("app");
             for(String field:new String[]{"token","cipherDigest","uid","canonicalDataPath"})
@@ -476,7 +651,10 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
                 result.put("preservedLifecycle",true).put("preservedRunId",canaryRunId);
             }
             stage(preserved?"booting-preserved-encrypted":"booting-plain");boot();checkCrashTransport();
-            Files.copy(new File(getApplicationInfo().sourceDir).toPath(),new File(root,"tmp/manager-ce-observer.apk").toPath(),StandardCopyOption.REPLACE_EXISTING);
+            if(retainedPlaintext)RetainedPlaintext32.requireCandidate(root,getFilesDir());
+            Path observer=new File(root,"tmp/manager-ce-observer.apk").toPath();
+            if(retainedPlaintext)Files.copy(new File(getApplicationInfo().sourceDir).toPath(),observer);
+            else Files.copy(new File(getApplicationInfo().sourceDir).toPath(),observer,StandardCopyOption.REPLACE_EXISTING);
             wakeKeyguard("the initial credential lifecycle frame");frame("ce32-plain-"+runId+".png");
             JSONObject original;
             if(preserved) {
@@ -484,6 +662,9 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
                 JSONObject initial=keyguard();check(!initial.getBoolean("secure"),"Preserved profile still requires a credential");
                 result.put("initialAuthlessKeyguard",initial).put("initialAuthlessReadiness",appReadiness(false));
                 original=app("verify");
+                verifyRecoveredOriginal(original);
+                if(recoveredRetained){JSONObject observedInventory=inventory();verifyInventory(observedInventory);
+                    result.put("retainedInventoryAfter",observedInventory).put("retainedAppsVerified",true);}
                 if(completed!=null) {
                     JSONObject expected=completed.getJSONObject("app");
                     for(String field:new String[]{"token","cipherDigest","uid","canonicalDataPath"})
@@ -498,15 +679,31 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
                 result.put("imageInstallStats",new JSONObject(new String(Files.readAllBytes(statistics.toPath()),"UTF-8")));
             }
             else {
+                if(retainedPlaintext) {
+                    stage("checking-retained-plaintext-before-writes");
+                    JSONObject lock=keyguard();check(!lock.getBoolean("secure"),"Retained plaintext profile has an existing credential");
+                    result.put("initialAuthlessKeyguard",lock).put("initialAuthlessReadiness",appReadiness(false));
+                    retainedInventory=inventory();JSONArray packages=retainedInventory.getJSONArray("packages");
+                    for(int i=0;i<packages.length();i++)check(!packages.getJSONObject(i).getString("package").equals(RetainedPlaintext32.TEST_PACKAGE),"CE witness package or kept data already exists");
+                    CeMigrationSpace.Plan plan=CeMigration.preflight(root);
+                    result.put("retainedInventoryBefore",retainedInventory).put("capacityBeforeWrites",new JSONObject()
+                        .put("plaintextBytes",plan.plaintextBytes).put("requiredBytes",plan.requiredBytes).put("dataChunks",plan.dataChunks));
+                }
                 stage("installing-ce-app");install();original=app("create");
-                for(String base:CeNamespace.API32_ROOTS) {
+                if(retainedPlaintext)RetainedPlaintext32.seed(root,runId);
+                else for(String base:CeNamespace.API32_ROOTS) {
                     JSONObject write=command(Arrays.asList("/system/bin/sh","-c","umask 077; exec /system/bin/toybox cat > "+base+"/.pocket-ce32-canary"),"ce32-canary-"+runId,20);
                     check(write.getInt("exit")==0,"Cannot create CE data canary");
                 }
             }
             result.put("originalApp",original);
             checkInstalldFrontend();
-            canaries(true);result.put("originalReadableCanariesVerified",5).put("originalPublicMediaCanaryVerified",publicMediaCanary());
+            canaries(true);preparePublicMediaCanary();
+            result.put("originalReadableCanariesVerified",5).put("originalPublicMediaCanaryVerified",publicMediaCanary());
+            if(retainedPlaintext) {
+                verifyInventory(inventory());CeMigrationSpace.Plan plan=CeMigration.preflight(root);
+                result.put("capacityBeforeCredentialChange",new JSONObject().put("plaintextBytes",plan.plaintextBytes).put("requiredBytes",plan.requiredBytes));
+            }
             stage("setting-password");result.put("initialCredential",credential("set","\n"+passwords[0]+"\n",false));
             if(preserved) {check(!new File(root,".pocket-ce-authless").exists(),"Default-unlock slot survived setting a password");capture(index++,false);}
             else {
@@ -520,7 +717,7 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
                 frame("ce32-phase-"+runId+"-"+phase+".png");
                 JSONObject bootState=new JSONObject().put("phase",phase);boots.put(bootState);
                 if(phase!=2) {
-                    canaries(false);bootState.put("lockedCanariesDenied",5);
+                    canaries(false);bootState.put("lockedCanariesDenied",5).put("lockedExternalCanaryDenied",ExternalVolume32.selected(root));
                     bootState.put("lockedAppReadiness",appReadiness(true));
                     String correct=passwords[phase==0?0:phase==1?1:2];
                     String wrong=phase==0?correct+"x":passwords[phase==1?0:1];
@@ -534,6 +731,8 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
                 check(current.getString("token").equals(original.getString("token")) && current.getString("cipherDigest").equals(original.getString("cipherDigest"))
                     && current.getInt("uid")==original.getInt("uid") && current.getInt("pid")!=original.getInt("pid"),"Ordinary app private data or keystore changed across encrypted boot");
                 bootState.put("app",current);
+                if(retainedInventory!=null){JSONObject observedInventory=inventory();verifyInventory(observedInventory);
+                    bootState.put("retainedInventoryAfter",observedInventory).put("retainedAppsVerified",true);}
                 canaries(true);bootState.put("readableCanariesVerified",5).put("unlockedExternalCanaryVerified",publicMediaCanary());
                 if(phase==0) {stage("changing-password");credential("set",passwords[0]+"\n"+passwords[1]+"\n",false);bootState.put("passwordChanged",true);}
                 if(phase==1) {stage("removing-password");credential("set",passwords[1]+"\n\n",false);bootState.put("passwordRemoved",true);}
@@ -545,6 +744,9 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
             }
             JSONObject saved=new JSONObject().put("runId",runId).put("hostPid",android.os.Process.myPid()).put("verifiedBoots",5).put("app",original)
                 .put("preservedLifecycle",preserved).put("canaryRunId",canaryRunId==null?runId:canaryRunId);
+            if(retainedPlaintext)saved.put("retainedPlaintext",true);
+            if(retainedInventory!=null)saved.put("retainedInventory",retainedInventory);
+            if(recoveredRetained)saved.put("recoveredRetainedProfile",true);
             Path temporary=new File(getFilesDir(),"ce32-restart-state.json.new").toPath();
             Files.write(temporary,saved.toString().getBytes("UTF-8"),StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE);
             Files.move(temporary,new File(getFilesDir(),"ce32-restart-state.json").toPath(),StandardCopyOption.ATOMIC_MOVE);
@@ -555,6 +757,7 @@ public final class ManagerCeProbe32 extends ManagerSessionProbe32 {
             try{
                 StringWriter stack=new StringWriter();error.printStackTrace(new PrintWriter(stack));
                 result.put("validation","FAIL").put("error",redact(error.toString())).put("errorStack",redact(stack.toString()));
+                try{closeKeyguardObserver();}catch(Exception observerCleanup){result.put("keyguardObserverCleanupError",observerCleanup.toString());}
                 if(ui(()->runtime!=null && (runtime.running() || runtime.starting() || runtime.stopping())))stop();
                 restoreInitTrial();
                 JSONObject failed=session(true);failed.put("nativeLog",redact(failed.optString("nativeLog")));

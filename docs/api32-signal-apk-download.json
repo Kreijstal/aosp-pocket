@@ -82,5 +82,20 @@
     "physicalPhoneVerified": false,
     "productionReleaseReady": false,
     "terminalStateEvidence": "out/api32/installd-core48-signal-terminal-state.json"
+  },
+  "currentCodec136Signal139Trial": {
+    "status": "PASS_SIGNAL139_GENUINE_PLAY_API32_HOME_REOPEN_NETWORK_INSTALLD_CURRENT136_DEFAULT32",
+    "runId": "e9ca4d2440eb4ae28a38ed0c040dc5a0",
+    "imageVersion": "0.78.136",
+    "imageSha256": "86cc3e1d1f09563cdc5464a1cd17744186d4e5f1cd4b960a037ae4c960025d65",
+    "managerSha256": "1b660471e3e280f191d9f39a8d6ff21e9f457aec20e16ffb0c4d565a305bce8c",
+    "sourcePinsVerified": 803,
+    "evidence": "out/api32/signal139-app-result/independent-check.json",
+    "evidenceSha256": "95058833ebd8da1358fb948e3ac26da27e0295c7216e45889ebeb4555cd39ccf",
+    "appModified": false,
+    "sampledPeakChildren": 29,
+    "accountOperationsVerified": false,
+    "physicalPhoneVerified": false,
+    "productionReleaseReady": false
   }
 }

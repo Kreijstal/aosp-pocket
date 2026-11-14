@@ -22,6 +22,70 @@ PACKAGE='dev.kreijstal.aosppocket.api32managerimage'
 ACTIVITY=PACKAGE+'/dev.kreijstal.aosppocket.runtime.ManagerAppProbe32'
 
 
+def _host_process_table(adb):
+    text=adb('shell','ps -A -o PID,UID,NAME:128')
+    lines=text.splitlines()
+    if not lines or lines[0].split()!=['PID','UID','NAME']:raise RuntimeError('Incomplete host process observation')
+    rows={}
+    for line in lines[1:]:
+        row=line.split(None,2)
+        if len(row)!=3 or not row[0].isdigit() or not row[1].isdigit() or int(row[0]) in rows:
+            raise RuntimeError('Malformed host process observation')
+        rows[int(row[0])]=(int(row[1]),row[2])
+    if rows.get(1)!=(0,'init'):raise RuntimeError('Host process observation lacks init')
+    return text,rows
+
+
+def _host_process_start(adb,pid):
+    # A process name is mutable during Android startup. Its kernel birth time
+    # is not. Explicit absence is distinct from a denied or incomplete read.
+    value=adb('shell','if [ -d /proc/'+str(pid)+' ]; then cat /proc/'+str(pid)+'/stat; else echo POCKET_HOST_PID_ABSENT; fi').strip()
+    if value=='POCKET_HOST_PID_ABSENT':return None
+    end=value.rfind(') ')
+    fields=value[end+2:].split() if end>=0 else []
+    if not value.startswith(str(pid)+' (') or len(fields)<20 or len(fields[0])!=1 or not fields[19].isdigit():
+        raise RuntimeError('Incomplete host process birth observation')
+    return int(fields[19]),fields[0]
+
+
+def pin_host_process_identity(adb,pid,package,uid):
+    if type(pid) is not int or pid<=0 or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_.]+',package):
+        raise ValueError('Invalid pinned host process')
+    if type(uid) is not int or uid<10000:raise ValueError('Invalid pinned host UID')
+    _,rows=_host_process_table(adb)
+    start=_host_process_start(adb,pid)
+    if rows.get(pid,(None,None))[0]!=uid or start is None or start[1] in ('Z','X'):
+        raise RuntimeError('Cannot pin a live Manager process with the package UID')
+    return {'pid':pid,'uid':uid,'startTimeTicks':start[0]}
+
+
+def host_process_exit_observation(adb,pid,package,identity=None):
+    """Prove parent loss with kernel identity, never its mutable process name."""
+    if type(pid) is not int or pid<=0 or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_.]+',package):
+        raise ValueError('Invalid pinned host process')
+    if identity is not None and (identity.get('pid')!=pid or type(identity.get('uid')) is not int
+            or identity['uid']<10000 or type(identity.get('startTimeTicks')) is not int or identity['startTimeTicks']<0):
+        raise ValueError('Invalid pinned host identity')
+    text,rows=_host_process_table(adb)
+    start=_host_process_start(adb,pid)
+    if start is None:reason='proc-absent'
+    elif identity is not None and start[0]!=identity['startTimeTicks']:reason='pid-reused'
+    elif start[1] in ('Z','X'):reason='terminated'
+    else:
+        if identity is not None and pid in rows and rows[pid][0]!=identity['uid']:
+            raise RuntimeError('Host process UID changed without a new birth time')
+        return None
+    result={'pid':pid,'package':package,'originalProcessAbsent':start is None or reason=='pid-reused',
+            'originalProcessExited':True,'identityReason':reason,'processList':text}
+    if identity is not None:result['expectedIdentity']=identity
+    if reason=='pid-reused':
+        result['pidReusedBy']=rows.get(pid,(None,None))[1]
+        result['observedIdentity']={'pid':pid,'uid':rows.get(pid,(None,None))[0],'startTimeTicks':start[0]}
+    try:result['exitInfo']=adb('shell','dumpsys activity exit-info '+package)
+    except Exception as error:result['exitInfoError']=str(error)
+    return result
+
+
 def audio_subworkloads_verified(app,spec):
     """Separate audio evidence never turns a failed combined AV trial into a pass."""
     if spec.get('package')!='dev.kreijstal.pocketav32test' or not app.get('avWorkloadRepeated'):return False
@@ -118,6 +182,19 @@ def av_workload_verified(app,spec):
                         and all(t>=0 for t in times) and all(times[i]<times[i+1] for i in range(len(times)-1))
                         and audio.get('minPcm',0)<0<audio.get('maxPcm',0) and audio['maxPcm']-audio['minPcm']>100
                         and 50<audio.get('rms',0)<32767):return False
+        if spec.get('requireExternalPrivateIo'):
+            if not isinstance(p.get('nonce'),str) or not p['nonce']:return False
+            external=p.get('externalStorage',{});payload=('Pocket AV external '+p['nonce']+'\n').encode()
+            prefix='/storage/emulated/0/Android/data/'+spec['package']+'/files/pocket-av-'
+            if not (external.get('validation')=='PASS' and external.get('uid')==p['uid'] and external.get('nonce')==p['nonce']
+                    and external.get('path')==prefix+p['nonce'] and external.get('bytes')==len(payload)
+                    and external.get('sha256')==hashlib.sha256(payload).hexdigest()
+                    and external.get('exclusiveCreate') is True and external.get('syncCompleted') is True and external.get('readbackVerified') is True):return False
+            if previous:
+                old=external.get('previousWitness',{});old_payload=('Pocket AV external '+previous['nonce']+'\n').encode()
+                if not (old.get('nonce')==previous['nonce'] and old.get('path')==prefix+previous['nonce']
+                        and old.get('bytes')==len(old_payload) and old.get('sha256')==hashlib.sha256(old_payload).hexdigest()):return False
+            elif 'previousWitness' in external:return False
         if not p.get('nonce') or p.get('finishedUptimeMillis',0)<p.get('startedUptimeMillis',1):return False
         if previous and (p['nonce']==previous['nonce'] or p['startedUptimeMillis']<previous['finishedUptimeMillis']):return False
         previous=p
@@ -252,10 +329,84 @@ def cross_uid_private_verified(app,spec,nonce):
                 and 'crossUidPrivateDenied' in proof.get('passed',[]) and len(denials)==len(matrix)
                 and all(d.get('errno') in [1,2,13] for d in denials)
                 and {(d.get('path'),d.get('operation'),d.get('flags')) for d in denials}==matrix):return False
-    return not any(k in app for k in ['storageOwnerCleanupError','storageOwnerRequestCleanupError','storageRequestCleanupError'])
+    return (not any(k in app for k in ['storageOwnerCleanupError','storageOwnerRequestCleanupError','storageRequestCleanupError'])
+        and (not spec.get('requireVirtualAliases') or virtual_alias_paths_verified(app,spec,nonce)))
 
 
-def namespace_syscalls_verified(app,nonce):
+def virtual_alias_paths_verified(app,spec,nonce):
+    aliases=['/mnt/runtime/default/emulated/0','/mnt/runtime/read/emulated/0',
+        '/mnt/runtime/write/emulated/0','/mnt/user/0/primary']
+    matrix=set()
+    for area in ['data','obb']:
+        relative='/Android/'+area+'/'+spec['storageOwner']['package']+('/files' if area=='data' else '')
+        for alias in aliases:
+            directory=alias+relative;path=directory+'/pocket-canary-'+nonce
+            matrix.update([(path,'open',0),(path,'open',0x200000),
+                (directory,'open',0x10000),(directory,'open',0x210000),(path,'stat',None)])
+    for key in ['firstLaunch','reopened']:
+        state=app.get(key,{});proof=state.get('externalVolumeApp',{});reads=proof.get('virtualAliasReads',[])
+        denials=proof.get('virtualAliasPrivateDenials',[])
+        canonical='/storage/emulated/0/Android/data/'+spec['package']+'/files/pocket-'+nonce
+        expected={alias+canonical[len('/storage/emulated/0'):] for alias in aliases+['/data/media/0','/system-data/media/0']}
+        if not (proof.get('validation')=='PASS' and proof.get('nonce')==nonce and proof.get('uid')==state.get('uid')
+                and proof.get('virtualAliasesVerified') is True and 'virtualAliases' in proof.get('passed',[])
+                and len(reads)==6 and {v.get('path') for v in reads}==expected
+                and all(v.get('canonicalPath')==canonical and v.get('readVerified') is True
+                    and isinstance(v.get('inode'),int) and v['inode']>0 and v.get('bytes',0)>0 for v in reads)
+                and len({(v.get('inode'),v.get('device'),v.get('bytes')) for v in reads})==1
+                and len(denials)==len(matrix) and all(d.get('errno') in [1,2,13] for d in denials)
+                and {(d.get('path'),d.get('operation'),d.get('flags')) for d in denials}==matrix):return False
+    return True
+
+
+def launcher_recents_verified(app,image,nonce):
+    record=app.get('launcherRecents',{});value=record.get('proof',{});configuration=record.get('configuration',{})
+    launcher='system_ext/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk'
+    expected=image.get('manifest',{}).get('entries',{}).get(launcher,{}).get('sha256')
+    if not (record.get('validation')=='PASS' and record.get('exit')==0 and value.get('validation')=='PASS'
+            and value.get('sdk')==32 and value.get('nonce')==nonce and isinstance(value.get('pid'),int) and value['pid']>0
+            and configuration.get('schema')==1 and configuration.get('sdk')==32
+            and configuration.get('mainClass')=='dev.kreijstal.aosppocket.guest.LauncherRecentsProbe32'
+            and configuration.get('installedLauncherPath')=='/'+launcher
+            and isinstance(expected,str) and re.fullmatch('[a-f0-9]{64}',expected)
+            and configuration.get('installedLauncherSha256')==expected
+            and configuration.get('installedLauncherCertificateSha256')=='a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc'
+            and configuration.get('originalApk',{}).get('sha256')=='2204aa1c0497881fb83a8b298eaa83c2f4d4cc6b1674c919cfd895d32178b31d'):return False
+    for key in ['original','patched']:
+        side=value.get(key,{});patched=key=='patched'
+        if not (side.get('patched') is patched and side.get('originalNullNpeReproduced') is (not patched)
+                and side.get('nullArrayEmptyFallbackVerified') is patched and side.get('serviceCalls')==6
+                and side.get('loader')=='dalvik.system.DexClassLoader'
+                and all(side.get(flag) is True for flag in ['disconnectedAndEmptyFallbacksVerified','nonnullTaskIdentityAndOrderPreserved',
+                    'remoteExceptionFallbackPreserved','securityAndStateErrorsPreserved','queryArgumentsPreserved'])):return False
+    lines=[line for line in record.get('output','').splitlines() if line.startswith('POCKET_LAUNCHER_RECENTS_NULL32 ')]
+    try:return len(lines)==1 and json.loads(lines[0].split(' ',1)[1])==value
+    except (ValueError,TypeError):return False
+
+
+def startup_broadcast_diagnostics_verified(app):
+    snapshots=app.get('startupBroadcastSnapshots',[]);owner=app.get('startupOwnerPid',0);nonces=set()
+    if not (snapshots and owner>0 and app.get('startupBroadcastDiagnosticErrors')==[]):return False
+    for snapshot in snapshots:
+        nonce=snapshot.get('nonce','');queues=snapshot.get('queues',[])
+        if not (snapshot.get('schema')==1 and snapshot.get('sdk')==32 and snapshot.get('uid')==1000
+                and snapshot.get('pid')==owner and snapshot.get('metadataOnly') is True
+                and snapshot.get('source')=='LocalServices.ActivityManagerService.mBroadcastQueues'
+                and re.fullmatch('[0-9a-f]{32}',nonce) and nonce not in nonces
+                and len(queues)==3 and {q.get('name') for q in queues}=={'foreground','background','offload'}):return False
+        nonces.add(nonce)
+        for queue in queues:
+            if queue.get('recordLimit')!=3 or len(queue.get('records',[]))>3:return False
+            for record in queue.get('records',[]):
+                count=record.get('receiverCount',-1);next_receiver=record.get('nextReceiver',-1);slots=record.get('deliverySlots',-1)
+                if not (0<=next_receiver<=count<=10000 and record.get('state') in range(5)
+                        and count<=slots<=10000
+                        and sum(record.get('delivery'+name,-10000) for name in ['Pending','Delivered','Skipped','Timeout'])==slots
+                        and record.get('receiverAgeMillis',-1)>=0):return False
+    return True
+
+
+def namespace_syscalls_verified(app,nonce,require_ce_opath=False):
     required={'relativeDotdot','symlinkBeforeDotdot','symlinkPrivateDenied','trailingSlash',
         'pollAndFstatfs','renamedDirectoryAndProcFd','cwdRelative','unlinkedHeldFile','unlinkedHeldDirectory'}
     for key in ['firstLaunch','reopened']:
@@ -265,7 +416,8 @@ def namespace_syscalls_verified(app,nonce):
                 and namespace.get('validation')=='PASS' and namespace.get('cleanupComplete') is True
                 and namespace.get('directInProcessSyscalls') is True and namespace.get('uid',0)>=10000
                 and namespace.get('uid')==proof.get('uid')==state.get('uid')
-                and set(namespace.get('passed',[]))==required):return False
+                and set(namespace.get('passed',[]))==required
+                and (not require_ce_opath or namespace.get('ceDirectoryOpathVerified') is True)):return False
     return True
 
 
@@ -423,6 +575,15 @@ def volume_lifecycle_verified(app,spec,nonce,provider_sha):
         and not any(k in app for k in ['volumeRecovery','volumeRecoveryError','storagePhaseCleanupError']))
 
 
+def image_reuse_verified(reuse,image):
+    counters=['reusedFiles','replacedFiles','reusedBytes','writtenBytes']
+    if any(type(reuse.get(k)) is not int or reuse[k]<0 for k in counters):return False
+    return bool(reuse.get('imageSha256')==image['sha256'] and reuse.get('sdk')==32
+        and reuse['reusedFiles']>0 and reuse['reusedFiles']+reuse['replacedFiles']==len(image['manifest']['entries'])
+        and reuse['reusedBytes']>0 and reuse['reusedBytes']+reuse['writtenBytes']==image['unpacked_bytes']
+        and (reuse['replacedFiles']>0 or reuse['writtenBytes']==0))
+
+
 def external_volume_verified(app,native,console,mounts=1):
     # The core's volume lifecycle uses stderr in init's inherited service
     # stream, while framework liblog is captured separately as nativeLog.
@@ -528,6 +689,8 @@ def main():
     assert 'DEBUGGABLE' not in adb('shell','dumpsys package '+package)
     installed=adb('shell','pm path '+package).splitlines();assert len(installed)==1 and installed[0].startswith('package:/data/app/')
     assert adb('shell','sha256sum '+shlex.quote(installed[0][8:]),timeout=90).split()[0]==metadata['sha256']
+    host_uids=re.findall(r'^package:'+re.escape(package)+r' uid:(\d+)$',adb('shell','pm list packages -U '+package),re.M)
+    assert len(host_uids)==1;report['hostUid']=int(host_uids[0])
     if args.require_fresh_install:report['freshHostSandboxVerified']=True
     requests=[]
     class Handler(http.server.SimpleHTTPRequestHandler):
@@ -555,18 +718,35 @@ def main():
         adb('shell','am force-stop '+package)
         extra=' --ez require_network true' if args.require_network else ''
         if args.require_pending_install:extra+=' --ez require_pending_install true'
+        with (work/'app-launch.json').open('x') as launch:
+            json.dump({'runId':report['runId'],'package':package,'apkSha256':metadata['sha256']},launch)
         print(adb('shell','am start -n '+activity+' --es probe_run_id '+report['runId']+extra),flush=True)
         try:
             pid=adb('shell','pidof '+package)
-            if pid.isdigit() and int(pid)>0:report['hostPid']=int(pid)
+            if pid.isdigit() and int(pid)>0:
+                report['hostPid']=int(pid)
+                report['hostProcessIdentity']=pin_host_process_identity(adb,int(pid),package,report['hostUid'])
         except Exception as error:report['hostPidLookupError']=str(error)
-        last=None;errors=0;deadline=time.monotonic()+1500
+        last=None;last_state={};errors=0;deadline=time.monotonic()+1500;next_host_check=0
         while time.monotonic()<deadline:
+            if report.get('hostPid') and not args.require_manager_crash_recovery and time.monotonic()>=next_host_check:
+                next_host_check=time.monotonic()+5
+                try:
+                    exited=host_process_exit_observation(adb,report['hostPid'],package,report.get('hostProcessIdentity'))
+                    if exited is None and 'hostProcessIdentity' not in report:
+                        report['hostProcessIdentity']=pin_host_process_identity(adb,report['hostPid'],package,report['hostUid'])
+                except Exception as error:
+                    observations=report.setdefault('hostLivenessObservationErrors',[]);observations.append(str(error)[:500]);del observations[:-8]
+                    exited=None
+                if exited is not None:
+                    report['hostProcessExit']=exited;report['app']=last_state;report['strictPassed']=False
+                    raise RuntimeError('Exact Manager parent exited; preserve the failed run without restarting it')
             try:output=adb('shell','dumpsys activity '+activity+' pocket-app32')
             except Exception:errors+=1;time.sleep(2);continue
             rows=[line.strip().split('=',1)[1] for line in output.splitlines() if line.strip().startswith('POCKET_SESSION32=')]
             state=json.loads(base64.b64decode(rows[-1],validate=True)) if rows else {}
             if state.get('runId')!=report['runId']:time.sleep(1);continue
+            last_state=state
             if args.require_manager_crash_recovery and state.get('stage')=='awaiting-manager-crash' and not report.get('managerCrashRequested'):
                 old=state['managerHostPid'];assert old==report['hostPid'] and state['managerCrashResume'] is False
                 assert re.fullmatch('[a-f0-9]{64}',state['crashCheckpointSha256'])
@@ -616,6 +796,11 @@ def main():
             if state.get('validation'):report['app']=state;break
             time.sleep(1)
         else:raise TimeoutError('App validation timed out; inspect the exact live guest before any restart')
+        if not args.require_manager_crash_recovery:
+            final_identity=pin_host_process_identity(adb,report['hostPid'],package,report['hostUid'])
+            report['hostFinalProcessIdentity']=final_identity
+            report['hostParentIdentityVerified']=final_identity==report.get('hostProcessIdentity')
+            if not report['hostParentIdentityVerified']:raise RuntimeError('Manager parent identity changed during the original nonce')
         report['pollErrors']=errors
         for name,command in commands:
             report[name+'After']=adb('shell',command);assert report[name+'After']==report[name+'Before']
@@ -634,11 +819,7 @@ def main():
         report['initStop']=re.findall(r'API32_INIT_STOPPED reaped=(\d+) remaining=(\d+) failed=(\d+)',console)
         stopped=report['app'].get('stoppedSession',{})
         if args.require_image_reuse:
-            reuse=report['app'].get('imageInstallStats',{});entries=image['manifest']['entries']
-            report['imageReuseVerified']=bool(reuse.get('imageSha256')==image['sha256'] and reuse.get('sdk')==32
-                and reuse.get('reusedFiles',0)>0 and reuse.get('replacedFiles',0)>0
-                and reuse.get('reusedFiles',0)+reuse.get('replacedFiles',0)==len(entries)
-                and reuse.get('reusedBytes',0)>0 and reuse.get('reusedBytes',0)+reuse.get('writtenBytes',0)==image['unpacked_bytes'])
+            report['imageReuseVerified']=image_reuse_verified(report['app'].get('imageInstallStats',{}),image)
         if image.get('child_supervision')=='kernel-subreaper':
             descendants=re.findall(r'API32_INIT_DESCENDANTS_STOPPED reaped=(\d+) signalled=(\d+) remaining=(\d+) query_error=(-?\d+)',console)
             report['descendantStop']=descendants
@@ -726,8 +907,16 @@ def main():
             report['strictPassed']=report['strictPassed'] and report['ordinaryExternalVolumeVerified']
             report['validation']='PASS' if report['strictPassed'] else 'FAIL'
         if app.get('requireNamespaceSyscalls') is True:
-            report['ordinaryNamespaceSyscallsVerified']=namespace_syscalls_verified(report['app'],report['runId'])
+            report['ordinaryNamespaceSyscallsVerified']=namespace_syscalls_verified(report['app'],report['runId'],app.get('requireCeDirectoryOpath') is True)
             report['strictPassed']=report['strictPassed'] and report['ordinaryNamespaceSyscallsVerified']
+            report['validation']='PASS' if report['strictPassed'] else 'FAIL'
+        if app.get('requireBootBroadcastDiagnostics') is True:
+            report['startupBroadcastDiagnosticsVerified']=startup_broadcast_diagnostics_verified(report['app'])
+            report['strictPassed']=report['strictPassed'] and report['startupBroadcastDiagnosticsVerified']
+            report['validation']='PASS' if report['strictPassed'] else 'FAIL'
+        if app.get('requireLauncherRecentsNullGuard') is True:
+            report['launcherRecentsNullGuardVerified']=launcher_recents_verified(report['app'],image,report['runId'])
+            report['strictPassed']=report['strictPassed'] and report['launcherRecentsNullGuardVerified']
             report['validation']='PASS' if report['strictPassed'] else 'FAIL'
         if image.get('private_dir_policy')=='provider-fuse-v1':
             expected=image['manifest']['entries']['apex/com.android.mediaprovider/priv-app/MediaProvider/MediaProvider.apk']['sha256']

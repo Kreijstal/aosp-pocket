@@ -22,9 +22,11 @@ from api32_runtime_boot import NORMAL_CORE_SERVICES,eager_camera_boot,shared_gat
 from build_api32_core import build_core
 from build_api32_crypto import build_crypto
 from build_api32_tombstoned import build_tombstoned
+from build_api32_timecheck import build as build_timecheck,configure_audio_service
 from build_api32_network import build_network
 from validate_native_loader import validate as validate_loader
 from api32_device_profile import device_profile_payloads
+from api32_codec_policy import configure_codec_timeout_profile
 
 def build_loader(ndk,out):
     target=out/'pocket-loader';cc=ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang'
@@ -69,6 +71,7 @@ def main():
     p.add_argument('--external-volume',action='store_true',help='Select the rootless emulated-volume session backend; requires the matching Manager host adapter')
     p.add_argument('--installd-in-core',action='store_true',help='Build and select the complete pinned installd in the UID-0 core')
     p.add_argument('--mediaprovider-dir',type=Path,help='Use the verified source-built private-view MediaProvider package receipt')
+    p.add_argument('--launcher-dir',type=Path,help='Use the verified original-certificate Launcher null-result backport')
     args=p.parse_args();source=args.fixture_root.resolve();out=args.out.resolve()
     if args.mediaprovider_dir and not args.external_volume:p.error('The private provider view requires --external-volume')
     url=urllib.parse.urlsplit(args.url)
@@ -102,9 +105,20 @@ def main():
     boot=boot.replace('/system/bin/pocket-boot-probe-api32','/system/bin/pocket-runtime-prepare-api32')
     boot=boot.replace('/system/bin/pocket-framework-probe-api32','/system/bin/pocket-runtime-wait-api32')
     boot=eager_camera_boot(boot)
+    # A ten-second poll count can expire during cold ELF loading. This client
+    # waits for real publication and a successful Binder ping with a monotonic
+    # deadline, still inside DirectSession's unchanged overall boot timeout.
+    from build_api32_service_wait import build_service_wait
+    readiness=build_service_wait(args.ndk,out/'service-readiness')
+    old_wait='/system/bin/pocket-servicemanager-api32 wait "$1"'
+    if boot.count(old_wait)!=1:raise ValueError('Expected one normal service readiness command')
+    boot=boot.replace(old_wait,'/system/bin/pocket-runtime-service-wait-api32 "$1"')
     generated={'system/etc/init/pocket-runtime.rc':rc.encode(),
         'system/etc/pocket-runtime-boot.sh':boot.encode(),
+        'system/bin/pocket-runtime-service-wait-api32':readiness.read_bytes(),
         'system/bin/pocket-runtime-wait-api32':(source/'system/bin/pocket-framework-probe-api32').read_bytes()}
+    profile,codec_policy=configure_codec_timeout_profile((source/'system/etc/pocket-profile.prop').read_text())
+    generated['system/etc/pocket-profile.prop']=profile.encode()
     device_profile,device_payloads,omitted_package_dirs=device_profile_payloads()
     generated.update(device_payloads)
     generated['system/etc/pocket-manager-control32']=b'input-control-v1\n'
@@ -119,6 +133,14 @@ def main():
     generated['system/framework/pocket-tools.jar']=build_runtime_tools(out/'runtime-tools').read_bytes()
     generated['system/framework/pocket-zygote.jar']=build_bootstrap(out/'bootstrap').read_bytes()
     if args.external_volume:generated['system/etc/pocket-external-volume32']=b'rootless-v1\n'
+    launcher=None
+    if args.launcher_dir:
+        from build_api32_launcher import load_package
+        launcher_dir=args.launcher_dir.resolve();launcher=load_package(launcher_dir)
+        launcher_path='system_ext/priv-app/Launcher3QuickStep/Launcher3QuickStep.apk'
+        if hashlib.file_digest((source/launcher_path).open('rb'),'sha256').hexdigest()!=launcher['baseApkSha256']:
+            raise ValueError('Launcher backport does not match the immutable source image')
+        generated[launcher_path]=(launcher_dir/'Launcher3QuickStep.apk').read_bytes()
     provider=None
     if args.mediaprovider_dir:
         from package_api32_mediaprovider import load_package
@@ -142,6 +164,9 @@ def main():
         rc,boot=shared_installd_frontend(rc,boot,generated['system/bin/pocket-core-api32'])
     if set(re.findall(r'^service (\S+) ',rc,re.M))!=NORMAL_CORE_SERVICES-{'gatekeeperd'}-({'pocket-installd'} if args.installd_in_core else set()):
         raise ValueError('Unexpected shared-frontend runtime service set')
+    rc=configure_audio_service(rc)
+    timecheck=build_timecheck(args.ndk.resolve(),out/'audio-timecheck')
+    generated['system/lib64/libpocket_timecheck_api32.so']=timecheck.read_bytes()
     generated['system/etc/init/pocket-runtime.rc']=rc.encode()
     generated['system/etc/pocket-runtime-boot.sh']=boot.encode()
     crypto_info=json.loads((crypto_dir/'build.json').read_text())
@@ -208,6 +233,7 @@ exec /system/bin/pocket-app-process-api32 -Xnorelocate -Xnoimage-dex2oat -Ximage
             entries[name]={'size':len(data),'crc32':zlib.crc32(data),'sha256':hashlib.sha256(data).hexdigest(),'mode':mode}
         manifest={'schema':1,'profile':'api32-direct','sdk':32,'abi':'arm64-v8a','runtime':1,'version':args.version,
             'experimental':True,'service_layout':2,'boot_protocol':'api32-v1','storage':'app-private',
+            'codec_timeout_multiplier':codec_policy['codecTimeoutMultiplier'],
             'child_supervision':'kernel-subreaper','crypto_frontend':'same-uid-v1','entries':entries}
         if args.external_volume:manifest['external_volume']='rootless-v1'
         if args.installd_in_core:manifest['installd_frontend']='same-uid-v1'
@@ -222,8 +248,10 @@ exec /system/bin/pocket-app-process-api32 -Xnorelocate -Xnoimage-dex2oat -Ximage
     (out/'image-inputs.lock.json').write_text(json.dumps({'sources':json.loads((ROOT/'sources.lock.json').read_text())['guest_api32'],
         'imageSha256':image['sha256'],'files':len(entries),'sourceFixture':str(source),'productionManagerVerified':False,
         'freshImageBootVerified':False,'rendererWorkerScheduling':False,'rootlessExternalVolumeSelected':args.external_volume,
-        'mediaProviderNativePackage':provider,'networkSourceBuild':network_info,'cryptoSourceBuild':crypto_info,
+        'mediaProviderNativePackage':provider,'launcherNullRecentsPackage':launcher,'networkSourceBuild':network_info,'cryptoSourceBuild':crypto_info,
         'nativeCoreSourceBuild':core_info,
+        'codecTimeoutPolicy':codec_policy,
+        'audioTimecheckSourceBuild':json.loads((out/'audio-timecheck/build.json').read_text()),
         'loaderSourceBuild':json.loads((out/'loader-build.json').read_text()),
         'deviceProfile':device_profile},indent=2)+'\n')
     print('API32_IMAGE_BUILD_PASS',target,'files='+str(len(entries)),'bytes='+str(image['bytes']),'sha256='+image['sha256'])

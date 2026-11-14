@@ -28,7 +28,7 @@ if __name__=='__main__':
     spec={'package':meta['package'],'version':'0.1','versionCode':1,'minSdk':32,'targetSdk':32,'certificateSha256':cert[0],
         'apkModified':False,'url':'http://127.0.0.1:8794/'+archive.name,'archiveBytes':archive.stat().st_size,
         'archiveSha256':hashlib.file_digest(archive.open('rb'),'sha256').hexdigest(),'files':[{'name':'base.apk','bytes':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}],
-        'proof':'media-av-v1','requireCleanAudioClose':True,'requireAllCameras':True,'requireCameraRecorder':True,'requireCameraRecorderAudio':True}
+        'proof':'media-av-v1','requireCleanAudioClose':True,'requireAllCameras':True,'requireCameraRecorder':True,'requireCameraRecorderAudio':True,'requireExternalPrivateIo':True}
     (out/'app-spec.json').write_text(json.dumps(spec,indent=2)+'\n')
     meta.update(scope='Ordinary application UID with normal CAMERA/RECORD_AUDIO runtime permissions; public AudioTrack, AudioRecord, all-camera Camera2 YUV/JPEG and MediaRecorder Surface AVC plus microphone AAC in MP4, decoded pixels/PCM and overlapping timestamps. No runtime pass claimed.',runtimeValidated=False,
         sources={str(path.relative_to(ROOT)):hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted((ROOT/'runtime/tests/api32/avapp').iterdir()) if path.is_file()})

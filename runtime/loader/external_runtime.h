@@ -16,6 +16,31 @@ static void external_files_start(void) {
     external_root_path(path,"/.pocket-external-namespace-enabled");
     external_namespace_enabled=external_files_enabled && raw(__NR_newfstatat,AT_FDCWD,(long)path,(long)&st,AT_SYMLINK_NOFOLLOW,0,0)==0 && S_ISREG(st.st_mode);
 }
+static int external_path_alias(const char* path,const char* from,const char* to,char* out) {
+    size_t base=length(from,PATH_LIMIT);
+    if(!prefix(path,from,base))return 0;
+    size_t size=length(path,PATH_LIMIT),head=length(to,PATH_LIMIT);
+    if(size==PATH_LIMIT || head+size-base>=PATH_LIMIT)return -ENAMETOOLONG;
+    memcpy(out,to,head);memcpy(out+head,path+base,size-base+1);return 1;
+}
+static int external_virtual_alias(const char* original,char* out) {
+    if(!external_namespace_enabled || external_storage_mode==3)return 0;
+    int rc=external_path_alias(original,"/mnt/user/0/primary","/storage/emulated/0",out);if(rc)return rc;
+    const char* views[]={"/mnt/runtime/default/emulated","/mnt/runtime/read/emulated","/mnt/runtime/write/emulated"};
+    for(unsigned i=0;i<sizeof(views)/sizeof(*views);i++) {
+        rc=external_path_alias(original,views[i],"/storage/emulated",out);if(rc)return rc;
+    }
+    // CE retains names/content in its VFS and seals the physical lower tree.
+    // Do not require an existing raw O_PATH parent to recognize a known media
+    // name. The real provider resolves it and checks the caller's permission.
+    if(guest_uid[1] && guest_uid[1]!=1000) {
+        const char* p=original;
+        if(prefix(p,pocket_loader_config.root,root_size))p+=root_size;
+        rc=external_path_alias(p,"/data/media","/storage/emulated",out);if(rc)return rc;
+        return external_path_alias(p,"/system-data/media","/storage/emulated",out);
+    }
+    return 0;
+}
 static int external_file_path_policy(int dir,const char* original,const char* mapped,char* out,char* temporary,unsigned followFinal) {
     // MediaProvider's backing view must not recursively re-enter itself.
     if(external_storage_mode==3 && prefix(original,"/storage/emulated",17))return 0;
@@ -28,6 +53,7 @@ static int external_file_path_policy(int dir,const char* original,const char* ma
         size_t size=length(alias,PATH_LIMIT);if(size+20>=PATH_LIMIT)return -ENAMETOOLONG;
         memcpy(out,"/storage/emulated/0",19);memcpy(out+19,alias,size+1);return 1;
     }
+    int virtualAlias=external_virtual_alias(original,out);if(virtualAlias)return virtualAlias;
     // The volume service prepares backing directories before a FUSE session
     // exists. Its privileged lower accesses are not emulated mount accesses.
     if((!guest_uid[1] || guest_uid[1]==1000 || external_storage_mode==3) && prefix(original,"/data/media",11))return 0;

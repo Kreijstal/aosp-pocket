@@ -119,12 +119,7 @@ final class RemoteImage {
         long remaining=archive.isFile()?0:Math.max(0,packed-(partial.isFile()?partial.length():0));
         // Installed files are replaced one at a time after complete validation;
         // no second full unpacked image is needed alongside existing /data.
-        long largest=0,missing=0;
-        for(Map.Entry<String,ImageArchive.Entry> item:files.entrySet()) {
-            File target=ImageArchive.target(root,item.getKey());long size=item.getValue().size;
-            largest=Math.max(largest,size);missing+=Math.max(0,size-(target.isFile()?target.length():0));
-        }
-        if(context.getFilesDir().getUsableSpace()<remaining+missing+largest+32L*1024*1024)
+        if(context.getFilesDir().getUsableSpace()<ImageArchive.requiredFreeSpace(root,files,remaining))
             throw new IOException("Not enough storage to download and set up Android "+androidVersion);
         progress.phase("Downloading Android "+androidVersion);
         File payload=ImageDownload.fetch(new URL(image.getString("url")),downloads,packed,sha,progress::update);

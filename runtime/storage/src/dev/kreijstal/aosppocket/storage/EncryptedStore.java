@@ -235,9 +235,17 @@ public final class EncryptedStore implements AutoCloseable {
         public void flush()throws IOException,GeneralSecurityException {
             owned();if(!prepared || flushed)throw new IllegalStateException("Invalid CE commit state");flushed=true;
             if(!pending)return;
+            // Stage the immutable ciphertext first so the filesystem can
+            // combine allocation and journal work across this transaction.
+            // Every new object is still forced before either its directory
+            // or the index that references it becomes durable. Reopen one
+            // object at a time to keep descriptor use independent of size.
             for(Entry e:captured.values())for(Map.Entry<Long,byte[]> b:e.dirty.entrySet()) {
-                String object=id();writeNew(objects.resolve(object),seal(contentKey,blockContext(e,b.getKey(),object),b.getValue()));
+                String object=id();writeNew(objects.resolve(object),seal(contentKey,blockContext(e,b.getKey(),object),b.getValue()),false);
                 e.blocks.put(b.getKey(),object);
+            }
+            for(Entry e:captured.values())for(Long block:e.dirty.keySet()) {
+                try(FileChannel file=FileChannel.open(objects.resolve(e.blocks.get(block)),StandardOpenOption.WRITE)){file.force(true);}
             }
             syncDirectory(objects);
             byte[] index=encode(captured);Path temporary=root.resolve("state-"+id());
@@ -367,9 +375,12 @@ public final class EncryptedStore implements AutoCloseable {
         return cipher.doFinal(sealed,12,sealed.length-12);
     }
     private static void writeNew(Path path,byte[] bytes)throws IOException {
+        writeNew(path,bytes,true);
+    }
+    private static void writeNew(Path path,byte[] bytes,boolean durable)throws IOException {
         try(FileChannel file=FileChannel.open(path,EnumSet.of(StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE),
             PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")))) {
-            ByteBuffer data=ByteBuffer.wrap(bytes);while(data.hasRemaining())file.write(data);file.force(true);
+            ByteBuffer data=ByteBuffer.wrap(bytes);while(data.hasRemaining())file.write(data);if(durable)file.force(true);
         }
     }
     private static byte[] readBounded(Path path,int max)throws IOException {
