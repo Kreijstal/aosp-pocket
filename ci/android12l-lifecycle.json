@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "historicalEvidence": "docs/android12l-deployment-evidence.json",
+  "binderCleanup": {
+    "resolved": false,
+    "fixCommit": null,
+    "regression": null
+  },
+  "fullLifecycle": null,
+  "historicalCrash": {
+    "path": "ci/fixtures/ce162-native-crash.json",
+    "sha256": "25dcd863549a052d4a562a2cf9eba792e8e10429446c6bc0a97cc7f80681cff6"
+  }
+}
