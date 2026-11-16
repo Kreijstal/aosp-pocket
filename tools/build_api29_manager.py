@@ -170,7 +170,7 @@ def main():
             if entry.filename in ['assets/api32-launcher-recents-spec.json','assets/api32-launcher-recents-probe.jar','assets/api32-launcher-recents-before.apk']:continue
             if external_native and entry.filename=='lib/arm64-v8a/'+EXTERNAL_LIBRARY:continue
             if args.ce_probe32 and entry.filename in ['assets/api32-ce-init','assets/api32-ce-init.json','assets/api32-ce-test.apk']:continue
-            if entry.filename in ['classes.dex','AndroidManifest.xml','assets/pocket-images.json','assets/sources.lock.json','assets/licenses/android10-NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz'] or entry.filename.startswith(('META-INF/','assets/api28-rootfs/','assets/default-guest/')):continue
+            if entry.filename in ['classes.dex','AndroidManifest.xml','assets/pocket-images.json','assets/sources.lock.json','assets/api32-product-identity.prop','assets/licenses/android10-NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz'] or entry.filename.startswith(('META-INF/','assets/api28-rootfs/','assets/default-guest/')):continue
             if args.app_probe32 and entry.filename in ['assets/api32-app-spec.json','assets/api32-network-client','assets/api32-dns-client']:continue
             if args.gatekeeper_client32 and entry.filename=='assets/api32-gatekeeper-client':continue
             if (args.app_probe32 or args.ce_probe32) and entry.filename in ['assets/api32-installd-client','assets/api32-installd-smoke.apk','assets/api32-installd-postboot']:continue
@@ -183,6 +183,7 @@ def main():
         if external_native:apk.write(args.external_native_dir/EXTERNAL_LIBRARY,'lib/arm64-v8a/'+EXTERNAL_LIBRARY)
         apk.writestr('assets/pocket-images.json',json.dumps(catalog,sort_keys=True,separators=(',',':'))+'\n')
         apk.write(ROOT/'sources.lock.json','assets/sources.lock.json')
+        if args.api32_catalog:apk.write(ROOT/'runtime/api32/product-identity.prop','assets/api32-product-identity.prop')
         apk.write(ROOT/'out/api29/reference/system/etc/NOTICE.xml.gz','assets/licenses/android10-NOTICE.xml.gz')
         if args.api32_catalog:apk.write(ROOT/'out/api32/android-probe/root/system/etc/NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz')
         if args.media_session_probe32:

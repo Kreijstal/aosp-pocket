@@ -1,0 +1,39 @@
+# Pocket 12L build identity: not an emulator product. Only build properties
+# say release-keys; system APKs keep their test signatures (no re-signing yet).
+ro.build.tags=release-keys
+ro.build.flavor=pocket_arm64-userdebug
+ro.build.display.id=pocket_arm64-userdebug 12 SE1B.240122.005 11418786 release-keys
+ro.build.description=pocket_arm64-userdebug 12 SE1B.240122.005 11418786 release-keys
+ro.build.product=pocket_arm64
+ro.build.fingerprint=Pocket/pocket_arm64/pocket_arm64:12/SE1B.240122.005/11418786:userdebug/release-keys
+ro.build.characteristics=default
+ro.product.board=pocket
+ro.system.build.tags=release-keys
+ro.system.build.fingerprint=Pocket/pocket_arm64/pocket_arm64:12/SE1B.240122.005/11418786:userdebug/release-keys
+ro.vendor.build.tags=release-keys
+ro.vendor.build.fingerprint=Pocket/pocket_arm64/pocket_arm64:12/SE1B.240122.005/11418786:userdebug/release-keys
+ro.product.build.tags=release-keys
+ro.product.build.fingerprint=Pocket/pocket_arm64/pocket_arm64:12/SE1B.240122.005/11418786:userdebug/release-keys
+ro.system_ext.build.tags=release-keys
+ro.system_ext.build.fingerprint=Pocket/pocket_arm64/pocket_arm64:12/SE1B.240122.005/11418786:userdebug/release-keys
+ro.product.name=pocket_arm64
+ro.product.device=pocket_arm64
+ro.product.model=AOSP Pocket
+ro.product.manufacturer=Pocket
+ro.product.brand=Pocket
+ro.product.vendor.name=pocket_arm64
+ro.product.vendor.device=pocket_arm64
+ro.product.vendor.model=AOSP Pocket
+ro.product.vendor.manufacturer=Pocket
+ro.product.vendor.brand=Pocket
+ro.product.product.name=pocket_arm64
+ro.product.product.device=pocket_arm64
+ro.product.product.model=AOSP Pocket
+ro.product.product.manufacturer=Pocket
+ro.product.product.brand=Pocket
+ro.product.system_ext.name=pocket_arm64
+ro.product.system_ext.device=pocket_arm64
+ro.product.system_ext.model=AOSP Pocket
+ro.product.system_ext.manufacturer=Pocket
+ro.product.system_ext.brand=Pocket
+

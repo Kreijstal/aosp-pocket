@@ -244,6 +244,14 @@ final class DirectImage {
             // defaults must follow the selected host geometry too.
             File profile=new File(root,"system/etc/pocket-profile.prop"),next=new File(profile.getPath()+".display-new");
             String content=new String(Files.readAllBytes(profile.toPath()),"UTF-8");
+            // Product identity belongs to Pocket, independently of the downloaded
+            // AOSP runtime revision. Reapply it after every image update.
+            Properties identity=new Properties();
+            try(Reader in=new InputStreamReader(context.getAssets().open("api32-product-identity.prop"),"UTF-8")) {
+                identity.load(in);
+            }
+            for(String key:new TreeSet<String>(identity.stringPropertyNames()))
+                content=property(content,key,identity.getProperty(key));
             content=property(content,"ro.crypto.state",CeStorage.enabled(root)?"encrypted":"unencrypted");
             if(CeStorage.enabled(root))content=property(content,"ro.crypto.type","file");
             Files.write(next.toPath(),geometry.properties(content,refreshHz).getBytes("UTF-8"));
