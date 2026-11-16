@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Direct Binder clients retain real kernel handles, buffer ownership, and
-// reference counting. Only their context-manager target is redirected.
+// reference counting. Their context manager and guest caller metadata follow
+// the same protocol as ordinary guest libbinder clients.
 #pragma once
 #include <linux/android/binder.h>
 #include <poll.h>
 #include "binder_identity.h"
+#include "binder_parcel.h"
 #define POCKET_BINDER_FDS 32
 #define POCKET_BINDER_CAP 65536
 struct PocketBinderFd {int key,state;uint32_t manager;uintptr_t node,cookie;};
@@ -180,12 +182,69 @@ static long binder_context(int fd,uint32_t*manager) {
  int state=__atomic_load_n(&f->state,__ATOMIC_ACQUIRE);if(state!=2)return state<0?state:-ETIMEDOUT;
  *manager=f->manager;return *manager?0:-EHOSTDOWN;
 }
+// Keep checked user copies below PIPE_BUF even for a large Parcel or a batch.
+static long binder_copy_from_user(void*out,uintptr_t source,size_t size) {
+ if(source>UINTPTR_MAX-size)return -EFAULT;
+ for(size_t at=0;at<size;) {
+  size_t count=size-at;if(count>PATH_LIMIT)count=PATH_LIMIT;
+  long result=copy_from_user((char*)out+at,source+at,count);if(result<0)return result;at+=count;
+ }
+ return 0;
+}
+static long binder_copy_to_user(uintptr_t target,const void*source,size_t size) {
+ if(target>UINTPTR_MAX-size)return -EFAULT;
+ for(size_t at=0;at<size;) {
+  size_t count=size-at;if(count>PATH_LIMIT)count=PATH_LIMIT;
+  long result=copy_to_user(target+at,(const char*)source+at,count);if(result<0)return result;at+=count;
+ }
+ return 0;
+}
+struct PocketBinderStage {struct PocketBinderStage*next;size_t size;};
+static void binder_free_stages(struct PocketBinderStage*stage) {
+ while(stage){struct PocketBinderStage*next=stage->next;size_t size=stage->size;raw(__NR_munmap,(long)stage,size,0,0,0,0);stage=next;}
+}
+static long binder_stage_identity(struct binder_transaction_data*tx,struct PocketBinderStage**stages) {
+ // DUMP, shell commands, replies and other tokenless control protocols retain
+ // their framing. Explicit host-bootstrap calls bypass this whole ioctl path.
+ if(tx->code<1 || tx->code>0x00ffffffu || tx->data_size<8)return 0;
+ unsigned char header[POCKET_BINDER_TOKEN_BYTES];
+ size_t count=tx->data_size;if(count>sizeof(header))count=sizeof(header);
+ long rc=binder_copy_from_user(header,tx->data.ptr.buffer,count);if(rc<0)return rc;
+ struct PocketBinderToken token;
+ if(!pocket_binder_token(header,count,&token) || token.format>=3)return 0;
+ // The kernel's maximum Binder mapping is 4 MiB. Bounds also make all size
+ // arithmetic below independent of untrusted binder_size_t values.
+ const size_t cap=4u*1024u*1024u;
+ if(tx->data_size>cap || tx->offsets_size>cap-tx->data_size)return -E2BIG;
+ if(tx->offsets_size%sizeof(binder_size_t))return -EINVAL;
+ size_t data_size=(size_t)tx->data_size,offsets_size=(size_t)tx->offsets_size;
+ size_t data_end=sizeof(struct PocketBinderStage)+data_size+POCKET_BINDER_IDENTITY_BYTES;
+ size_t offsets_at=(data_end+sizeof(binder_size_t)-1)&~(sizeof(binder_size_t)-1);
+ size_t allocation=offsets_at+offsets_size;
+ long memory=raw(__NR_mmap,0,allocation,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(memory<0)return memory;
+ struct PocketBinderStage*stage=(struct PocketBinderStage*)memory;
+ unsigned char*data=(unsigned char*)(stage+1);
+ binder_size_t*offsets=(binder_size_t*)((char*)stage+offsets_at);
+ rc=binder_copy_from_user(data+POCKET_BINDER_IDENTITY_BYTES,tx->data.ptr.buffer,data_size);
+ if(rc<0)goto failed;
+ rc=binder_copy_from_user(offsets,tx->data.ptr.offsets,offsets_size);if(rc<0)goto failed;
+ uint64_t identity=((uint64_t)guest_uid[1]<<32)|(uint32_t)raw(__NR_getpid,0,0,0,0,0,0);
+ // Re-parse the snapshot: another app thread must not cause double-prefixing
+ // by changing the original Parcel between the small header and full copies.
+ rc=pocket_binder_add_identity(data,data_size+POCKET_BINDER_IDENTITY_BYTES,data_size,offsets,offsets_size,identity);
+ if(rc<=0)goto failed;
+ stage->size=allocation;stage->next=*stages;*stages=stage;
+ tx->data_size=data_size+POCKET_BINDER_IDENTITY_BYTES;tx->data.ptr.buffer=(uintptr_t)data;
+ if(offsets_size)tx->data.ptr.offsets=(uintptr_t)offsets;
+ return 0;
+ failed:raw(__NR_munmap,memory,allocation,0,0,0,0);return rc;
+}
 static long binder_filter_read(int fd,struct PocketBinderFd*f,struct binder_write_read*rw) {
  if(!f || !rw->read_consumed)return 0;
  if(rw->read_consumed>rw->read_size || rw->read_consumed>POCKET_BINDER_CAP)return -E2BIG;
  size_t allocation=rw->read_consumed;
  long mem=raw(__NR_mmap,0,rw->read_consumed,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(mem<0)return mem;
- char*bytes=(char*)mem;long result=copy_from_user(bytes,rw->read_buffer,rw->read_consumed);size_t out=0;
+ char*bytes=(char*)mem;long result=binder_copy_from_user(bytes,rw->read_buffer,rw->read_consumed);size_t out=0;
  if(!result)for(size_t at=0;at<rw->read_consumed;){
   if(rw->read_consumed-at<4){result=-EPROTO;break;}uint32_t command;memcpy(&command,bytes+at,4);
   size_t size=_IOC_SIZE(command);if(size>rw->read_consumed-at-4){result=-EPROTO;break;}
@@ -194,22 +253,25 @@ static long binder_filter_read(int fd,struct PocketBinderFd*f,struct binder_writ
   if(own<0){result=own;break;}
   if(!own){for(size_t i=0;i<size+4;i++)bytes[out+i]=bytes[at+i];out+=size+4;}at+=size+4;
  }
- if(!result){result=copy_to_user(rw->read_buffer,bytes,out);if(result>=0){rw->read_consumed=out;result=0;}}
+ if(!result){result=binder_copy_to_user(rw->read_buffer,bytes,out);if(result>=0){rw->read_consumed=out;result=0;}}
  raw(__NR_munmap,mem,allocation,0,0,0,0);return result;
 }
 static long binder_ioctl(int fd,uintptr_t user) {
  struct binder_write_read rw;long rc=copy_from_user(&rw,user,sizeof(rw));if(rc<0)return rc;
  if(rw.write_consumed>rw.write_size || rw.write_size>POCKET_BINDER_CAP)return -E2BIG;
- long mem=0;struct binder_write_read original=rw;
+ long mem=0;struct binder_write_read original=rw;struct PocketBinderStage*stages=NULL;
  if(rw.write_size){mem=raw(__NR_mmap,0,rw.write_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(mem<0)return mem;
-  rc=copy_from_user((void*)mem,rw.write_buffer,rw.write_size);if(rc<0)goto done;
+  rc=binder_copy_from_user((void*)mem,rw.write_buffer,rw.write_size);if(rc<0)goto done;
   char*bytes=(char*)mem;
-  for(size_t at=0;at<rw.write_size;){uint32_t command;if(rw.write_size-at<4){rc=-EINVAL;goto done;}memcpy(&command,bytes+at,4);at+=4;
+  for(size_t at=0;at<rw.write_size;){size_t start=at;uint32_t command;if(rw.write_size-at<4){rc=-EINVAL;goto done;}memcpy(&command,bytes+at,4);at+=4;
    size_t size=_IOC_SIZE(command);if(size>rw.write_size-at){rc=-EINVAL;goto done;}
-   if(command==BC_TRANSACTION || command==BC_TRANSACTION_SG){
+   if(start<rw.write_consumed && at+size>rw.write_consumed){rc=-EINVAL;goto done;}
+   if(start>=rw.write_consumed && (command==BC_TRANSACTION || command==BC_TRANSACTION_SG)){
     if(size<sizeof(struct binder_transaction_data)){rc=-EINVAL;goto done;}
     struct binder_transaction_data tx;memcpy(&tx,bytes+at,sizeof(tx));
-    if(!tx.target.handle){uint32_t manager;rc=binder_context(fd,&manager);if(rc<0)goto done;tx.target.handle=manager;memcpy(bytes+at,&tx,sizeof(tx));}
+    if(!tx.target.handle){uint32_t manager;rc=binder_context(fd,&manager);if(rc<0)goto done;tx.target.handle=manager;}
+    rc=binder_stage_identity(&tx,&stages);if(rc<0)goto done;
+    memcpy(bytes+at,&tx,sizeof(tx));
    }
    at+=size;
   }
@@ -219,7 +281,7 @@ static long binder_ioctl(int fd,uintptr_t user) {
  {long filtered=binder_filter_read(fd,binder_find(fd,0),&rw);if(filtered<0){rc=filtered;goto done;}}
  rw.write_buffer=original.write_buffer;
  {long copied=copy_to_user(user,(const char*)&rw,sizeof(rw));if(copied<0)rc=copied;}
- done:if(mem>0)raw(__NR_munmap,mem,original.write_size,0,0,0,0);return rc;
+ done:binder_free_stages(stages);if(mem>0)raw(__NR_munmap,mem,original.write_size,0,0,0,0);return rc;
 }
 static int binder_dispatch(long nr,__u64*r) {
  if(!guest_identity)return 0;

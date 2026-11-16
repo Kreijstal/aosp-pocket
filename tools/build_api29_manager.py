@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import urllib.parse
@@ -37,6 +38,9 @@ def main():
     p.add_argument('--catalog',type=Path,required=True)
     p.add_argument('--api32-catalog',type=Path,help='Include the experimental, separately downloaded Android 12L image')
     p.add_argument('--out',type=Path,default=ROOT/'out/api29/manager')
+    p.add_argument('--package-name',help='Existing Manager application ID to update without creating a new profile')
+    p.add_argument('--version',help='Manager version name (default: image-family version)')
+    p.add_argument('--version-code',type=int,help='Manager Android version code')
     p.add_argument('--media-session-patch32',type=Path,help='Additional reversible native/config patches for the MediaProvider trial')
     p.add_argument('--media-session-image32',action='store_true',help='Validate the packaged API32 image without replacing its runtime code')
     p.add_argument('--media-session-lazy-probe32',type=Path,help='Media activation client for the packaged-image trial')
@@ -60,6 +64,10 @@ def main():
     p.add_argument('--ce-recovered-retained32',action='store_true',help='Explicit test-only encrypted lifecycle after authenticated recovery of the normal API32 Manager profile')
     p.add_argument('--image-probe32-package',choices=('dev.kreijstal.aosppocket.api32managerimage','dev.kreijstal.aosppocket.api32managerimage2','dev.kreijstal.aosppocket.api32managerimage3'),help='Separate non-CE API32 test sandbox, preserving existing profiles')
     args=p.parse_args();args.image_probe32=args.image_probe32 or args.session_probe32 or args.persistence_probe32 or bool(args.app_probe32) or args.ce_probe32 or bool(args.media_session_probe32);args.probe=args.probe or args.app_probe or args.image_probe32
+    if args.package_name and (args.probe or not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+',args.package_name)):
+        p.error('--package-name requires a normal Manager build and a valid application ID')
+    if args.version and not re.fullmatch(r'[0-9]+(?:\.[0-9]+)*',args.version):p.error('Invalid Manager version')
+    if args.version_code is not None and not 0<args.version_code<=2100000000:p.error('Invalid Manager version code')
     if args.ce_retained_plaintext32 and args.ce_recovered_retained32:p.error('Choose only one normal-profile CE mode')
     if args.ce_retained_plaintext32 or args.ce_recovered_retained32:
         if not args.ce_probe32 or args.ce_probe32_package!='dev.kreijstal.aosppocket.api32ceimage' or args.ce_init_probe32:p.error('Normal-profile CE mode requires --ce-probe32 without a separate CE package or native init replacement')
@@ -134,6 +142,12 @@ def main():
     run('jar','cf',out/'classes.jar','-C',out/'classes','.')
     run('java','-cp',r8,'com.android.tools.r8.D8','--lib',android,'--min-api','28','--output',out/'dex',out/'classes.jar')
     manifest=ET.parse(ROOT/'runtime/app/AndroidManifest.xml');ns='{http://schemas.android.com/apk/res/android}'
+    if args.package_name:
+        manifest.getroot().set('package',args.package_name)
+        for element in manifest.getroot().iter():
+            for key in ['name','targetActivity']:
+                value=element.get(ns+key,'')
+                if value.startswith('.'):element.set(ns+key,'dev.kreijstal.aosppocket.runtime'+value)
     if args.probe:
         manifest.getroot().set('package',args.ce_probe32_package if args.ce_probe32 else (args.image_probe32_package or 'dev.kreijstal.aosppocket.api32managerimage') if args.image_probe32 else 'dev.kreijstal.aosppocket.api29manager')
         for element in manifest.getroot().iter():
@@ -148,7 +162,7 @@ def main():
         if args.session_probe32 or args.persistence_probe32 or args.app_probe32 or args.ce_probe32:ET.SubElement(app,'activity',{ns+'name':'dev.kreijstal.aosppocket.runtime.ImageProbe32',ns+'exported':'true'})
     ET.register_namespace('android',ns[1:-1]);manifest.write(out/'manifest-source.xml',encoding='utf-8',xml_declaration=True)
     run('javac','--release','8','-cp',tool/'build/tools','-d',out/'manifest-tools',ROOT/'runtime/tools/PocketManifest.java')
-    version='0.78' if args.api32_catalog else '0.77';version_code='78' if args.api32_catalog else '77'
+    version=args.version or ('0.78' if args.api32_catalog else '0.77');version_code=str(args.version_code or (78 if args.api32_catalog else 77))
     run('java','-cp',str(tool/'build/tools')+':'+str(out/'manifest-tools'),'PocketManifest',out/'manifest-source.xml',out/'AndroidManifest.xml','28','28',version_code,version)
     with zipfile.ZipFile(args.base_apk) as base,zipfile.ZipFile(out/'unsigned.apk','w',zipfile.ZIP_DEFLATED,compresslevel=1) as apk:
         for entry in base.infolist():
@@ -156,7 +170,7 @@ def main():
             if entry.filename in ['assets/api32-launcher-recents-spec.json','assets/api32-launcher-recents-probe.jar','assets/api32-launcher-recents-before.apk']:continue
             if external_native and entry.filename=='lib/arm64-v8a/'+EXTERNAL_LIBRARY:continue
             if args.ce_probe32 and entry.filename in ['assets/api32-ce-init','assets/api32-ce-init.json','assets/api32-ce-test.apk']:continue
-            if entry.filename in ['classes.dex','AndroidManifest.xml','assets/pocket-images.json','assets/licenses/android10-NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz'] or entry.filename.startswith(('META-INF/','assets/api28-rootfs/','assets/default-guest/')):continue
+            if entry.filename in ['classes.dex','AndroidManifest.xml','assets/pocket-images.json','assets/sources.lock.json','assets/licenses/android10-NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz'] or entry.filename.startswith(('META-INF/','assets/api28-rootfs/','assets/default-guest/')):continue
             if args.app_probe32 and entry.filename in ['assets/api32-app-spec.json','assets/api32-network-client','assets/api32-dns-client']:continue
             if args.gatekeeper_client32 and entry.filename=='assets/api32-gatekeeper-client':continue
             if (args.app_probe32 or args.ce_probe32) and entry.filename in ['assets/api32-installd-client','assets/api32-installd-smoke.apk','assets/api32-installd-postboot']:continue
@@ -168,6 +182,7 @@ def main():
         apk.write(out/'dex/classes.dex','classes.dex');apk.write(out/'AndroidManifest.xml','AndroidManifest.xml')
         if external_native:apk.write(args.external_native_dir/EXTERNAL_LIBRARY,'lib/arm64-v8a/'+EXTERNAL_LIBRARY)
         apk.writestr('assets/pocket-images.json',json.dumps(catalog,sort_keys=True,separators=(',',':'))+'\n')
+        apk.write(ROOT/'sources.lock.json','assets/sources.lock.json')
         apk.write(ROOT/'out/api29/reference/system/etc/NOTICE.xml.gz','assets/licenses/android10-NOTICE.xml.gz')
         if args.api32_catalog:apk.write(ROOT/'out/api32/android-probe/root/system/etc/NOTICE.xml.gz','assets/licenses/android12l-NOTICE.xml.gz')
         if args.media_session_probe32:

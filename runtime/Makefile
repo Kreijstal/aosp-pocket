@@ -133,6 +133,14 @@ include runtime/manager/Makefile
 include runtime/attestation/Makefile
 include runtime/magisk/Makefile
 
+BINDER_TEST_CC ?= clang
+.PHONY: check-binder-transport
+check-binder-transport:
+	mkdir -p out/binder-caller-fix
+	$(BINDER_TEST_CC) -std=c11 -g -O1 -Wall -Wextra -Werror -Wno-unused-function \
+		-fsanitize=address,undefined runtime/tests/binder_transport.c -o out/binder-caller-fix/binder-transport-test
+	out/binder-caller-fix/binder-transport-test
+
 check-display:
 	mkdir -p out/display-tests
 	javac --release 8 -d out/display-tests runtime/app/src/dev/kreijstal/aosppocket/bridge/DisplayGeometry.java runtime/app/src/dev/kreijstal/aosppocket/bridge/SharedFrames.java runtime/tests/DisplayGeometryTest.java runtime/tests/SharedFramesTest.java
