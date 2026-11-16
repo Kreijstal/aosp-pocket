@@ -124,6 +124,11 @@ def main():
                                      'screenshot', str(image)], capture_output=True, timeout=10)
             assert result.returncode == 0 and image.read_bytes() == screenshot, result.stderr
             assert stat.S_IMODE(image.stat().st_mode) == 0o600
+            alias_image = base/'screencap.png'
+            result = subprocess.run(['python3', str(ROOT/'tools/pocketctl.py'), '--config', str(cfg),
+                                     'screencap', str(alias_image)], capture_output=True, timeout=10)
+            assert result.returncode == 0 and alias_image.read_bytes() == screenshot, result.stderr
+            assert stat.S_IMODE(alias_image.stat().st_mode) == 0o600
             assert request(4)[0] == 0
             result = subprocess.run(['python3', str(ROOT/'tools/pocketctl.py'), '--config', str(cfg),
                                      'screenshot', str(image)], capture_output=True, timeout=10)
@@ -132,7 +137,7 @@ def main():
             assert not list(base.glob('screen.png.*.tmp'))
             assert request(3)[0] == 0
         checks.append('CLI file transfer, failed-pull preservation and private token config')
-        checks.append('private CLI screenshot and failed-capture preservation')
+        checks.append('private CLI screenshot/screencap and failed-capture preservation')
 
         assert request(4)[0] == 0
         assert request(5)[:2] == (0, b'module-view-reset\n')

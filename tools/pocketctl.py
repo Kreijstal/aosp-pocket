@@ -216,13 +216,15 @@ def main():
     pull = sub.add_parser('pull')
     pull.add_argument('guest')
     pull.add_argument('local', type=Path)
-    screenshot = sub.add_parser('screenshot', help='Save the current Pocket guest display as a PNG (Manager 0.78.171+)')
+    screenshot = sub.add_parser('screencap', aliases=['screenshot'], help='Save the current Pocket guest display as a PNG (Manager 0.78.171+)')
     screenshot.add_argument('local', type=Path)
     install = sub.add_parser('install', help='Install a single APK using the guest package manager')
     install.add_argument('apk', type=Path)
     adbkey = sub.add_parser('adb-key', help='Authorize an adb public key for the Android 12L guest and start its adbd')
     adbkey.add_argument('pubkey', type=Path, nargs='?', default=Path.home()/'.android/adbkey.pub')
     args = parser.parse_args()
+    if args.operation == 'screencap':
+        args.operation = 'screenshot'
     if args.operation == 'pair':
         token = getpass.getpass('Pocket connection token: ').strip()
         config = {'port': args.port, 'token': token}

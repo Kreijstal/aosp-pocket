@@ -587,7 +587,7 @@ python ~/storage/downloads/pocketctl.py shell -c 'id; getprop ro.build.version.s
 python ~/storage/downloads/pocketctl.py exec -- /system/bin/pm list packages
 python ~/storage/downloads/pocketctl.py push ./example.apk /data/local/tmp/example.apk
 python ~/storage/downloads/pocketctl.py pull /data/local/tmp/example.apk ./copy.apk
-python ~/storage/downloads/pocketctl.py screenshot ./guest-screen.png
+python ~/storage/downloads/pocketctl.py screencap ./guest-screen.png
 python ~/storage/downloads/pocketctl.py install ./example.apk
 python ~/storage/downloads/pocketctl.py stop
 ```
@@ -607,6 +607,8 @@ process. PNG encoding runs on the admin worker. It captures the Pocket guest,
 not the phone's One UI or other host apps. A running guest with an available
 frame is required. Failed captures preserve an existing destination file.
 Update the Termux client using **Save Termux client** after updating Manager.
+From 0.78.172 the same operation is also named `screencap`; `screenshot`
+continues to work. This is a Termux client command, using the paired console.
 The token is stored privately by each app, and never passed as a command-line
 argument. Treat it as authority over Pocket and its guest data.
 

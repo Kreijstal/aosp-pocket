@@ -58,3 +58,26 @@ After reconnecting: install 0.78.171, enable Termux administration, update the
 saved client and capture the actual error screen. Do not count the host test
 image as a physical-phone screenshot or infer Revolut success from a resumed
 activity record.
+
+## Termux `screencap` command — 0.78.172
+
+The Termux client now exposes the same authenticated PNG capture as:
+
+```sh
+python pocketctl.py screencap screen.png
+```
+
+`screenshot` remains a compatible alias. Both use the existing paired token
+and Manager 0.78.171+ endpoint, retain private file creation, and preserve the
+destination after failed capture. This is a Termux command; no guest command
+or image payload is added. Manager 0.78.172 bundles the updated client for
+**Save Termux client**. A separately updated client also works with 0.78.171.
+
+`python3 runtime/tests/test_admin.py`: **PASS, 12 checks**, including a real
+PNG through both command names. The 0.78.172 Manager build and APK signature
+verification pass. APK payload inspection confirms Java, native libraries and
+the image catalog are byte-identical to 0.78.171; only the client and version
+metadata change. Phone capture remains pending reconnection.
+
+APK SHA-256:
+`011a18f479982f76873dcbe8867ceb8f5082ebe369e3627852e56982979d1b73`.
