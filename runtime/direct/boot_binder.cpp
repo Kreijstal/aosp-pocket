@@ -11,6 +11,13 @@
 #include "kernel_identity.h"
 #include "../api28/binder_identity.h"
 #include "../api28/binder_token.h"
+#if POCKET_GUEST_API == 32
+#include "binder_dispatch.h"
+extern "C" int pocket_binder_guest_caller(uint32_t* uid,uint32_t* pid) {
+    auto* state=android::IPCThreadState::self();
+    return PocketBinderDispatchScope::caller(state->getCallingUid(),state->getCallingPid(),uid,pid)?1:0;
+}
+#endif
 namespace android {
 status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32_t flags) {
     using Original=status_t(*)(BBinder*,uint32_t,const Parcel&,Parcel*,uint32_t);
@@ -56,7 +63,17 @@ status_t BBinder::transact(uint32_t code,const Parcel& data,Parcel* reply,uint32
             thread->restoreCallingIdentity(static_cast<int64_t>(claimed));guest=true;
         }
     }
-    status_t result=original(this,code,data,reply,flags);
+    status_t result;
+    {
+#if POCKET_GUEST_API == 32
+        // Always push, including rejected/host/local nested dispatches, so they
+        // cannot inherit an outer guest's authorization context.
+        const uint64_t caller=(static_cast<uint64_t>(thread->getCallingUid())<<32)
+                |static_cast<uint32_t>(thread->getCallingPid());
+        PocketBinderDispatchScope dispatch(guest,caller);
+#endif
+        result=original(this,code,data,reply,flags);
+    }
     if (guest) thread->restoreCallingIdentity(identity);
     return result;
 }

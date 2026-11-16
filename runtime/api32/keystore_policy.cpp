@@ -11,7 +11,8 @@
 #include <string.h>
 #include <initializer_list>
 #include <stdint.h>
-#include "../api28/binder_identity.h"
+#include <dlfcn.h>
+#include "../direct/binder_dispatch.h"
 
 namespace {
 constexpr const char* appKeys="u:r:pocket_keystore:s0"; // A virtual label, not a kernel SID.
@@ -21,10 +22,11 @@ bool oneOf(const char* value,std::initializer_list<const char*> names) {
 }
 bool caller(uid_t* uid) {
     auto* state=android::IPCThreadState::self();
-    uint64_t identity=0;
-    if(!pocket_binder_identity(state->getCallingPid(),&identity) ||
-       (identity>>32)!=state->getCallingUid())return false;
-    *uid=state->getCallingUid();return true;
+    static auto dispatch=reinterpret_cast<PocketBinderGuestCaller>(dlsym(RTLD_DEFAULT,"pocket_binder_guest_caller"));
+    uint32_t logicalUid=0,logicalPid=0;
+    if(!dispatch || dispatch(&logicalUid,&logicalPid)!=1 || logicalUid!=state->getCallingUid()
+            || logicalPid!=static_cast<uint32_t>(state->getCallingPid()))return false;
+    *uid=logicalUid;return true;
 }
 __attribute__((constructor)) void requireKeystore32() {
     char sdk[PROP_VALUE_MAX];__system_property_get("ro.build.version.sdk",sdk);

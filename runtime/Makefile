@@ -134,6 +134,26 @@ include runtime/attestation/Makefile
 include runtime/magisk/Makefile
 
 BINDER_TEST_CC ?= clang
+BINDER_TEST_CXX ?= clang++
+.PHONY: check-binder-dispatch
+check-binder-dispatch:
+	mkdir -p out/keystore-caller-fix
+	$(BINDER_TEST_CXX) -std=c++17 -g -O1 -Wall -Wextra -Werror -pthread \
+		-fsanitize=address,undefined runtime/tests/binder_dispatch.cpp -o out/keystore-caller-fix/binder-dispatch-test
+	out/keystore-caller-fix/binder-dispatch-test
+
+.PHONY: check-keystore-policy
+check-keystore-policy:
+	mkdir -p out/keystore-caller-fix
+	$(BINDER_TEST_CXX) -std=c++17 -g -O1 -Wall -Wextra -Werror -fsanitize=address,undefined \
+		-Iruntime/tests/keystore_policy_stubs -Wl,--export-dynamic -Wl,--wrap=getuid -Wl,--wrap=syscall \
+		runtime/tests/keystore_policy.cpp runtime/api32/keystore_policy.cpp -ldl -o out/keystore-caller-fix/keystore-policy-test
+	out/keystore-caller-fix/keystore-policy-test 2>out/keystore-caller-fix/policy-denials.log
+	$(BINDER_TEST_CXX) -std=c++17 -g -O1 -Wall -Wextra -Werror -fsanitize=address,undefined -DTEST_NO_ADAPTER \
+		-Iruntime/tests/keystore_policy_stubs -Wl,--export-dynamic -Wl,--wrap=getuid -Wl,--wrap=syscall \
+		runtime/tests/keystore_policy.cpp runtime/api32/keystore_policy.cpp -ldl -o out/keystore-caller-fix/keystore-no-adapter-test
+	out/keystore-caller-fix/keystore-no-adapter-test 2>out/keystore-caller-fix/no-adapter-denials.log
+
 .PHONY: check-binder-transport
 check-binder-transport:
 	mkdir -p out/binder-caller-fix
