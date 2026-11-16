@@ -587,6 +587,7 @@ python ~/storage/downloads/pocketctl.py shell -c 'id; getprop ro.build.version.s
 python ~/storage/downloads/pocketctl.py exec -- /system/bin/pm list packages
 python ~/storage/downloads/pocketctl.py push ./example.apk /data/local/tmp/example.apk
 python ~/storage/downloads/pocketctl.py pull /data/local/tmp/example.apk ./copy.apk
+python ~/storage/downloads/pocketctl.py screenshot ./guest-screen.png
 python ~/storage/downloads/pocketctl.py install ./example.apk
 python ~/storage/downloads/pocketctl.py stop
 ```
@@ -598,6 +599,14 @@ that use Android services still require a running guest. Administration keeps
 its foreground notification while the guest is stopped so Termux can start it
 again. Disabling administration closes the listener and current console sessions.
 Revocation closes current sessions and replaces the key; pair again afterward.
+
+From 0.78.171, `screenshot` saves the guest frame currently displayed by Pocket
+as a PNG through the same authenticated console. It uses the Manager's existing
+display buffer, without requiring guest `screencap`, ADB or another guest
+process. PNG encoding runs on the admin worker. It captures the Pocket guest,
+not the phone's One UI or other host apps. A running guest with an available
+frame is required. Failed captures preserve an existing destination file.
+Update the Termux client using **Save Termux client** after updating Manager.
 The token is stored privately by each app, and never passed as a command-line
 argument. Treat it as authority over Pocket and its guest data.
 

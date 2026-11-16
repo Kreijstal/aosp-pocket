@@ -107,6 +107,24 @@ public final class GuestService extends Service {
             final long generation=++adminGeneration;
             admin=new AdminServer(AdminServer.DEFAULT_PORT,adminKey(false),new AdminServer.Backend(){
                 @Override public String status() throws Exception{return adminMain(()->{requireAdmin(generation);return adminState();});}
+                @Override public byte[] screenshot() throws Exception {
+                    android.graphics.Bitmap image=adminMain(()->{
+                        requireAdmin(generation);
+                        android.graphics.Bitmap frame=snapshot();
+                        if(frame==null)throw new IOException("No guest frame available; open the Pocket guest first");
+                        return frame;
+                    });
+                    try {
+                        ByteArrayOutputStream png=new ByteArrayOutputStream();
+                        // Encode on the admin worker, keeping input and the UI responsive.
+                        if(!image.compress(android.graphics.Bitmap.CompressFormat.PNG,100,png))
+                            throw new IOException("Cannot encode the guest screenshot");
+                        adminMain(()->{requireAdmin(generation);return null;});
+                        return png.toByteArray();
+                    } catch(OutOfMemoryError exhausted) {
+                        throw new IOException("Not enough memory to encode the guest screenshot",exhausted);
+                    } finally {image.recycle();}
+                }
                 @Override public String control(boolean start) throws Exception {
                     return adminMain(()->{requireAdmin(generation);if(start)startGuest();else stopGuest();return adminState();});
                 }

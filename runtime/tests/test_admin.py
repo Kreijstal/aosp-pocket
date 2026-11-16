@@ -12,6 +12,7 @@ import struct
 import subprocess
 import tempfile
 import time
+import zlib
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('pocketctl', ROOT/'tools/pocketctl.py')
@@ -41,6 +42,13 @@ def main():
             assert 'rejected' in str(error), error
         assert json.loads(request(1)[1])['executed'] == 0
         checks.append('wrong token rejected before any command executes')
+        try:
+            client.request(wrong, 6, stdout=io.BytesIO(), stderr=io.BytesIO())
+            raise AssertionError('Wrong token captured a screenshot')
+        except OSError as error:
+            assert 'rejected' in str(error), error
+        assert json.loads(request(1)[1])['captures'] == 0
+        checks.append('screenshots require the existing owner authentication')
 
         # A keyless process binding the port must not impersonate Pocket.
         import threading
@@ -76,6 +84,27 @@ def main():
         assert request(2, ['/usr/bin/printf', '%s', argument]) == (0, argument.encode(), b'')
         checks.append('argument boundaries preserved without an extra host shell')
 
+        code, screenshot, errors = request(6)
+        assert code == 0 and not errors and len(screenshot) > client.CHUNK
+        assert screenshot.startswith(b'\x89PNG\r\n\x1a\n')
+        offset = 8
+        saw_header = saw_end = False
+        while offset < len(screenshot):
+            size, = struct.unpack_from('!I', screenshot, offset)
+            kind = screenshot[offset+4:offset+8]
+            payload = screenshot[offset+8:offset+8+size]
+            crc, = struct.unpack_from('!I', screenshot, offset+8+size)
+            assert zlib.crc32(kind+payload) == crc
+            if kind == b'IHDR':
+                assert struct.unpack('!II', payload[:8]) == (512, 256)
+                saw_header = True
+            if kind == b'IEND':
+                assert size == 0
+                saw_end = True
+            offset += 12+size
+        assert offset == len(screenshot) and saw_header and saw_end
+        checks.append('large real PNG survives chunked binary screenshot transport')
+
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             assert request(2, ['/bin/pwd'], cwd=directory)[1].strip() == os.fsencode(directory)
@@ -90,7 +119,20 @@ def main():
             result = subprocess.run(['python3', str(ROOT/'tools/pocketctl.py'), '--config', str(cfg),
                                      'pull', str(base/'missing'), str(pulled)], capture_output=True, timeout=10)
             assert result.returncode != 0 and pulled.read_bytes() == data
+            image = base/'screen.png'
+            result = subprocess.run(['python3', str(ROOT/'tools/pocketctl.py'), '--config', str(cfg),
+                                     'screenshot', str(image)], capture_output=True, timeout=10)
+            assert result.returncode == 0 and image.read_bytes() == screenshot, result.stderr
+            assert stat.S_IMODE(image.stat().st_mode) == 0o600
+            assert request(4)[0] == 0
+            result = subprocess.run(['python3', str(ROOT/'tools/pocketctl.py'), '--config', str(cfg),
+                                     'screenshot', str(image)], capture_output=True, timeout=10)
+            assert result.returncode != 0 and b'No guest frame' in result.stderr
+            assert image.read_bytes() == screenshot
+            assert not list(base.glob('screen.png.*.tmp'))
+            assert request(3)[0] == 0
         checks.append('CLI file transfer, failed-pull preservation and private token config')
+        checks.append('private CLI screenshot and failed-capture preservation')
 
         assert request(4)[0] == 0
         assert request(5)[:2] == (0, b'module-view-reset\n')

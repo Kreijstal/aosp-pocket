@@ -216,6 +216,8 @@ def main():
     pull = sub.add_parser('pull')
     pull.add_argument('guest')
     pull.add_argument('local', type=Path)
+    screenshot = sub.add_parser('screenshot', help='Save the current Pocket guest display as a PNG (Manager 0.78.171+)')
+    screenshot.add_argument('local', type=Path)
     install = sub.add_parser('install', help='Install a single APK using the guest package manager')
     install.add_argument('apk', type=Path)
     adbkey = sub.add_parser('adb-key', help='Authorize an adb public key for the Android 12L guest and start its adbd')
@@ -245,11 +247,18 @@ def main():
     if args.operation == 'push':
         with args.local.open('rb') as source:
             return request(config, 2, ['/system/bin/sh', '-c', 'cat > "$1"', 'pocket-push', args.guest], source=source)
-    if args.operation == 'pull':
+    if args.operation in ('pull', 'screenshot'):
         temporary = args.local.with_name(args.local.name+'.'+secrets.token_hex(8)+'.tmp')
         try:
-            with temporary.open('xb') as out:
-                code = request(config, 2, ['/system/bin/cat', args.guest], stdout=out)
+            with os.fdopen(os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as out:
+                if args.operation == 'screenshot':
+                    code = request(config, 6, stdout=out)
+                else:
+                    code = request(config, 2, ['/system/bin/cat', args.guest], stdout=out)
+            if code == 0 and args.operation == 'screenshot':
+                with temporary.open('rb') as image:
+                    if image.read(8) != b'\x89PNG\r\n\x1a\n':
+                        raise OSError('Pocket returned an invalid PNG screenshot')
             if code == 0:
                 temporary.replace(args.local)
             return code

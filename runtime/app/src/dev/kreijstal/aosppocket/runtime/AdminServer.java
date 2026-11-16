@@ -17,6 +17,7 @@ final class AdminServer implements AutoCloseable {
         String control(boolean start) throws Exception;
         Process execute(String cwd, List<String> argv) throws Exception;
         default String resetModuleView() throws Exception {throw new IOException("Module-view recovery unavailable");}
+        default byte[] screenshot() throws Exception {throw new IOException("Guest screenshots unavailable");}
     }
     static final byte[] MAGIC="PKADMIN1".getBytes(StandardCharsets.US_ASCII);
     static final int DEFAULT_PORT=2228, CHUNK=65536;
@@ -90,6 +91,15 @@ final class AdminServer implements AutoCloseable {
             out.write(response(key,session));out.flush();
             try {
                 int operation=in.readUnsignedByte();
+                if(operation==6) {
+                    byte[] png=backend.screenshot();
+                    if(png==null || png.length<8)throw new IOException("No guest screenshot available");
+                    for(int offset=0;offset<png.length;offset+=CHUNK) {
+                        int size=Math.min(CHUNK,png.length-offset);
+                        frame(out,1,Arrays.copyOfRange(png,offset,offset+size),size);
+                    }
+                    exit(out,0);return;
+                }
                 if(operation==1 || operation==3 || operation==4 || operation==5) {
                     String result=operation==5?backend.resetModuleView():operation==1?backend.status():backend.control(operation==3);
                     text(out,1,result+"\n");exit(out,0);return;
