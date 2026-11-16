@@ -124,6 +124,8 @@ catalogs remain under `out/keystore-caller-fix/`.
 
 The normal Manager 0.78.173 candidate SHA-256 is
 `8a5568bb71ac2b5c086f748e02def0737bf5d1d0e9c5e58fc0ca356d9bec5523`.
-It and its image remain unpublished; the configured download URL is reserved
-for a future authorized release. VM73 already has the matching cached image.
-Existing release-qualification requirements remain in force.
+The matching APK and image are packaged for the explicitly requested
+[0.78.173 experimental prerelease](https://github.com/Kreijstal/aosp-pocket/releases/tag/pocket-0.78.173),
+with the pinned image URL embedded in Manager. Publishing this test build does
+not qualify Android 12L or clear the existing release gate. VM73 already has
+the matching cached image. Existing qualification requirements remain in force.
