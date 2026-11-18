@@ -13,9 +13,86 @@ struct PocketBinderFd {int key,state;uint32_t manager;uintptr_t node,cookie;};
 static struct PocketBinderFd binder_fds[POCKET_BINDER_FDS];
 static struct {int tid,depth;} binder_host_threads[64];
 static int binder_owner_pid;
+// Death-notification protocol guard. Kernel Binder delivers exactly one
+// BR_CLEAR_DEATH_NOTIFICATION_DONE per BC_CLEAR_DEATH_NOTIFICATION, and never
+// while a BR_DEAD_BINDER for the same cookie awaits BC_DEAD_BINDER_DONE.
+// Rust Binder builds before android16-6.12 "set_dead" in request_death's
+// dead-owner branch (e.g. 6.12.38-android16-5, ab13974591) queue a dead-owner
+// notification without marking it dead, so clearing it sends one DONE
+// immediately and a second after BC_DEAD_BINDER_DONE. libbinder answers every
+// DONE with decWeak on the cookie's BpBinder; the extra one frees a proxy that
+// a Java BinderProxy still owns (CE162/acore: BinderProxy_destroy SIGSEGV).
+// Only DONEs that the C protocol forbids are withheld; unknown cookies pass.
+#define POCKET_BINDER_DEATHS 512
+struct PocketBinderDeath {int key;uint32_t clears,dead;binder_uintptr_t cookie;};
+static struct PocketBinderDeath binder_deaths[POCKET_BINDER_DEATHS];
+static int binder_death_lock;
+static unsigned long binder_death_withheld;
+static unsigned binder_death_cursor;
 static void binder_reset_after_fork(void) {
  int pid=(int)raw(__NR_getpid,0,0,0,0,0,0);
- if(binder_owner_pid!=pid){memset(binder_fds,0,sizeof(binder_fds));memset(binder_host_threads,0,sizeof(binder_host_threads));binder_owner_pid=pid;}
+ if(binder_owner_pid!=pid){memset(binder_fds,0,sizeof(binder_fds));memset(binder_host_threads,0,sizeof(binder_host_threads));
+  memset(binder_deaths,0,sizeof(binder_deaths));binder_death_lock=0;binder_death_withheld=0;binder_death_cursor=0;binder_owner_pid=pid;}
+}
+static void binder_death_acquire(void) {
+ while(__atomic_exchange_n(&binder_death_lock,1,__ATOMIC_ACQUIRE)){struct timespec wait={0,50000};raw(__NR_nanosleep,(long)&wait,0,0,0,0,0);}
+}
+static void binder_death_release(void){__atomic_store_n(&binder_death_lock,0,__ATOMIC_RELEASE);}
+// Caller holds binder_death_lock.
+// A settled entry (no clear outstanding, not dead) is kept as a retired record
+// so a duplicate DONE for the same cookie is still recognised. Retired records
+// are reused round-robin only when no empty slot remains; active ones never.
+static struct PocketBinderDeath* binder_death_find(int fd,binder_uintptr_t cookie,int create) {
+ struct PocketBinderDeath*free_slot=0;
+ for(unsigned i=0;i<POCKET_BINDER_DEATHS;i++) {
+  if(binder_deaths[i].key==fd+1 && binder_deaths[i].cookie==cookie)return binder_deaths+i;
+  if(!free_slot && !binder_deaths[i].key)free_slot=binder_deaths+i;
+ }
+ if(!create)return 0;
+ for(unsigned n=0;!free_slot && n<POCKET_BINDER_DEATHS;n++) {
+  struct PocketBinderDeath*d=binder_deaths+(binder_death_cursor++%POCKET_BINDER_DEATHS);
+  if(!d->clears && !d->dead)free_slot=d;
+ }
+ if(!free_slot)return 0;
+ free_slot->key=fd+1;free_slot->cookie=cookie;free_slot->clears=free_slot->dead=0;return free_slot;
+}
+static void binder_death_idle(struct PocketBinderDeath*d){(void)d;}
+static void binder_death_forget_fd(int fd) {
+ binder_death_acquire();
+ for(unsigned i=0;i<POCKET_BINDER_DEATHS;i++)if(binder_deaths[i].key==fd+1)binder_deaths[i].key=0;
+ binder_death_release();
+}
+// Account clears and dead-binder acknowledgements in [from,to) of a write
+// buffer. sign=+1 before the ioctl (so another thread cannot read the
+// resulting DONE first), sign=-1 to roll back commands left unconsumed.
+static void binder_death_writes(int fd,const char*bytes,size_t from,size_t to,int sign) {
+ binder_death_acquire();
+ for(size_t at=from;at+4<=to;) {
+  uint32_t command;memcpy(&command,bytes+at,4);at+=4;
+  size_t size=_IOC_SIZE(command);if(size>to-at)break;
+  if(command==BC_CLEAR_DEATH_NOTIFICATION && size>=sizeof(struct binder_handle_cookie)) {
+   struct binder_handle_cookie value;memcpy(&value,bytes+at,sizeof(value));
+   struct PocketBinderDeath*d=binder_death_find(fd,value.cookie,sign>0);
+   if(d){if(sign>0)d->clears++;else if(d->clears)d->clears--;binder_death_idle(d);}
+  }else if(command==BC_DEAD_BINDER_DONE && size>=sizeof(binder_uintptr_t)) {
+   binder_uintptr_t cookie;memcpy(&cookie,bytes+at,sizeof(cookie));
+   struct PocketBinderDeath*d=binder_death_find(fd,cookie,sign<0);
+   if(d){d->dead=sign<0;binder_death_idle(d);}
+  }
+  at+=size;
+ }
+ binder_death_release();
+}
+// Returns 1 to deliver a death-related return command, 0 to withhold it.
+// Caller holds binder_death_lock.
+static int binder_death_read(int fd,uint32_t command,const char*payload) {
+ if(command!=BR_DEAD_BINDER && command!=BR_CLEAR_DEATH_NOTIFICATION_DONE)return 1;
+ binder_uintptr_t cookie;memcpy(&cookie,payload,sizeof(cookie));
+ if(command==BR_DEAD_BINDER){struct PocketBinderDeath*d=binder_death_find(fd,cookie,1);if(d)d->dead=1;return 1;}
+ struct PocketBinderDeath*d=binder_death_find(fd,cookie,0);
+ if(!d)return 1;
+ if(d->dead || !d->clears){binder_death_withheld++;return 0;}
+ d->clears--;binder_death_idle(d);return 1;
 }
 static long binder_host_scope(unsigned enabled) {
  binder_reset_after_fork();int tid=(int)raw(__NR_gettid,0,0,0,0,0,0);
@@ -61,7 +138,7 @@ static struct PocketBinderFd* binder_find(int fd,int create) {
  }
  return 0;
 }
-static void binder_closed(int fd) {struct PocketBinderFd*f=binder_find(fd,0);if(f){f->manager=0;f->state=0;f->node=f->cookie=0;__atomic_store_n(&f->key,0,__ATOMIC_RELEASE);}}
+static void binder_closed(int fd) {binder_reset_after_fork();binder_death_forget_fd(fd);struct PocketBinderFd*f=binder_find(fd,0);if(f){f->manager=0;f->state=0;f->node=f->cookie=0;__atomic_store_n(&f->key,0,__ATOMIC_RELEASE);}}
 static int64_t binder_time(void){struct timespec ts;if(raw(__NR_clock_gettime,1,(long)&ts,0,0,0,0)<0)return 0;return ts.tv_sec*1000+ts.tv_nsec/1000000;}
 static long binder_write(int fd,const void*data,size_t size) {
  size_t at=0;for(unsigned tries=0;at<size && tries<64;tries++){
@@ -240,21 +317,25 @@ static long binder_stage_identity(struct binder_transaction_data*tx,struct Pocke
  failed:raw(__NR_munmap,memory,allocation,0,0,0,0);return rc;
 }
 static long binder_filter_read(int fd,struct PocketBinderFd*f,struct binder_write_read*rw) {
- if(!f || !rw->read_consumed)return 0;
+ if(!rw->read_consumed)return 0;
  if(rw->read_consumed>rw->read_size || rw->read_consumed>POCKET_BINDER_CAP)return -E2BIG;
- size_t allocation=rw->read_consumed;
- long mem=raw(__NR_mmap,0,rw->read_consumed,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(mem<0)return mem;
- char*bytes=(char*)mem;long result=binder_copy_from_user(bytes,rw->read_buffer,rw->read_consumed);size_t out=0;
+ // libbinder reads at most 256 bytes; keep its common path off mmap.
+ char small[1024];long mem=0;size_t allocation=rw->read_consumed;char*bytes=small;
+ if(allocation>sizeof(small)){mem=raw(__NR_mmap,0,allocation,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(mem<0)return mem;bytes=(char*)mem;}
+ long result=binder_copy_from_user(bytes,rw->read_buffer,rw->read_consumed);size_t out=0;
  if(!result)for(size_t at=0;at<rw->read_consumed;){
   if(rw->read_consumed-at<4){result=-EPROTO;break;}uint32_t command;memcpy(&command,bytes+at,4);
   size_t size=_IOC_SIZE(command);if(size>rw->read_consumed-at-4){result=-EPROTO;break;}
-  long own=binder_own_reference(fd,f,command,bytes+at+4);
-  if(command==BR_TRANSACTION){struct binder_transaction_data tx;if(size!=sizeof(tx)){result=-EPROTO;break;}memcpy(&tx,bytes+at+4,sizeof(tx));own=binder_own_callback(fd,f,&tx);}
+  long own=f?binder_own_reference(fd,f,command,bytes+at+4):0;
+  if(f && command==BR_TRANSACTION){struct binder_transaction_data tx;if(size!=sizeof(tx)){result=-EPROTO;break;}memcpy(&tx,bytes+at+4,sizeof(tx));own=binder_own_callback(fd,f,&tx);}
   if(own<0){result=own;break;}
+  if(!own && (command==BR_DEAD_BINDER || command==BR_CLEAR_DEATH_NOTIFICATION_DONE) && size>=sizeof(binder_uintptr_t)) {
+   binder_death_acquire();own=!binder_death_read(fd,command,bytes+at+4);binder_death_release();
+  }
   if(!own){for(size_t i=0;i<size+4;i++)bytes[out+i]=bytes[at+i];out+=size+4;}at+=size+4;
  }
- if(!result){result=binder_copy_to_user(rw->read_buffer,bytes,out);if(result>=0){rw->read_consumed=out;result=0;}}
- raw(__NR_munmap,mem,allocation,0,0,0,0);return result;
+ if(!result && out!=rw->read_consumed){result=binder_copy_to_user(rw->read_buffer,bytes,out);if(result>=0){rw->read_consumed=out;result=0;}}
+ if(mem)raw(__NR_munmap,mem,allocation,0,0,0,0);return result;
 }
 static long binder_ioctl(int fd,uintptr_t user) {
  struct binder_write_read rw;long rc=copy_from_user(&rw,user,sizeof(rw));if(rc<0)return rc;
@@ -276,8 +357,16 @@ static long binder_ioctl(int fd,uintptr_t user) {
    at+=size;
   }
   rw.write_buffer=(uintptr_t)mem;
+  binder_death_writes(fd,(const char*)mem,rw.write_consumed,rw.write_size,1);
  }
  rc=raw(__NR_ioctl,fd,BINDER_WRITE_READ,(long)&rw,0,0,0);
+ if(mem && rw.write_consumed<rw.write_size) {
+  size_t from=original.write_consumed>rw.write_consumed?original.write_consumed:rw.write_consumed;
+  // Commands are atomic; resume at the first boundary at or after "from".
+  size_t at=original.write_consumed;
+  for(;at<from && at+4<=rw.write_size;){uint32_t command;memcpy(&command,(char*)mem+at,4);at+=4+_IOC_SIZE(command);}
+  if(at<rw.write_size)binder_death_writes(fd,(const char*)mem,at,rw.write_size,-1);
+ }
  {long filtered=binder_filter_read(fd,binder_find(fd,0),&rw);if(filtered<0){rc=filtered;goto done;}}
  rw.write_buffer=original.write_buffer;
  {long copied=copy_to_user(user,(const char*)&rw,sizeof(rw));if(copied<0)rc=copied;}

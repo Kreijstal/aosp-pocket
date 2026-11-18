@@ -20,6 +20,7 @@ static unsigned guest_uid[3]={10017,10017,10017},guest_gid[3];
 static unsigned kernel_calls,seen,active_maps,maximum_copy,checks;
 static int kernel_error;
 static size_t consume_limit,reply_bytes;
+static unsigned char scripted[512];static size_t scripted_size;static int consume_none;
 static void (*inspect)(const struct binder_transaction_data*,uint32_t,const void*);
 struct Allocation {long address;size_t size;};
 static struct Allocation allocations[2048];
@@ -40,7 +41,7 @@ static size_t length(const char*s,size_t limit){return strnlen(s,limit);}
 static long raw(long nr,long a,long b,long c,long d,long e,long f) {
  if(nr==__NR_ioctl && b==BINDER_WRITE_READ) {
   kernel_calls++;struct binder_write_read*rw=(void*)c;
-  size_t end=consume_limit && consume_limit<rw->write_size?consume_limit:rw->write_size;
+  size_t end=consume_none?rw->write_consumed:consume_limit && consume_limit<rw->write_size?consume_limit:rw->write_size;
   for(size_t at=rw->write_consumed;at<end;) {
    uint32_t command;memcpy(&command,(char*)(uintptr_t)rw->write_buffer+at,4);at+=4;
    size_t size=_IOC_SIZE(command);assert(size<=end-at);
@@ -50,7 +51,9 @@ static long raw(long nr,long a,long b,long c,long d,long e,long f) {
    }
    at+=size;
   }
-  rw->write_consumed=end;rw->read_consumed=reply_bytes;
+  rw->write_consumed=end;
+  if(scripted_size){assert(scripted_size<=rw->read_size);memcpy((void*)(uintptr_t)rw->read_buffer,scripted,scripted_size);rw->read_consumed=scripted_size;scripted_size=0;return kernel_error;}
+  rw->read_consumed=reply_bytes;
   assert(reply_bytes<=rw->read_size);
   for(size_t at=0;at<reply_bytes;at+=4){uint32_t noop=BR_NOOP;memcpy((char*)(uintptr_t)rw->read_buffer+at,&noop,4);}
   return kernel_error;
@@ -72,6 +75,7 @@ static long raw(long nr,long a,long b,long c,long d,long e,long f) {
 static void reset(void) {
  assert(!active_maps);kernel_calls=seen=maximum_copy=0;kernel_error=0;consume_limit=reply_bytes=0;inspect=NULL;
  memset(binder_fds,0,sizeof(binder_fds));memset(binder_host_threads,0,sizeof(binder_host_threads));binder_owner_pid=getpid();
+ memset(binder_deaths,0,sizeof(binder_deaths));binder_death_withheld=0;binder_death_cursor=0;scripted_size=0;
  struct PocketBinderFd*f=binder_find(70,1);assert(f);f->state=2;f->manager=42;
 }
 static void word(unsigned char*bytes,size_t at,uint32_t value){memcpy(bytes+at,&value,4);}
@@ -114,6 +118,27 @@ static void flat_object(const struct binder_transaction_data*tx,uint32_t type,co
  prefixed(tx,type,bytes);const binder_size_t*offset=(void*)(uintptr_t)tx->data.ptr.offsets;
  assert(tx->offsets_size==sizeof(*offset) && *offset==136);
  assert(!memcmp((char*)(uintptr_t)tx->data.ptr.buffer+136,(void*)(original_data+128),sizeof(struct flat_binder_object)));
+}
+static size_t death_command(unsigned char*bytes,uint32_t type,uint32_t handle,binder_uintptr_t cookie) {
+ memcpy(bytes,&type,4);
+ if(type==BC_CLEAR_DEATH_NOTIFICATION || type==BC_REQUEST_DEATH_NOTIFICATION){struct binder_handle_cookie v={handle,cookie};memcpy(bytes+4,&v,sizeof(v));}
+ else memcpy(bytes+4,&cookie,sizeof(cookie));
+ return 4+_IOC_SIZE(type);
+}
+static size_t script(uint32_t type,binder_uintptr_t cookie) {
+ size_t at=scripted_size;memcpy(scripted+at,&type,4);at+=4;
+ if(_IOC_SIZE(type)){memcpy(scripted+at,&cookie,sizeof(cookie));at+=sizeof(cookie);}
+ return scripted_size=at;
+}
+// Runs one ioctl writing "out" (may be empty) and returns the delivered
+// return commands as a compact string such as "D C N" (dead, clear-done, noop).
+static const char* exchange(int fd,const unsigned char*out,size_t n) {
+ static unsigned char in[512];static char seen_text[64];struct binder_write_read rw={.write_size=n,.write_buffer=(uintptr_t)out,.read_size=sizeof(in),.read_buffer=(uintptr_t)in};
+ assert(binder_ioctl(fd,(uintptr_t)&rw)==0 && rw.write_consumed==n && !active_maps);
+ size_t t=0;
+ for(size_t at=0;at<rw.read_consumed;){uint32_t c;memcpy(&c,in+at,4);at+=4+_IOC_SIZE(c);
+  seen_text[t++]=c==BR_DEAD_BINDER?'D':c==BR_CLEAR_DEATH_NOTIFICATION_DONE?'C':c==BR_NOOP?'N':'?';}
+ seen_text[t]=0;return seen_text;
 }
 int main(void) {
  unsigned char payload[16384],before[sizeof(payload)],commands[1024],saved_commands[1024],incoming[8192];
@@ -185,5 +210,55 @@ int main(void) {
  assert(!binder_dispatch(__NR_ioctl,args) && args[0]==70 && !kernel_calls);assert(binder_host_scope(0)==0);checks++;
  reset();guest_identity=0;assert(!binder_dispatch(__NR_ioctl,args) && !kernel_calls);guest_identity=1;checks++;
  assert(binder_copy_from_user(payload,UINTPTR_MAX-4,8)==-EFAULT);assert(binder_copy_to_user(UINTPTR_MAX-4,payload,8)==-EFAULT);checks++;
- printf("PASS: raw Binder credential transport %u cases; original buffers, SG objects, partial writes, host scope, bounds and cleanup\n",checks);
+ // Death notifications. Fd 71 has no direct-client bootstrap, like libbinder.
+ {
+  const binder_uintptr_t X=0xb400006e116097d0ull,Y=0xb400006e1160a790ull;unsigned char out[64];size_t m;
+  // Rust Binder dead-owner sequence recorded in acore (trace run 178): early
+  // DONE before BC_DEAD_BINDER_DONE, second DONE after it. Deliver exactly one.
+  reset();script(BR_DEAD_BINDER,X);assert(!strcmp(exchange(71,out,0),"D"));
+  m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,34,X);script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);script(BR_NOOP,0);
+  assert(!strcmp(exchange(71,out,m),"N") && binder_death_withheld==1);
+  m=death_command(out,BC_DEAD_BINDER_DONE,0,X);script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);
+  assert(!strcmp(exchange(71,out,m),"C"));
+  for(unsigned i=0;i<POCKET_BINDER_DEATHS;i++)assert(!binder_deaths[i].clears && !binder_deaths[i].dead);
+  // A third DONE for the settled cookie is withheld too.
+  script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);assert(!strcmp(exchange(71,out,0),"") && binder_death_withheld==2);checks++;
+  // C Binder / fixed Rust: the single DONE follows BC_DEAD_BINDER_DONE.
+  reset();script(BR_DEAD_BINDER,X);assert(!strcmp(exchange(71,out,0),"D"));
+  m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,34,X);assert(!strcmp(exchange(71,out,m),""));
+  m=death_command(out,BC_DEAD_BINDER_DONE,0,X);script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);
+  assert(!strcmp(exchange(71,out,m),"C") && !binder_death_withheld);checks++;
+  // Both DONEs in one read after BC_DEAD_BINDER_DONE: still exactly one.
+  reset();script(BR_DEAD_BINDER,X);assert(!strcmp(exchange(71,out,0),"D"));
+  m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,34,X);m+=death_command(out+m,BC_DEAD_BINDER_DONE,0,X);
+  script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);
+  assert(!strcmp(exchange(71,out,m),"C") && binder_death_withheld==1);checks++;
+  // Ordinary unlink of a live binder, DONE read by the clearing ioctl itself,
+  // and an unrelated cookie interleaved; nothing is withheld.
+  reset();m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,30,Y);script(BR_CLEAR_DEATH_NOTIFICATION_DONE,Y);script(BR_NOOP,0);
+  assert(!strcmp(exchange(71,out,m),"CN") && !binder_death_withheld);checks++;
+  // A cookie this process never cleared through the loader passes unchanged.
+  reset();script(BR_CLEAR_DEATH_NOTIFICATION_DONE,Y);assert(!strcmp(exchange(71,out,0),"C"));checks++;
+  // An unconsumed clear is rolled back; a later DONE for it is not invented.
+  reset();m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,30,Y);consume_none=1;kernel_error=-EAGAIN;
+  {struct binder_write_read rw={.write_size=m,.write_buffer=(uintptr_t)out};assert(binder_ioctl(71,(uintptr_t)&rw)==-EAGAIN && rw.write_consumed==0);}
+  consume_none=0;kernel_error=0;
+  script(BR_CLEAR_DEATH_NOTIFICATION_DONE,Y);assert(!strcmp(exchange(71,out,0),"") && binder_death_withheld==1);
+  for(unsigned i=0;i<POCKET_BINDER_DEATHS;i++)assert(!binder_deaths[i].clears && !binder_deaths[i].dead);checks++;
+  // Direct bootstrap clients (fd 70) get the same guard; close forgets state.
+  reset();script(BR_DEAD_BINDER,X);assert(!strcmp(exchange(70,out,0),"D"));
+  m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,34,X);script(BR_CLEAR_DEATH_NOTIFICATION_DONE,X);
+  assert(!strcmp(exchange(70,out,m),"") && binder_death_withheld==1);
+  binder_closed(70);for(unsigned i=0;i<POCKET_BINDER_DEATHS;i++)assert(!binder_deaths[i].key);checks++;
+ }
+ // Retired records never displace active ones when the table is full.
+ {
+  unsigned char out[64];size_t m;reset();
+  for(unsigned i=0;i<POCKET_BINDER_DEATHS;i++){m=death_command(out,BC_CLEAR_DEATH_NOTIFICATION,1,0x1000+i);assert(!strcmp(exchange(71,out,m),""));}
+  for(unsigned i=0;i<POCKET_BINDER_DEATHS;i+=2){script(BR_CLEAR_DEATH_NOTIFICATION_DONE,0x1000+i);assert(!strcmp(exchange(71,out,0),"C"));}
+  script(BR_DEAD_BINDER,0x9000);assert(!strcmp(exchange(71,out,0),"D"));
+  for(unsigned i=1;i<POCKET_BINDER_DEATHS;i+=2){script(BR_CLEAR_DEATH_NOTIFICATION_DONE,0x1000+i);assert(!strcmp(exchange(71,out,0),"C"));}
+  assert(!binder_death_withheld);checks++;
+ }
+ printf("PASS: raw Binder credential transport %u cases; original buffers, SG objects, partial writes, host scope, bounds, cleanup and death-notification DONE guard\n",checks);
 }
