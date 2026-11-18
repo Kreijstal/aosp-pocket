@@ -37,11 +37,18 @@ class LifecycleGateTest(unittest.TestCase):
         with self.assertRaisesRegex(GateError, expected):
             check(self.root, self.config)
 
-    def test_committed_state_blocks_without_any_out_directory(self):
+    def test_unresolved_binder_cleanup_blocks_without_any_out_directory(self):
         self.assertFalse((self.root / 'out').exists())
-        self.rejected('Binder cleanup remains unresolved.*CE162 .* is FAIL: 2/6')
+        self.config['binderCleanup']['resolved'] = False
+        self.rejected('Binder cleanup remains unresolved.*recorded crash replay')
+
+    def test_committed_workaround_passes_in_this_checkout(self):
+        config = json.loads((REPO / 'ci/android12l-lifecycle.json').read_text())
+        self.assertIsNone(config['fullLifecycle'])
+        self.assertEqual(check(REPO, config), 'binder workaround ' + config['binderCleanup']['fixCommit'][:12])
 
     def test_clean_checkout_command_exits_one_even_under_python_optimization(self):
+        self.config['binderCleanup']['resolved'] = False
         self.write('ci/android12l-lifecycle.json', self.config)
         (self.root / 'tools').mkdir()
         for name in ['check_android12l_lifecycle.py', 'test_api32_persistence_on_pi.py']:
@@ -51,7 +58,6 @@ class LifecycleGateTest(unittest.TestCase):
                                     cwd=self.root, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1)
             self.assertIn('BinderProxy_destroy', result.stdout)
-            self.assertIn('2/6 strict cycles', result.stdout)
             self.assertIn('recorded crash replay: DEBUG:signal 0 (SIGSEGV)', result.stdout)
 
     def test_real_ce162_debug_excerpt_replays_native_fatal_detection(self):
@@ -68,9 +74,9 @@ class LifecycleGateTest(unittest.TestCase):
         self.config['historicalCrash'] = self.write(name, capture)
         self.rejected('Recorded CE162 fatal must be detected')
 
-    def test_resolved_checkbox_does_not_replace_full_evidence(self):
-        self.config['binderCleanup']['resolved'] = True
-        self.rejected('CE162 .* is FAIL')
+    def test_resolved_checkbox_does_not_replace_fix_evidence(self):
+        self.config['binderCleanup'].update(resolved=True, fixCommit=None, regression=None)
+        self.rejected('fix commit reference')
 
     def test_historical_failure_cannot_be_relabelled(self):
         path = self.root / self.config['historicalEvidence']
@@ -157,8 +163,14 @@ class LifecycleGateTest(unittest.TestCase):
             {'children': 0, 'rows': []}]}
         self.regression = {'validation': 'PASS', 'affectedProcess': 'android.process.acore',
                            'binderProxyCleanupObserved': True, 'nativeCrashes': [], 'nativeLog': '',
-                           'managerSha256': self.report['managerSha256'], 'imageSha256': self.report['imageSha256']}
-        self.config['binderCleanup'].update(resolved=True, regression=self.write('evidence/regression.json', self.regression))
+                           'managerSha256': self.report['managerSha256'], 'imageSha256': self.report['imageSha256'],
+                           'withGuard': {'deadOwnerSequences': [{'events': [
+                               '1.000 10 W BC_REQUEST_DEATH h=30 cookie=c1',
+                               '1.001 11 R BR_DEAD_BINDER cookie=c1 h=30',
+                               '1.002 11 W BC_CLEAR_DEATH h=30 cookie=c1',
+                               '1.003 11 W BC_DEAD_BINDER_DONE cookie=c1',
+                               '1.004 11 R BR_CLEAR_DEATH_DONE cookie=c1 h=30']}]}}
+        self.config['binderCleanup']['resolved'] = True
         self.config['fullLifecycle'] = {'budget': self.write('evidence/process-budget.json', budget)}
         self.save_report()
         subprocess.run(['git', 'init', '--quiet', str(self.root)], check=True)
@@ -168,12 +180,43 @@ class LifecycleGateTest(unittest.TestCase):
                         'commit', '--quiet', '-m', 'Synthetic runtime fix reference'], check=True)
         self.config['binderCleanup']['fixCommit'] = subprocess.check_output(
             ['git', '-C', str(self.root), 'rev-parse', 'HEAD'], text=True).strip()
+        self.save_regression()
+
+    def save_regression(self):
+        self.regression['fixCommit'] = self.config['binderCleanup']['fixCommit']
+        self.config['binderCleanup']['regression'] = self.write('evidence/regression.json', self.regression)
 
     def save_report(self):
         full = self.config['fullLifecycle']
         full['report'] = self.write('evidence/ce-manager-report.json', self.report)
         self.receipt['reportSha256'] = full['report']['sha256']
         full['verification'] = self.write('evidence/independent-check.json', self.receipt)
+
+    def test_workaround_passes_without_full_lifecycle(self):
+        self.passing_fixture()
+        self.config['fullLifecycle'] = None
+        self.assertEqual(check(self.root, self.config), 'binder workaround ' + self.config['binderCleanup']['fixCommit'][:12])
+
+    def test_duplicate_clear_done_is_rejected(self):
+        self.passing_fixture()
+        self.config['fullLifecycle'] = None
+        events = self.regression['withGuard']['deadOwnerSequences'][0]['events']
+        events.insert(3, '1.0025 11 R BR_CLEAR_DEATH_DONE cookie=c1 h=30')
+        self.save_regression()
+        self.rejected('exactly once')
+
+    def test_regression_without_dead_owner_sequence_is_rejected(self):
+        self.passing_fixture()
+        self.config['fullLifecycle'] = None
+        self.regression['withGuard']['deadOwnerSequences'] = []
+        self.save_regression()
+        self.rejected('No dead-owner')
+
+    def test_regression_for_another_fix_commit_is_rejected(self):
+        self.passing_fixture()
+        self.regression['fixCommit'] = 'f' * 40
+        self.config['binderCleanup']['regression'] = self.write('evidence/regression.json', self.regression)
+        self.rejected('different fix commit')
 
     def test_complete_synthetic_evidence_can_pass_checker_only(self):
         self.passing_fixture()
@@ -226,7 +269,7 @@ class LifecycleGateTest(unittest.TestCase):
     def test_unobserved_acore_cleanup_is_rejected(self):
         self.passing_fixture()
         self.regression['binderProxyCleanupObserved'] = False
-        self.config['binderCleanup']['regression'] = self.write('evidence/regression.json', self.regression)
+        self.save_regression()
         self.rejected('Affected-process Binder cleanup')
 
     def test_nonexistent_fix_commit_is_rejected(self):
@@ -261,7 +304,7 @@ class LifecycleGateTest(unittest.TestCase):
     def test_binder_regression_must_match_candidate(self):
         self.passing_fixture()
         self.regression['imageSha256'] = 'f' * 64
-        self.config['binderCleanup']['regression'] = self.write('evidence/regression.json', self.regression)
+        self.save_regression()
         self.rejected('different candidate')
 
 

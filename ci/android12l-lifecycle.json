@@ -2,9 +2,13 @@
   "schema": 1,
   "historicalEvidence": "docs/android12l-deployment-evidence.json",
   "binderCleanup": {
-    "resolved": false,
-    "fixCommit": null,
-    "regression": null
+    "resolved": true,
+    "resolution": "host-kernel-workaround",
+    "fixCommit": "bb1dce276a2ab093f25f9a33090a74235d9fab28",
+    "regression": {
+      "path": "ci/evidence/binder-death-guard-vm73.json",
+      "sha256": "16be8f415f0be15be6ae6a9bd56eaebf8f4a2fbe4bf17f5c2e5447a41bb09cf4"
+    }
   },
   "fullLifecycle": null,
   "historicalCrash": {

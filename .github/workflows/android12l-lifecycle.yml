@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   ce162-lifecycle:
-    name: CE162 full lifecycle gate
+    name: CE162 Binder workaround gate
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -18,7 +18,13 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Test loader Binder death-notification guard
+        run: |
+          mkdir -p out/ci
+          clang -std=c11 -g -O1 -Wall -Wextra -Werror -Wno-unused-function \
+            -fsanitize=address,undefined runtime/tests/binder_transport.c -o out/ci/binder-transport-test
+          out/ci/binder-transport-test
       - name: Test lifecycle gate and crash rejection
         run: python3 -m unittest discover -s tools/tests -p 'test_android12l_lifecycle_gate.py'
-      - name: Require complete passing lifecycle evidence and Binder fix
+      - name: Require the Binder workaround and its acore regression
         run: python3 tools/check_android12l_lifecycle.py

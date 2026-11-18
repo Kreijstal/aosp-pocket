@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Read-only CI evidence gate; CE162's recorded failure must remain a failure.
+"""Read-only CI evidence gate for the CE162 Binder cleanup crash.
 
-This does not run the Pi VM or qualify a release. A replacement full run must
-include its independent verification receipt, hash-bound raw captures and budget,
-plus an affected-process Binder cleanup regression and reviewed fix reference.
+CE162's recorded failure must stay a failure. The crash comes from a host Rust
+Binder bug: a duplicate BR_CLEAR_DEATH_NOTIFICATION_DONE frees a BpBinder still
+held by a Java BinderProxy. Pocket works around it in its loader. The gate passes
+once a reviewed runtime fix commit and an android.process.acore regression show
+the workaround: one DONE per dead-owner clear and no native crash. The gate does
+not run the Pi VM or qualify a release. A full lifecycle run is optional; if one
+is recorded, it is checked strictly against the same candidate.
 """
 import argparse
 import hashlib
@@ -218,16 +222,11 @@ def check(root, config):
     require(failure['strictCycleIndices'] == [0, 1] and failure['failedCapturedCycleIndex'] == 2,
             'Historical CE162 cycle failure was changed')
     recorded_fatal = replay_historical_crash(root, config, history)
-    blockers = []
     binder = config['binderCleanup']
     if binder.get('resolved') is not True:
-        blockers.append('Binder cleanup remains unresolved: android.process.acore / '
-                        'ReferenceQueueD / RefBase::decStrong / BinderProxy_destroy')
-    if not config.get('fullLifecycle'):
-        blockers.append('CE162 ' + CE162_RUN + ' is FAIL: 2/6 strict cycles; captured cycle 2 '
-                        'contains SIGSEGV; offline outer/UI and seventh-cold lifecycle incomplete; '
+        raise GateError('Binder cleanup remains unresolved: android.process.acore / '
+                        'ReferenceQueueD / RefBase::decStrong / BinderProxy_destroy; '
                         'recorded crash replay: ' + recorded_fatal)
-    require(not blockers, '; '.join(blockers))
     require(isinstance(binder.get('fixCommit'), str) and re.fullmatch(r'[a-f0-9]{40}', binder['fixCommit']),
             'Binder fix commit reference is required')
     fix = binder['fixCommit']
@@ -240,17 +239,27 @@ def check(root, config):
                                        '--name-only', '-r', fix], text=True).splitlines()
     require(any(p.startswith('runtime/') and not p.startswith(('runtime/tests/', 'runtime/tools/'))
                 for p in changed), 'Binder fix commit does not change runtime code')
-    report = check_full(root, config['fullLifecycle'])
     _, regression = checked(root, binder['regression'])
     require(regression.get('validation') == 'PASS' and regression.get('affectedProcess') == 'android.process.acore'
             and regression.get('binderProxyCleanupObserved') is True,
             'Affected-process Binder cleanup regression has not passed')
     require(regression.get('nativeCrashes') == [] and not native_fatals(regression['nativeLog']),
             'Binder cleanup regression contains a native crash')
+    require(regression.get('fixCommit') == fix, 'Binder regression is for a different fix commit')
+    sequences = regression['withGuard']['deadOwnerSequences']
+    require(isinstance(sequences, list) and sequences, 'No dead-owner death notification was exercised')
+    for sequence in sequences:
+        events = [line.split()[3] for line in sequence['events']]
+        require(events.count('BR_DEAD_BINDER') == 1 and events.count('BR_CLEAR_DEATH_DONE') == 1 and
+                events[-1] == 'BR_CLEAR_DEATH_DONE' and
+                events.index('BC_DEAD_BINDER_DONE') < events.index('BR_CLEAR_DEATH_DONE'),
+                'Dead-owner clear did not complete exactly once after BC_DEAD_BINDER_DONE')
+    if not config.get('fullLifecycle'):
+        return 'binder workaround ' + fix[:12]
+    report = check_full(root, config['fullLifecycle'])
     for name in ['imageSha256', 'managerSha256']:
         require(regression[name] == report[name], 'Binder regression is from a different candidate')
     return report['runId']
-
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)

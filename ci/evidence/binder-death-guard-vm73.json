@@ -1,0 +1,89 @@
+{
+ "schema": 1,
+ "kind": "binder-death-guard-regression",
+ "validation": "PASS",
+ "affectedProcess": "android.process.acore",
+ "binderProxyCleanupObserved": true,
+ "nativeCrashes": [],
+ "nativeLog": "07:16:34 n=4 acore=24908\n07:17:04 n=11 acore=\n07:17:12 n=12 acore=25088\n07:23:38 n=111 acore=26909\n07:24:15 n=117 acore=\n07:24:21 n=118 acore=27187\nDONE n=120 07:24:44\n",
+ "rootCause": "Host Rust Binder (android16-6.12 at 501f58f107ab): request_death on a node whose owner is already dead queues BR_DEAD_BINDER without marking the NodeDeath dead, so BC_CLEAR_DEATH_NOTIFICATION completes immediately and BC_DEAD_BINDER_DONE completes it a second time. libbinder drops a weak reference per BR_CLEAR_DEATH_NOTIFICATION_DONE, freeing the BpBinder under the Java BinderProxy (CE162 SIGSEGV in BinderProxy_destroy -> RefBase::decStrong).",
+ "workaround": "runtime/loader/binder_runtime.h withholds the extra DONE: one per clear, never while a BR_DEAD_BINDER is unacknowledged",
+ "fixCommit": "bb1dce276a2ab093f25f9a33090a74235d9fab28",
+ "host": {
+  "vmInstance": 73,
+  "kernel": "6.12.38-android16-5-g501f58f107ab-ab13974591-4k",
+  "binderDriver": "rust_binder"
+ },
+ "guestBuild": "image 0.78.174, Pocket/pocket_arm64/pocket_arm64:12/SE1B.240122.005/11418786:userdebug/release-keys",
+ "workload": "one content query at a time on content://com.android.contacts/contacts; 3 of every 4 clients SIGKILLed mid-query; SIGUSR1 to acore after each client",
+ "withoutGuard": {
+  "loaderSha256": "f56047ad3c50e0f21df07c5af3bf7a110ffa6ced73aa0bda0cbba4ac83d30a46",
+  "result": "FAIL",
+  "clientsUntilCrash": 8,
+  "tombstones": [
+   "tombstone_17",
+   "tombstone_18"
+  ],
+  "tombstoneExcerpt": [
+   "Timestamp: 2026-11-18 07:03:48.237877883+0000",
+   "Cmdline: android.process.acore",
+   "pid: 21404, tid: 21419, name: ReferenceQueueD  >>> android.process.acore <<<",
+   "signal 0 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr --------",
+   "      #00 pc 000000000000ddb8  /system/lib64/libutils.so (android::RefBase::decStrong(void const*) const+28) (BuildId: c1f7ebcd9c7d12c6107c4834ed56b006)",
+   "      #01 pc 0000000000169c24  /system/lib64/libandroid_runtime.so (BinderProxy_destroy(void*)+60) (BuildId: 6a598d27bc7becfba434fe2e56a5c673)"
+  ],
+  "duplicateDoneTrace": [
+   "121859.534 21422 W BC_REQUEST_DEATH h=34 cookie=b400006e116097d0",
+   "121859.534 21423 R BR_DEAD_BINDER cookie=b400006e116097d0 h=34 req=1 clr=0 done=0 dead=1",
+   "121859.534 21423 W BC_CLEAR_DEATH h=34 cookie=b400006e116097d0",
+   "121859.540 21423 R BR_CLEAR_DEATH_DONE cookie=b400006e116097d0 h=34 req=1 clr=1 done=1 dead=1",
+   "121859.547 21423 W BC_DEAD_BINDER_DONE cookie=b400006e116097d0",
+   "121859.548 21423 R BR_CLEAR_DEATH_DONE cookie=b400006e116097d0 h=0 req=0 clr=0 done=0 dead=0 ANOMALY_UNKNOWN_COOKIE",
+   "121864.220 21423 W BC_REQUEST_DEATH h=30 cookie=b400006e116097d0",
+   "121864.224 21422 W BC_CLEAR_DEATH h=30 cookie=b400006e116097d0",
+   "121864.225 21422 R BR_CLEAR_DEATH_DONE cookie=b400006e116097d0 h=30 req=1 clr=1 done=1 dead=0"
+  ]
+ },
+ "withGuard": {
+  "loaderSha256": "17c79d00022fbd2cd00a1aa3705145e68d9f65f30699fd731a8796976ad287e7",
+  "loaderNote": "the deployed 0.78.174 loader (reproduced from source, identical after stripping debug info) plus this guard",
+  "result": "PASS",
+  "clients": 120,
+  "logWindowUtc": "07:16:34-07:24:44 2026-11-18",
+  "acoreIncarnations": 4,
+  "newTombstones": [],
+  "tracerAnomalies": 0,
+  "deadOwnerSequences": [
+   {
+    "trace": "trace-25088",
+    "events": [
+     "122974.563 25106 W BC_REQUEST_DEATH h=30 cookie=b4000078a6e0e250",
+     "122974.587 25307 R BR_DEAD_BINDER cookie=b4000078a6e0e250 h=30 req=1 clr=0 done=0 dead=1",
+     "122974.587 25307 W BC_CLEAR_DEATH h=30 cookie=b4000078a6e0e250",
+     "122974.590 25307 W BC_DEAD_BINDER_DONE cookie=b4000078a6e0e250",
+     "122974.590 25307 R BR_CLEAR_DEATH_DONE cookie=b4000078a6e0e250 h=30 req=1 clr=1 done=1 dead=1"
+    ]
+   },
+   {
+    "trace": "trace-27187",
+    "events": [
+     "123117.252 27205 W BC_REQUEST_DEATH h=30 cookie=b4000078a6e092d0",
+     "123117.252 27276 R BR_DEAD_BINDER cookie=b4000078a6e092d0 h=30 req=1 clr=0 done=0 dead=1",
+     "123117.258 27276 W BC_CLEAR_DEATH h=30 cookie=b4000078a6e092d0",
+     "123117.264 27276 W BC_DEAD_BINDER_DONE cookie=b4000078a6e092d0",
+     "123117.264 27276 R BR_CLEAR_DEATH_DONE cookie=b4000078a6e092d0 h=30 req=1 clr=1 done=1 dead=1"
+    ]
+   },
+   {
+    "trace": "trace-27187",
+    "events": [
+     "123117.286 27206 W BC_REQUEST_DEATH h=34 cookie=b4000078a6e10c50",
+     "123117.296 27205 R BR_DEAD_BINDER cookie=b4000078a6e10c50 h=34 req=1 clr=0 done=0 dead=1",
+     "123117.296 27205 W BC_CLEAR_DEATH h=34 cookie=b4000078a6e10c50",
+     "123117.320 27205 W BC_DEAD_BINDER_DONE cookie=b4000078a6e10c50",
+     "123117.320 27205 R BR_CLEAR_DEATH_DONE cookie=b4000078a6e10c50 h=34 req=1 clr=1 done=1 dead=1"
+    ]
+   }
+  ]
+ }
+}
