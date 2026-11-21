@@ -34,6 +34,21 @@ final class SyscallBackend {
             throw new java.io.IOException("Working directory escapes image");
         return directory;
     }
+    static final String API32_BINDER_PRELOAD="/system/lib64/libpocket_binder_api32.so";
+    /**
+     * Owner console programs ("pocket exec"). The 12L boot environment omits the
+     * preload because the boot scripts choose it per service. Admin clients
+     * still need it: the guest's services prefix their interface tokens with
+     * caller identity, and only this Parcel adapter accepts those callbacks.
+     * Without it, a callback such as cmd's IResultReceiver.send fails
+     * enforceInterface. It is one-way, so cmd waits forever. The adapter's
+     * getContextObject also performs the service-manager handoff itself.
+     */
+    static Map<String,String> adminEnvironment(File root,int parentPid,int sdk) {
+        Map<String,String> env=environment(root,parentPid,sdk);
+        if(sdk==32)env.put("LD_PRELOAD",API32_BINDER_PRELOAD);
+        return env;
+    }
     static Map<String,String> environment(File root,int parentPid) {
         return environment(root,parentPid,28);
     }

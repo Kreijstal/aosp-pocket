@@ -26,7 +26,7 @@ ifneq ($(shell cat out/runtime-native/.arch 2>/dev/null),$(ARCH))
 $(shell rm -rf out/runtime-native && mkdir -p out/runtime-native)
 endif
 .DEFAULT_GOAL := verify
-.PHONY: native verify smoke check-host check-profiles check-host-wire check-display
+.PHONY: native verify smoke check-host check-profiles check-admin-environment check-host-wire check-display
 .PHONY: syscall-profile-probe
 .DELETE_ON_ERROR:
 
@@ -123,6 +123,11 @@ check-profiles:
 	mkdir -p out/profile-tests
 	javac --release 8 -d out/profile-tests runtime/app/src/dev/kreijstal/aosppocket/runtime/GuestProfile.java runtime/tests/GuestProfileTest.java
 	java -cp out/profile-tests dev.kreijstal.aosppocket.runtime.GuestProfileTest
+
+check-admin-environment:
+	mkdir -p out/admin-environment-tests
+	javac --release 8 -d out/admin-environment-tests runtime/app/src/dev/kreijstal/aosppocket/runtime/SyscallBackend.java runtime/tests/AdminEnvironmentTest.java
+	java -cp out/admin-environment-tests dev.kreijstal.aosppocket.runtime.AdminEnvironmentTest
 
 check-host-wire:
 	mkdir -p out/host-wire-tests

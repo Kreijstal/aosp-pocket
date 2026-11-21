@@ -338,7 +338,7 @@ final class DirectImage {
     static Process admin(File root,String cwd,List<String> argv) throws IOException {
         ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,cwd,argv)).directory(SyscallBackend.directory(root,cwd));
         builder.environment().clear();
-        builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid(),GuestProfile.detect(root).sdk));
+        builder.environment().putAll(SyscallBackend.adminEnvironment(root,android.os.Process.myPid(),GuestProfile.detect(root).sdk));
         return builder.start();
     }
 }
