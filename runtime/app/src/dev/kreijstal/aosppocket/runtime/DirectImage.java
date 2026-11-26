@@ -38,14 +38,7 @@ final class DirectImage {
         return disableAttestation(context,28);
     }
     static boolean disableAttestation(Context context,int sdk) throws IOException {
-        File image=root(context,sdk);
-        File config=new File(image,"system-data/misc/keystore/pocket-teesim.json");
-        if(!config.exists())return false;
-        if(!config.getParentFile().getCanonicalPath().startsWith(image.getCanonicalPath()+"/"))
-            throw new IOException("Attestation configuration escapes the guest image");
-        File saved=new File(config.getParentFile(),"pocket-teesim.disabled-"+System.nanoTime()+".json");
-        Files.move(config.toPath(),saved.toPath(),StandardCopyOption.ATOMIC_MOVE);
-        return true;
+        return AttestationBackend.disableTeesimulator(root(context,sdk));
     }
     /**
      * Processes left by an earlier session or the legacy direct backend.
@@ -189,6 +182,9 @@ final class DirectImage {
             if(!entry.delete())throw new IOException("Cannot reset guest property area");
         File console=new File(root,"pocket-console");Files.deleteIfExists(console.toPath());
         Os.symlink("logs/manager-init.log",console.getPath());
+        // Project the owner-selected attestation backend into the image before
+        // any boot environment is derived from it.
+        AttestationBackend.apply(root,AttestationBackend.get(context));
         NativeLoader.prepare(root);
         String interpreter=new File(root,"system/bin/pocket-loader").getPath();
         prepareExecutables(new File(root,"system/bin"),interpreter);
@@ -326,6 +322,7 @@ final class DirectImage {
         ProcessBuilder builder=new ProcessBuilder(SyscallBackend.command(root,"/",program)).directory(root);
         builder.environment().clear();
         builder.environment().putAll(SyscallBackend.environment(root,android.os.Process.myPid(),sdk));
+        builder.environment().put("POCKET_ATTESTATION_BACKEND",AttestationBackend.read(root));
         if(sdk==32) {
             if(runId==null || !runId.matches("[a-zA-Z0-9-]{1,64}"))throw new IOException("Invalid runtime start ID");
             builder.environment().put("POCKET_API32_RUN_ID",runId);

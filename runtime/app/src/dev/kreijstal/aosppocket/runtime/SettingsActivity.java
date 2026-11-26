@@ -15,7 +15,7 @@ import dev.kreijstal.aosppocket.bridge.AndroidVersions;
 /** Management lives on its own page, away from the guest display. */
 public final class SettingsActivity extends RuntimeActivity {
     private Button install, start, stop, apk, lastApp;
-    private Spinner version;
+    private Spinner version, attestation;
     private final List<Integer> versionSdks=new ArrayList<>();
     private TextView performance;
     private TextView adminStatus;
@@ -35,17 +35,40 @@ public final class SettingsActivity extends RuntimeActivity {
         Button androidPage=new Button(this); androidPage.setText("Back to Android");
         androidPage.setOnClickListener(v->androidPage()); layout.addView(androidPage);
         TextView heading=new TextView(this); heading.setText("Settings"); heading.setTextSize(24); layout.addView(heading);
-        Button disableAttestation=new Button(this);
-        disableAttestation.setText("Disable experimental attestation backend");
-        disableAttestation.setOnClickListener(v->{
-            try {
-                boolean disabled=DirectImage.disableAttestation(this,runtime!=null && runtime.directBackend()?runtime.selectedSdk():28);
-                if(disabled && runtime!=null)runtime.stopGuest();
-                Toast.makeText(this,disabled ? "Backend disabled; configuration preserved. Start Android again."
-                    : "Experimental attestation backend is already disabled.",Toast.LENGTH_LONG).show();
-            } catch(Exception error){Toast.makeText(this,"Cannot disable backend: "+error.getMessage(),Toast.LENGTH_LONG).show();}
+        TextView attestationHeading=new TextView(this);
+        attestationHeading.setText("Attestation backend");
+        attestationHeading.setTextSize(18);
+        layout.addView(attestationHeading);
+        attestation = new Spinner(this);
+        attestation.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
+            new ArrayList<>(AttestationBackend.LABELS)));
+        attestation.setSelection(Math.max(0,AttestationBackend.VALUES.indexOf(AttestationBackend.get(this))), false);
+        attestation.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
+                if (updating || runtime == null) return;
+                String value = AttestationBackend.VALUES.get(position);
+                if (value.equals(runtime.attestationBackend())) return;
+                runtime.setAttestationBackend(value);
+                // Keys are bound to the identity the guest booted with, so a
+                // running guest would otherwise keep attesting the old way.
+                if (runtime.running()) runtime.stopGuest();
+                Toast.makeText(SettingsActivity.this,
+                    AttestationBackend.label(value)+" applies the next time Android starts.",Toast.LENGTH_LONG).show();
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
         });
-        layout.addView(disableAttestation);
+        layout.addView(attestation);
+        Button resetKeystore=new Button(this);
+        resetKeystore.setText("Reset guest keystore");
+        resetKeystore.setOnClickListener(v->{
+            try {
+                if (runtime == null) return;
+                int removed=runtime.resetGuestKeystore();
+                Toast.makeText(this,"Guest keystore reset: "+removed+" entries removed. Apps re-create their keys.",
+                    Toast.LENGTH_LONG).show();
+            } catch(Exception error){Toast.makeText(this,"Cannot reset guest keystore: "+error.getMessage(),Toast.LENGTH_LONG).show();}
+        });
+        layout.addView(resetKeystore);
         status = new TextView(this);
         status.setLines(2);
         layout.addView(status);
@@ -79,7 +102,7 @@ public final class SettingsActivity extends RuntimeActivity {
         button("Close manager", open, v -> finishAndRemoveTask());
         layout.addView(open, new LinearLayout.LayoutParams(-1, dp(52)));
         TextView note = new TextView(this);
-        note.setText("Android has its own launcher icon and Recents window. Closing this manager keeps it running. Shared host UID/kernel.");
+        note.setText("Android has its own launcher icon and Recents window. Closing this manager keeps it running. Shared host UID/kernel. The attestation backend is fixed when Android starts; changing it stops the guest, and existing keys keep the identity they were created with until the guest keystore is reset.");
         note.setTextColor(Color.DKGRAY);
         layout.addView(note);
         adminStatus=new TextView(this);layout.addView(adminStatus);
@@ -162,6 +185,8 @@ public final class SettingsActivity extends RuntimeActivity {
         updating = true;
         if (ready) version.setSelection(Math.max(0,versionSdks.indexOf(runtime.selectedSdk())), false);
         version.setEnabled(ready && !runtime.running() && !runtime.starting() && !runtime.preparing() && !runtime.stopping());
+        if (attestation != null) attestation.setSelection(
+            Math.max(0,AttestationBackend.VALUES.indexOf(runtime == null ? AttestationBackend.get(this) : runtime.attestationBackend())), false);
         updating = false;
         apk.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping());
         lastApp.setEnabled(ready && runtime.directBackend() && runtime.booted() && !runtime.stopping() && runtime.hasLastApp());

@@ -192,6 +192,20 @@ public final class GuestService extends Service {
         geometry();
         message("Android " + androidVersion() + " selected. Tap Start.");
     }
+    String attestationBackend() { return AttestationBackend.get(this); }
+    /**
+     * Persist the attestation backend. A running guest keeps the identity it
+     * booted with, so the caller stops it and asks the owner to start again.
+     */
+    void setAttestationBackend(String value) {
+        AttestationBackend.set(this, value);
+        message("Attestation backend: " + AttestationBackend.label(value) + ". Tap Start.");
+    }
+    /** Clears guest key blobs so apps re-create keys under the selected backend. */
+    int resetGuestKeystore() throws java.io.IOException {
+        if (running() || starting || preparing()) throw new java.io.IOException("Stop Android before resetting the guest keystore");
+        return AttestationBackend.resetGuestKeystore(DirectImage.root(this, sdk));
+    }
     private void geometry() {
         width = directBackend() ? hostDisplay.width : legacyWidth;
         height = directBackend() ? hostDisplay.height : legacyHeight;
