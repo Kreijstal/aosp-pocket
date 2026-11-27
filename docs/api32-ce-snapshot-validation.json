@@ -1,0 +1,514 @@
+{
+  "schema": 1,
+  "candidateVersion": "0.78.174",
+  "device": "Pi existing VM73",
+  "apkSha256": "9e953315e38da6ccd35a681d7e348ac76a275ccaa3cbf998d6404de04a33bb12",
+  "unchangedImageSha256": "d9973ac0902d51a1fac6197735c1e59c0bb0ff0945858ca162752ce646924140",
+  "failureBefore": {
+    "application": "com.revolut.revolut",
+    "exception": "java.util.concurrent.TimeoutException: java.io.RandomAccessFile.finalize() timed out after 10 seconds",
+    "blockedFrame": "libcore.io.Linux.close",
+    "inputAnrAlsoObserved": true,
+    "nativeLog": "out/network-caller-fix/pi/final/final-native.log",
+    "nativeLogSha256": "bfe17df7f8605c869d9e23e9aafa304c1f3334697fdf1dd8f0568a9740ff6705"
+  },
+  "threadEvidence": {
+    "managerDump": "out/network-caller-fix/pi/close-trial/host-trace_02.txt",
+    "observed": [
+      "CeNamespace.sync called EncryptedStore.write -> block under namespace and store monitors",
+      "FUSE receive callback CeStorage.fuseRead blocked in EncryptedStore.readBounded from disk under the same monitors",
+      "RPC fsync and background checkpoint wait on the commit lease"
+    ],
+    "scope": "Observed redundant metadata reads and serialized file-operation delays; do not claim this establishes the S20 One UI restart cause"
+  },
+  "fix": {
+    "metadataSnapshots": "Replace known changed chunks directly from the authoritative complete serialized metadata, retaining unchanged ciphertext chunks",
+    "partialWrites": "Existing authenticated read/modify/write unchanged",
+    "capture": "Namespace and file snapshot still captured together under the same locks",
+    "durability": "Encrypted chunk/index sync and atomic state commit unchanged",
+    "diskFormatChanged": false
+  },
+  "tests": [
+    {
+      "command": "python3 tools/test_ce_snapshot.py",
+      "result": "PASS: no-old-read regression; chunk reuse, tail shrink/grow/zero-fill and invalid bitmap/range rejection; both namespace layouts and durable reopen"
+    },
+    {
+      "command": "python3 tools/test_encrypted_store.py",
+      "result": "PASS: encrypted backend behavior and 8 SIGKILL recovery cycles"
+    }
+  ],
+  "piAfter": {
+    "ordinaryAppUid": 10114,
+    "nonce": "508535212689249fd9fafafbbedc33dd",
+    "checks": {
+      "runtime_binder_uid_nondumpable": "PASS",
+      "runtime_keystore_nondumpable": "PASS",
+      "runtime_dns_nondumpable": "PASS",
+      "runtime_network_nondumpable": "PASS"
+    },
+    "revolutPid": 22671,
+    "revolutAt150Seconds": "Alive with onboarding spinner; startup not successful",
+    "inputAnr": {
+      "observed": true,
+      "activity": "UserOnboardingLauncherActivity",
+      "inputTimeoutMs": 20009
+    },
+    "randomAccessFileFinalizerTimeoutObserved": false,
+    "randomAccessFileFinalizerScope": "No occurrence in this bounded capture; not proof of resolution",
+    "nativeLog": "out/ce-snapshot-fix/pi/final-native.log",
+    "stopCompletionObserved": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 32,
+      "running": false,
+      "ready": false,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 12L stopped. Tap Start to boot again.",
+      "shellUid": 0
+    },
+    "phoneS20Ssh": "LAN 192.168.188.157:8022 timed out; no phone test performed",
+    "attest114": {
+      "nonce": "ebabf8669b1ac458164bd9668f5e5af8",
+      "checks": {
+        "runtime_binder_uid_nondumpable": {
+          "status": "PASS",
+          "detail": "Raw Binder preserves package UID=10114 with dumpable=0",
+          "data": {
+            "package": "dev.kreijstal.attestprobe",
+            "applicationUid": 10114,
+            "processUid": 10114,
+            "probePid": 27518,
+            "callerPid": 27481,
+            "processName": "dev.kreijstal.attestprobe:binder_uid_probe",
+            "userId": 0,
+            "source": "Direct /dev/binder IOCTLs in a private service process; no credential prefix added",
+            "nativeValues": [
+              1,
+              1,
+              0,
+              1,
+              0,
+              10114,
+              2,
+              0,
+              0,
+              0,
+              10114,
+              2,
+              0,
+              1,
+              108,
+              5
+            ],
+            "schemaVersion": 1,
+            "originalDumpable": 1,
+            "baseline": {
+              "setDumpableStatus": 0,
+              "actualDumpable": 1,
+              "nativeStatus": 0,
+              "rawBinderUid": 10114,
+              "parcelFormat": 2
+            },
+            "nonDumpable": {
+              "setDumpableStatus": 0,
+              "actualDumpable": 0,
+              "nativeStatus": 0,
+              "rawBinderUid": 10114,
+              "parcelFormat": 2
+            },
+            "restoreStatus": 0,
+            "restoredDumpable": 1,
+            "elapsedMs": 108,
+            "transactionCode": 5,
+            "mainProcessDumpabilityBefore": 1,
+            "mainProcessDumpabilityAfter": 1,
+            "mainProcessDumpabilityChanged": false
+          }
+        },
+        "runtime_keystore_nondumpable": {
+          "status": "PASS",
+          "detail": "AES-GCM, RSA-PKCS1, RSA-OAEP and EC generation/use passed with dumpable=1, 0, 1; temporary keys deleted",
+          "data": {
+            "applicationUid": 10114,
+            "processUid": 10114,
+            "probePid": 27556,
+            "callerPid": 27481,
+            "processName": "dev.kreijstal.attestprobe:keystore_probe",
+            "probeKind": "Keystore",
+            "source": "Ordinary AndroidKeyStore JCA generation and crypto; private process; fresh temporary aliases only",
+            "originalDumpable": 1,
+            "attestationRequested": false,
+            "strongBoxRequested": false,
+            "provider": "AndroidKeyStore",
+            "phases": [
+              {
+                "requestedDumpable": 1,
+                "setDumpableStatus": 0,
+                "actualDumpable": 1,
+                "operations": [
+                  {
+                    "algorithm": "AES_GCM",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "RSA_PKCS1",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "RSA_OAEP",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "EC",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  }
+                ]
+              },
+              {
+                "requestedDumpable": 0,
+                "setDumpableStatus": 0,
+                "actualDumpable": 0,
+                "operations": [
+                  {
+                    "algorithm": "AES_GCM",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "RSA_PKCS1",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "RSA_OAEP",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "EC",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  }
+                ]
+              },
+              {
+                "requestedDumpable": 1,
+                "setDumpableStatus": 0,
+                "actualDumpable": 1,
+                "operations": [
+                  {
+                    "algorithm": "AES_GCM",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "RSA_PKCS1",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "RSA_OAEP",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  },
+                  {
+                    "algorithm": "EC",
+                    "keyGenerated": true,
+                    "operationPassed": true,
+                    "temporaryKeyDeleted": true
+                  }
+                ]
+              }
+            ],
+            "restoreStatus": 0,
+            "restoredDumpable": 1,
+            "mainProcessDumpabilityBefore": 1,
+            "mainProcessDumpabilityAfter": 1,
+            "mainProcessDumpabilityChanged": false
+          }
+        },
+        "runtime_dns_nondumpable": {
+          "status": "PASS",
+          "detail": "Native DNS resolved example.com with dumpable=1, 0, 1; original process state restored",
+          "data": {
+            "applicationUid": 10114,
+            "processUid": 10114,
+            "probePid": 27607,
+            "callerPid": 27481,
+            "processName": "dev.kreijstal.attestprobe:dns_probe",
+            "probeKind": "DNS",
+            "source": "Native Bionic getaddrinfo; private process; no Java DNS cache",
+            "hostname": "example.com",
+            "addressFamily": "IPv4",
+            "javaDnsCacheUsed": false,
+            "nativeValues": [
+              1,
+              1,
+              1,
+              0,
+              1,
+              0,
+              2,
+              56,
+              0,
+              0,
+              0,
+              0,
+              2,
+              32,
+              1,
+              0,
+              1,
+              0,
+              2,
+              17,
+              0,
+              1,
+              105,
+              0
+            ],
+            "schemaVersion": 1,
+            "originalDumpable": 1,
+            "restoreStatus": 0,
+            "restoredDumpable": 1,
+            "elapsedMs": 105,
+            "phases": [
+              {
+                "requestedDumpable": 1,
+                "setDumpableStatus": 0,
+                "actualDumpable": 1,
+                "lookupStatus": 0,
+                "addressCount": 2,
+                "elapsedMs": 56
+              },
+              {
+                "requestedDumpable": 0,
+                "setDumpableStatus": 0,
+                "actualDumpable": 0,
+                "lookupStatus": 0,
+                "addressCount": 2,
+                "elapsedMs": 32
+              },
+              {
+                "requestedDumpable": 1,
+                "setDumpableStatus": 0,
+                "actualDumpable": 1,
+                "lookupStatus": 0,
+                "addressCount": 2,
+                "elapsedMs": 17
+              }
+            ],
+            "mainProcessDumpabilityBefore": 1,
+            "mainProcessDumpabilityAfter": 1,
+            "mainProcessDumpabilityChanged": false
+          }
+        },
+        "runtime_network_nondumpable": {
+          "status": "PASS",
+          "detail": "Native DNS and TCP resolved and connected to example.com:443 with dumpable=1, 0, 1; original process state restored",
+          "data": {
+            "applicationUid": 10114,
+            "processUid": 10114,
+            "probePid": 27636,
+            "callerPid": 27481,
+            "processName": "dev.kreijstal.attestprobe:network_probe",
+            "probeKind": "Network",
+            "source": "Native Bionic DNS and TCP connect; private process; no application data",
+            "hostname": "example.com",
+            "addressFamily": "IPv4",
+            "javaDnsCacheUsed": false,
+            "port": 443,
+            "applicationDataSent": false,
+            "nativeValues": [
+              1,
+              1,
+              1,
+              0,
+              1,
+              0,
+              2,
+              38,
+              0,
+              15,
+              0,
+              0,
+              0,
+              0,
+              2,
+              16,
+              0,
+              17,
+              1,
+              0,
+              1,
+              0,
+              2,
+              15,
+              0,
+              11,
+              0,
+              1,
+              112,
+              0
+            ],
+            "schemaVersion": 1,
+            "originalDumpable": 1,
+            "restoreStatus": 0,
+            "restoredDumpable": 1,
+            "elapsedMs": 112,
+            "phases": [
+              {
+                "requestedDumpable": 1,
+                "setDumpableStatus": 0,
+                "actualDumpable": 1,
+                "lookupStatus": 0,
+                "addressCount": 2,
+                "dnsElapsedMs": 38,
+                "tcpStatus": 0,
+                "tcpElapsedMs": 15
+              },
+              {
+                "requestedDumpable": 0,
+                "setDumpableStatus": 0,
+                "actualDumpable": 0,
+                "lookupStatus": 0,
+                "addressCount": 2,
+                "dnsElapsedMs": 16,
+                "tcpStatus": 0,
+                "tcpElapsedMs": 17
+              },
+              {
+                "requestedDumpable": 1,
+                "setDumpableStatus": 0,
+                "actualDumpable": 1,
+                "lookupStatus": 0,
+                "addressCount": 2,
+                "dnsElapsedMs": 15,
+                "tcpStatus": 0,
+                "tcpElapsedMs": 11
+              }
+            ],
+            "mainProcessDumpabilityBefore": 1,
+            "mainProcessDumpabilityAfter": 1,
+            "mainProcessDumpabilityChanged": false
+          }
+        },
+        "runtime_storage_io": {
+          "status": "FAIL",
+          "detail": "App-private storage sync took 8359 ms; exceeds this diagnostic's 5-second per-operation budget",
+          "data": {
+            "applicationUid": 10114,
+            "processUid": 10114,
+            "probePid": 27664,
+            "callerPid": 27481,
+            "processName": "dev.kreijstal.attestprobe:storage_probe",
+            "probeKind": "Storage",
+            "source": "App-private RandomAccessFile write/sync/read/close; temporary 8 KiB canary; no dumpability changes",
+            "measurements": [
+              1,
+              444,
+              1,
+              8359,
+              1,
+              15,
+              17,
+              8192,
+              8192,
+              1,
+              1,
+              1
+            ],
+            "schemaVersion": 1,
+            "bytes": 8192,
+            "openMs": 444,
+            "writeMs": 1,
+            "syncMs": 8359,
+            "readMs": 1,
+            "closeMs": 15,
+            "cleanupMs": 17,
+            "readbackMatched": true,
+            "canaryRemoved": true,
+            "perOperationBudgetMs": 5000,
+            "dumpabilityChangedByProbe": false,
+            "mainProcessDumpabilityBefore": 1,
+            "mainProcessDumpabilityAfter": 1,
+            "mainProcessDumpabilityChanged": false
+          }
+        }
+      },
+      "registeredDefaultChecks": 64,
+      "registeredAttestChecks": 31,
+      "fullAttestPassClaimed": false
+    },
+    "revolutEventually": {
+      "screen": "Secure your phone to unlock your Revolut app",
+      "screenshot": "out/ce-snapshot-fix/pi/revolut-secure-lock-required.png",
+      "testProfilePasswordFree": true,
+      "credentialChanged": false,
+      "successfulAuthenticatedBankingSessionClaimed": false,
+      "qualificationClaimed": false
+    },
+    "apkSequentialReadSeconds": [
+      {
+        "path": "/data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/api32/system-data/app/~~gHqXnR_3Hg1bV1s0IalsOQ==/com.revolut.revolut-E3yA42hdErDnoXezwTR21A==/base.apk",
+        "elapsedSeconds": 110.91240124893375
+      },
+      {
+        "path": "/data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/api32/system-data/app/~~gHqXnR_3Hg1bV1s0IalsOQ==/com.revolut.revolut-E3yA42hdErDnoXezwTR21A==/split_config.arm64_v8a.apk",
+        "elapsedSeconds": 25.679296913789585
+      },
+      {
+        "path": "/data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/api32/system-data/app/~~gHqXnR_3Hg1bV1s0IalsOQ==/com.revolut.revolut-E3yA42hdErDnoXezwTR21A==/split_config.es.apk",
+        "elapsedSeconds": 10.514608154073358
+      },
+      {
+        "path": "/data/user/0/dev.kreijstal.aosppocket.api32managerimage/files/api32/system-data/app/~~gHqXnR_3Hg1bV1s0IalsOQ==/com.revolut.revolut-E3yA42hdErDnoXezwTR21A==/split_config.xxhdpi.apk",
+        "elapsedSeconds": 0.6320581780746579
+      }
+    ]
+  },
+  "fullLifecycleQualified": false,
+  "fullAttestPassClaimed": false,
+  "ce162Resolved": false,
+  "remainingIssue": "App-private encrypted-storage sync latency: ordinary app 8 KiB canary took 8359ms, diagnostic FAIL. Repeated earlier input ANRs remain preserved; reaching the security prompt does not supersede them.",
+  "cleanup": {
+    "socketRestoredAndVerified": true,
+    "temporaryImportRemoved": true,
+    "publicFixtureRestorationReceipt": "/home/pi/pocket-api32-vm/network-fix174/fixture-restoration.json",
+    "lastStopState": {
+      "enabled": true,
+      "port": 2228,
+      "sdk": 32,
+      "running": false,
+      "ready": false,
+      "starting": false,
+      "stopping": false,
+      "status": "Android 12L stopped. Tap Start to boot again.",
+      "shellUid": 0
+    },
+    "fullLifecycleQualified": false
+  },
+  "finalAttestApk": {
+    "sha256": "8832055f716aed9cae3aa8ddd31d1107943d1aa0eb68971ceb406cb3e3661d02",
+    "installedOnPi": true,
+    "probeBytecodeUnchangedFromMeasuredApk": true,
+    "privacyCopyAudit": "out/ce-snapshot-fix/attest/privacy-copy-validation.json"
+  }
+}
