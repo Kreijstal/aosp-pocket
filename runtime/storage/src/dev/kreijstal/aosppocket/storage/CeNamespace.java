@@ -39,9 +39,8 @@ public final class CeNamespace {
     private final TreeMap<Integer,Node> nodes=new TreeMap<>();
     private int next=7;
     private String[] roots=ROOTS;
-    // Hashes describe the current in-memory index, including uncommitted
-    // writes. Compare before calling store.write, which otherwise has to read
-    // every old chunk after file data has evicted it from the shared cache.
+    // Hashes describe the staged index, including changes awaiting a commit.
+    // They let us replace changed chunks without reading their old ciphertext.
     private byte[][] serializedChunks=new byte[0][];
     private boolean metadataDirty;
     private long metadataRevision;
@@ -279,13 +278,11 @@ public final class CeNamespace {
                 out.flush();byte[] raw=bytes.toByteArray();
                 try {
                     byte[][] next=chunkHashes(raw),previous=serializedChunks;
-                    // A partially failed resize/write invalidates comparisons
-                    // until a complete index image has been prepared again.
-                    serializedChunks=null;store.resize(INDEX,raw.length);
-                    for(int i=0;i<next.length;i++)if(previous==null || i>=previous.length || !Arrays.equals(next[i],previous[i])) {
-                        int at=i*EncryptedStore.CHUNK_SIZE;
-                        store.write(INDEX,at,raw,at,Math.min(EncryptedStore.CHUNK_SIZE,raw.length-at));
-                    }
+                    boolean[] changed=new boolean[next.length];
+                    for(int i=0;i<next.length;i++)changed[i]=previous==null || i>=previous.length || !Arrays.equals(next[i],previous[i]);
+                    // Invalidate comparisons until replacement has completed.
+                    // No old chunk reads are needed for this complete snapshot.
+                    serializedChunks=null;store.replaceSnapshot(INDEX,raw,changed);
                     serializedChunks=next;
                     commit.capture();revision=metadataRevision;
                 }finally{Arrays.fill(raw,(byte)0);}
