@@ -26,7 +26,34 @@ final class ExternalVolume32 implements AutoCloseable {
     private int attaches,revocations,denials,replyFailures;
     private String lastReplyFailure;
     private final JSONArray retiredHolders=new JSONArray();
-    static boolean selected(File root) {return new File(root,"system/etc/pocket-external-volume32").isFile();}
+    // The volume is served through host AppFuse, whose opens run under the
+    // host StorageManagerService and vold locks; a stalled one let the host
+    // watchdog restart system_server on the S20 (2026-11-17/18). It stays off
+    // unless the owner creates this marker; the guest then runs without an
+    // emulated external volume. Its data in /data/media is left untouched.
+    static final String ALLOW=".pocket-external-appfuse-allowed";
+    private static final String MARKER="system/etc/pocket-external-volume32",GATED=MARKER+".gated";
+    static boolean selected(File root) {return new File(root,ALLOW).isFile() && new File(root,MARKER).isFile();}
+    /** Hides or restores the image's volume marker before the guest starts; returns whether the image selected the volume. */
+    static boolean gate(File root)throws IOException {
+        Path marker=new File(root,MARKER).toPath(),gated=new File(root,GATED).toPath();
+        boolean allowed=new File(root,ALLOW).isFile();
+        if(!allowed && Files.isRegularFile(marker,LinkOption.NOFOLLOW_LINKS))Files.move(marker,gated,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
+        else if(allowed && !Files.exists(marker,LinkOption.NOFOLLOW_LINKS) && Files.isRegularFile(gated,LinkOption.NOFOLLOW_LINKS))Files.move(gated,marker,StandardCopyOption.ATOMIC_MOVE);
+        // Without the AppFuse volume, shared storage is the plain /data/media
+        // tree, which the guest loader and vold present as /sdcard.
+        Path plain=new File(root,PLAIN).toPath();
+        if(selected(root))Files.deleteIfExists(plain);
+        else {
+            // A volume that ran before leaves the loader's external-routing
+            // selectors; with no broker they would strand every /sdcard path.
+            for(String selector:new String[]{".pocket-external-enabled",".pocket-external-namespace-enabled"})
+                Files.deleteIfExists(new File(root,selector).toPath());
+            if(!Files.isRegularFile(plain,LinkOption.NOFOLLOW_LINKS))Files.write(plain,new byte[]{'1','\n'});
+        }
+        return Files.isRegularFile(marker,LinkOption.NOFOLLOW_LINKS) || Files.isRegularFile(gated,LinkOption.NOFOLLOW_LINKS);
+    }
+    static final String PLAIN=".pocket-media-plain";
     private static void clearStoppedEndpoints(File root)throws Exception {
         File[] identities=new File(root,".pocket-identity").listFiles();
         if(identities!=null)for(File identity:identities)if(identity.getName().matches("[1-9][0-9]*")) {

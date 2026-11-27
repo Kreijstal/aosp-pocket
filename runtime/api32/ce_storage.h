@@ -12,7 +12,9 @@
 
 // Same app-owned CE protocol used by the older integration. This caller is
 // reached only after the typed vold adapter authenticates its Binder caller.
-inline bool ceEnabled32(){return access("/.pocket-ce-enabled",F_OK)==0;}
+// Emulated CE (plain files, locked by the Manager) keeps the same file-based
+// encryption contract; only real CE also routes paths through the loader.
+inline bool ceEnabled32(){return access("/.pocket-ce-enabled",F_OK)==0 || access("/.pocket-ce-emulated",F_OK)==0;}
 inline int ceControl32(unsigned operation,const std::vector<uint8_t>& secret={}) {
     struct Request {uint32_t magic,version,op,nr,uid,gid;uint64_t args[6];uint32_t p,q,data,groups;};
     static_assert(sizeof(Request)==88,"CE request ABI");
