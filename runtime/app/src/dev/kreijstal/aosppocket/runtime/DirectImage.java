@@ -178,14 +178,15 @@ final class DirectImage {
         if(GuestProfile.detect(root).sdk!=sdk)throw new IOException("Downloaded Android image SDK does not match the selected profile");
         for(String name:new String[]{"system-data",".pocket-owner","dev/socket","dev/__properties__","dev/input","logs","tmp"})new File(root,name).mkdirs();
         prepareDataPath(root,sdk);
+        // Project the owner-selected attestation backend into the image before
+        // any boot environment is derived from it, and before the preload step
+        // reads that marker.
+        AttestationBackend.apply(root,AttestationBackend.get(context));
         if(sdk==32)AttestationPreload32.apply(context,root);
         for(File entry:new File(root,"dev/__properties__").listFiles())
             if(!entry.delete())throw new IOException("Cannot reset guest property area");
         File console=new File(root,"pocket-console");Files.deleteIfExists(console.toPath());
         Os.symlink("logs/manager-init.log",console.getPath());
-        // Project the owner-selected attestation backend into the image before
-        // any boot environment is derived from it.
-        AttestationBackend.apply(root,AttestationBackend.get(context));
         NativeLoader.prepare(root);
         String interpreter=new File(root,"system/bin/pocket-loader").getPath();
         prepareExecutables(new File(root,"system/bin"),interpreter);
