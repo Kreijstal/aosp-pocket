@@ -19,6 +19,8 @@ static int guest_identity=1;
 static unsigned guest_uid[3]={10017,10017,10017},guest_gid[3];
 static unsigned kernel_calls,seen,active_maps,maximum_copy,checks;
 static int kernel_error;
+static int fd_flags,finish_bootstrap_on_wait;
+static unsigned bootstrap_waits;
 static size_t consume_limit,reply_bytes;
 static unsigned char scripted[512];static size_t scripted_size;static int consume_none;
 static void (*inspect)(const struct binder_transaction_data*,uint32_t,const void*);
@@ -67,6 +69,18 @@ static long raw(long nr,long a,long b,long c,long d,long e,long f) {
   unsigned i;for(i=0;i<2048 && allocations[i].address!=a;i++){}assert(i<2048 && allocations[i].size==(size_t)b);
   long result=syscall(nr,a,b,c,d,e,f);assert(!result);allocations[i].address=0;active_maps--;return result;
  }
+ if(nr==__NR_fcntl && a==70) {
+  if(b==F_GETFL)return fd_flags;
+  assert(b==F_SETFL);fd_flags=(int)c;return 0;
+ }
+ if(nr==__NR_nanosleep && finish_bootstrap_on_wait) {
+  bootstrap_waits++;
+  fd_flags&=~O_NONBLOCK;
+  binder_find(70,0)->state=2;
+  kernel_error=0;
+  reply_bytes=4;
+  return 0;
+ }
  if(nr==__NR_getpid || nr==__NR_gettid || nr==__NR_clock_gettime || nr==__NR_nanosleep || nr==__NR_ppoll) {
   long result=syscall(nr,a,b,c,d,e,f);return result<0?-errno:result;
  }
@@ -74,6 +88,7 @@ static long raw(long nr,long a,long b,long c,long d,long e,long f) {
 }
 static void reset(void) {
  assert(!active_maps);kernel_calls=seen=maximum_copy=0;kernel_error=0;consume_limit=reply_bytes=0;inspect=NULL;
+ fd_flags=O_RDWR;finish_bootstrap_on_wait=0;bootstrap_waits=0;
  memset(binder_fds,0,sizeof(binder_fds));memset(binder_host_threads,0,sizeof(binder_host_threads));binder_owner_pid=getpid();
  memset(binder_deaths,0,sizeof(binder_deaths));binder_death_withheld=0;binder_death_cursor=0;scripted_size=0;
  struct PocketBinderFd*f=binder_find(70,1);assert(f);f->state=2;f->manager=42;
@@ -178,6 +193,25 @@ int main(void) {
  rw=(struct binder_write_read){.write_size=2*n,.write_buffer=(uintptr_t)commands};
  assert(binder_ioctl(70,(uintptr_t)&rw)==-EAGAIN && rw.write_consumed==n && seen==1 && !active_maps);
  consume_limit=0;kernel_error=0;assert(binder_ioctl(70,(uintptr_t)&rw)==0 && rw.write_consumed==2*n && seen==2 && !active_maps);checks++;
+ // The looper gets EAGAIN during bootstrap after its outgoing commands were consumed.
+ reset();inspect=prefixed;kernel_error=-EAGAIN;fd_flags|=O_NONBLOCK;finish_bootstrap_on_wait=1;
+ struct PocketBinderFd *bootstrap_fd=binder_find(70,0);
+ bootstrap_fd->state=1;bootstrap_fd->bootstrap_set_nonblock=1;
+ rw=(struct binder_write_read){.write_size=n,.write_buffer=(uintptr_t)commands,.read_size=sizeof(incoming),.read_buffer=(uintptr_t)incoming};
+ assert(binder_ioctl(70,(uintptr_t)&rw)==0 && kernel_calls==2 && bootstrap_waits==1);
+ assert(rw.write_consumed==n && rw.read_consumed==4 && seen==1 && !active_maps);checks++;
+ // EAGAIN may be observed after bootstrap has already restored blocking mode.
+ reset();kernel_error=-EAGAIN;binder_find(70,0)->bootstrap_set_nonblock=1;
+ rw=(struct binder_write_read){.read_size=sizeof(incoming),.read_buffer=(uintptr_t)incoming};
+ assert(binder_ioctl(70,(uintptr_t)&rw)==-EAGAIN && kernel_calls==2 && bootstrap_waits==0);checks++;
+ // A descriptor explicitly set nonblocking after bootstrap still gets EAGAIN.
+ reset();kernel_error=-EAGAIN;fd_flags|=O_NONBLOCK;binder_find(70,0)->bootstrap_set_nonblock=1;
+ assert(binder_ioctl(70,(uintptr_t)&rw)==-EAGAIN && kernel_calls==1 && bootstrap_waits==0);checks++;
+ // Bootstrap on an already nonblocking fd leaves its mode and reads alone.
+ reset();fd_flags|=O_NONBLOCK;bootstrap_fd=binder_find(70,0);bootstrap_fd->state=1;
+ assert(binder_bootstrap(70,bootstrap_fd)==-ENOSYS && !bootstrap_fd->bootstrap_set_nonblock && fd_flags==(O_RDWR|O_NONBLOCK));
+ kernel_calls=0;kernel_error=-EAGAIN;
+ assert(binder_ioctl(70,(uintptr_t)&rw)==-EAGAIN && kernel_calls==1 && bootstrap_waits==0);checks++;
  reset();struct binder_transaction_data bad=tx;bad.data.ptr.buffer=1;command(commands,BC_TRANSACTION,bad);command(commands+n,BC_TRANSACTION,tx);
  rw=(struct binder_write_read){.write_size=2*n,.write_consumed=n,.write_buffer=(uintptr_t)commands};inspect=prefixed;
  assert(binder_ioctl(70,(uintptr_t)&rw)==0 && seen==1 && !active_maps);checks++;
@@ -260,5 +294,5 @@ int main(void) {
   for(unsigned i=1;i<POCKET_BINDER_DEATHS;i+=2){script(BR_CLEAR_DEATH_NOTIFICATION_DONE,0x1000+i);assert(!strcmp(exchange(71,out,0),"C"));}
   assert(!binder_death_withheld);checks++;
  }
- printf("PASS: raw Binder credential transport %u cases; original buffers, SG objects, partial writes, host scope, bounds, cleanup and death-notification DONE guard\n",checks);
+ printf("PASS: raw Binder credential transport %u cases; original buffers, SG objects, partial writes, bootstrap read retry, host scope, bounds, cleanup and death-notification DONE guard\n",checks);
 }

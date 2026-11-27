@@ -6,6 +6,10 @@ The full credential-lifecycle run failed. Binder cleanup remains unresolved.
 No release gate below is satisfied by this document, and no qualification or
 support flag is changed. This checklist does not authorize deployment or publication.
 
+The [CI lifecycle evidence gate](android12l-ci.md) currently fails on CE162.
+It requires a Binder fix record and complete matching replacement evidence;
+a scoped recovery PASS cannot clear it.
+
 ## Candidate and recorded result
 
 This record concerns the ARM64 API32 image **0.78.136** and the test Manager
