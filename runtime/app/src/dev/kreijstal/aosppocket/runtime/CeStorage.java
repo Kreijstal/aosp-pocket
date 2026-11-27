@@ -37,6 +37,7 @@ final class CeStorage implements AutoCloseable {
     private final Map<Integer,Integer> opened=new HashMap<>();
     private final Set<Integer> touched=new HashSet<>();
     private volatile boolean draining;
+    private volatile boolean emulatedUnlocked;
     static boolean enabled(File root){return new File(root,".pocket-ce-enabled").isFile();}
     CeStorage(File root)throws Exception{this(root,()->{});}
     CeStorage(File root,Runnable transportDead)throws Exception {
@@ -49,7 +50,11 @@ final class CeStorage implements AutoCloseable {
         Path endpoint=new File(root,"dev/socket/pocket_ce").toPath();Files.deleteIfExists(endpoint);
         bound.bind(new LocalSocketAddress(endpoint.toString(),LocalSocketAddress.Namespace.FILESYSTEM));
         Os.chmod(endpoint.toString(),0600);server=new LocalServerSocket(bound.getFileDescriptor());
-        fuse=new CeFuse(this);publishDevice(fuse.device);
+        // Only real encryption needs the host AppFuse transport; plain and
+        // emulated CE storage is reached directly by the guest.
+        if(enabled(root)){fuse=new CeFuse(this);publishDevice(fuse.device);}
+        CeEmulated.adoptExport(root);
+        if(CeEmulated.enabled(root))CeEmulated.seal(root);
         new Thread(this::accept,"PocketCeRpc").start();
         checkpoints.scheduleWithFixedDelay(this::checkpoint,250,250,TimeUnit.MILLISECONDS);
     }
@@ -147,7 +152,25 @@ final class CeStorage implements AutoCloseable {
         if(secret.length==0){if(namespace==null || diskSecret==null)throw new FsException(13);CeDefaultKey.prepare(root,diskSecret);}
         else {unlock(secret);CeDefaultKey.prepareSecure(root);}
     }
+    private synchronized Reply emulated(Request r)throws Exception {
+        switch((int)r.nr) {
+        case 0:return new Reply(emulatedUnlocked?2:1);
+        case 1:CeEmulated.verify(root,r.data);if(!emulatedUnlocked){CeEmulated.unseal(root);emulatedUnlocked=true;}return new Reply(0);
+        case 2:if(emulatedUnlocked){CeEmulated.seal(root);emulatedUnlocked=false;}return new Reply(0);
+        case 3:CeEmulated.prepareAuth(root,r.data,emulatedUnlocked);return new Reply(0);
+        case 9:CeEmulated.fixate(root);return new Reply(0);
+        case 10:return new Reply(0); // no plain-to-encrypted capture
+        default:throw new FsException(95);
+        }
+    }
+    /** After an export: lets emulated CE accept this store's disk secret. */
+    synchronized void enrollEmulated()throws Exception {
+        if(diskSecret==null)throw new FsException(13);
+        CeEmulated.enroll(root,diskSecret,new File(root,".pocket-ce-authless").isFile());
+    }
     private CeNamespace unlocked()throws FsException {CeNamespace ns=namespace;if(ns==null)throw new FsException(13);return ns;}
+    /** The unlocked namespace, for an offline plain export after the guest stopped. */
+    CeNamespace exportSource()throws FsException {return unlocked();}
     // As with file-based encryption, a CE root's own user.* attributes stay
     // readable while locked. UserDataPreparer reads user.serial at boot and
     // destroys the user's DE and CE storage on any error but ENODATA.
@@ -235,6 +258,7 @@ final class CeStorage implements AutoCloseable {
     private Reply handle(Request r)throws Exception {
         if(r.op==3) {
             if(r.uid!=0 && r.uid!=1000)throw new FsException(1);
+            if(CeEmulated.enabled(root))return emulated(r);
             if(r.nr==0)return new Reply(namespace!=null?2:enabled(root)?1:0);
             if(r.nr==1){unlock(r.data);return new Reply(0);}
             if(r.nr==3){prepareAuth(r.data);return new Reply(0);}
@@ -413,6 +437,7 @@ final class CeStorage implements AutoCloseable {
     synchronized byte[] takePreparedSecret(){byte[] value=preparedSecret;preparedSecret=null;return value;}
     @Override public void close()throws Exception {
         closed=true;
+        if(CeEmulated.enabled(root))try{CeEmulated.seal(root);emulatedUnlocked=false;}catch(Exception error){android.util.Log.e("PocketCE","Cannot lock emulated CE storage",error);}
         // Do not interrupt a checkpoint during its atomic durable commit.
         checkpoints.shutdown();boolean interrupted=false;
         while(true)try{if(checkpoints.awaitTermination(1,TimeUnit.DAYS))break;}catch(InterruptedException error){interrupted=true;}

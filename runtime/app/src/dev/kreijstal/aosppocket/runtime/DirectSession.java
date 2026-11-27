@@ -102,7 +102,7 @@ final class DirectSession implements AutoCloseable {
                 battery=new BootBattery(context,root);hostBroker=new HostBroker(context,root);
                 ceStorage=new CeStorage(root,()->main.post(()->{if(!closed)listener.restart("Encrypted storage stopped working; restarting Android…");}));
                 if(sdk==29 || sdk==32)power=new GuestPower(context,root);
-                if(sdk==32){audio32=new HostAudio(root,context);log32=new GuestLog32(root);if(ExternalVolume32.selected(root))external32=new ExternalVolume32(root);}
+                if(sdk==32){audio32=new HostAudio(root,context);log32=new GuestLog32(root);if(ExternalVolume32.gate(root) && !ExternalVolume32.selected(root))android.util.Log.i("PocketStorage","External storage volume disabled: it needs host AppFuse (touch /"+ExternalVolume32.ALLOW+" to allow)");if(ExternalVolume32.selected(root))external32=new ExternalVolume32(root);}
                 init=DirectImage.start(root,runId);
                 runtimeLog=new RuntimeLog(new File(root,"logs/manager-init.log"));
             }
@@ -207,7 +207,21 @@ final class DirectSession implements AutoCloseable {
                 byte[] migration=ceStorage.takePreparedSecret();
                 try {
                     DirectImage.stopLeftovers(root);
+                    String exported=null;
+                    if(migration==null && CePlainExport.requested(root)) {
+                        main.post(()->listener.status("Decrypting "+androidName+" private storage…"));
+                        try{exported=CePlainExport.perform(root,ceStorage.exportSource());ceStorage.enrollEmulated();}
+                        catch(dev.kreijstal.aosppocket.storage.CeNamespace.FsException locked){if(locked.errno!=13)throw locked;}
+                    }
                     ceStorage.close();
+                    if(CePlainExport.requested(root)) {
+                        if(exported==null)ended=androidName+" storage is still encrypted: unlock Android before stopping it to decrypt.";
+                        else {
+                            CePlainExport.finish(root);
+                            android.util.Log.i("PocketCE","Exported encrypted storage to plain storage: "+exported);
+                            ended=androidName+" storage decrypted ("+exported+"). Start the guest.";
+                        }
+                    }
                     if(migration!=null) {
                         main.post(()->listener.status("Encrypting "+androidName+" private storage…"));
                         CeMigration.perform(root,migration);
