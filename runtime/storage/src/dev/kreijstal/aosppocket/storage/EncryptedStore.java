@@ -155,6 +155,28 @@ public final class EncryptedStore implements AutoCloseable {
         }
         return count;
     }
+    // The namespace already has authoritative bytes and hashes for its whole
+    // snapshot. Changed chunks can be replaced without reading old ciphertext
+    // while its global monitor is held. Ordinary partial writes still use write.
+    synchronized void replaceSnapshot(String name,byte[] input,boolean[] changed)throws IOException {
+        Entry e=file(name);int chunks=(int)((input.length+(long)CHUNK_SIZE-1)/CHUNK_SIZE);
+        if(input.length>MAX_SIZE || changed.length!=chunks)throw new IllegalArgumentException("Invalid snapshot size");
+        for(int i=0;i<chunks;i++)if(!changed[i]) {
+            long oldLength=Math.min(CHUNK_SIZE,Math.max(0,e.size-(long)i*CHUNK_SIZE));
+            if(oldLength!=Math.min(CHUNK_SIZE,input.length-i*CHUNK_SIZE))
+                throw new IllegalArgumentException("New snapshot range requires replacement");
+        }
+        boolean updated=e.size!=input.length;
+        for(int i=0;i<chunks;i++)if(changed[i]) {
+            byte[] value=new byte[CHUNK_SIZE];int at=i*CHUNK_SIZE;
+            System.arraycopy(input,at,value,0,Math.min(CHUNK_SIZE,input.length-at));
+            wipe(e.dirty.put((long)i,value));updated=true;
+        }
+        e.blocks.tailMap((long)chunks).clear();
+        for(byte[] value:e.dirty.tailMap((long)chunks).values())wipe(value);
+        e.dirty.tailMap((long)chunks).clear();e.size=input.length;
+        if(updated){modified=true;revision++;}
+    }
     public synchronized void write(String name,long offset,byte[] input,int start,int length)throws IOException,GeneralSecurityException {
         Entry e=file(name);range(offset,input,start,length);if(length==0)return;
         // A successful write still needs a sync boundary: VFS callers also
