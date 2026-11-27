@@ -39,6 +39,7 @@ final class CeMigration {
         Files.move(temp,new File(root,name).toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);syncDirectory(root.toPath());
     }
     static void finishVerified(File root)throws Exception {
+        CePlainExport.finish(root);
         if(!new File(root,VERIFIED).isFile())return;
         String[] journal=new String(Files.readAllBytes(new File(root,VERIFIED).toPath()),java.nio.charset.StandardCharsets.US_ASCII).trim().split("\n",-1);
         boolean layout32=journal.length==2 && journal[1].equals("api32-roots=5");

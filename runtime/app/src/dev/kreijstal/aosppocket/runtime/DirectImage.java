@@ -233,7 +233,8 @@ final class DirectImage {
         String original=new String(Files.readAllBytes(properties.toPath()),"UTF-8");
         // Like VMOS, the guest language follows the host locale.
         String projected=property(geometry.properties(original,refreshHz),"ro.product.locale",Locale.getDefault().toLanguageTag());
-        if(CeStorage.enabled(root)) {
+        CeEmulated.adoptExport(root);
+        if(CeStorage.enabled(root) || CeEmulated.enabled(root)) {
             projected=property(projected,"ro.crypto.state","encrypted");
             projected=property(projected,"ro.crypto.type","file");
         }
@@ -252,8 +253,9 @@ final class DirectImage {
             }
             for(String key:new TreeSet<String>(identity.stringPropertyNames()))
                 content=property(content,key,identity.getProperty(key));
-            content=property(content,"ro.crypto.state",CeStorage.enabled(root)?"encrypted":"unencrypted");
-            if(CeStorage.enabled(root))content=property(content,"ro.crypto.type","file");
+            boolean fbe=CeStorage.enabled(root) || CeEmulated.enabled(root);
+            content=property(content,"ro.crypto.state",fbe?"encrypted":"unencrypted");
+            if(fbe)content=property(content,"ro.crypto.type","file");
             Files.write(next.toPath(),geometry.properties(content,refreshHz).getBytes("UTF-8"));
             Files.move(next.toPath(),profile.toPath(),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
         }
