@@ -30,7 +30,7 @@ final class AttestationBackend {
     static final List<String> LABELS = Collections.unmodifiableList(Arrays.asList(
         "Local software (built-in keymaster)",
         "Host passthrough (mirror this device)",
-        "TEESimulator (emulated TEE)"));
+        "TEESimulator (software-attested boot state)"));
     /** Guest-visible projection, relative to the guest image root. */
     static final String MARKER = "system-data/misc/keystore/pocket-attestation-backend";
     /** Android 9 TEESimulator owner opt-in, relative to the guest image root. */

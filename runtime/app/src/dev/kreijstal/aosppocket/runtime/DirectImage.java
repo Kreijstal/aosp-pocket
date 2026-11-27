@@ -178,6 +178,7 @@ final class DirectImage {
         if(GuestProfile.detect(root).sdk!=sdk)throw new IOException("Downloaded Android image SDK does not match the selected profile");
         for(String name:new String[]{"system-data",".pocket-owner","dev/socket","dev/__properties__","dev/input","logs","tmp"})new File(root,name).mkdirs();
         prepareDataPath(root,sdk);
+        if(sdk==32)AttestationPreload32.apply(context,root);
         for(File entry:new File(root,"dev/__properties__").listFiles())
             if(!entry.delete())throw new IOException("Cannot reset guest property area");
         File console=new File(root,"pocket-console");Files.deleteIfExists(console.toPath());

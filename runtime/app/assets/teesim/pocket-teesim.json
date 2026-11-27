@@ -1,0 +1,32 @@
+{
+  "type": "config",
+  "epoch": 1,
+  "bootInfo": {
+    "deviceLocked": true,
+    "verifiedBootState": 0,
+    "strongBoxAvailable": false,
+    "attestVersionTee": 3,
+    "attestVersionStrongBox": 3
+  },
+  "profiles": [
+    {
+      "id": "pocket-owner",
+      "mode": "generation",
+      "securityLevel": 0,
+      "osVersion": 120000,
+      "osPatchLevel": 202610,
+      "vendorPatchLevel": 202610,
+      "bootPatchLevel": 202610,
+      "packages": [
+        "com.revolut.revolut"
+      ],
+      "uids": [
+        10000
+      ],
+      "uidPackages": [
+        "com.revolut.revolut"
+      ],
+      "keyboxB64": "<base64 of the owner-supplied keybox.xml — NOT AVAILABLE on this machine>"
+    }
+  ]
+}
