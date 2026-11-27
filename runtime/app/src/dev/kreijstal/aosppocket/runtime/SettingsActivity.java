@@ -61,12 +61,28 @@ public final class SettingsActivity extends RuntimeActivity {
         Button resetKeystore=new Button(this);
         resetKeystore.setText("Reset guest keystore");
         resetKeystore.setOnClickListener(v->{
-            try {
-                if (runtime == null) return;
-                int removed=runtime.resetGuestKeystore();
-                Toast.makeText(this,"Guest keystore reset: "+removed+" entries removed. Apps re-create their keys.",
-                    Toast.LENGTH_LONG).show();
-            } catch(Exception error){Toast.makeText(this,"Cannot reset guest keystore: "+error.getMessage(),Toast.LENGTH_LONG).show();}
+            if (runtime == null) return;
+            if (runtime.running()) {
+                Toast.makeText(this,"Stop Android before resetting the guest keystore.",Toast.LENGTH_LONG).show();
+                return;
+            }
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Reset guest keystore?")
+                .setMessage("Every app inside Android loses the keys it stored in the Android Keystore.\n\n"
+                    +"Apps that encrypt data with those keys can lose that data or sign you out: "
+                    +"saved logins, tickets, and message history may become unreadable.\n\n"
+                    +"Only do this after changing the attestation backend. "
+                    +"The previous keystore is kept so the reset can be undone while Android is stopped.")
+                .setNegativeButton("Cancel",null)
+                .setPositiveButton("Reset keystore",(dialog,which)->{
+                    try {
+                        File backup=runtime.resetGuestKeystore();
+                        Toast.makeText(this,backup==null?"The guest keystore was already empty."
+                            :"Guest keystore reset. Previous keys saved in /data/misc/"+backup.getName()+".",
+                            Toast.LENGTH_LONG).show();
+                    } catch(Exception error){Toast.makeText(this,"Cannot reset guest keystore: "+error.getMessage(),Toast.LENGTH_LONG).show();}
+                })
+                .show();
         });
         layout.addView(resetKeystore);
         status = new TextView(this);

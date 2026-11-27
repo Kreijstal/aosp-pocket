@@ -106,27 +106,47 @@ final class AttestationBackend {
         return true;
     }
 
+    /** Previous keystores kept after a reset, newest first beyond this are deleted. */
+    static final int KEPT_RESETS = 3;
+
     /**
-     * Drop every guest keystore blob so apps re-create their keys under the
-     * currently selected backend. Attestation identity is bound at key
+     * Move every guest keystore blob aside so apps re-create their keys under
+     * the currently selected backend. Attestation identity is bound at key
      * creation, so a backend change only takes effect for new keys.
-     * Returns the number of removed entries.
+     * The old keystore is kept in system-data/misc/keystore-reset-TIME (the
+     * guest's /data/misc), so a reset made by mistake can be undone while
+     * Android is stopped. Returns the backup directory, or null if the
+     * keystore was already empty.
      */
-    static int resetGuestKeystore(File root) throws IOException {
+    static File resetGuestKeystore(File root) throws IOException {
         File directory = new File(root, "system-data/misc/keystore");
         File canonical = directory.getCanonicalFile();
         if (!canonical.getPath().startsWith(root.getCanonicalPath() + "/"))
             throw new IOException("Guest keystore escapes the guest image");
         File[] entries = canonical.listFiles();
-        if (entries == null) return 0;
-        int removed = 0;
+        if (entries == null) return null;
+        File backup = null;
         for (File entry : entries) {
             String name = entry.getName();
             // Keep the owner's attestation configuration; it is not key material.
             if (name.startsWith("pocket-teesim") || name.equals("pocket-attestation-backend")) continue;
-            removed += deleteTree(entry);
+            if (backup == null) {
+                String stamp = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.ROOT)
+                    .format(new java.util.Date());
+                backup = new File(canonical.getParentFile(), "keystore-reset-" + stamp);
+                if (!backup.mkdir()) throw new IOException("Cannot create " + backup.getName());
+            }
+            Files.move(entry.toPath(), new File(backup, name).toPath(), StandardCopyOption.ATOMIC_MOVE);
         }
-        return removed;
+        if (backup != null) pruneResets(canonical.getParentFile());
+        return backup;
+    }
+
+    private static void pruneResets(File misc) throws IOException {
+        File[] old = misc.listFiles((dir, name) -> name.startsWith("keystore-reset-"));
+        if (old == null || old.length <= KEPT_RESETS) return;
+        Arrays.sort(old, (a, b) -> b.getName().compareTo(a.getName()));
+        for (int i = KEPT_RESETS; i < old.length; i++) deleteTree(old[i]);
     }
 
     private static int deleteTree(File entry) throws IOException {

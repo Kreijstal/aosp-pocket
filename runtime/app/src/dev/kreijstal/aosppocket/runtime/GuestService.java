@@ -201,8 +201,8 @@ public final class GuestService extends Service {
         AttestationBackend.set(this, value);
         message("Attestation backend: " + AttestationBackend.label(value) + ". Tap Start.");
     }
-    /** Clears guest key blobs so apps re-create keys under the selected backend. */
-    int resetGuestKeystore() throws java.io.IOException {
+    /** Moves guest key blobs aside so apps re-create keys under the selected backend. */
+    File resetGuestKeystore() throws java.io.IOException {
         if (running() || starting || preparing()) throw new java.io.IOException("Stop Android before resetting the guest keystore");
         return AttestationBackend.resetGuestKeystore(DirectImage.root(this, sdk));
     }
