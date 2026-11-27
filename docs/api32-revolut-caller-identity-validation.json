@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-16",
+  "result": "ROOT_CAUSE_CONFIRMED",
+  "fixApplied": false,
+  "buildQualified": false,
+  "device": "pf-phone2 / Samsung SM-G780G / host Android 13",
+  "guestSdk": 32,
+  "guestImageManifestVersion": "0.78.20",
+  "guestImageSha256": "aa8cde90162f4383580048fde652110ac439888bb50af3288e7ea888ca0237e8",
+  "package": "com.revolut.revolut",
+  "versionName": "10.135",
+  "versionCode": 1013509766,
+  "guestPackageUid": 10108,
+  "kernelHostAppUid": 10467,
+  "rootCause": "Raw Binder clients lose their guest caller identity after becoming non-dumpable. The PID/start-time attribution fallback reopens /proc/PID/stat; this returns ENOENT for the protected caller. Dispatch then retains the real host app UID rather than the guest app UID, and the package-UID query returns -1. Standard Binder clients carry the guest identity in their Parcel header and do not depend on this fallback.",
+  "liveFailure": {
+    "pid": 27719,
+    "incidentHex": "1b082d0c03",
+    "subreason": 8,
+    "initializationFailureCode": 780,
+    "meaning": "Raw package-UID lookup returned -1, rather than the old subtype 9 unequal-UID result",
+    "method": "com.revolut.ProtectedRevolutApplication.kk",
+    "procStatOpenErrno": 2,
+    "procOwnerBefore": 10467,
+    "procOwnerAtFailure": 0,
+    "identityRecordPresent": true,
+    "identityRecordGuestUid": 10108,
+    "packageUidTransaction": 5,
+    "flags64": false,
+    "userId": 0
+  },
+  "liveCodeValidation": [
+    {
+      "offset": "0x4cb94",
+      "bytes": 1440,
+      "sha256": "bbc94112fcdcc2f98f65edfb5abbddd0d5b0278a849330b616135e647de20a1b",
+      "identicalToPreviouslyAnalyzedCode": true
+    },
+    {
+      "offset": "0x3e8c4",
+      "bytes": 248,
+      "sha256": "d8ebded5f69e8be060b9b9a63c9ed6162a0ccc6f336691d8563277ca78cfc043",
+      "identicalToPreviouslyAnalyzedCode": true
+    }
+  ],
+  "controls": [
+    {
+      "client": "raw Binder",
+      "guestUid": 10108,
+      "dumpable": 1,
+      "guestCredentialPrefix": false,
+      "packageUid": 10108
+    },
+    {
+      "client": "raw Binder",
+      "guestUid": 10108,
+      "dumpable": 0,
+      "guestCredentialPrefix": false,
+      "packageUid": -1
+    },
+    {
+      "client": "raw Binder",
+      "guestUid": 10108,
+      "dumpable": 1,
+      "guestCredentialPrefix": false,
+      "packageUid": 10108
+    },
+    {
+      "client": "raw Binder",
+      "guestUid": 10108,
+      "dumpable": 0,
+      "guestCredentialPrefix": true,
+      "packageUid": 10108
+    },
+    {
+      "client": "Java Binder",
+      "guestUid": 10108,
+      "dumpable": 0,
+      "guestCredentialPrefix": true,
+      "packageUid": 10108
+    }
+  ],
+  "fixDirection": "Preserve guest caller identity at the raw Binder transaction boundary, or through validated process-lifecycle registration that does not depend on a peer remaining dumpable; retain PID-reuse protection.",
+  "scope": {
+    "guestRestarted": false,
+    "appRestartedForCapture": true,
+    "appDataCleared": false,
+    "appApkModified": false,
+    "ptraceAttached": false,
+    "appInstructionsOrRegistersPatched": false,
+    "hostRootUsed": false,
+    "unmodifiedBankAppPassAfterFixEstablished": false,
+    "diagnosticCleanupVerified": false
+  },
+  "limitations": [
+    "The raw-header positive control changes only the diagnostic probe, not Revolut or the production runtime.",
+    "This identifies the current startup rejection; later application checks have not been validated.",
+    "The owner console timed out during cleanup; removal of the diagnostic helpers and final guest PID checks could not be verified. SSH to Termux remained reachable. See out/pfphone2-compatibility-check/diagnostic-cleanup.json."
+  ],
+  "evidence": [
+    {
+      "path": "out/pfphone2-compatibility-check/incident-capture-held-proc.json",
+      "sha256": "ac014725f53e5775ffeacf82ef5502e7f8032994bf320fa9a895b640c43a5300"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/incident-capture-confirmed-retry.json",
+      "sha256": "1085098ea2fb5238389354a0856bf84316c51d27ecce60fb5c20ed6b6d746723"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/raw-uid-dumpability-control.json",
+      "sha256": "cfe191e93d04bf881749c1af3846203defa6ee2ed88ab73c817f571be40d14f5"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/raw-uid-header-control.json",
+      "sha256": "c8399ff21b6a11e77f4157a9281efd16c5dcdf77de48980c2c304e499f6b358a"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/java-uid-dumpability-control-retry.json",
+      "sha256": "510e9512b6695d39a4360add4fb87d6d301d36bdff7868d46472ef88f3d87f1c"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/revolut-final-reproduction-retry.json",
+      "sha256": "7cb21863bde128aad5a6f7669c361528e0be9c6af09c7e4a9a73ab0c7dc6ad99"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/watch-incident.c",
+      "sha256": "65d621bca976c6b7fb85ec40bc7bed8a2370c8af70cb538fc05a20756460acc0"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/raw-binder-uid.c",
+      "sha256": "f752fd9aa228e5571db673aa4c6a77766554b666af47146ded1d9b75fee6c78f"
+    },
+    {
+      "path": "out/pfphone2-compatibility-check/IdentityRead.java",
+      "sha256": "744b306ade6a94f6bd340095854f40b2ef46040f5335c4ebc7e21965ba4abb54"
+    }
+  ],
+  "sourceReview": [
+    {
+      "path": "runtime/api28/binder_identity.h",
+      "sha256": "a84b62c2cc12c736dbc469eff7514c687f3d90292940d347d4e7d89b5ce836b7"
+    },
+    {
+      "path": "runtime/direct/boot_binder.cpp",
+      "sha256": "8b7722cfeef6c83c4668583e36590a0ed1986ef354357d14434026f1dd7a9c09"
+    },
+    {
+      "path": "runtime/api32/guest_credentials.cpp",
+      "sha256": "dd2dc054a756f6ed109af0fee0ff6462f6f66aad70c19c11e5b731271e819f14"
+    }
+  ],
+  "validationCommand": "python3 out/pfphone2-compatibility-check/verify_root_cause.py"
+}
