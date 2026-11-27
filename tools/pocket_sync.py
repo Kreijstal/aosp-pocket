@@ -4,8 +4,10 @@
 
   pocket_sync.py plan                 # show what a sync would do (default)
   pocket_sync.py sync [--yes]         # do it
-  pocket_sync.py sync --only de.hafas.android.sbahnberlin
-  pocket_sync.py move org.thoughtcrime.securesms --to pocket
+  pocket_sync.py sync --only com.example.app
+  pocket_sync.py sync --only com.example.app --from waydroid   # one-way
+  pocket_sync.py move com.example.messenger --to pocket
+  pocket_sync.py restore com.example.app --to pocket
 
 Per app, the side whose data changed since the last sync wins (if both did,
 the newer data wins and a CONFLICT is logged; --conflict skip refuses).
@@ -15,7 +17,7 @@ plan tells you which build to install by hand. Data never goes onto an older
 app version. Keystore keys (software Keymaster blobs) are re-sealed for the
 target's OS version/patch level and re-homed to the target app uid.
 
-Exclusive apps (default: Signal) must never run on both sides: only the
+Exclusive apps (DEFAULT_EXCLUSIVE, --exclusive) must never run on both sides: only the
 enabled ("live") side is ever a source, and the copy on the other side stays
 disabled. `move` hands the live copy over. microG (gms/gsf) and Play Store are
 excluded by default because their data is a per-device identity.
@@ -47,6 +49,7 @@ BACKUPS = Path.home() / '.local/share/pocket-sync/backups'
 KEYSTORE_DB = '/data/misc/keystore/persistent.sqlite'
 REMOTE_TMP = '/data/local/tmp/pocket-sync'
 DEFAULT_EXCLUDE = {'com.google.android.gms', 'com.google.android.gsf', 'com.android.vending'}
+# Apps whose cloned data is a per-device account identity: only one side may run them.
 DEFAULT_EXCLUSIVE = {'org.thoughtcrime.securesms'}
 # Top-level entries of an app data dir that are per-device/ABI and never copied.
 SKIP_RE = 'cache|code_cache|lib|lib-main|app_lib.*'
@@ -786,7 +789,7 @@ def main():
     ap.add_argument('--exclude', action='append', default=[], help='skip these packages (repeatable)')
     ap.add_argument('--include', action='append', default=[], help='un-exclude a default-excluded package')
     ap.add_argument('--exclusive', action='append', default=[],
-                    help='extra apps that must only be live on one side (default: Signal)')
+                    help='extra apps that must only be live on one side (see DEFAULT_EXCLUSIVE)')
     ap.add_argument('--conflict', choices=['newest', 'skip'], default='newest')
     ap.add_argument('--yes', '-y', action='store_true', help='do not ask before syncing')
     ap.add_argument('--keep-backups', type=int, default=10)
