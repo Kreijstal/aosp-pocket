@@ -267,17 +267,11 @@ def main():
         finally:
             temporary.unlink(missing_ok=True)
     if args.operation == 'install':
-        destination = '/data/local/tmp/pocket-install-'+secrets.token_hex(8)+'.apk'
-        try:
-            with args.apk.open('rb') as source:
-                code = request(config, 2, ['/system/bin/sh', '-c', 'cat > "$1"', 'pocket-push', destination], source=source)
-            return code or request(config, 2, ['/system/bin/pm', 'install', '-r', destination])
-        finally:
-            try:
-                request(config, 2, ['/system/bin/rm', '-f', destination])
-            except OSError:
-                pass
-
+        # Stream the APK into pm: on Android 12L a staged file in /data/local/tmp
+        # carries an app_data_file label that the guest's system_server may not read.
+        size = args.apk.stat().st_size
+        with args.apk.open('rb') as source:
+            return request(config, 2, ['/system/bin/pm', 'install', '-r', '-S', str(size)], source=source)
 
 if __name__ == '__main__':
     try:

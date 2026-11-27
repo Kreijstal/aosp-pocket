@@ -51,10 +51,11 @@ final class AttestationPreload32 {
         File library = child(root, LIBRARY);
         if (selected) {
             // The image is downloaded, so the library and the owner configuration
-            // travel in the APK and are installed on first use. An existing file
-            // wins: an owner-supplied pocket-teesim.json is never overwritten.
-            installAsset(context, "teesim/libpocket_teesim_api32.so", library, 0755);
-            installAsset(context, "teesim/pocket-teesim.json", config, 0644);
+            // travel in the APK. The library belongs to the Manager and is
+            // replaced whenever the APK carries a different build; the owner's
+            // pocket-teesim.json is only installed when missing.
+            installAsset(context, "teesim/libpocket_teesim_api32.so", library, 0755, true);
+            installAsset(context, "teesim/pocket-teesim.json", config, 0644, false);
         }
         boolean wanted = selected && config.isFile() && library.isFile();
         String text = new String(Files.readAllBytes(rc.toPath()), StandardCharsets.UTF_8);
@@ -75,16 +76,23 @@ final class AttestationPreload32 {
         }
     }
 
-    /** Install an APK asset into the image unless the owner already supplied that file. */
-    private static void installAsset(Context context, String asset, File target, int mode)
-            throws IOException {
-        if (target.isFile()) return;
+    /**
+     * Install an APK asset into the image. With {@code refresh} an existing file
+     * is replaced when its bytes differ; without it an existing file wins.
+     */
+    private static void installAsset(Context context, String asset, File target, int mode,
+            boolean refresh) throws IOException {
+        if (target.isFile() && !refresh) return;
         File parent = target.getParentFile();
         if (parent != null && !parent.isDirectory() && !parent.mkdirs())
             throw new IOException("Cannot create " + parent);
         Path staged = new File(target.getPath() + ".new").toPath();
         try (InputStream in = context.getAssets().open(asset)) {
             Files.copy(in, staged, StandardCopyOption.REPLACE_EXISTING);
+        }
+        if (target.isFile() && java.util.Arrays.equals(Files.readAllBytes(staged), Files.readAllBytes(target.toPath()))) {
+            Files.delete(staged);
+            return;
         }
         chmod(staged.toString(), mode);
         Files.move(staged, target.toPath(), StandardCopyOption.REPLACE_EXISTING);

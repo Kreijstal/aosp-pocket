@@ -26,6 +26,7 @@
 // `bootInfo` is read here; `profiles`/`keyboxB64` is the part that only a full
 // TEESimulator KeyMint TA can serve (see REPORT.md stage 2).
 
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +52,9 @@ unsigned char gBootHash[kBlobLength] = {
 };
 int32_t gBootState = 0;   // KM_VERIFIED_BOOT_VERIFIED
 bool gDeviceLocked = true;
-bool gLoaded = false;
+pthread_once_t gLoadOnce = PTHREAD_ONCE_INIT;
+// Static, not on the stack: HAL Binder threads have small stacks.
+char gText[64 * 1024];
 
 // Minimal scan for the three bootInfo members; the file also carries profiles
 // and a base64 keybox, so a full JSON parser buys nothing here.
@@ -80,14 +83,12 @@ bool readBoolean(const char* text, const char* key, bool* out) {
 }
 
 void load() {
-    if (gLoaded) return;
-    gLoaded = true;
     FILE* file = fopen(kConfig, "rb");
     if (!file) return;
-    char text[64 * 1024];
-    const size_t length = fread(text, 1, sizeof(text) - 1, file);
+    char* text = gText;
+    const size_t length = fread(text, 1, sizeof(gText) - 1, file);
     fclose(file);
-    if (length == 0 || length >= sizeof(text) - 1) return;
+    if (length == 0 || length >= sizeof(gText) - 1) return;
     text[length] = '\0';
     long state = 0;
     if (readInteger(text, "\"verifiedBootState\"", &state) && state >= 0 && state <= 3)
@@ -98,32 +99,40 @@ void load() {
 
 }  // namespace
 
-// AArch64 returns the 40-byte VerifiedBootParams through x8 (sret).
-// Layout, from the real implementation: key{data,size}, hash{data,size},
-// int32 state, bool device_locked (+3 padding).
+// keymaster::KeymasterContext::GetVerifiedBootParams() returns
+// `const VerifiedBootParams*`: a pointer, in x0, to a struct the context owns
+// (the stock implementation fills a function-local static and returns its
+// address; libpuresoftkeymasterdevice.so @0xb244). Callers keep and
+// dereference that pointer, so it must stay valid for the process lifetime.
+// Layout: key{data,size}, hash{data,size}, int32 state, bool device_locked.
 struct kblob { const void* data; size_t size; };
 struct vboot_params {
     kblob verified_boot_key;
     kblob verified_boot_hash;
     int32_t verified_boot_state;
-    unsigned char device_locked;
-    unsigned char pad[3];
+    bool device_locked;
 };
+static_assert(sizeof(vboot_params) == 40, "VerifiedBootParams layout");
+
+namespace {
+vboot_params gParams;
+pthread_once_t gParamsOnce = PTHREAD_ONCE_INIT;
+
+void fillParams() {
+    pthread_once(&gLoadOnce, load);
+    gParams.verified_boot_key = {gBootKey, kBlobLength};
+    gParams.verified_boot_hash = {gBootHash, kBlobLength};
+    gParams.verified_boot_state = gBootState;
+    gParams.device_locked = gDeviceLocked;
+}
+}  // namespace
 
 extern "C" __attribute__((visibility("default")))
-struct vboot_params pocket_verified_boot_params(const void* self, int32_t* error) {
+const vboot_params* pocket_verified_boot_params(const void* self, int32_t* error) {
     (void)self;
-    load();
-    vboot_params params;
-    params.verified_boot_key.data = gBootKey;
-    params.verified_boot_key.size = kBlobLength;
-    params.verified_boot_hash.data = gBootHash;
-    params.verified_boot_hash.size = kBlobLength;
-    params.verified_boot_state = gBootState;
-    params.device_locked = gDeviceLocked ? 1 : 0;
-    params.pad[0] = params.pad[1] = params.pad[2] = 0;
-    if (error) *error = 0;
-    return params;
+    pthread_once(&gParamsOnce, fillParams);
+    if (error) *error = 0;  // KM_ERROR_OK
+    return &gParams;
 }
 
 #define POCKET_BOOT_PARAMS(symbol)                                                        \
