@@ -2,3 +2,6 @@
 *.apk
 *.keystore
 __pycache__/
+/out-local/
+/pocket-api32-arm64-*.zip
+/SHA256SUMS
