@@ -267,8 +267,16 @@ public final class GuestService extends Service {
         if (!geometry.contains("width")) geometry.edit().putInt("width", width)
             .putInt("height", height).putInt("dpi", dpi).apply();
         legacyWidth = width; legacyHeight = height; legacyDpi = dpi;
-        sdk = getSharedPreferences("guest-backend", MODE_PRIVATE).getInt("sdk",
-            new File(getFilesDir(), "rootfs/init").isFile() || !directAvailable() ? 25 : 28);
+        int savedSdk = getSharedPreferences("guest-backend", MODE_PRIVATE).getInt("sdk", 0);
+        if (savedSdk != 0) {
+            sdk = savedSdk;
+        } else if (new File(getFilesDir(), "rootfs/init").isFile()) {
+            sdk = 25;
+        } else if (DirectImage.bundled(this, 32)) {
+            sdk = 32;
+        } else {
+            sdk = DirectImage.bundled(this, 28) ? 28 : 25;
+        }
         geometry();
         message = directBackend() && !hasImage() && RemoteImage.available(this,sdk)
             ? "Download Android "+androidVersion()+" to get started. The image is saved for offline use."
