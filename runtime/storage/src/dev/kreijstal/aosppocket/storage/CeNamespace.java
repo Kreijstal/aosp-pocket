@@ -44,6 +44,8 @@ public final class CeNamespace {
     private byte[][] serializedChunks=new byte[0][];
     private boolean metadataDirty;
     private long metadataRevision;
+    private long stagedMetadataRevision=-1;
+    private long durableMetadataRevision=-1;
     private final ThreadLocal<ExternalMediaView> externalMediaView=new ThreadLocal<>();
     /** A pathname RPC can see an outer emulated mount above this encrypted store.
      * Keep that choice on the request thread: provider backing requests and
@@ -74,11 +76,12 @@ public final class CeNamespace {
             long size=store.size(INDEX);if(size>16*1024*1024)throw new IOException("Oversized CE namespace");
             byte[] raw=new byte[(int)size];store.read(INDEX,0,raw,0,raw.length);
             try {decode(raw);serializedChunks=chunkHashes(raw);}finally{Arrays.fill(raw,(byte)0);}
+            stagedMetadataRevision=metadataRevision;durableMetadataRevision=metadataRevision;
             boolean removed=false;
             for(Iterator<Node> it=nodes.values().iterator();it.hasNext();) {
                 Node n=it.next();if(n.links==0){if(n.regular())store.delete(content(n.id));it.remove();removed=true;}
             }
-            if(removed)sync();
+            if(removed){markDirty();sync();}
         }
     }
     private static long now(){return System.currentTimeMillis();}
@@ -260,35 +263,48 @@ public final class CeNamespace {
         return hashes;
     }
     public void sync()throws IOException,GeneralSecurityException {
-        // The commit lease serializes durable snapshots. Filesystem monitors
+        long targetMeta,targetStore;
+        synchronized(this) {
+            targetMeta=metadataRevision;targetStore=store.currentRevision();
+            if(durableMetadataRevision>=targetMeta && store.durableRevision()>=targetStore)return;
+        }
+        // The commit lease serializes durable snapshots. Concurrent callers
+        // coalesce: if an earlier commit already flushed our target revisions,
+        // return without running another full snapshot. Filesystem monitors
         // cover capture only; encryption, fsync and collection run outside them.
         try(EncryptedStore.Commit commit=store.beginCommit()) {
             long revision;
             synchronized(this) {
-                ByteArrayOutputStream bytes=new ByteArrayOutputStream();DataOutputStream out=new DataOutputStream(bytes);
-                // API32 adds a fifth reserved root. Legacy stores keep format2
-                // and inode7 remains an ordinary file/directory in that layout.
-                out.writeInt(roots.length==ROOTS.length?2:3);out.writeInt(next);out.writeInt(nodes.size());
-                for(Node n:nodes.values()) {
-                    out.writeInt(n.id);out.writeInt(n.parent);out.writeInt(n.mode);out.writeInt(n.uid);out.writeInt(n.gid);out.writeInt(n.links);
-                    out.writeLong(n.atime);out.writeLong(n.mtime);out.writeLong(n.ctime);out.writeUTF(n.target);out.writeInt(n.children.size());
-                    for(Map.Entry<String,Integer> e:n.children.entrySet()){out.writeUTF(e.getKey());out.writeInt(e.getValue());}
-                    out.writeInt(n.xattrs.size());for(Map.Entry<String,byte[]> x:n.xattrs.entrySet()){out.writeUTF(x.getKey());out.writeInt(x.getValue().length);out.write(x.getValue());}
+                if(durableMetadataRevision>=targetMeta && store.durableRevision()>=targetStore)return;
+                if(metadataRevision!=stagedMetadataRevision) {
+                    ByteArrayOutputStream bytes=new ByteArrayOutputStream();DataOutputStream out=new DataOutputStream(bytes);
+                    // API32 adds a fifth reserved root. Legacy stores keep format2
+                    // and inode7 remains an ordinary file/directory in that layout.
+                    out.writeInt(roots.length==ROOTS.length?2:3);out.writeInt(next);out.writeInt(nodes.size());
+                    for(Node n:nodes.values()) {
+                        out.writeInt(n.id);out.writeInt(n.parent);out.writeInt(n.mode);out.writeInt(n.uid);out.writeInt(n.gid);out.writeInt(n.links);
+                        out.writeLong(n.atime);out.writeLong(n.mtime);out.writeLong(n.ctime);out.writeUTF(n.target);out.writeInt(n.children.size());
+                        for(Map.Entry<String,Integer> e:n.children.entrySet()){out.writeUTF(e.getKey());out.writeInt(e.getValue());}
+                        out.writeInt(n.xattrs.size());for(Map.Entry<String,byte[]> x:n.xattrs.entrySet()){out.writeUTF(x.getKey());out.writeInt(x.getValue().length);out.write(x.getValue());}
+                    }
+                    out.flush();byte[] raw=bytes.toByteArray();
+                    try {
+                        byte[][] next=chunkHashes(raw),previous=serializedChunks;
+                        boolean[] changed=new boolean[next.length];
+                        for(int i=0;i<next.length;i++)changed[i]=previous==null || i>=previous.length || !Arrays.equals(next[i],previous[i]);
+                        // Invalidate comparisons until replacement has completed.
+                        // No old chunk reads are needed for this complete snapshot.
+                        serializedChunks=null;store.replaceSnapshot(INDEX,raw,changed);
+                        serializedChunks=next;stagedMetadataRevision=metadataRevision;
+                    }finally{Arrays.fill(raw,(byte)0);}
                 }
-                out.flush();byte[] raw=bytes.toByteArray();
-                try {
-                    byte[][] next=chunkHashes(raw),previous=serializedChunks;
-                    boolean[] changed=new boolean[next.length];
-                    for(int i=0;i<next.length;i++)changed[i]=previous==null || i>=previous.length || !Arrays.equals(next[i],previous[i]);
-                    // Invalidate comparisons until replacement has completed.
-                    // No old chunk reads are needed for this complete snapshot.
-                    serializedChunks=null;store.replaceSnapshot(INDEX,raw,changed);
-                    serializedChunks=next;
-                    commit.capture();revision=metadataRevision;
-                }finally{Arrays.fill(raw,(byte)0);}
+                commit.capture();revision=metadataRevision;
             }
             commit.flush();
-            synchronized(this){if(metadataRevision==revision)metadataDirty=false;}
+            synchronized(this) {
+                if(revision>durableMetadataRevision)durableMetadataRevision=revision;
+                if(metadataRevision==revision)metadataDirty=false;
+            }
         }
     }
     private void decode(byte[] raw)throws IOException {

@@ -8,6 +8,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.crypto.*;
 import javax.crypto.spec.*;
@@ -32,6 +33,7 @@ public final class EncryptedStore implements AutoCloseable {
     private static final byte[] MAGIC={'P','C','K','C','E','0','0','1'};
     private static final SecureRandom RANDOM=new SecureRandom();
     private static final Set<Path> OPEN=new HashSet<>();
+    private static final ThreadPoolExecutor FSYNC_POOL=createFsyncPool();
     private final Path root,objects;
     private final FileChannel owner;
     private final FileLock ownerLock;
@@ -43,9 +45,21 @@ public final class EncryptedStore implements AutoCloseable {
     private boolean closed;
     private boolean modified=true;
     private long revision;
+    private long durableRevision=-1;
     private final ReentrantLock commits=new ReentrantLock(true);
     private Set<String> committedObjects=new HashSet<>();
     private int commitsSinceCollection;
+
+    private static ThreadPoolExecutor createFsyncPool() {
+        ThreadPoolExecutor pool=new ThreadPoolExecutor(8,8,5,TimeUnit.SECONDS,new LinkedBlockingQueue<Runnable>(),
+            new ThreadFactory() {
+                @Override public Thread newThread(Runnable r) {
+                    Thread t=new Thread(r,"PocketCeFsync");t.setDaemon(true);return t;
+                }
+            });
+        pool.allowCoreThreadTimeOut(true);
+        return pool;
+    }
 
     private static final class Entry {
         String id;long size;
@@ -107,7 +121,7 @@ public final class EncryptedStore implements AutoCloseable {
             } finally {wipe(wrap);wipe(master);}
             byte[] index=unseal(store.indexKey,store.context("index"),readBounded(root.resolve("state"),MAX_INDEX+28));
             try {store.decode(index);}finally{wipe(index);}
-            store.modified=false;
+            store.modified=false;store.durableRevision=store.revision;
             for(Entry e:store.entries.values())store.committedObjects.addAll(e.blocks.values());
             return store;
         } catch(IOException|GeneralSecurityException|RuntimeException error){store.close();throw error;}
@@ -260,16 +274,19 @@ public final class EncryptedStore implements AutoCloseable {
             // Stage the immutable ciphertext first so the filesystem can
             // combine allocation and journal work across this transaction.
             // Every new object is still forced before either its directory
-            // or the index that references it becomes durable. Reopen one
-            // object at a time to keep descriptor use independent of size.
+            // or the index that references it becomes durable. Force multiple
+            // objects concurrently so the host filesystem can coalesce them
+            // into a single journal commit while keeping fd usage bounded.
+            List<Path> staged=new ArrayList<>();
             for(Entry e:captured.values())for(Map.Entry<Long,byte[]> b:e.dirty.entrySet()) {
-                String object=id();writeNew(objects.resolve(object),seal(contentKey,blockContext(e,b.getKey(),object),b.getValue()),false);
-                e.blocks.put(b.getKey(),object);
+                String object=id();Path path=objects.resolve(object);
+                writeNew(path,seal(contentKey,blockContext(e,b.getKey(),object),b.getValue()),false);
+                e.blocks.put(b.getKey(),object);staged.add(path);
             }
-            for(Entry e:captured.values())for(Long block:e.dirty.keySet()) {
-                try(FileChannel file=FileChannel.open(objects.resolve(e.blocks.get(block)),StandardOpenOption.WRITE)){file.force(true);}
+            if(!staged.isEmpty()) {
+                forceFiles(staged);
+                syncDirectory(objects);
             }
-            syncDirectory(objects);
             byte[] index=encode(captured);Path temporary=root.resolve("state-"+id());
             try {
                 writeNew(temporary,seal(indexKey,context("index"),index));
@@ -291,7 +308,9 @@ public final class EncryptedStore implements AutoCloseable {
                         if(Arrays.equals(latest,b.getValue())){current.dirty.remove(b.getKey());wipe(latest);}
                     }
                 }
-                committedObjects=committed;modified=revision!=capturedRevision;
+                committedObjects=committed;
+                if(capturedRevision>durableRevision)durableRevision=capturedRevision;
+                modified=revision!=capturedRevision;
                 collect=++commitsSinceCollection>=64;
             }
             if(collect){collectUnreferenced();commitsSinceCollection=0;}
@@ -304,8 +323,16 @@ public final class EncryptedStore implements AutoCloseable {
     }
     /** Durably commit all file contents and names as one transaction. */
     public void sync()throws IOException,GeneralSecurityException {
-        try(Commit commit=beginCommit()){commit.capture();commit.flush();}
+        long target;
+        synchronized(this){ready();if(!modified)return;target=revision;}
+        try(Commit commit=beginCommit()) {
+            synchronized(this){ready();if(durableRevision>=target)return;}
+            commit.capture();commit.flush();
+        }
     }
+    public synchronized long currentRevision(){ready();return revision;}
+    public synchronized long durableRevision(){ready();return durableRevision;}
+    public boolean isCommitInProgress(){return commits.isLocked();}
     public synchronized boolean hasPendingChanges(){ready();return modified;}
 
     /** Reclaim unreachable ciphertext only after committing the current state. */
@@ -315,14 +342,42 @@ public final class EncryptedStore implements AutoCloseable {
     private void collectUnreferenced()throws IOException {
         Set<String> live;
         synchronized(this){live=new HashSet<>(committedObjects);for(Entry e:entries.values())live.addAll(e.blocks.values());}
+        boolean removedObjects=false;
         try(DirectoryStream<Path> paths=Files.newDirectoryStream(objects)) {
-            for(Path path:paths)if(isId(path.getFileName().toString()) && !live.contains(path.getFileName().toString()))Files.delete(path);
+            for(Path path:paths)if(isId(path.getFileName().toString()) && !live.contains(path.getFileName().toString())){Files.delete(path);removedObjects=true;}
         }
-        syncDirectory(objects);
+        if(removedObjects)syncDirectory(objects);
+        boolean removedStates=false;
         try(DirectoryStream<Path> paths=Files.newDirectoryStream(root,"state-*")) {
-            for(Path path:paths)if(isId(path.getFileName().toString().substring(6)))Files.delete(path);
+            for(Path path:paths)if(isId(path.getFileName().toString().substring(6))){Files.delete(path);removedStates=true;}
         }
-        syncDirectory(root);
+        if(removedStates)syncDirectory(root);
+    }
+    private static void forceFile(Path path)throws IOException {
+        try(FileChannel file=FileChannel.open(path,StandardOpenOption.WRITE)){file.force(true);}
+    }
+    private static void forceFiles(List<Path> paths)throws IOException {
+        if(paths.size()==1){forceFile(paths.get(0));return;}
+        List<Future<Void>> pending=new ArrayList<>(paths.size()-1);
+        for(int i=1;i<paths.size();i++) {
+            final Path path=paths.get(i);
+            pending.add(FSYNC_POOL.submit(new Callable<Void>() {
+                @Override public Void call()throws IOException {forceFile(path);return null;}
+            }));
+        }
+        IOException failure=null;
+        try{forceFile(paths.get(0));}catch(IOException error){failure=error;}
+        for(Future<Void> task:pending) {
+            try{task.get();}
+            catch(ExecutionException error) {
+                Throwable cause=error.getCause();
+                if(failure==null)failure=cause instanceof IOException?(IOException)cause:new IOException("Object sync failed",cause);
+            } catch(InterruptedException error) {
+                Thread.currentThread().interrupt();
+                if(failure==null)failure=new InterruptedIOException("Interrupted during object sync");
+            }
+        }
+        if(failure!=null)throw failure;
     }
 
     private static byte[] encode(TreeMap<String,Entry> view)throws IOException {

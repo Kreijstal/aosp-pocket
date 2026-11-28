@@ -23,7 +23,12 @@ final class CeStorage implements AutoCloseable {
     private final String[] roots;
     private final LocalSocket bound=new LocalSocket();
     private final LocalServerSocket server;
-    private final ThreadPoolExecutor workers=new ThreadPoolExecutor(8,8,0,TimeUnit.SECONDS,new ArrayBlockingQueue<>(128));
+    private final ThreadPoolExecutor workers=createWorkers();
+    private static ThreadPoolExecutor createWorkers() {
+        ThreadPoolExecutor pool=new ThreadPoolExecutor(16,16,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(128));
+        pool.allowCoreThreadTimeOut(true);
+        return pool;
+    }
     private final ScheduledExecutorService checkpoints=Executors.newSingleThreadScheduledExecutor(r->new Thread(r,"PocketCeCheckpoint"));
     private final Object rootAttrs=new Object();
     private final Set<LocalSocket> peers=ConcurrentHashMap.newKeySet();
@@ -85,7 +90,7 @@ final class CeStorage implements AutoCloseable {
         CeNamespace ns=namespace;
         if(ns==null || closed || draining)return;
         try {
-            if(namespace==ns && !closed && !draining && ns.hasPendingChanges())ns.sync();
+            if(namespace==ns && !closed && !draining && ns.hasPendingChanges() && !ns.store.isCommitInProgress())ns.sync();
         }catch(Exception error){android.util.Log.e("PocketCE","Encrypted storage checkpoint failed; pending writes retained",error);}
     }
     private void accept() {
@@ -318,7 +323,7 @@ final class CeStorage implements AutoCloseable {
         // AppFuse description. Never resolve its old or replacement pathname.
         if(r.nr==56)return descriptor?open(n,(int)r.a[3],r.uid,r.gid,r.groups):openRequest(r,ns,p);
         if(r.nr==35){Node removed=ns.remove(p,(r.a[2]&AT_REMOVEDIR)!=0,r.uid,r.gid,r.groups);reclaimClosed(ns,removed.id);return new Reply(0);}
-        if(r.nr==82 || r.nr==83){ns.sync();return new Reply(0);}
+        if(r.nr==82 || r.nr==83){if(ns.hasPendingChanges())ns.sync();return new Reply(0);}
         if(r.nr>=5 && r.nr<=16)return xattrs(r,ns,descriptor,p,n);
         synchronized(ns){switch(r.nr) {
         case 79:case 80: { // statat, fstat

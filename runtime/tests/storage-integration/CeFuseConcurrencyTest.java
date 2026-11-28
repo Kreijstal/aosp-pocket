@@ -17,12 +17,13 @@ public final class CeFuseConcurrencyTest {
     public static final class Callbacks {
         final CountDownLatch entered=new CountDownLatch(1),release=new CountDownLatch(1);
         volatile int writes;volatile boolean fail;
+        final java.util.concurrent.atomic.AtomicInteger syncCalls=new java.util.concurrent.atomic.AtomicInteger();
         public long fuseSize(int id){return writes;}
         public byte[] fuseRead(int id,long offset,int size){return new byte[Math.min(size,writes)];}
         public int fuseWrite(int id,long offset,byte[] data){writes+=data.length;return data.length;}
         public void fuseOpened(int id){}
         public void fuseRelease(int id){}
-        public void fuseSync()throws Exception {entered.countDown();release.await();if(fail)throw new java.io.IOException("Injected sync failure");}
+        public void fuseSync()throws Exception {syncCalls.incrementAndGet();entered.countDown();release.await();if(fail)throw new java.io.IOException("Injected sync failure");}
     }
     public static void main(String[] args)throws Exception {
         System.load(args[0]);int[] sockets=pair();Callbacks cb=new Callbacks();long server=CeFuse.start(sockets[0],cb);
@@ -40,6 +41,19 @@ public final class CeFuseConcurrencyTest {
             cb.release.countDown();reply=receive(sockets[1],2000);check(reply[0]==11 && reply[1]==0,"sync completion reply");
             cb.fail=true;send(sockets[1],20,14);reply=receive(sockets[1],2000);
             check(reply[0]==14 && reply[1]==-5,"sync error was not propagated");
+        } finally {cb.release.countDown();CeFuse.stop(server);closeFd(sockets[1]);}
+        // Queued FSYNC requests must coalesce into a single fuseSync() call.
+        sockets=pair();cb=new Callbacks();server=CeFuse.start(sockets[0],cb);
+        try {
+            send(sockets[1],20,30);check(cb.entered.await(2,TimeUnit.SECONDS),"batch blocker sync did not enter");
+            send(sockets[1],20,31);send(sockets[1],20,32);send(sockets[1],20,33);send(sockets[1],20,34);
+            // Send a GETATTR so we know the serve thread has already queued 31..34.
+            send(sockets[1],3,35);check(receive(sockets[1],2000)[0]==35,"sync batch fence");
+            cb.release.countDown();
+            java.util.Set<Long> seen=new java.util.HashSet<>();
+            for(int i=0;i<5;i++){long[] r=receive(sockets[1],2000);check(r[1]==0,"batched sync error");seen.add(r[0]);}
+            check(seen.equals(new java.util.HashSet<>(java.util.Arrays.asList(30L,31L,32L,33L,34L))),"missing batched sync replies: "+seen);
+            check(cb.syncCalls.get()==2,"queued FSYNCs did not coalesce: calls="+cb.syncCalls.get());
         } finally {cb.release.countDown();CeFuse.stop(server);closeFd(sockets[1]);}
         sockets=pair();cb=new Callbacks();server=CeFuse.start(sockets[0],cb);
         try {

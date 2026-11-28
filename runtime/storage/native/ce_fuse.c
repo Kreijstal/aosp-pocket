@@ -82,17 +82,27 @@ static int enqueue_sync(struct Server* s,uint64_t id) {
 static void* sync_requests(void* opaque) {
     struct Server* s=opaque;JNIEnv* env=NULL;
     if(attach(s,&env)!=JNI_OK){died(s,"sync thread attach failed",0,0);stopping(s);shutdown(s->fd,SHUT_RDWR);return NULL;}
+    uint64_t batch[SYNC_QUEUE];
     for(;;) {
         pthread_mutex_lock(&s->work);
         while(!s->count && !s->stopping)pthread_cond_wait(&s->available,&s->work);
         if(!s->count && s->stopping){pthread_mutex_unlock(&s->work);break;}
-        uint64_t id=s->sync_ids[s->head];s->head=(s->head+1)%SYNC_QUEUE;s->count--;
-        pthread_cond_signal(&s->space);pthread_mutex_unlock(&s->work);
-        struct fuse_out_header out={.len=sizeof(out),.unique=id};
+        // All queued FSYNC requests arrived after earlier WRITE callbacks
+        // already finished on the serve thread, so one durable sync satisfies
+        // the entire queued batch.
+        unsigned count=s->count;
+        for(unsigned i=0;i<count;i++)batch[i]=s->sync_ids[(s->head+i)%SYNC_QUEUE];
+        s->head=(s->head+count)%SYNC_QUEUE;s->count=0;
+        pthread_cond_broadcast(&s->space);pthread_mutex_unlock(&s->work);
+        int32_t error=0;
         (*env)->CallVoidMethod(env,s->callback,s->sync);
-        if((*env)->ExceptionCheck(env)){(*env)->ExceptionClear(env);out.error=-EIO;}
-        respond(s,&out,sizeof(out));
+        if((*env)->ExceptionCheck(env)){(*env)->ExceptionClear(env);error=-EIO;}
+        for(unsigned i=0;i<count;i++) {
+            struct fuse_out_header out={.len=sizeof(out),.error=error,.unique=batch[i]};
+            if(respond(s,&out,sizeof(out))<0)goto done;
+        }
     }
+done:
     (*s->vm)->DetachCurrentThread(s->vm);return NULL;
 }
 static int attrs(JNIEnv* env,struct Server* s,struct fuse_attr* a,uint64_t inode) {
