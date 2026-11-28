@@ -235,6 +235,34 @@ Binder and hardware-bridge observations from the official APK, including an
 offline Unicorn check of its preloader's seccomp construction. These findings
 guide the next runtime experiments; they do not implement a guest framework.
 
+## Guest storage encryption
+
+Setting a lock-screen password inside Android 9 or Android 12L does not
+automatically encrypt guest private storage (`ro.crypto.state` remains
+`unencrypted` until encryption is enabled). There is currently no UI toggle in
+Pocket Manager; enable it through Termux using the bundled `pocketctl.py`
+client:
+
+1. Inside Pocket Android, set a lock-screen password in **Settings → Security →
+   Screen lock**.
+2. In **Pocket Manager → Settings**, tap **Enable Termux administration**,
+   **Save Termux client** (`pocketctl.py`), and **Copy connection token**.
+3. In Termux, pair once and run `encrypt-storage` while the guest is running:
+
+```sh
+python ~/storage/downloads/pocketctl.py pair
+python ~/storage/downloads/pocketctl.py encrypt-storage
+```
+
+`encrypt-storage` prompts for the guest's existing lock-screen password,
+prepares the synthetic disk secret, stops the guest to migrate private storage
+into the encrypted store, and restarts it. On subsequent cold starts the guest
+sets `ro.crypto.state=encrypted` and `ro.crypto.type=file`, keeping credential-
+encrypted storage locked until unlocked with the guest password. This is a
+userspace encrypted filesystem (the host and Manager can access unlocked keys
+and memory, with no TEE claim); see [exec-loader.md](docs/exec-loader.md) for
+details and limits.
+
 ## Sources and licensing
 
 Bootstrap code: Apache-2.0, see [LICENSE](LICENSE). Toybox: upstream 0BSD,
